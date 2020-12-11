@@ -5,6 +5,7 @@
 --------------------------------------------------------------------------------
 
 [![PyPI](https://img.shields.io/pypi/v/wilds)](https://pypi.org/project/wilds/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/p-lambda/wilds/blob/master/LICENSE)
 
 ## Overview
 WILDS is a benchmark of in-the-wild distribution shifts spanning diverse data modalities and applications, from tumor identification to wildlife monitoring to poverty mapping.
