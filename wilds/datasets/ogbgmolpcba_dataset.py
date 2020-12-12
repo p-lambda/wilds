@@ -18,7 +18,7 @@ class OGBPCBADataset(WILDSDataset):
         Molecular graphs represented as Pytorch Geometric data objects
 
     Label (y):
-        y represents 128-class binary labels. 
+        y represents 128-class binary labels.
 
     Metadata:
         - scaffold
@@ -47,7 +47,7 @@ class OGBPCBADataset(WILDSDataset):
         }
 
     License:
-        This dataset is in the public domain and is distributed under MIT license.
+        This dataset is distributed under the MIT license.
         https://github.com/snap-stanford/ogb/blob/master/LICENSE
     """
 

@@ -52,8 +52,9 @@ class FMoWDataset(WILDSDataset):
     }
 
     License:
-        Distributed under FMoW Challenge Public License.
-    
+        Distributed under the FMoW Challenge Public License.
+        https://github.com/fMoW/dataset/blob/master/LICENSE
+
     """
     _dataset_name = 'fmow'
     _download_url = 'https://worksheets.codalab.org/rest/bundles/0xc59ea8261dfe4d2baa3820866e33d781/contents/blob/'
