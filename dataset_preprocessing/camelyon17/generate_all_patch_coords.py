@@ -1,4 +1,5 @@
-# Modified from https://raw.githubusercontent.com/liucong3/camelyon17/master/training/make_patch.py
+# Code adapted from https://github.com/liucong3/camelyon17
+# and https://github.com/cv-lee/Camelyon17
 
 import openslide
 import cv2
