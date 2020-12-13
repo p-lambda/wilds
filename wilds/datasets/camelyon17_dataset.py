@@ -78,13 +78,13 @@ class Camelyon17Dataset(WILDSDataset):
 
         self._split_dict = {
             'train': 0,
-            'val-id': 1,
+            'id_val': 1,
             'test': 2,
             'val': 3
         }
         self._split_names = {
             'train': 'Train',
-            'val-id': 'Validation (ID)',
+            'id_val': 'Validation (ID)',
             'test': 'Test',
             'val': 'Validation (OOD)',
         }

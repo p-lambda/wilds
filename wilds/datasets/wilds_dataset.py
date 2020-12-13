@@ -384,7 +384,7 @@ class WILDSDataset:
         """
         Args:
             - metric (Metric): Metric to use for eval
-            - grouper (Grouper): Grouper object that converts metadata into groups
+            - grouper (CombinatorialGrouper): Grouper object that converts metadata into groups
             - y_pred (Tensor): Predicted targets
             - y_true (Tensor): True targets
             - metadata (Tensor): Metadata
@@ -397,15 +397,21 @@ class WILDSDataset:
             results.update(metric.compute(y_pred, y_true))
             results_str += f"Average {metric.name}: {results[metric.agg_metric_field]:.3f}\n"
         g = grouper.metadata_to_group(metadata)
-        results.update(metric.compute_group_wise(y_pred, y_true, g, grouper.n_groups))
+        group_results = metric.compute_group_wise(y_pred, y_true, g, grouper.n_groups)
         for group_idx in range(grouper.n_groups):
-            if results[metric.group_count_field(group_idx)] == 0:
+            group_str = grouper.group_field_str(group_idx)
+            group_metric = group_results[metric.group_metric_field(group_idx)]
+            group_counts = group_results[metric.group_count_field(group_idx)]
+            results[f'{metric.name}_{group_str}'] = group_metric
+            results[f'count_{group_str}'] = group_counts
+            if group_results[metric.group_count_field(group_idx)] == 0:
                 continue
             results_str += (
                 f'  {grouper.group_str(group_idx)}  '
-                f"[n = {results[metric.group_count_field(group_idx)]:6.0f}]:\t"
-                f"{metric.name} = {results[metric.group_metric_field(group_idx)]:5.3f}\n")
-        results_str += f"Worst-group {metric.name}: {results[metric.worst_group_metric_field]:.3f}\n"
+                f"[n = {group_results[metric.group_count_field(group_idx)]:6.0f}]:\t"
+                f"{metric.name} = {group_results[metric.group_metric_field(group_idx)]:5.3f}\n")
+        results[f'{metric.worst_group_metric_field}'] = group_results[f'{metric.worst_group_metric_field}']
+        results_str += f"Worst-group {metric.name}: {group_results[metric.worst_group_metric_field]:.3f}\n"
         return results, results_str
 
 

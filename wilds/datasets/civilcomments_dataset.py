@@ -148,13 +148,13 @@ class CivilCommentsDataset(WILDSDataset):
             }
             results_str += f"  {identity_var:20s}"
             for group_idx in range(eval_grouper.n_groups):
-                group_str = eval_grouper.group_str(group_idx).replace(' ','')
-                if f'{identity_var}=1' in group_str:
+                group_str = eval_grouper.group_field_str(group_idx)
+                if f'{identity_var}:1' in group_str:
                     group_metric = group_results[self._metric.group_metric_field(group_idx)]
                     group_counts = group_results[self._metric.group_count_field(group_idx)]
                     results[f'{self._metric.name}_{group_str}'] = group_metric
                     results[f'count_{group_str}'] = group_counts
-                    if f'y=0' in group_str:
+                    if f'y:0' in group_str:
                         label_str = 'non_toxic'
                     else:
                         label_str = 'toxic'

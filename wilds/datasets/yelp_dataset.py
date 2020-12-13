@@ -82,37 +82,36 @@ class YelpDataset(WILDSDataset):
         return self._input_array[idx]
 
     def eval(self, y_pred, y_true, metadata):
-        # first compute groupwise accuracies
-        g = self._eval_grouper.metadata_to_group(metadata)
-        results = {
-            **self._metric.compute(y_pred, y_true),
-            **self._metric.compute_group_wise(y_pred, y_true, g, self._eval_grouper.n_groups)
-        }
-        # then do specific computations for each split and make pretty string
-        if self.split_scheme in ('time', 'time_baseline'):
-            results_str = (
-                f"Average {self._metric.name}: {results[self._metric.agg_metric_field]:.3f}\n"
-            )
-            for group_idx in range(self._eval_grouper.n_groups):
-                if results[self._metric.group_count_field(group_idx)]==0:
-                    continue
-                results_str += (
-                        f'  {self._eval_grouper.group_str(group_idx)} [n = {results[self._metric.group_count_field(group_idx)]:6.0f}]:\t {self._metric.name} = {results[self._metric.group_metric_field(group_idx)]:5.3f}\n'
-                )
-        elif self.split_scheme=='user':
+        if self.split_scheme=='user':
+            # first compute groupwise accuracies
+            g = self._eval_grouper.metadata_to_group(metadata)
+            results = {
+                **self._metric.compute(y_pred, y_true),
+                **self._metric.compute_group_wise(y_pred, y_true, g, self._eval_grouper.n_groups)
+            }
             accs = []
             for group_idx in range(self._eval_grouper.n_groups):
-                if results[self._metric.group_count_field(group_idx)]>0:
-                    accs.append(results[self._metric.group_metric_field(group_idx)])
+                group_str = self._eval_grouper.group_field_str(group_idx)
+                group_metric = results.pop(self._metric.group_metric_field(group_idx))
+                group_counts = results.pop(self._metric.group_count_field(group_idx))
+                results[f'{self._metric.name}_{group_str}'] = group_metric
+                results[f'count_{group_str}'] = group_counts
+                if group_counts>0:
+                    accs.append(group_metric)
             accs = np.array(accs)
             results['10th_percentile_acc'] = np.percentile(accs, 10)
+            results[f'{self._metric.worst_group_metric_field}'] = self._metric.worst(accs)
             results_str = (
                 f"Average {self._metric.name}: {results[self._metric.agg_metric_field]:.3f}\n"
                 f"10th percentile {self._metric.name}: {results['10th_percentile_acc']:.3f}\n"
+                f"Worst-group {self._metric.name}: {results[self._metric.worst_group_metric_field]:.3f}\n"
             )
+            return results, results_str
         else:
-            raise ValueError(f'Split scheme {self.split_scheme} not recognized')
-        return results, results_str
+            return self.standard_group_eval(
+                self._metric,
+                self._eval_grouper,
+                y_pred, y_true, metadata)
 
     def initialize_split_dicts(self):
         if self.split_scheme in ('user', 'time'):

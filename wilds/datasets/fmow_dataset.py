@@ -180,21 +180,11 @@ class FMoWDataset(WILDSDataset):
        return img_batch[within_batch_idx]
 
     def eval(self, y_pred, y_true, metadata):
-        # Overall evaluation
-        all_results, all_results_str = self.standard_eval(self._metric, y_pred, y_true)
-        # Evaluate by year 
-        year_grouper = self._eval_groupers['year']
-        year_results, year_results_str = self.standard_group_eval(
+        # Overall evaluation + evaluate by year 
+        all_results, all_results_str = self.standard_group_eval(
             self._metric,
-            year_grouper,
-            y_pred, y_true, metadata,
-            aggregate=False)
-        all_results_str += year_results_str
-        for group_idx in range(year_grouper.n_groups):
-            saved_field = f'{self._metric.name}_{year_grouper.group_str(group_idx)}'.replace(' = ', ':')
-            all_results[saved_field] = year_results[self._metric.group_metric_field(group_idx)]
-            count_field = f'count_{year_grouper.group_str(group_idx)}'.replace(' = ', ':')
-            all_results[count_field] = year_results[self._metric.group_count_field(group_idx)]
+            self._eval_groupers['year'],
+            y_pred, y_true, metadata)
         # Evaluate by region and ignore the "Other" region
         region_grouper = self._eval_groupers['region']
         region_results = self._metric.compute_group_wise(
@@ -202,13 +192,15 @@ class FMoWDataset(WILDSDataset):
             y_true, 
             region_grouper.metadata_to_group(metadata), 
             region_grouper.n_groups)
+        all_results[f'{self._metric.name}_worst_year'] = all_results.pop(self._metric.worst_group_metric_field)
         region_metric_list = []
         for group_idx in range(region_grouper.n_groups):
-            saved_field = f'{self._metric.name}_{region_grouper.group_str(group_idx)}'.replace(' = ', ':')
-            all_results[saved_field] = region_results[self._metric.group_metric_field(group_idx)]
-            count_field = f'count_{region_grouper.group_str(group_idx)}'.replace(' = ', ':')
-            all_results[count_field] = region_results[self._metric.group_count_field(group_idx)]
-            if region_results[self._metric.group_count_field(group_idx)] == 0 or region_grouper.group_str(group_idx)=="Other":
+            group_str = region_grouper.group_field_str(group_idx)
+            group_metric = region_results[self._metric.group_metric_field(group_idx)]
+            group_counts = region_results[self._metric.group_count_field(group_idx)]
+            all_results[f'{self._metric.name}_{group_str}'] = group_metric
+            all_results[f'count_{group_str}'] = group_counts
+            if region_results[self._metric.group_count_field(group_idx)] == 0 or "Other" in group_str:
                 continue
             all_results_str += (
                 f'  {region_grouper.group_str(group_idx)}  '
@@ -216,6 +208,6 @@ class FMoWDataset(WILDSDataset):
                 f"{self._metric.name} = {region_results[self._metric.group_metric_field(group_idx)]:5.3f}\n")
             region_metric_list.append(region_results[self._metric.group_metric_field(group_idx)])
         all_results[f'{self._metric.name}_worst_region'] = self._metric.worst(region_metric_list)
-        all_results_str += f"Worst-group {self._metric.name}: {region_results[self._metric.worst_group_metric_field]:.3f}\n"
+        all_results_str += f"Worst-group {self._metric.name}: {all_results[f'{self._metric.name}_worst_region']:.3f}\n"
 
         return all_results, all_results_str
