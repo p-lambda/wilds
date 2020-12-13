@@ -59,16 +59,16 @@ class IWildCamDataset(WILDSDataset):
         train_df['split'] = 'train'
         val_trans_df['split'] = 'val'
         test_trans_df['split'] = 'test'
-        val_cis_df['split'] = 'val_cis'
-        test_cis_df['split'] = 'test_cis'
+        val_cis_df['split'] = 'id_val'
+        test_cis_df['split'] = 'id_test'
         df = pd.concat([train_df, val_trans_df, test_trans_df, test_cis_df, val_cis_df])
 
         # Splits
         data = {}
-        self._split_dict = {'train': 0, 'val': 1, 'test': 2, 'val_cis': 3, 'test_cis': 4}
-        self._split_names = {'train': 'Train', 'val': 'Validation (Trans)',
-                                'test': 'Test (Trans)', 'val_cis': 'Validation (Cis)',
-                                'test_cis': 'Test Cis'}
+        self._split_dict = {'train': 0, 'val': 1, 'test': 2, 'id_val': 3, 'id_test': 4}
+        self._split_names = {'train': 'Train', 'val': 'Validation (OOD/Trans)',
+                                'test': 'Test (OOD/Trans)', 'id_val': 'Validation (ID/Cis)',
+                                'id_test': 'Test (ID/Cis)'}
 
         df['split_id'] = df['split'].apply(lambda x: self._split_dict[x])
         self._split_array = df['split_id'].values
@@ -104,14 +104,12 @@ class IWildCamDataset(WILDSDataset):
         super().__init__(root_dir, download, split_scheme)
 
     def eval(self, y_pred, y_true, metadata):
-        g = self._eval_grouper.metadata_to_group(metadata)
         results = {}
 
         for i in range(len(self._metrics)):
             results.update({
                 **self._metrics[i].compute(y_pred, y_true),
                         })
-
 
         results_str = (
             f"Average acc: {results[self._metrics[0].agg_metric_field]:.3f}\n"
