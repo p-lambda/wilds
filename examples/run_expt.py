@@ -90,7 +90,7 @@ def main():
     parser.add_argument('--evaluate_all_splits', type=parse_bool, const=True, nargs='?', default=True)
     parser.add_argument('--eval_splits', nargs='+', default=[])
     parser.add_argument('--eval_only', type=parse_bool, const=True, nargs='?', default=False)
-    parser.add_argument('--eval_epochs', default=None, type=int)
+    parser.add_argument('--eval_epoch', default=None, type=int)
 
     # Misc
     parser.add_argument('--device', type=int, default=0)
@@ -106,7 +106,6 @@ def main():
     parser.add_argument('--resume', type=parse_bool, const=True, nargs='?', default=False)
 
     config = parser.parse_args()
-    print(config.no_group_logging)
     config = populate_defaults(config)
 
     # set device
