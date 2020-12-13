@@ -1,10 +1,11 @@
-import sklearn, torch
+import torch
 import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
 from wilds.common.metrics.metric import Metric, ElementwiseMetric, MultiTaskMetric
 from wilds.common.metrics.loss import ElementwiseLoss
 from wilds.common.utils import avg_over_groups, minimum, maximum
+import sklearn.metrics
 from scipy.stats import pearsonr
 
 def logits_to_score(logits):
@@ -73,7 +74,8 @@ class Recall(Metric):
     def _compute(self, y_pred, y_true):
         if self.prediction_fn is not None:
             y_pred = self.prediction_fn(y_pred)
-        return sklearn.metrics.recall_score(y_true, y_pred, average=self.average, labels=torch.unique(y_true))
+        recall = sklearn.metrics.recall_score(y_true, y_pred, average=self.average, labels=torch.unique(y_true))
+        return torch.tensor(recall)
 
     def worst(self, metrics):
         return minimum(metrics)
@@ -91,64 +93,8 @@ class F1(Metric):
     def _compute(self, y_pred, y_true):
         if self.prediction_fn is not None:
             y_pred = self.prediction_fn(y_pred)
-        return sklearn.metrics.f1_score(y_true, y_pred, average=self.average, labels=torch.unique(y_true))
-
-    def worst(self, metrics):
-        return minimum(metrics)
-
-class BinaryAUROC(Metric):
-    def __init__(self, score_fn=logits_to_score, name=None):
-        self.score_fn = score_fn
-        if name is None:
-            name = 'auroc'
-        super().__init__(name=name)
-
-    def _compute(self, y_pred, y_true):
-        if self.score_fn is not None:
-            score = self.score_fn(y_pred)
-
-        try:
-            return torch.FloatTensor([sklearn.metrics.roc_auc_score(y_true, score)])
-        except ValueError:
-            print('Warning: AUROC not defined when only one class is present in y_true.')
-            return torch.FloatTensor([float('nan')])
-
-    def worst(self, metrics):
-        return minimum(metrics)
-      
-class BinaryAUPRC(Metric):
-    def __init__(self, score_fn=logits_to_score, name=None):
-        self.score_fn = score_fn
-        if name is None:
-            name = f'auprc'
-
-        super().__init__(name=name)
-
-    def _compute(self, y_pred, y_true):
-        if self.score_fn is not None:
-            score = self.score_fn(y_pred)
-        try:
-            return torch.FloatTensor([sklearn.metrics.average_precision_score(y_true, score)])
-        except ValueError:
-            print('Warning: AUPRC not defined when only one class is present in y_true.')
-            return torch.FloatTensor([float('nan')])
-
-    def worst(self, metrics):
-        return minimum(metrics)
-
-class PrecisionAtRecall(Metric):
-    """Given a specific model threshold, determine the precision score achieved"""
-    def __init__(self, threshold, score_fn=logits_to_score, name=None):
-        self.score_fn = score_fn
-        self.threshold = threshold
-        if name is None:
-            name = "precision_at_global_recall_"
-        super().__init__(name=name)
-
-    def _compute(self, y_pred, y_true):
-        score = self.score_fn(y_pred)
-        predictions = (score > self.threshold)
-        return torch.FloatTensor([sklearn.metrics.precision_score(y_true, predictions)])
+        score = sklearn.metrics.f1_score(y_true, y_pred, average=self.average, labels=torch.unique(y_true))
+        return torch.tensor(score)
 
     def worst(self, metrics):
         return minimum(metrics)
@@ -166,18 +112,16 @@ class SQCorrelation(Metric):
     def worst(self, metrics):
         return minimum(metrics)
 
-def mse_loss(out, targets, reduction='none'):
-    losses = (out - targets)**2
-    reduce_dims = tuple(list(range(1, len(targets.shape))))
-    losses = torch.mean(losses, dim=reduce_dims)
-
-    if reduction == 'mean':
-        loss = losses.mean()
-    elif reduction == 'sum':
-        loss = losses.sum()
-    elif reduction == 'none':
-        loss = losses
-    return loss
+def mse_loss(out, targets):
+    assert out.size()==targets.size()
+    if out.numel()==0:
+        return torch.Tensor()
+    else:
+        assert out.dim()>1, 'MSE loss currently supports Tensors of dimensions > 1'
+        losses = (out - targets)**2
+        reduce_dims = tuple(list(range(1, len(targets.shape))))
+        losses = torch.mean(losses, dim=reduce_dims)
+        return losses
 
 class MSE(ElementwiseLoss):
     def __init__(self, name=None):

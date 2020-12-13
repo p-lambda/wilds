@@ -17,7 +17,7 @@ class Metric:
             - y_pred (Tensor): Predicted targets or model output
             - y_true (Tensor): True targets
         Output:
-            - metric (0-dim Tensor): metric
+            - metric (0-dim tensor): metric
         """
         return NotImplementedError
 
@@ -27,7 +27,7 @@ class Metric:
         Args:
             - metrics (Tensor, numpy array, or list): Metrics
         Output:
-            - worst_metric (0-dim Tensor): Worst-case metric
+            - worst_metric (0-dim tensor): Worst-case metric
         """
         raise NotImplementedError
 
@@ -78,11 +78,14 @@ class Metric:
             - y_true (Tensor): True targets
             - return_dict (bool): Whether to return the output as a dictionary or a tensor
         Output (return_dict=False):
-            - metric (0-dim Tensor): metric
+            - metric (0-dim tensor): metric. If the inputs are empty, returns tensor(0.)
         Output (return_dict=True):
             - results (dict): Dictionary of results, mapping metric.agg_metric_field to avg_metric
         """
-        agg_metric = self._compute(y_pred, y_true)
+        if y_true.numel()==0:
+            agg_metric = torch.tensor(0., device=y_true.device)
+        else:
+            agg_metric = self._compute(y_pred, y_true)
         if return_dict:
             results = {
                 self.agg_metric_field: agg_metric.item()
@@ -103,7 +106,8 @@ class Metric:
         Output (return_dict=False):
             - group_metrics (Tensor): tensor of size (n_groups, ) including the average metric for each group
             - group_counts (Tensor): tensor of size (n_groups, ) including the group count
-            - worst_group_metric (0-dim Tensor): worst-group metric
+            - worst_group_metric (0-dim tensor): worst-group metric
+            - For empty inputs/groups, corresponding metrics are tensor(0.)
         Output (return_dict=True):
             - results (dict): Dictionary of results
         """
@@ -134,7 +138,6 @@ class Metric:
         
         return group_metrics, group_counts, worst_group_metric
 
-
 class ElementwiseMetric(Metric):
     """
     Averages.
@@ -156,7 +159,7 @@ class ElementwiseMetric(Metric):
         Args:
             - metrics (Tensor, numpy array, or list): Metrics
         Output:
-            - worst_metric (0-dim Tensor): Worst-case metric
+            - worst_metric (0-dim tensor): Worst-case metric
         """
         raise NotImplementedError
 
@@ -167,7 +170,7 @@ class ElementwiseMetric(Metric):
             - y_pred (Tensor): Predicted targets or model output
             - y_true (Tensor): True targets
         Output:
-            - avg_metric (0-dim Tensor): average of element-wise metrics
+            - avg_metric (0-dim tensor): average of element-wise metrics
         """
         element_wise_metrics = self._compute_element_wise(y_pred, y_true)
         avg_metric = element_wise_metrics.mean()
@@ -176,7 +179,7 @@ class ElementwiseMetric(Metric):
     def _compute_group_wise(self, y_pred, y_true, g, n_groups):
         element_wise_metrics = self._compute_element_wise(y_pred, y_true)
         group_metrics, group_counts = avg_over_groups(element_wise_metrics, g, n_groups)
-        worst_group_metric = self.worst(group_metrics)
+        worst_group_metric = self.worst(group_metrics[group_counts>0])
         return group_metrics, group_counts, worst_group_metric
 
     @property
@@ -222,14 +225,15 @@ class MultiTaskMetric(Metric):
     def _compute(self, y_pred, y_true):
         flattened_metrics, _ = self.compute_flattened(y_pred, y_true, return_dict=False)
         if flattened_metrics.numel()==0:
-            return torch.tensor(0).to(y_pred.device)
-        return flattened_metrics.mean()
+            return torch.tensor(0., device=y_true.device)
+        else:
+            return flattened_metrics.mean()
 
     def _compute_group_wise(self, y_pred, y_true, g, n_groups):
         flattened_metrics, indices = self.compute_flattened(y_pred, y_true, return_dict=False)
         flattened_g = g[indices]
         group_metrics, group_counts = avg_over_groups(flattened_metrics, flattened_g, n_groups)
-        worst_group_metric = self.worst(group_metrics)
+        worst_group_metric = self.worst(group_metrics[group_counts>0])
         return group_metrics, group_counts, worst_group_metric
 
     def compute_flattened(self, y_pred, y_true, return_dict=True):

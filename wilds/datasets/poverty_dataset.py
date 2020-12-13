@@ -150,8 +150,8 @@ class PovertyMapDataset(WILDSDataset):
 
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
-        self._split_dict = {'train': 0, 'val': 1, 'test': 2, 'ood_val': 3, 'ood_test': 4}
-        self._split_names = {'train': 'Train', 'val': 'Val', 'test': 'Test', 'ood_val': 'OOD Val', 'ood_test': 'OOD Test'}
+        self._split_dict = {'train': 0, 'id_val': 1, 'id_test': 2, 'val': 3, 'test': 4}
+        self._split_names = {'train': 'Train', 'id_val': 'ID Val', 'id_test': 'ID Test', 'val': 'OOD Val', 'test': 'OOD Test'}
 
         if split_scheme=='official':
             split_scheme = 'countries'
@@ -177,11 +177,11 @@ class PovertyMapDataset(WILDSDataset):
         idxs_id, idxs_ood_test = split_by_countries(incountry_folds_split, country_folds['test'], self.metadata)
         # also create a validation OOD set
         idxs_id, idxs_ood_val = split_by_countries(idxs_id, country_folds['val'], self.metadata)
-        for split in ['ood_test', 'ood_val', 'test', 'val', 'train']:
+        for split in self.split_dict.keys():
             # keep ood for test, otherwise throw away ood data
-            if split == 'ood_test':
+            if split == 'test':
                 idxs = idxs_ood_test
-            elif split == 'ood_val':
+            elif split == 'val':
                 idxs = idxs_ood_val
             else:
                 idxs = idxs_id
@@ -197,15 +197,15 @@ class PovertyMapDataset(WILDSDataset):
                     eval_idxs  = subsample_idxs(idxs, take_rest=False, num=num_eval, seed=ord(fold))
 
                 if split != 'train':
-                    if split == 'val':
+                    if split == 'id_val':
                         idxs = eval_idxs[:num_eval//2]
                     else:
                         idxs = eval_idxs[num_eval//2:]
             self._split_array[idxs] = self._split_dict[split]
 
-        if use_ood_val:
-            self._split_dict = {'train': 0, 'id_val': 1, 'test': 2, 'val': 3, 'ood_test': 4}
-            self._split_names = {'train': 'Train', 'id_val': 'Val', 'test': 'Test', 'val': 'OOD Val', 'ood_test': 'OOD Test'}
+        if not use_ood_val:
+            self._split_dict = {'train': 0, 'val': 1, 'id_test': 2, 'ood_val': 3, 'test': 4}
+            self._split_names = {'train': 'Train', 'val': 'ID Val', 'id_test': 'ID Test', 'ood_val': 'OOD Val', 'test': 'OOD Test'}
 
 
         self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')

@@ -43,6 +43,15 @@ class Grouper:
         """
         raise NotImplementedError
 
+    def group_field_str(self, group):
+        """
+        Args:
+            - group (int): A single integer representing a group.
+        Output:
+            - group_str (str): A string containing the name of that group.
+        """
+        raise NotImplementedError
+
 class CombinatorialGrouper(Grouper):
     def __init__(self, dataset, groupby_fields):
         """
@@ -138,3 +147,7 @@ class CombinatorialGrouper(Grouper):
         # a_1 * x_1 +
         # a_2 * x_2 + ...
         # a_n * x_n
+
+    def group_field_str(self, group):
+        return self.group_str(group).replace('=', ':').replace(',','_').replace(' ','')
+
