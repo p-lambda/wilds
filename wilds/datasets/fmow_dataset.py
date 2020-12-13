@@ -65,7 +65,7 @@ class FMoWDataset(WILDSDataset):
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
         self._split_dict = {'train': 0, 'val': 1, 'test': 2, 'ood_val': 3, 'ood_test': 4}
-        self._split_names = {'train': 'Train', 'val': 'Val', 'test': 'Test', 'ood_val': 'OOD Val', 'ood_test': 'OOD Test'}
+        self._split_names = {'train': 'Train', 'val': 'ID Val', 'test': 'ID Test', 'ood_val': 'OOD Val', 'ood_test': 'OOD Test'}
         if split_scheme=='official':
             split_scheme='time_after_2016'
         self._split_scheme = split_scheme
@@ -121,7 +121,7 @@ class FMoWDataset(WILDSDataset):
 
         if use_ood_val:
             self._split_dict = {'train': 0, 'id_val': 1, 'test': 2, 'val': 3, 'ood_test': 4}
-            self._split_names = {'train': 'Train', 'id_val': 'Val', 'test': 'Test', 'val': 'OOD Val', 'ood_test': 'OOD Test'}
+            self._split_names = {'train': 'Train', 'id_val': 'ID Val', 'test': 'ID Test', 'val': 'OOD Val', 'ood_test': 'OOD Test'}
 
         # filter out sequestered images from full dataset
         seq_mask = np.asarray(self.metadata['split'] == 'seq')
@@ -155,9 +155,10 @@ class FMoWDataset(WILDSDataset):
         self._metadata_fields = ['region', 'year', 'y']
         self._metadata_array = torch.from_numpy(self.metadata[self._metadata_fields].astype(int).to_numpy()).long()[~seq_mask]
 
-        self._eval_groupers = [
-                CombinatorialGrouper(dataset=self, groupby_fields=['region']),
-                CombinatorialGrouper(dataset=self, groupby_fields=['year'])]
+        self._eval_groupers = {
+            'year': CombinatorialGrouper(dataset=self, groupby_fields=['year']),
+            'region': CombinatorialGrouper(dataset=self, groupby_fields=['region']),
+        }
 
         self._metric = Accuracy()
         super().__init__(root_dir, download, split_scheme)
@@ -173,13 +174,38 @@ class FMoWDataset(WILDSDataset):
        return img_batch[within_batch_idx]
 
     def eval(self, y_pred, y_true, metadata):
-        all_results = {}
-        all_results_str = ''
-        for grouper in self._eval_groupers:
-            results, results_str = self.standard_group_eval(
-                self._metric,
-                grouper,
-                y_pred, y_true, metadata)
-            all_results.update(results)
-            all_results_str += results_str
+        # Overall evaluation
+        all_results, all_results_str = self.standard_eval(self._metric, y_pred, y_true)
+        # Evaluate by year 
+        year_grouper = self._eval_groupers['year']
+        year_results, year_results_str = self.standard_group_eval(
+            self._metric,
+            year_grouper,
+            y_pred, y_true, metadata,
+            aggregate=False)
+        all_results_str += year_results_str
+        for group_idx in range(year_grouper.n_groups):
+            saved_field = f'{self._metric.name}_{year_grouper.group_str(group_idx)}'.replace(' = ', ':')
+            all_results[saved_field] = year_results[self._metric.group_metric_field(group_idx)]
+        # Evaluate by region and ignore the "Other" region
+        region_grouper = self._eval_groupers['region']
+        region_results = self._metric.compute_group_wise(
+            y_pred, 
+            y_true, 
+            region_grouper.metadata_to_group(metadata), 
+            region_grouper.n_groups)
+        region_metric_list = []
+        for group_idx in range(region_grouper.n_groups):
+            saved_field = f'{self._metric.name}_{region_grouper.group_str(group_idx)}'.replace(' = ', ':')
+            all_results[saved_field] = year_results[self._metric.group_metric_field(group_idx)]
+            if region_results[self._metric.group_count_field(group_idx)] == 0 or region_grouper.group_str(group_idx)=="Other":
+                continue
+            all_results_str += (
+                f'  {region_grouper.group_str(group_idx)}  '
+                f"[n = {region_results[self._metric.group_count_field(group_idx)]:6.0f}]:\t"
+                f"{self._metric.name} = {region_results[self._metric.group_metric_field(group_idx)]:5.3f}\n")
+            region_metric_list.append(region_results[self._metric.group_metric_field(group_idx)])
+        all_results[f'{self._metric.name}_worst_region'] = self._metric.worst(region_metric_list)
+        all_results_str += f"Worst-group {self._metric.name}: {region_results[self._metric.worst_group_metric_field]:.3f}\n"
+
         return all_results, all_results_str

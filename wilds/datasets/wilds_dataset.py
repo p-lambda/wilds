@@ -361,7 +361,26 @@ class WILDSDataset:
         return data_dir
 
     @staticmethod
-    def standard_group_eval(metric, grouper, y_pred, y_true, metadata):
+    def standard_eval(metric, y_pred, y_true):
+        """
+        Args:
+            - metric (Metric): Metric to use for eval
+            - y_pred (Tensor): Predicted targets
+            - y_true (Tensor): True targets
+        Output:
+            - results (dict): Dictionary of results
+            - results_str (str): Pretty print version of the results
+        """
+        results = {
+            **metric.compute(y_pred, y_true),
+        }
+        results_str = (
+            f"Average {metric.name}: {results[metric.agg_metric_field]:.3f}\n"
+        )
+        return results, results_str
+
+    @staticmethod
+    def standard_group_eval(metric, grouper, y_pred, y_true, metadata, aggregate=True):
         """
         Args:
             - metric (Metric): Metric to use for eval
@@ -373,14 +392,12 @@ class WILDSDataset:
             - results (dict): Dictionary of results
             - results_str (str): Pretty print version of the results
         """
+        results, results_str = {}, ''
+        if aggregate:
+            results.update(metric.compute(y_pred, y_true))
+            results_str += f"Average {metric.name}: {results[metric.agg_metric_field]:.3f}\n"
         g = grouper.metadata_to_group(metadata)
-        results = {
-            **metric.compute(y_pred, y_true),
-            **metric.compute_group_wise(y_pred, y_true, g, grouper.n_groups)
-        }
-        results_str = (
-            f"Average {metric.name}: {results[metric.agg_metric_field]:.3f}\n"
-        )
+        results.update(metric.compute_group_wise(y_pred, y_true, g, grouper.n_groups))
         for group_idx in range(grouper.n_groups):
             if results[metric.group_count_field(group_idx)] == 0:
                 continue
