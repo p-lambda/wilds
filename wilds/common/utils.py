@@ -3,21 +3,39 @@ import numpy as np
 from torch.utils.data import Subset
 from pandas.api.types import CategoricalDtype
 
-def minimum(numbers):
+def minimum(numbers, empty_val=0.):
     if isinstance(numbers, torch.Tensor):
-        return numbers[~torch.isnan(numbers)].min()
+        if numbers.numel()==0:
+            return torch.tensor(empty_val, device=numbers.device)
+        else:
+            return numbers[~torch.isnan(numbers)].min()
     elif isinstance(numbers, np.ndarray):
-        return numbers.nanmin()
+        if numbers.size==0:
+            return np.array(empty_val)
+        else:
+            return np.nanmin(numbers)
     else:
-        return min(numbers)
+        if len(numbers)==0:
+            return empty_val
+        else:
+            return min(numbers)
 
-def maximum(numbers):
+def maximum(numbers, empty_val=0.):
     if isinstance(numbers, torch.Tensor):
-        return numbers[~torch.isnan(numbers)].max()
+        if numbers.numel()==0:
+            return torch.tensor(empty_val, device=numbers.device)
+        else:
+            return numbers[~torch.isnan(numbers)].max()
     elif isinstance(numbers, np.ndarray):
-        return numbers.nanmax()
+        if numbers.size==0:
+            return np.array(empty_val)
+        else:
+            return np.nanmax(numbers)
     else:
-        return max(numbers)
+        if len(numbers)==0:
+            return empty_val
+        else:
+            return max(numbers)
 
 def split_into_groups(g):
     """
