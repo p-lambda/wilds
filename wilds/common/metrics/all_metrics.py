@@ -99,15 +99,15 @@ class F1(Metric):
     def worst(self, metrics):
         return minimum(metrics)
 
-class SQCorrelation(Metric):
+class PearsonCorrelation(Metric):
     def __init__(self, name=None):
         if name is None:
-            name = 'r2'
+            name = 'r'
         super().__init__(name=name)
 
     def _compute(self, y_pred, y_true):
-        r2 = pearsonr(y_pred.squeeze().detach().cpu().numpy(), y_true.squeeze().detach().cpu().numpy())[0]**2
-        return torch.tensor(r2)
+        r = pearsonr(y_pred.squeeze().detach().cpu().numpy(), y_true.squeeze().detach().cpu().numpy())[0]
+        return torch.tensor(r)
 
     def worst(self, metrics):
         return minimum(metrics)

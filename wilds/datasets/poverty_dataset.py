@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 import pickle
 import numpy as np
 from wilds.datasets.wilds_dataset import WILDSDataset
-from wilds.common.metrics.all_metrics import MSE, SQCorrelation
+from wilds.common.metrics.all_metrics import MSE, PearsonCorrelation
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.utils import subsample_idxs, shuffle_arr
 
@@ -226,7 +226,7 @@ class PovertyMapDataset(WILDSDataset):
             dataset=self,
             groupby_fields=['urban'])
 
-        self._metrics = [MSE(), SQCorrelation()]
+        self._metrics = [MSE(), PearsonCorrelation()]
         self.cache_counter = 0
 
         super().__init__(root_dir, download, split_scheme)
