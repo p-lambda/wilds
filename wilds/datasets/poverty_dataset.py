@@ -148,6 +148,7 @@ class PovertyMapDataset(WILDSDataset):
     def __init__(self, root_dir='data', download=False, split_scheme='official',
                  no_nl=True, fold='A', oracle_training_set=False, use_ood_val=False):
 
+        self._compressed_size = 18_630_656_000
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
         self._split_dict = {'train': 0, 'id_val': 1, 'id_test': 2, 'val': 3, 'test': 4}

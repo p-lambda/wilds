@@ -55,6 +55,7 @@ class AmazonDataset(WILDSDataset):
         self._dataset_name = 'amazon'
         self._version = '1.0'
         self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x60237058e01749cda7b0701c2bd01420/contents/blob/'
+        self._compressed_size = 4_066_541_568
         # the official split is the user split
         if split_scheme=='official':
             split_scheme = 'user'
