@@ -177,7 +177,7 @@ class PovertyMapDataset(WILDSDataset):
         idxs_id, idxs_ood_test = split_by_countries(incountry_folds_split, country_folds['test'], self.metadata)
         # also create a validation OOD set
         idxs_id, idxs_ood_val = split_by_countries(idxs_id, country_folds['val'], self.metadata)
-        for split in self.split_dict.keys():
+        for split in ['test', 'val', 'id_test', 'id_val', 'train']:
             # keep ood for test, otherwise throw away ood data
             if split == 'test':
                 idxs = idxs_ood_test
