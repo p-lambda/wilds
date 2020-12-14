@@ -9,7 +9,7 @@ from wilds.datasets.celebA_dataset import CelebADataset
 from wilds.datasets.civilcomments_dataset import CivilCommentsDataset
 from wilds.datasets.fmow_dataset import FMoWDataset
 from wilds.datasets.iwildcam_dataset import IWildCamDataset
-from wilds.datasets.ogbgmolpcba_dataset import OGBPCBADataset
+from wilds.datasets.ogbmolpcba_dataset import OGBPCBADataset
 from wilds.datasets.poverty_dataset import PovertyMapDataset
 from wilds.datasets.waterbirds_dataset import WaterbirdsDataset
 from wilds.datasets.yelp_dataset import YelpDataset
@@ -25,7 +25,7 @@ datasets = {
     'iwildcam': IWildCamDataset,
     'waterbirds': WaterbirdsDataset,
     'yelp': YelpDataset,
-    'ogbg-molpcba': OGBPCBADataset,
+    'ogb-molpcba': OGBPCBADataset,
     'poverty': PovertyMapDataset,
     'fmow': FMoWDataset,
     'bdd100k': BDD100KDataset,

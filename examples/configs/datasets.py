@@ -139,7 +139,7 @@ dataset_defaults = {
         'coral_penalty_weight': 0.1,
         'no_group_logging': True,
     },
-    'ogbg-molpcba': {
+    'ogb-molpcba': {
         'split_scheme': 'official',
         'model': 'gin-virtual',
         'model_kwargs': {'dropout':0.5}, # include pretrained
