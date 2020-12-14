@@ -256,6 +256,13 @@ class WILDSDataset:
         """
         return getattr(self, '_original_resolution', None)
 
+    @property
+    def compressed_size(self):
+        """
+        Size of the compressed bundle
+        """
+        return getattr(self, '_compressed_size', None)
+
     def initialize_data_dir(self, root_dir, download):
         """
         Helper function for downloading/updating the dataset if required.
@@ -349,14 +356,17 @@ class WILDSDataset:
 
             from wilds.datasets.download_utils import download_and_extract_archive
             print(f'Downloading dataset to {data_dir}...')
+            print(f'You can also download the dataset manually at https://wilds.stanford.edu/downloads.')
             try:
                 download_and_extract_archive(
                     url=self.download_url,
                     download_root=data_dir,
                     filename='archive.tar.gz',
-                    remove_finished=True)
-            except:
-                print(f"\n{os.path.join(data_dir, 'archive.tar.gz')} appears to be corrupted. Please try deleting it and rerunning this command.\n")
+                    remove_finished=True,
+                    size=self.compressed_size)
+            except Exception as e:
+                print(f"\n{os.path.join(data_dir, 'archive.tar.gz')} may be corrupted. Please try deleting it and rerunning this command.\n")
+                print(f"Exception: ", e)
 
         return data_dir
 

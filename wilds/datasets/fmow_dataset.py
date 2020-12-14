@@ -62,6 +62,7 @@ class FMoWDataset(WILDSDataset):
 
     def __init__(self, root_dir='data', download=False, split_scheme='official',
                  oracle_training_set=False, seed=111, use_ood_val=False):
+        self._compressed_size = 65_000_000_000
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
         self._split_dict = {'train': 0, 'id_val': 1, 'id_test': 2, 'val': 3, 'test': 4}
@@ -180,7 +181,7 @@ class FMoWDataset(WILDSDataset):
        return img_batch[within_batch_idx]
 
     def eval(self, y_pred, y_true, metadata):
-        # Overall evaluation + evaluate by year 
+        # Overall evaluation + evaluate by year
         all_results, all_results_str = self.standard_group_eval(
             self._metric,
             self._eval_groupers['year'],
@@ -188,9 +189,9 @@ class FMoWDataset(WILDSDataset):
         # Evaluate by region and ignore the "Other" region
         region_grouper = self._eval_groupers['region']
         region_results = self._metric.compute_group_wise(
-            y_pred, 
-            y_true, 
-            region_grouper.metadata_to_group(metadata), 
+            y_pred,
+            y_true,
+            region_grouper.metadata_to_group(metadata),
             region_grouper.n_groups)
         all_results[f'{self._metric.name}_worst_year'] = all_results.pop(self._metric.worst_group_metric_field)
         region_metric_list = []

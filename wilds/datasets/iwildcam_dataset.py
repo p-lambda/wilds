@@ -45,7 +45,8 @@ class IWildCamDataset(WILDSDataset):
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
 
         # path
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0xa726d7f94d434e458ceef61eac2c828b/contents/blob/'
+        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x3f1b346ff2d74b5daf1a08685d68c6ec/contents/blob/'
+        self._compressed_size = 84_000_000_000
         self._data_dir = Path(self.initialize_data_dir(root_dir, download))
 
         # Load splits

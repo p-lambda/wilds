@@ -49,6 +49,7 @@ class Camelyon17Dataset(WILDSDataset):
         self._dataset_name = 'camelyon17'
         self._version = '1.0'
         self._download_url = 'https://worksheets.codalab.org/rest/bundles/0xe45e15f39fb54e9d9e919556af67aabe/contents/blob/'
+        self._compressed_size = 10_658_709_504
         self._data_dir = self.initialize_data_dir(root_dir, download)
         self._original_resolution = (96,96)
 

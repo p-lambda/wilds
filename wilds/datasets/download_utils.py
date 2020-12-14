@@ -49,8 +49,8 @@ import torch
 from torch.utils.model_zoo import tqdm
 
 
-def gen_bar_updater() -> Callable[[int, int, int], None]:
-    pbar = tqdm(total=None)
+def gen_bar_updater(total) -> Callable[[int, int, int], None]:
+    pbar = tqdm(total=total, unit='Byte')
 
     def bar_update(count, block_size, total_size):
         if pbar.total is None and total_size:
@@ -81,7 +81,7 @@ def check_integrity(fpath: str, md5: Optional[str] = None) -> bool:
     return check_md5(fpath, md5)
 
 
-def download_url(url: str, root: str, filename: Optional[str] = None, md5: Optional[str] = None) -> None:
+def download_url(url: str, root: str, filename: Optional[str] = None, md5: Optional[str] = None, size: Optional[int] = None) -> None:
     """Download a file from a url and place it in root.
 
     Args:
@@ -107,7 +107,7 @@ def download_url(url: str, root: str, filename: Optional[str] = None, md5: Optio
             print('Downloading ' + url + ' to ' + fpath)
             urllib.request.urlretrieve(
                 url, fpath,
-                reporthook=gen_bar_updater()
+                reporthook=gen_bar_updater(size)
             )
         except (urllib.error.URLError, IOError) as e:  # type: ignore[attr-defined]
             if url[:5] == 'https':
@@ -116,7 +116,7 @@ def download_url(url: str, root: str, filename: Optional[str] = None, md5: Optio
                       ' Downloading ' + url + ' to ' + fpath)
                 urllib.request.urlretrieve(
                     url, fpath,
-                    reporthook=gen_bar_updater()
+                    reporthook=gen_bar_updater(size)
                 )
             else:
                 raise e
@@ -284,6 +284,7 @@ def download_and_extract_archive(
     filename: Optional[str] = None,
     md5: Optional[str] = None,
     remove_finished: bool = False,
+    size: Optional[int] = None
 ) -> None:
     download_root = os.path.expanduser(download_root)
     if extract_root is None:
@@ -291,7 +292,7 @@ def download_and_extract_archive(
     if not filename:
         filename = os.path.basename(url)
 
-    download_url(url, download_root, filename, md5)
+    download_url(url, download_root, filename, md5, size)
 
     archive = os.path.join(download_root, filename)
     print("Extracting {} to {}".format(archive, extract_root))
