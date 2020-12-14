@@ -46,7 +46,7 @@ class IWildCamDataset(WILDSDataset):
 
         # path
         self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x3f1b346ff2d74b5daf1a08685d68c6ec/contents/blob/'
-        self._compressed_size = 84_000_000_000
+        self._compressed_size = 90_094_666_806
         self._data_dir = Path(self.initialize_data_dir(root_dir, download))
 
         # Load splits
