@@ -94,7 +94,6 @@ This short Python snippet covers all of the steps of getting started with a WILD
 
 # Get the training set
 >>> train_data = dataset.get_subset('train', 
-...                                 # baseline experiments use examples.transforms.initialize_transform()
 ...                                 transform=transforms.Compose([transforms.Resize((224,224)), 
 ...                                                               transforms.ToTensor()]))
 
@@ -149,7 +148,6 @@ Invoking the `eval` method of each dataset yields all metrics reported in the pa
 
 # Get the test set
 >>> test_data = dataset.get_subset('test',
-...                                 # baseline experiments use examples.transforms.initialize_transform()
 ...                                 transform=transforms.Compose([transforms.Resize((224,224)), 
 ...                                                               transforms.ToTensor()]))
 
