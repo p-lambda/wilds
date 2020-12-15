@@ -17,6 +17,7 @@ The WILDS package contains:
 In addition, the example scripts contain default models, allowing new algorithms to be easily added and run on all of the WILDS datasets.
 
 For more information, please read [our paper](https://arxiv.org/pdf/2012.07421.pdf) or visit [our website](https://wilds.stanford.edu).
+For questions and feedback, please post on the [discussion board](https://github.com/p-lambda/wilds/discussions).
 
 ## Installation
 
@@ -166,7 +167,7 @@ Invoking the `eval` method of each dataset yields all metrics reported in the pa
 ```
 
 ## Citing WILDS
-If you use WILDS datasets in your work, please cite our paper ([Bibtex](https://wilds.stanford.edu/assets/files/bibtex.md)):
+If you use WILDS datasets in your work, please cite [our paper](https://arxiv.org/pdf/2012.07421.pdf) ([Bibtex](https://wilds.stanford.edu/assets/files/bibtex.md)):
 
 - **WILDS: A Benchmark of in-the-Wild Distribution Shifts** (2020). Pang Wei Koh*, Shiori Sagawa*, Henrik Marklund, Sang Michael Xie, Marvin Zhang, Akshay Balsubramani, Weihua Hu, Michihiro Yasunaga, Richard Lanas Phillips, Sara Beery, Jure Leskovec, Anshul Kundaje, Emma Pierson, Sergey Levine, Chelsea Finn, and Percy Liang.
 
