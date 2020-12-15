@@ -16,6 +16,7 @@ The WILDS package contains:
 
 In addition, the example scripts contain default models, allowing new algorithms to be easily added and run on all of the WILDS datasets.
 
+For more information, please read [our paper](https://arxiv.org/pdf/2012.07421.pdf) or visit [our website](https://wilds.stanford.edu).
 
 ## Installation
 
