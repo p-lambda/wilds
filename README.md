@@ -87,12 +87,16 @@ This short Python snippet covers all of the steps of getting started with a WILD
 ```py
 >>> from wilds.datasets.iwildcam_dataset import IWildCamDataset
 >>> from wilds.common.data_loaders import get_train_loader
+>>> import torchvision.transforms as transforms
 
 # Load the full dataset, and download it if necessary
 >>> dataset = IWildCamDataset()
 
 # Get the training set
->>> train_data = dataset.get_subset('train')
+>>> train_data = dataset.get_subset('train', 
+...                                 # baseline experiments use examples.transforms.initialize_transform()
+...                                 transform=transforms.Compose([transforms.Resize((224,224)), 
+...                                                               transforms.ToTensor()]))
 
 # Prepare the standard data loader
 >>> train_loader = get_train_loader('standard', train_data, batch_size=16)
@@ -144,7 +148,10 @@ Invoking the `eval` method of each dataset yields all metrics reported in the pa
 >>> from wilds.common.data_loaders import get_eval_loader
 
 # Get the test set
->>> test_data = dataset.get_subset('test')
+>>> test_data = dataset.get_subset('test',
+...                                 # baseline experiments use examples.transforms.initialize_transform()
+...                                 transform=transforms.Compose([transforms.Resize((224,224)), 
+...                                                               transforms.ToTensor()]))
 
 # Prepare the data loader
 >>> test_loader = get_eval_loader('standard', test_data, batch_size=16)
@@ -156,7 +163,7 @@ Invoking the `eval` method of each dataset yields all metrics reported in the pa
 
 # Evaluate
 >>> dataset.eval(all_y_pred, all_y_true, all_metadata)
-{'recall_macro': 0.66, ...}
+{'recall_macro_all': 0.66, ...}
 ```
 
 ## Citing WILDS
