@@ -178,7 +178,7 @@ class FMoWDataset(WILDSDataset):
        batch_idx = idx // self.chunk_size
        within_batch_idx = idx % self.chunk_size
        img_batch = np.load(self.root / f'rgb_all_imgs_{batch_idx}.npy', mmap_mode='r')
-       return img_batch[within_batch_idx]
+       return img_batch[within_batch_idx].copy()
 
     def eval(self, y_pred, y_true, metadata):
         # Overall evaluation + evaluate by year

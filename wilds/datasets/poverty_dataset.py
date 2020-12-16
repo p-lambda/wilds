@@ -242,7 +242,7 @@ class PovertyMapDataset(WILDSDataset):
        img = torch.from_numpy(img).float()
 
        self.cache_counter += 1
-       if self.cache_counter > 1000:
+       if self.cache_counter > 100:
            self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
            self.imgs = self.imgs.transpose((0, 3, 1, 2))
            self.cache_counter = 0
