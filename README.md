@@ -81,7 +81,7 @@ python run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data
 
 The scripts are set up to facilitate general-purpose algorithm development: new algorithms can be added to `examples/algorithms` and then run on all of the WILDS datasets using the default models.
 
-The first time you run these scripts, you might need to download the datasets. You can do so by passing in the `--download` argument, for example:
+The first time you run these scripts, you might need to download the datasets. You can do so with the `--download` argument, for example:
 ```
 python run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data --download
 ```
