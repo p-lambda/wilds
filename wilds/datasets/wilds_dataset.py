@@ -318,12 +318,12 @@ class WILDSDataset:
                 if self.download_url is None:
                     raise FileNotFoundError(f'The {self.dataset_name} dataset could not be found in {data_dir}. {self.dataset_name} cannot be automatically downloaded. Please download it manually.')
                 else:
-                    raise FileNotFoundError(f'The {self.dataset_name} dataset could not be found in {data_dir}. Run with --download to download the dataset. This might take some time for large datasets.')
+                    raise FileNotFoundError(f'The {self.dataset_name} dataset could not be found in {data_dir}. Initialize the dataset with download=True to download the dataset. If you are using the example script, run with --download. This might take some time for large datasets.')
             else:
                 do_download = True
 
         # Older major version:
-        # Prompt for update, ignore --download
+        # Prompt for update, ignore `download` flag
         elif (old_major_version < current_major_version):
             print(
                 '***********\n'
@@ -334,7 +334,7 @@ class WILDSDataset:
                 do_download = True
 
         # Same major version, older minor version:
-        # Notify user but do not prompt unless --download is set
+        # Notify user but do not prompt unless `download` is set
         elif ((old_major_version == current_major_version) and
               (old_minor_version < current_minor_version)):
             print(
@@ -342,7 +342,7 @@ class WILDSDataset:
                 f'{self.dataset_name} has been updated to a new minor version.\n')
             if download == False:
                 print(
-                    'Run with --download to update the dataset. This might take some time for large datasets.\n'
+                    'Initialize the dataset with download=True to download the dataset. If you are using the example script, run with --download. This might take some time for large datasets.\n'
                     '***********\n')
             else:
                 do_download = True

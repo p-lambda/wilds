@@ -81,6 +81,11 @@ python run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data
 
 The scripts are set up to facilitate general-purpose algorithm development: new algorithms can be added to `examples/algorithms` and then run on all of the WILDS datasets using the default models.
 
+The first time you run these scripts, you might need to download the datasets. You can do so by passing in the `--download` argument, for example:
+```
+python run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data --download
+```
+
 ### Data loading
 
 The WILDS package provides a simple, standardized interface for all datasets in the benchmark.
@@ -92,11 +97,11 @@ This short Python snippet covers all of the steps of getting started with a WILD
 >>> import torchvision.transforms as transforms
 
 # Load the full dataset, and download it if necessary
->>> dataset = IWildCamDataset()
+>>> dataset = IWildCamDataset(download=True)
 
 # Get the training set
->>> train_data = dataset.get_subset('train', 
-...                                 transform=transforms.Compose([transforms.Resize((224,224)), 
+>>> train_data = dataset.get_subset('train',
+...                                 transform=transforms.Compose([transforms.Resize((224,224)),
 ...                                                               transforms.ToTensor()]))
 
 # Prepare the standard data loader
@@ -150,7 +155,7 @@ Invoking the `eval` method of each dataset yields all metrics reported in the pa
 
 # Get the test set
 >>> test_data = dataset.get_subset('test',
-...                                 transform=transforms.Compose([transforms.Resize((224,224)), 
+...                                 transform=transforms.Compose([transforms.Resize((224,224)),
 ...                                                               transforms.ToTensor()]))
 
 # Prepare the data loader
