@@ -146,10 +146,11 @@ class PovertyMapDataset(WILDSDataset):
     _version = '1.0'
 
     def __init__(self, root_dir='data', download=False, split_scheme='official',
-                 no_nl=True, fold='A', oracle_training_set=False, use_ood_val=False):
+                 no_nl=True, fold='A', oracle_training_set=False, use_ood_val=False, cache_size=100):
 
         self._compressed_size = 18_630_656_000
         self._data_dir = self.initialize_data_dir(root_dir, download)
+        self.cache_size = cache_size
 
         self._split_dict = {'train': 0, 'id_val': 1, 'id_test': 2, 'val': 3, 'test': 4}
         self._split_names = {'train': 'Train', 'id_val': 'ID Val', 'id_test': 'ID Test', 'val': 'OOD Val', 'test': 'OOD Test'}
@@ -242,7 +243,7 @@ class PovertyMapDataset(WILDSDataset):
        img = torch.from_numpy(img).float()
 
        self.cache_counter += 1
-       if self.cache_counter > 100:
+       if self.cache_counter > self.cache_size:
            self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
            self.imgs = self.imgs.transpose((0, 3, 1, 2))
            self.cache_counter = 0
