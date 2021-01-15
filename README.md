@@ -40,6 +40,11 @@ cd wilds
 pip install -e .
 ```
 
+Requirements can be install from requirements.txt file:
+```bash
+pip install -r requirements.txt
+```
+
 ### Requirements
 - numpy>=1.19.1
 - pandas>=1.1.0
