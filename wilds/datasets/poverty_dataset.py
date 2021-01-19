@@ -234,21 +234,23 @@ class PovertyMapDataset(WILDSDataset):
         super().__init__(root_dir, download, split_scheme)
 
     def get_input(self, idx):
-       """
-       Returns x for a given idx.
-       """
-       img = self.imgs[idx].copy()
-       if self.no_nl:
-           img[-1] = 0
-       img = torch.from_numpy(img).float()
+        """
+        Returns x for a given idx.
+        """
+        img = self.imgs[idx].copy()
+        if self.no_nl:
+            img[-1] = 0
+        img = torch.from_numpy(img).float()
 
-       self.cache_counter += 1
-       if self.cache_counter > self.cache_size:
-           self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
-           self.imgs = self.imgs.transpose((0, 3, 1, 2))
-           self.cache_counter = 0
+        # consider refreshing cache if cache_size is limited
+        if self.cache_size < self.imgs.shape[0]:
+            self.cache_counter += 1
+            if self.cache_counter > self.cache_size:
+                self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
+                self.imgs = self.imgs.transpose((0, 3, 1, 2))
+                self.cache_counter = 0
 
-       return img
+        return img
 
     def eval(self, y_pred, y_true, metadata):
         all_results = {}
