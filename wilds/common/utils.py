@@ -122,7 +122,7 @@ def shuffle_arr(arr, seed=None):
     rng.shuffle(arr)
     return arr
 
-def threshold_at_recall(y_pred, y_true, global_recall=0.6):
+def threshold_at_recall(y_pred, y_true, global_recall=60):
     """ Calculate the model threshold to use to achieve a desired global_recall level. Assumes that
     y_true is a vector of the true binary labels."""
-    return np.percentile(y_pred[y_true == 1], global_recall)
+    return np.percentile(y_pred[y_true == 1], 100-global_recall)
