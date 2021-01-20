@@ -241,7 +241,7 @@ dataset_defaults = {
         'lr': 5e-5,
         'weight_decay': 0,
         'n_epochs': 4,
-        # 'dataset_kwargs' : {'uniform_over_groups' :True}
+        'uniform_over_groups':True,
     },
 }
 
