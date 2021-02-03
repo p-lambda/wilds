@@ -1,5 +1,6 @@
 import os
-import shutil
+import time
+
 import torch
 import numpy as np
 
@@ -358,12 +359,14 @@ class WILDSDataset:
             print(f'Downloading dataset to {data_dir}...')
             print(f'You can also download the dataset manually at https://wilds.stanford.edu/downloads.')
             try:
+                start_time = time.time()
                 download_and_extract_archive(
                     url=self.download_url,
                     download_root=data_dir,
                     filename='archive.tar.gz',
                     remove_finished=True,
                     size=self.compressed_size)
+                print(f"It took {(time.time() - start_time) / 60} minutes to download and uncompress the dataset.")
             except Exception as e:
                 print(f"\n{os.path.join(data_dir, 'archive.tar.gz')} may be corrupted. Please try deleting it and rerunning this command.\n")
                 print(f"Exception: ", e)

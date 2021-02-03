@@ -1,0 +1,81 @@
+{
+    "ERM": {
+        "id_val_eval": {
+            "acc_avg": 0.7543861269950867,
+            "10th_percentile_acc": 0.5866666436195374,
+            "acc_avg_std": 0.0005394951496839006,
+            "10th_percentile_acc_std": 0.0
+        },
+        "val_eval": {
+            "acc_avg": 0.7433450023333231,
+            "10th_percentile_acc": 0.5733333230018616,
+            "acc_avg_std": 0.00036952112313871373,
+            "10th_percentile_acc_std": 0.0
+        },
+        "id_test_eval": {
+            "acc_avg": 0.7474529345830282,
+            "10th_percentile_acc": 0.5733333230018616,
+            "acc_avg_std": 0.000603370892394845,
+            "10th_percentile_acc_std": 0.0
+        },
+        "test_eval": {
+            "acc_avg": 0.734962522983551,
+            "10th_percentile_acc": 0.5600000023841858,
+            "acc_avg_std": 0.00019088471010086455,
+            "10th_percentile_acc_std": 0.0
+        }
+    },
+    "groupDRO": {},
+    "deepCORAL": {
+        "id_val_eval": {
+            "acc_avg": 0.7520739634831747,
+            "10th_percentile_acc": 0.5822222034136454,
+            "acc_avg_std": 0.0005253387218306365,
+            "10th_percentile_acc_std": 0.006285387616328635
+        },
+        "val_eval": {
+            "acc_avg": 0.7435482343037924,
+            "10th_percentile_acc": 0.5600000023841858,
+            "acc_avg_std": 0.00046901555468141797,
+            "10th_percentile_acc_std": 0.0
+        },
+        "id_test_eval": {
+            "acc_avg": 0.7455505728721619,
+            "10th_percentile_acc": 0.5600000023841858,
+            "acc_avg_std": 0.00011139425084473622,
+            "10th_percentile_acc_std": 0.0
+        },
+        "test_eval": {
+            "acc_avg": 0.7334999044736227,
+            "10th_percentile_acc": 0.551111121972402,
+            "acc_avg_std": 0.00018969424769007767,
+            "10th_percentile_acc_std": 0.006285387616328635
+        }
+    },
+    "IRM": {
+        "id_val_eval": {
+            "acc_avg": 0.747459610303243,
+            "10th_percentile_acc": 0.5777777632077535,
+            "acc_avg_std": 0.0030492600729825937,
+            "10th_percentile_acc_std": 0.006285387616328635
+        },
+        "val_eval": {
+            "acc_avg": 0.7369381984074911,
+            "10th_percentile_acc": 0.5613333344459535,
+            "acc_avg_std": 0.00044357047351512496,
+            "10th_percentile_acc_std": 0.0018856162848986636
+        },
+        "id_test_eval": {
+            "acc_avg": 0.7414492766062418,
+            "10th_percentile_acc": 0.5688888827959696,
+            "acc_avg_std": 0.0040413459422498944,
+            "10th_percentile_acc_std": 0.006285387616328635
+        },
+        "test_eval": {
+            "acc_avg": 0.7288655638694763,
+            "10th_percentile_acc": 0.5600000023841858,
+            "acc_avg_std": 0.0008467991264271171,
+            "10th_percentile_acc_std": 0.0
+        }
+    }
+}
