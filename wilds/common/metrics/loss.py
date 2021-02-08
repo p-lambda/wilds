@@ -29,7 +29,7 @@ class Loss(Metric):
             - worst_metric (float): Worst-case metric
         """
         return maximum(metrics)
-    
+
 class ElementwiseLoss(ElementwiseMetric):
     def __init__(self, loss_fn, name=None):
         self.loss_fn = loss_fn
@@ -82,3 +82,12 @@ class MultiTaskLoss(MultiTaskMetric):
         """
         return maximum(metrics)
 
+
+def lm_cross_entropy_loss(input, target):
+    """
+    Cross entropy loss for language model head (input's dimenstionality is 3)
+        input: [batch_size, seqlen, vocab_size]
+        target: [batch_size, seqlen]
+    """
+    loss_fn = torch.nn.CrossEntropyLoss(reduction='none')
+    return loss_fn(input.transpose(1,2), target) #[batch_size, seqlen]

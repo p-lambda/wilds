@@ -49,7 +49,11 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
         # The subsequent detach is just for safety
         # (they should already be detached in batch_results)
         epoch_y_true.append(batch_results['y_true'].clone().detach())
-        epoch_y_pred.append(batch_results['y_pred'].clone().detach())
+        if batch_results['y_pred'].dim() == 3:
+            #language model preds have a very big vocab size (e.g. 50000), so need to do argmax here. otherwise get OOM
+            epoch_y_pred.append(batch_results['y_pred'].clone().detach().argmax(-1))
+        else:
+            epoch_y_pred.append(batch_results['y_pred'].clone().detach())
         epoch_metadata.append(batch_results['metadata'].clone().detach())
 
         if train and (batch_idx+1) % config.log_every==0:
@@ -135,7 +139,11 @@ def evaluate(algorithm, datasets, epoch, general_logger, config):
         for batch in iterator:
             batch_results = algorithm.evaluate(batch)
             epoch_y_true.append(batch_results['y_true'].clone().detach())
-            epoch_y_pred.append(batch_results['y_pred'].clone().detach())
+            if batch_results['y_pred'].dim() == 3:
+                #language model preds have a very big vocab size (e.g. 50000), so need to do argmax here. otherwise get OOM
+                epoch_y_pred.append(batch_results['y_pred'].clone().detach().argmax(-1))
+            else:
+                epoch_y_pred.append(batch_results['y_pred'].clone().detach())
             epoch_metadata.append(batch_results['metadata'].clone().detach())
 
         results, results_str = dataset['dataset'].eval(
