@@ -231,7 +231,7 @@ dataset_defaults = {
         'model_kwargs': {'in_features': 104},
         'loss_function': 'cross_entropy',
         'groupby_fields': ['y'],
-        'val_metric': 'precision_at_global_recall__all',
+        'val_metric': 'precision_at_global_recall_all',
         'val_metric_decreasing': False,
         'algo_log_metric': 'accuracy',
         'optimizer': 'Adam',
