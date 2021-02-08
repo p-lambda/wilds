@@ -241,7 +241,6 @@ dataset_defaults = {
         'lr': 5e-5,
         'weight_decay': 0,
         'n_epochs': 4,
-        'uniform_over_groups':True,
     },
 }
 
