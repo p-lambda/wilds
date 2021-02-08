@@ -7,6 +7,7 @@ from wilds.datasets.bdd100k_dataset import BDD100KDataset
 from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
 from wilds.datasets.celebA_dataset import CelebADataset
 from wilds.datasets.civilcomments_dataset import CivilCommentsDataset
+from wilds.datasets.encodetfbs_dataset import EncodeTFBSDataset
 from wilds.datasets.fmow_dataset import FMoWDataset
 from wilds.datasets.iwildcam_dataset import IWildCamDataset
 from wilds.datasets.ogbmolpcba_dataset import OGBPCBADataset
@@ -28,7 +29,8 @@ datasets = {
     'ogb-molpcba': OGBPCBADataset,
     'poverty': PovertyMapDataset,
     'fmow': FMoWDataset,
-    'bdd100k': BDD100KDataset,
+    'bdd100k': BDD100KDataset, 
+    'encodeTFBS': EncodeTFBSDataset, 
 }
 
 losses = {
@@ -47,7 +49,7 @@ algo_log_metrics = {
 # see initialize_*() functions for correspondence
 transforms = ['bert', 'image_base', 'image_resize_and_center_crop', 'poverty_train']
 models = ['resnet18_ms', 'resnet50', 'resnet34', 'wideresnet50', 'densenet121', 'bert-base-uncased', 'gin-virtual', 
-    'logistic_regression']
+    'logistic_regression', 'beagle']
 algorithms = ['ERM', 'groupDRO', 'deepCORAL', 'IRM']
 optimizers = ['SGD', 'Adam', 'AdamW']
 schedulers = ['linear_schedule_with_warmup', 'ReduceLROnPlateau', 'StepLR']
