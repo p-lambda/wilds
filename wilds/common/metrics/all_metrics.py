@@ -129,26 +129,6 @@ class MSE(ElementwiseLoss):
             name = 'mse'
         super().__init__(name=name, loss_fn=mse_loss)
 
-class BinaryAUPRC(Metric):
-    def __init__(self, score_fn=logits_to_score, name=None):
-        self.score_fn = score_fn
-        if name is None:
-            name = f'auprc'
-
-        super().__init__(name=name)
-
-    def _compute(self, y_pred, y_true):
-        if self.score_fn is not None:
-            score = self.score_fn(y_pred)
-        try:
-            return torch.tensor(sklearn.metrics.average_precision_score(y_true, score))
-        except ValueError:
-            print('Warning: AUPRC not defined when there are no positive cases.')
-            return torch.FloatTensor([float('nan')])
-
-    def worst(self, metrics):
-        return minimum(metrics)
-
 class PrecisionAtRecall(Metric):
     """Given a specific model threshold, determine the precision score achieved"""
     def __init__(self, threshold, score_fn=logits_to_score, name=None):
