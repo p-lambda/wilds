@@ -3,7 +3,7 @@ import torch
 import pandas as pd
 import numpy as np
 from wilds.datasets.wilds_dataset import WILDSDataset
-from wilds.common.metrics.all_metrics import Accuracy, BinaryAUPRC, PrecisionAtRecall
+from wilds.common.metrics.all_metrics import Accuracy, PrecisionAtRecall
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.utils import subsample_idxs, threshold_at_recall
 import torch.nn.functional as F
@@ -61,13 +61,15 @@ class SQFDataset(WILDSDataset):
 
         # Load data
         data_df = pd.read_csv(os.path.join(self.data_dir, 'sqf.csv') , index_col=0)
-
+        data_df = data_df[data_df['suspected.crime'] == 'cpw']
+        print('!!!!!', data_df.shape)
         categories = ['black', 'white hispanic', 'black hispanic', 'hispanic', 'white']
         data_df = data_df.loc[data_df['suspect.race'].map(lambda x: x in categories)]
         data_df['suspect.race'] = data_df['suspect.race'].map(lambda x: 'Hispanic' if 'hispanic' in x else x.title())
 
         # Only track weapons stops
         data_df = data_df[data_df['suspected.crime']=='cpw']
+        print(data_df.shape)
 
         # Get district features if measuring race, don't if measuring boroughs
         self.feats_to_use  = self.get_split_features(data_df.columns)
@@ -245,16 +247,13 @@ class SQFDataset(WILDSDataset):
         y_scores = F.softmax(y_pred, dim=1)[:,1]
         threshold_60 = threshold_at_recall(y_scores, y_true)
         results = Accuracy().compute(y_pred, y_true)
-        results.update(BinaryAUPRC().compute(y_pred, y_true))
         results.update(PrecisionAtRecall(threshold_60).compute(y_pred, y_true))
         results.update(Accuracy().compute_group_wise(y_pred, y_true, g, self._eval_grouper.n_groups))
-        results.update(BinaryAUPRC().compute_group_wise(y_pred, y_true, g, self._eval_grouper.n_groups))
         results.update(
         PrecisionAtRecall(threshold_60).compute_group_wise(y_pred, y_true, g, self._eval_grouper.n_groups))
 
         results_str = (
             f"Average {PrecisionAtRecall(threshold=threshold_60).name }:  {results[PrecisionAtRecall(threshold=threshold_60).agg_metric_field]:.3f}\n"
-            f"Average {BinaryAUPRC().name}:  {results[BinaryAUPRC().agg_metric_field]:.3f}\n"
             f"Average {Accuracy().name}:  {results[Accuracy().agg_metric_field]:.3f}\n"
         )
 
@@ -269,7 +268,7 @@ class SQFDataset(WILDSDataset):
         elif 'bronx' in self.split_scheme or 'all_borough' == self.split_scheme:
             self._eval_grouper = CombinatorialGrouper(
                 dataset=self,
-                groupby_fields =  ['borough'])
+                groupby_fields = ['borough'])
         else:
             raise ValueError(f'Split scheme {self.split_scheme} not recognized')
 
