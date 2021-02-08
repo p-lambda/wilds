@@ -229,7 +229,7 @@ class SQFDataset(WILDSDataset):
             self._split_dict = {'train': 0, 'test': 1, 'val':2}
             self._split_names = {'train': 'train: 80% Black Stops 2009 and 2010', 'test':'Test: All Stops 2011 and 2012. ', \
                                  'val':'20% sample of all stops 2009 & 10'}
-        elif 'all_race' == self.split_scheme or 'test' == self.split_scheme :
+        elif 'all_race' == self.split_scheme :
             self._split_dict = {'train': 0, 'test': 1, 'val':2}
             self._split_names = {'train': 'train: Stops 2009 and 2010 subsampled to the size of Black people training set', 'test':'Test: All Stops 2011 and 2012. ', \
                                  'val':'20% sample of all stops 2009 & 10'}
@@ -260,7 +260,7 @@ class SQFDataset(WILDSDataset):
         return results, results_str
 
     def initialize_eval_grouper(self):
-        if 'black' in self.split_scheme or 'race' in self.split_scheme or 'test' in self.split_scheme:
+        if 'black' in self.split_scheme or 'race' in self.split_scheme :
             self._eval_grouper = CombinatorialGrouper(
                 dataset=self,
                 groupby_fields = ['suspect race']
