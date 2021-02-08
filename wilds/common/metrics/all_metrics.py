@@ -135,7 +135,7 @@ class PrecisionAtRecall(Metric):
         self.score_fn = score_fn
         self.threshold = threshold
         if name is None:
-            name = "precision_at_global_recall_"
+            name = "precision_at_global_recall"
         super().__init__(name=name)
 
     def _compute(self, y_pred, y_true):
