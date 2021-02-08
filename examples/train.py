@@ -91,7 +91,6 @@ def train(algorithm, datasets, general_logger, config, epoch_offset, best_val_me
 
         # Then run val
         val_results = run_epoch(algorithm, datasets['val'], general_logger, epoch, config, train=False)
-        print(val_results)
         curr_val_metric = val_results[config.val_metric]
         general_logger.write(f'Validation {config.val_metric}: {curr_val_metric:.3f}\n')
 
