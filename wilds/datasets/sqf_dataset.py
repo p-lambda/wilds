@@ -62,14 +62,12 @@ class SQFDataset(WILDSDataset):
         # Load data
         data_df = pd.read_csv(os.path.join(self.data_dir, 'sqf.csv') , index_col=0)
         data_df = data_df[data_df['suspected.crime'] == 'cpw']
-        print('!!!!!', data_df.shape)
         categories = ['black', 'white hispanic', 'black hispanic', 'hispanic', 'white']
         data_df = data_df.loc[data_df['suspect.race'].map(lambda x: x in categories)]
         data_df['suspect.race'] = data_df['suspect.race'].map(lambda x: 'Hispanic' if 'hispanic' in x else x.title())
 
         # Only track weapons stops
         data_df = data_df[data_df['suspected.crime']=='cpw']
-        print(data_df.shape)
 
         # Get district features if measuring race, don't if measuring boroughs
         self.feats_to_use  = self.get_split_features(data_df.columns)
