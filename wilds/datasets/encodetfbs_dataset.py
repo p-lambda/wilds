@@ -127,7 +127,7 @@ class EncodeTFBSDataset(WILDSDataset):
         Computes this from: 
         (1) sequence features in self._seq_bp
         (2) DNase features in self._dnase_allcelltypes
-        (3) Metadata for the index (location along the genome with 1kb window width)
+        (3) Metadata for the index (location along the genome with 200bp window width)
         """
         this_metadata = self._metadata_df.iloc[idx, :]
         flank_size = 400
