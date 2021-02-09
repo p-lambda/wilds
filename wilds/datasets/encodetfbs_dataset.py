@@ -4,9 +4,7 @@ import pandas as pd
 import numpy as np
 from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
-from wilds.common.metrics.eval_metric import Accuracy
-
-import IPython
+from wilds.common.metrics.all_metrics import Accuracy
 
 class EncodeTFBSDataset(WILDSDataset):
     """
