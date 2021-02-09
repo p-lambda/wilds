@@ -5,7 +5,6 @@ import numpy as np
 from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.eval_metric import Accuracy
-from wilds.common.eval import standard_group_eval
 
 import IPython
 
@@ -133,7 +132,7 @@ class EncodeTFBSDataset(WILDSDataset):
         (3) Metadata for the index (location along the genome with 1kb window width)
         """
         this_metadata = self._metadata_df.iloc[idx, :]
-        flank_size = 500
+        flank_size = 400
         interval_start = this_metadata['start'] - flank_size
         interval_end = this_metadata['stop'] + flank_size
         dnase_this = _dnase_allcelltypes[this_metadata['celltype']][this_metadata['chr']][interval_start:interval_end]
@@ -141,7 +140,7 @@ class EncodeTFBSDataset(WILDSDataset):
         return np.column_stack([seq_this, dnase_this])
 
     def eval(self, y_pred, y_true, metadata):
-        return standard_group_eval(
+        return self.standard_group_eval(
             self._metric,
             self._eval_grouper,
             y_pred, y_true, metadata)
