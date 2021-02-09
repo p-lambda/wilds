@@ -77,6 +77,25 @@ class Recall(Metric):
     def worst(self, metrics):
         return minimum(metrics)
 
+class AveragePrecision(Metric):
+    def __init__(self, prediction_fn=logits_to_pred, name=None, average='weighted'):
+        self.prediction_fn = prediction_fn
+        if name is None:
+            name = f'avgprec'
+            if average is not None:
+                name+=f'-{average}'
+        self.average = average
+        super().__init__(name=name)
+
+    def _compute(self, y_pred, y_true):
+        if self.prediction_fn is not None:
+            y_pred = self.prediction_fn(y_pred)
+        score = sklearn.metrics.average_precision_score(y_true, y_pred, average=self.average, labels=torch.unique(y_true))
+        return torch.tensor(score)
+
+    def worst(self, metrics):
+        return minimum(metrics)
+
 class F1(Metric):
     def __init__(self, prediction_fn=None, name=None, average='binary'):
         self.prediction_fn = prediction_fn
