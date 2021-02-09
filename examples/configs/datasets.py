@@ -110,7 +110,7 @@ dataset_defaults = {
         'train_transform': None,
         'eval_transform': None,
         'loss_function': 'cross_entropy',
-        'groupby_fields': ['hospital'],
+        'groupby_fields': ['celltype'],
         'val_metric': 'acc_avg',
         'val_metric_decreasing': False,
         'optimizer': 'Adam',
@@ -121,9 +121,9 @@ dataset_defaults = {
         'weight_decay': 0.01,
         'n_epochs': 1,
         'n_groups_per_batch': 2,
+        'algo_log_metric': 'accuracy',
         # 'irm_lambda': 1.0,
         # 'coral_penalty_weight': 0.1,
-        'algo_log_metric': 'accuracy'
     },
     'fmow': {
         'split_scheme': 'official',
