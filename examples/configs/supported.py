@@ -30,7 +30,7 @@ datasets = {
     'poverty': PovertyMapDataset,
     'fmow': FMoWDataset,
     'bdd100k': BDD100KDataset, 
-    'encodeTFBS': EncodeTFBSDataset, 
+    'encode-tfbs': EncodeTFBSDataset, 
 }
 
 losses = {
