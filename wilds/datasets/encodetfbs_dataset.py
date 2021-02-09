@@ -25,7 +25,8 @@ class EncodeTFBSDataset(WILDSDataset):
     """
 
     def __init__(self, root_dir, download, split_scheme):
-        self._dataset_name = 'encodeTFBS'
+        self._dataset_name = 'encode-tfbs'
+        self._version = '1.0'
         self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x8b3255e21e164cd98d3aeec09cd0bc26/contents/blob/'
         self._data_dir = self.initialize_data_dir(root_dir, download)
         self._y_size = 1
@@ -55,10 +56,10 @@ class EncodeTFBSDataset(WILDSDataset):
         self._dnase_allcelltypes = {}
         for ct in self._all_celltypes:
             dnase_filename = os.path.join(self._data_dir, '{}_dnase.npz'.format(ct))
-            dnase_npz_file = np.load(dnase_filename)
+            dnase_npz_contents = np.load(dnase_filename)
             self._dnase_allcelltypes[ct] = {}
-            for chrom in seq_bp:
-                self._dnase_allcelltypes[ct][chrom] = dnase_npz_file[chrom]
+            for chrom in self._seq_bp:
+                self._dnase_allcelltypes[ct][chrom] = dnase_npz_contents[chrom]
         
         # Read in metadata dataframe from training+validation data
         train_chr = pd.read_csv(os.path.join(self._data_dir, 'labels/{}.train.labels.tsv.gz'.format(self._transcription_factor)), sep='\t')
@@ -130,7 +131,7 @@ class EncodeTFBSDataset(WILDSDataset):
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
             groupby_fields=['celltype'])
-        self._metric = Auprc()
+        self._metric = Accuracy()
         
         super().__init__(root_dir, download, split_scheme)
 
