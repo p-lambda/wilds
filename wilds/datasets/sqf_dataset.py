@@ -188,7 +188,7 @@ class SQFDataset(WILDSDataset):
         return local_idx_dict
 
     def get_split_maps(self, data_df, train_idxs, test_idxs, val_idxs):
-        """Using the existing split indices, create a map to put entries to training and validation sets. Set class var."""
+        """Using the existing split indices, create a map to put entries to training and validation sets, and returns split_array."""
         index_dict = {}
         for arg, idx_set in enumerate([train_idxs, test_idxs, val_idxs]):
             index_dict.update(self.indices_to_dict(idx_set, arg))
