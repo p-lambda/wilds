@@ -17,7 +17,8 @@ def check():
         is_outdated, latest = check_outdated('wilds', __version__)
         if is_outdated:
             logging.warning(
-                f'The WILDS package is out of date. Your version is {__version__}, while the latest version is {latest}.')
+                f'The WILDS package is out of date. Your version is '
+                f'{__version__}, while the latest version is {latest}.')
     except Exception:
         pass
 
