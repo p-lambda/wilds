@@ -8,8 +8,20 @@ from wilds.common.metrics.all_metrics import Accuracy
 
 class EncodeTFBSDataset(WILDSDataset):
     """
-    EncodeTFBS dataset
-    Website: https://www.synapse.org/#!Synapse:syn6131484
+    ENCODE-DREAM-wilds dataset of transcription factor binding sites. 
+    This is a subset of the dataset from the ENCODE-DREAM in vivo Transcription Factor Binding Site Prediction Challenge. 
+    
+    Input (x):
+        1000-base-pair regions of sequence with a quantified chromatin accessibility readout.
+
+    Label (y):
+        y is binary. It is 1 if the central 200bp region is bound by the transcription factor MAX, and 0 otherwise.
+
+    Metadata:
+        Each sequence is annotated with the celltype of origin (a string) and the chromosome of origin (a string).
+    
+    Website:
+        https://www.synapse.org/#!Synapse:syn6131484
     """
 
     def __init__(self, root_dir, download, split_scheme):
@@ -19,6 +31,7 @@ class EncodeTFBSDataset(WILDSDataset):
         self._y_size = 1
         self._n_classes = 2
         
+        # self._tr_chrs = ['chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
         self._tr_chrs = ['chr2', 'chr9', 'chr11']
         self._te_chrs = ['chr1', 'chr8', 'chr21']
         self._transcription_factor = 'MAX'
