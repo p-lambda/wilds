@@ -111,7 +111,7 @@ dataset_defaults = {
         'eval_transform': None,
         'loss_function': 'cross_entropy',
         'groupby_fields': ['hospital'],
-        'val_metric': 'ap',
+        'val_metric': 'acc_avg',
         'val_metric_decreasing': False,
         'optimizer': 'Adam',
         # 'optimizer_kwargs': { },
@@ -123,7 +123,7 @@ dataset_defaults = {
         'n_groups_per_batch': 2,
         # 'irm_lambda': 1.0,
         # 'coral_penalty_weight': 0.1,
-        # 'algo_log_metric': 'accuracy',
+        'algo_log_metric': 'accuracy'
     },
     'fmow': {
         'split_scheme': 'official',
