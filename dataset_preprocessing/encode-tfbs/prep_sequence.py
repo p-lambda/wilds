@@ -3,6 +3,8 @@ import numpy as np
 
 from tqdm import tqdm
 
+# Sequence preprocessing. Code adapted from Jacob Schreiber.
+
 # Human chromosome names
 chr_IDs = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX']
 
@@ -32,7 +34,7 @@ def one_hot_encode(sequence, ignore='N', alphabet=None, dtype='int8', verbose=Fa
     ohe : numpy.ndarray
         A binary matrix of shape (alphabet_size, sequence_length) where alphabet_size is the number of unique elements in the sequence and sequence_length is the length of the input sequence.
     """
-
+    
     name = None if verbose in (True, False) else verbose
     d = verbose is False
     

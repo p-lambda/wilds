@@ -78,7 +78,7 @@ class Recall(Metric):
         return minimum(metrics)
 
 class AveragePrecision(Metric):
-    def __init__(self, prediction_fn=logits_to_pred, name=None, average='weighted'):
+    def __init__(self, prediction_fn=logits_to_pred, name=None, average='macro'):
         self.prediction_fn = prediction_fn
         if name is None:
             name = f'avgprec'

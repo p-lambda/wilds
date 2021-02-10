@@ -6,23 +6,14 @@ import torch.nn.functional as F
 
 class Beagle(nn.Module):
     """
-    Neural net models over genomic sequence.
+    Neural net models over genomic sequence. Adapted from https://github.com/kundajelab/ChromDragoNN
     Input:
-        - sequence_length: int (default 1000) 
-        - Shape: (N, 5, sequence_length, 1) with batch size N.
+        - s (Tensor): float torch tensor of shape (N, 5, 1000, 1) with batch size N.
     
     Output:
         - prediction (Tensor): float torch tensor of shape (N, )
-    
-    TODO: Finish docstring.
     """
     def __init__(self):
-        """
-        Parameters
-        ----------
-        sequence_length : int
-        n_genomic_features : int
-        """
         super(Beagle, self).__init__()
 
         self.dropout = 0.3
@@ -57,6 +48,6 @@ class Beagle(nn.Module):
         s = F.dropout(F.relu(self.bn4(self.fc1(s))), p=self.dropout, training=self.training)  # batch_size x 1000
         s = F.dropout(F.relu(self.bn5(self.fc2(s))), p=self.dropout, training=self.training)  # batch_size x 1000
         
-        s = self.fc3(s)
+        prediction = self.fc3(s)
 
         return s#, conv_out
