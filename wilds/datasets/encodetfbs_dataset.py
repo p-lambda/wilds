@@ -24,7 +24,7 @@ class EncodeTFBSDataset(WILDSDataset):
         https://www.synapse.org/#!Synapse:syn6131484
     """
 
-    def __init__(self, root_dir, download, split_scheme):
+    def __init__(self, root_dir='data', download=False, split_scheme='official'):
         self._dataset_name = 'encode-tfbs'
         self._version = '1.0'
         self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x8b3255e21e164cd98d3aeec09cd0bc26/contents/blob/'
