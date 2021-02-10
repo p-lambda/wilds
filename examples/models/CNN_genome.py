@@ -50,4 +50,4 @@ class Beagle(nn.Module):
         
         prediction = self.fc3(s)
 
-        return s#, conv_out
+        return s #, conv_out

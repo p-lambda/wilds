@@ -62,13 +62,14 @@ class EncodeTFBSDataset(WILDSDataset):
                 self._dnase_allcelltypes[ct][chrom] = dnase_npz_contents[chrom]
         
         # Read in metadata dataframe from training+validation data
-        train_chr = pd.read_csv(os.path.join(self._data_dir, 'labels/{}.train.labels.tsv.gz'.format(self._transcription_factor)), sep='\t')
-        val_chr = pd.read_csv(os.path.join(self._data_dir, 'labels/{}.val.labels.tsv.gz'.format(self._transcription_factor)), sep='\t')
-        training_df = train_chr[np.isin(train_chr['chr'], self._tr_chrs)]
-        val_df = val_chr[np.isin(val_chr['chr'], self._te_chrs)]
+        train_regions_labeled = pd.read_csv(os.path.join(self._data_dir, 'labels/{}.train.labels.tsv.gz'.format(self._transcription_factor)), sep='\t')
+        val_regions_labeled = pd.read_csv(os.path.join(self._data_dir, 'labels/{}.val.labels.tsv.gz'.format(self._transcription_factor)), sep='\t')
+        training_df = train_regions_labeled[np.isin(train_regions_labeled['chr'], self._tr_chrs)]
+        val_df = val_regions_labeled[np.isin(val_regions_labeled['chr'], self._te_chrs)]
         all_df = pd.concat([training_df, val_df])
         
-        # Filter by start/stop coordinate if needed
+        # Filter by start/stop coordinate if needed 
+        # (TODO: remove for final version)
         filter_msk = all_df['start'] >= 0
         filter_msk = all_df['start']%1000 == 0
         all_df = all_df[filter_msk]
@@ -111,18 +112,18 @@ class EncodeTFBSDataset(WILDSDataset):
             'test': 'Test',
             'val-ood': 'Validation (OOD)',
         }
-        train_chr_mask = np.isin(self._metadata_df['chr'], self._tr_chrs)
-        val_chr_mask = np.isin(self._metadata_df['chr'], self._te_chrs)
+        train_regions_mask = np.isin(self._metadata_df['chr'], self._tr_chrs)
+        val_regions_mask = np.isin(self._metadata_df['chr'], self._te_chrs)
         train_celltype_mask = np.isin(self._metadata_df['celltype'], self._train_celltypes)
         val_celltype_mask = np.isin(self._metadata_df['celltype'], self._val_celltype)
         test_celltype_mask = np.isin(self._metadata_df['celltype'], self._test_celltype)
         
         split_array = -1*np.ones(self._metadata_df.shape[0]).astype(int)
-        split_array[np.logical_and(train_chr_mask, train_celltype_mask)] = self._split_dict['train']
-        split_array[np.logical_and(val_chr_mask, test_celltype_mask)] = self._split_dict['test']
+        split_array[np.logical_and(train_regions_mask, train_celltype_mask)] = self._split_dict['train']
+        split_array[np.logical_and(val_regions_mask, test_celltype_mask)] = self._split_dict['test']
         # Validate using test chr, either using a designated validation cell line ('val-ood') or a training cell line ('val-id')
-        split_array[np.logical_and(val_chr_mask, val_celltype_mask)] = self._split_dict['val-ood']
-        split_array[np.logical_and(val_chr_mask, train_celltype_mask)] = self._split_dict['val-id']
+        split_array[np.logical_and(val_regions_mask, val_celltype_mask)] = self._split_dict['val-ood']
+        split_array[np.logical_and(val_regions_mask, train_celltype_mask)] = self._split_dict['val-id']
         if self._split_scheme=='standard':
             self._metadata_df['split'] = split_array
             self._split_array = split_array
