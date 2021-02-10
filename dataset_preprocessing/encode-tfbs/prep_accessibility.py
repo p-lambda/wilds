@@ -1,24 +1,24 @@
+import argparse, time
 import numpy as np
 import pyBigWig
 
 # Human chromosome names
 chr_IDs = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX']
 
-def generate_accessibility_archives(input_dir, output_dir):
+def generate_accessibility_archives(input_dir='dnase_bigwigs', output_dir='codalab_archive'):
     dnases = {}
     celltypes = ['A549', 'GM12878', 'H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
 
-    for ctype in celltypes:#glob.glob('dnase_bigwigs/*'):
+    for ctype in celltypes:
         itime = time.time()
-        # ctype = pth.split('/')[1].split('.')[1]
         bw = pyBigWig.open("{}/DNASE.{}.fc.signal.bigwig".format(input_dir, ctype))
         chromsizes = bw.chroms()
-        print(ctype, time.time() - itime)
         dn_dict = {}
         for chrom in chromsizes: #chr_IDs:
             x = bw.values(chrom, 0, chromsizes[chrom], numpy=True)
-            dn_dict[chrom] = np.nan_to_num(x).astype(np.float16)   # half-precision makes things significantly smaller (less time to load)
-            print(chrom, time.time() - itime)
+            # half-precision makes things significantly smaller (less time to load)
+            dn_dict[chrom] = np.nan_to_num(x).astype(np.float16)
+            print("{}, {}. Time: {}".format(ctype, chrom, time.time() - itime))
         dnases[ctype] = dn_dict
 
     for ctype in dnases:
