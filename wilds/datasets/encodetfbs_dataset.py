@@ -1,4 +1,4 @@
-import os
+import os, time
 import torch
 import pandas as pd
 import numpy as np
@@ -25,6 +25,7 @@ class EncodeTFBSDataset(WILDSDataset):
     """
 
     def __init__(self, root_dir='data', download=False, split_scheme='official'):
+        itime = time.time()
         self._dataset_name = 'encode-tfbs'
         self._version = '1.0'
         self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x8b3255e21e164cd98d3aeec09cd0bc26/contents/blob/'
@@ -52,6 +53,7 @@ class EncodeTFBSDataset(WILDSDataset):
         self._seq_bp = {}
         for chrom in seq_arr:
             self._seq_bp[chrom] = seq_arr[chrom]
+            print(chrom, time.time() - itime)
         
         self._dnase_allcelltypes = {}
         for ct in self._all_celltypes:
@@ -60,6 +62,7 @@ class EncodeTFBSDataset(WILDSDataset):
             self._dnase_allcelltypes[ct] = {}
             for chrom in self._seq_bp:
                 self._dnase_allcelltypes[ct][chrom] = dnase_npz_contents[chrom]
+            print(ct, time.time() - itime)
         
         # Read in metadata dataframe from training+validation data
         train_regions_labeled = pd.read_csv(os.path.join(self._data_dir, 'labels/{}.train.labels.tsv.gz'.format(self._transcription_factor)), sep='\t')
@@ -67,6 +70,7 @@ class EncodeTFBSDataset(WILDSDataset):
         training_df = train_regions_labeled[np.isin(train_regions_labeled['chr'], self._tr_chrs)]
         val_df = val_regions_labeled[np.isin(val_regions_labeled['chr'], self._te_chrs)]
         all_df = pd.concat([training_df, val_df])
+        print(train_regions_labeled, time.time() - itime)
         
         # Filter by start/stop coordinate if needed 
         # (TODO: remove for final version)
@@ -150,7 +154,7 @@ class EncodeTFBSDataset(WILDSDataset):
         interval_end = this_metadata['stop'] + flank_size
         dnase_this = _dnase_allcelltypes[this_metadata['celltype']][this_metadata['chr']][interval_start:interval_end]
         seq_this = _seq_bp[this_metadata['chr']][interval_start:interval_end]
-        return np.column_stack([seq_this, dnase_this])
+        return torch.tensor(np.column_stack([seq_this, dnase_this]))
 
     def eval(self, y_pred, y_true, metadata):
         return self.standard_group_eval(
