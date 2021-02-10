@@ -70,9 +70,7 @@ def compile_results(dataset, results, in_distribution_val=False):
                     ]:
                         sort_metrics.append("acc_avg")
 
-                    val_split = (
-                        "id_val_eval" if in_distribution_val else "val_eval"
-                    )
+                    val_split = "id_val_eval" if in_distribution_val else "val_eval"
                     result = get_early_stopped_row(
                         result_df[result_type],
                         result_df[val_split],

@@ -1,0 +1,31 @@
+{
+    "ERM": {
+        "id_val_eval": {
+            "acc_avg": 0.6160120765368143,
+            "acc_worst_region": 0.5971905986467997,
+            "acc_avg_std": 0.002275722084595204,
+            "acc_worst_region_std": 0.0019045690125462182
+        },
+        "val_eval": {
+            "acc_avg": 0.591781735420227,
+            "acc_worst_region": 0.48982980847358704,
+            "acc_avg_std": 0.0037399838293052344,
+            "acc_worst_region_std": 0.009113527637751988
+        },
+        "id_test_eval": {
+            "acc_avg": 0.5975692272186279,
+            "acc_worst_region": 0.5765668551127116,
+            "acc_avg_std": 0.0022361676027099413,
+            "acc_worst_region_std": 0.0012028258630594232
+        },
+        "test_eval": {
+            "acc_avg": 0.5253754258155823,
+            "acc_worst_region": 0.31970690687497455,
+            "acc_avg_std": 0.002482694120825554,
+            "acc_worst_region_std": 0.005746113176421025
+        }
+    },
+    "groupDRO": {},
+    "deepCORAL": {},
+    "IRM": {}
+}

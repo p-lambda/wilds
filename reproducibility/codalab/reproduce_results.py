@@ -11,6 +11,7 @@ from reproducibility.codalab.hyperparameter_search_space import (
 from reproducibility.codalab.util.analysis_utils import (
     compile_results,
     get_early_stopped_row,
+    get_metrics,
     load_results,
 )
 
@@ -30,7 +31,6 @@ Example usage:
 class CodaLabReproducibility:
     _GROUP_NAME = "wilds-admins"
     _ADDITIONAL_DATASETS = ["bdd100k", "celebA", "waterbirds", "yelp"]
-    _ID_VAL_DATASETS = ["amazon", "camelyon17", "iwildcam"]
     _CIVIL_COMMENTS_ADDITIONAL_ALGORITHMS = [
         "erm_groupby-y",
         "erm_groupby-black-y",
@@ -127,7 +127,7 @@ class CodaLabReproducibility:
         datasets = (
             dataset_defaults.keys()
             if not in_distribution
-            else CodaLabReproducibility._ID_VAL_DATASETS
+            else list(ID_HYPERPARAMETER_SEARCH_SPACE["datasets"].keys())
         )
 
         for dataset in datasets:
@@ -158,8 +158,13 @@ class CodaLabReproducibility:
                 if dataset == "poverty":
                     folds = ["A", "B", "C", "D", "E"]
                     for fold in folds:
+                        bundle_name = (
+                            f"{dataset}_{algorithm}_fold{fold}"
+                            if not in_distribution
+                            else f"hp_id_{algorithm}_{dataset}_fold{fold}"
+                        )
                         uuid = self._get_bundle_uuid(
-                            f"{dataset}_{algorithm}_fold{fold}", worksheet_uuid
+                            bundle_name, worksheet_uuid
                         )
                         results_dfs = load_results(
                             f"https://worksheets.codalab.org/rest/bundles/{uuid}/contents/blob",
@@ -183,7 +188,9 @@ class CodaLabReproducibility:
                             include_in_distribution=True,
                         )
                         dataset_results[algorithm].append(results_dfs)
-            compiled_results = compile_results(dataset, dataset_results, in_distribution)
+            compiled_results = compile_results(
+                dataset, dataset_results, in_distribution
+            )
 
             subdirectory = "main" if not in_distribution else "id_val"
             with open(
@@ -197,7 +204,6 @@ class CodaLabReproducibility:
             grid = []
             for p in product(*params):
                 grid.append(p)
-            print(grid)
             return grid
 
         worksheet_uuid = self._set_worksheet()
@@ -206,7 +212,7 @@ class CodaLabReproducibility:
 
         for dataset, dataset_uuid in datasets_uuids.items():
             # The following datasets have in-distribution val sets and has been hyperparameter tuned
-            if dataset not in CodaLabReproducibility._ID_VAL_DATASETS:
+            if dataset not in ID_HYPERPARAMETER_SEARCH_SPACE["datasets"]:
                 continue
 
             hyperparameters = ID_HYPERPARAMETER_SEARCH_SPACE["datasets"][dataset].keys()
@@ -246,19 +252,20 @@ class CodaLabReproducibility:
         worksheet_uuid = self._set_worksheet()
 
         # The following datasets have in-distribution val sets and has been hyperparameter tuned
-        for dataset in CodaLabReproducibility._ID_VAL_DATASETS:
+        for dataset in ID_HYPERPARAMETER_SEARCH_SPACE["datasets"].keys():
+            metric = get_metrics(dataset)[0]
             grid_uuids = self._run(
                 [
                     "cl",
                     "search",
                     f"name=hyperparameters_id_erm_{dataset}",
+                    "state=ready",
                     "host_worksheet=%s" % worksheet_uuid,
-                    ".limit=12",
+                    ".limit=100",
                     ".shared",
                     "--uuid-only",
                 ]
             ).split("\n")
-
             best_uuid = None
             best_accuracy = 0
             for uuid in grid_uuids:
@@ -268,11 +275,11 @@ class CodaLabReproducibility:
                     include_in_distribution=True,
                 )
                 id_val_result_df = get_early_stopped_row(
-                    results_dfs["id_val_eval"], results_dfs["id_val_eval"], ["acc_avg"]
+                    results_dfs["id_val_eval"], results_dfs["id_val_eval"], [metric]
                 )
-                if id_val_result_df["acc_avg"] > best_accuracy:
+                if id_val_result_df[metric] > best_accuracy:
                     best_uuid = uuid
-                    best_accuracy = id_val_result_df["acc_avg"]
+                    best_accuracy = id_val_result_df[metric]
 
             print(f"Best for {dataset} uuid: {best_uuid}")
         print("\nTODO: run the best manually for now")
@@ -292,6 +299,7 @@ class CodaLabReproducibility:
                 f"{dataset}_{self._wilds_version}", worksheet_uuid
             )
             for dataset in dataset_defaults.keys()
+            if dataset not in CodaLabReproducibility._ADDITIONAL_DATASETS and dataset != "ogb-molpcba"
         }
 
     def _get_bundle_uuid(self, name, worksheet_uuid):
