@@ -7,6 +7,7 @@ import torch.nn.functional as F
 class Beagle(nn.Module):
     """
     Neural net models over genomic sequence. Adapted from https://github.com/kundajelab/ChromDragoNN
+    
     Input:
         - s (Tensor): float torch tensor of shape (N, 5, 1000, 1) with batch size N.
     

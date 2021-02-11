@@ -108,6 +108,20 @@ class EncodeTFBSDataset(WILDSDataset):
         metadata_df['y'] = y_array
         self._metadata_df = metadata_df[non_ambig_mask]
         
+        samp_ndces = []
+        itime = time.time()
+        for ct in self._all_celltypes:
+            neg_msk = np.logical_and((self._metadata_df['celltype'] == ct), (self._metadata_df['y'] == 0))
+            pos_msk = np.logical_and((self._metadata_df['celltype'] == ct), (self._metadata_df['y'] == 1))
+            neg_ndces = np.where(neg_msk)[0]
+            pos_ndces = np.where(pos_msk)[0]
+            np.random.seed(42)
+            samp_neg_ndces = np.random.choice(neg_ndces, size=len(pos_ndces), replace=False)
+            samp_ndces.extend(samp_neg_ndces)
+            samp_ndces.extend(pos_ndces)
+            print(ct, time.time() - itime)
+        self._metadata_df = self._metadata_df.iloc[samp_ndces, :]
+        
         train_regions_mask = np.isin(self._metadata_df['chr'], self._train_chroms)
         val_regions_mask = np.isin(self._metadata_df['chr'], self._test_chroms)
         train_celltype_mask = np.isin(self._metadata_df['celltype'], self._train_celltypes)

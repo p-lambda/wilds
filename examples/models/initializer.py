@@ -6,6 +6,7 @@ from models.layers import Identity
 from models.gnn import GINVirtual
 
 def initialize_model(config, d_out):
+    print('Dout: {}'.format(d_out))
     if config.model == 'resnet18_ms':
         # multispectral resnet 18
         model = ResNet18(num_classes=d_out, **config.model_kwargs)
