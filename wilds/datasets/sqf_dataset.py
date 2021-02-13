@@ -168,12 +168,6 @@ class SQFDataset(WILDSDataset):
 
         return train_idxs, test_idxs, validation_id_idxs
 
-    def indices_to_dict(self, indices, int_val):
-        local_idx_dict = {}
-        for i in indices:
-            local_idx_dict[i] = int_val
-        return local_idx_dict
-
     def get_split_maps(self, data_df,  train_idxs, test_idxs, val_idxs):
         """Using the existing split indices, create a map to put entries to training and validation sets. """
         self._split_array = np.zeros(data_df.shape[0])
