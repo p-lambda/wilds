@@ -127,7 +127,6 @@ class SQFDataset(WILDSDataset):
         self._input_array = self._input_array[new_feats]
         self.initialize_eval_grouper()
 
-
     def load_metadata(self, data_df):
         metadata_df = data_df[self._identity_vars].copy()
         metadata_names = ['suspect race', 'borough', '2010 or earlier?']
@@ -176,17 +175,11 @@ class SQFDataset(WILDSDataset):
         return local_idx_dict
 
     def get_split_maps(self, data_df,  train_idxs, test_idxs, val_idxs):
-        """Using the existing split indices, create a map to put entries to training and validation sets. Set class var."""
-        index_dict = {}
-        for arg, idx_set in enumerate([train_idxs, test_idxs, val_idxs]):
-            index_dict.update(self.indices_to_dict(idx_set, arg))
-
-        index_accumulator = []
-
-        for index, sample in data_df.iterrows():
-            index_accumulator.append(index_dict[index])
-
-        self._split_array = np.array(index_accumulator)
+        """Using the existing split indices, create a map to put entries to training and validation sets. """
+        self._split_array = np.zeros(data_df.shape[0])
+        self._split_array[train_idxs] = 0
+        self._split_array[test_idxs] = 1
+        self._split_array[val_idxs] = 2
 
     def get_split_features(self, columns):
         """Get features that include precinct if we're splitting on race or don't include if we're using borough splits."""
