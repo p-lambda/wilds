@@ -183,10 +183,11 @@ class SQFDataset(WILDSDataset):
 
     def get_split_maps(self, data_df,  train_idxs, test_idxs, val_idxs):
         """Using the existing split indices, create a map to put entries to training and validation sets. """
-        self._split_array = np.zeros(data_df.shape[0])
-        self._split_array[train_idxs] = 0
-        self._split_array[test_idxs] = 1
-        self._split_array[val_idxs] = 2
+        split_array = np.zeros(data_df.shape[0])
+        split_array[train_idxs] = 0
+        split_array[test_idxs] = 1
+        split_array[val_idxs] = 2
+        return split_array
 
     def get_split_features(self, columns):
         """Get features that include precinct if we're splitting on race or don't include if we're using borough splits."""
