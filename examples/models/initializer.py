@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torchvision
 from models.bert import BertClassifier, BertFeaturizer
+from models.distil_bert import DistilBertClassifier, DistilBertFeaturizer
 from models.resnet_multispectral import ResNet18
 from models.layers import Identity
 from models.gnn import GINVirtual
@@ -14,7 +15,18 @@ def initialize_model(config, d_out):
             name=config.model,
             d_out=d_out,
             **config.model_kwargs)
-    elif config.model.startswith('bert'):
+    elif 'bert' in config.model:
+        model = initializeBertBasedModel(config, d_out)
+    elif config.model == 'logistic_regression':
+        model = nn.Linear(out_features=d_out, **config.model_kwargs)
+    elif config.model == 'gin-virtual':
+        model = GINVirtual(num_tasks=d_out, **config.model_kwargs)
+    else:
+        raise ValueError('Model not recognized.')
+    return model
+
+def initializeBertBasedModel(config, d_out):
+    if config.model == 'bert-based-uncased':
         if d_out is None:
             model = BertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
         else:
@@ -22,12 +34,18 @@ def initialize_model(config, d_out):
                 config.model,
                 num_labels=d_out,
                 **config.model_kwargs)
-    elif config.model == 'logistic_regression':
-        model = nn.Linear(out_features=d_out, **config.model_kwargs)
-    elif config.model == 'gin-virtual':
-        model = GINVirtual(num_tasks=d_out, **config.model_kwargs)
+    elif config.model == 'distilbert-based-uncased':
+        print('Initializing DistilBERT model instead of the default BERT')
+        if d_out is None:
+            model = DistilBertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
+        else:
+            model = DistilBertClassifier.from_pretrained(
+                config.model,
+                num_labels=d_out,
+                **config.model_kwargs)
     else:
-        raise ValueError('Model not recognized.')
+        raise RuntimeError(f'Unhandled model: {config.model}')
+
     return model
 
 def initialize_torchvision_model(name, d_out, **kwargs):

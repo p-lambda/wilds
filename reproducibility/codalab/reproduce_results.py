@@ -163,9 +163,7 @@ class CodaLabReproducibility:
                             if not in_distribution
                             else f"hp_id_{algorithm}_{dataset}_fold{fold}"
                         )
-                        uuid = self._get_bundle_uuid(
-                            bundle_name, worksheet_uuid
-                        )
+                        uuid = self._get_bundle_uuid(bundle_name, worksheet_uuid)
                         results_dfs = load_results(
                             f"https://worksheets.codalab.org/rest/bundles/{uuid}/contents/blob",
                             splits=["val", "test"],
@@ -284,6 +282,44 @@ class CodaLabReproducibility:
             print(f"Best for {dataset} uuid: {best_uuid}")
         print("\nTODO: run the best manually for now")
 
+    def output_results(self):
+        # TODO: hardcoded these for now for speeding up BERT -Tony
+        worksheet_uuid = "0xb9e5615b78924cb48273f80b746c9fe7"
+        for dataset in ["amazon", "civilcomments"]:
+            print(f"-- {dataset} --")
+            metrics = get_metrics(dataset)
+            sort_metric = metrics[0]
+            experiment_uuids = self._run(
+                [
+                    "cl",
+                    "search",
+                    f"{dataset}_erm_frac",
+                    "state=ready",
+                    "host_worksheet=%s" % worksheet_uuid,
+                    ".limit=100",
+                    "--uuid-only",
+                ]
+            ).split("\n")
+
+            for uuid in experiment_uuids:
+                bundle_name = self._run(
+                    ["cl", "info", uuid, "--field=name"], print_output=False
+                )
+                results_dfs = load_results(
+                    f"https://worksheets.codalab.org/rest/bundles/{uuid}/contents/blob",
+                    splits=["val", "test"],
+                    include_in_distribution=True,
+                )
+                test_result_df = get_early_stopped_row(
+                    results_dfs["test_eval"], results_dfs["val_eval"], [sort_metric]
+                )
+
+                log_output = f"{bundle_name.split('_')[-1]}"
+                for metric in metrics:
+                    log_output += f" {metric}={test_result_df[metric]}"
+                print(log_output)
+            print("\n")
+
     def _construct_command(self, dataset_name, algorithm, seed, hyperparameters):
         command = (
             "python wilds/examples/run_expt.py --root_dir $HOME --log_dir $HOME "
@@ -299,7 +335,8 @@ class CodaLabReproducibility:
                 f"{dataset}_{self._wilds_version}", worksheet_uuid
             )
             for dataset in dataset_defaults.keys()
-            if dataset not in CodaLabReproducibility._ADDITIONAL_DATASETS and dataset != "ogb-molpcba"
+            if dataset not in CodaLabReproducibility._ADDITIONAL_DATASETS
+            and dataset != "ogb-molpcba"
         }
 
     def _get_bundle_uuid(self, name, worksheet_uuid):
@@ -323,7 +360,7 @@ class CodaLabReproducibility:
         self._run(["cl", "work", worksheet_uuid])
         return worksheet_uuid
 
-    def _get_worksheet_uuid(self):
+    def _get_worksheet_uuid(self, worksheet_name):
         results = self._run(
             [
                 "cl",
@@ -386,6 +423,8 @@ def main():
         reproducibility.tune_hyperparameters_id()
     elif args.post_tune:
         reproducibility.post_tune_hyperparameters_id()
+    elif args.output_results:
+        reproducibility.output_results()
     else:
         # If the other flags are not set, just reproduce the main results of WILDS.
         reproducibility.reproduce_main_results()
@@ -429,6 +468,11 @@ if __name__ == "__main__":
         "--post-tune",
         action="store_true",
         help="Follow-up to ID validation hyperparameter tuning experiments (default to false).",
+    )
+    parser.add_argument(
+        "--output-results",
+        action="store_true",
+        help="Output results for any set of WILDS experiments (default to false).",
     )
 
     # Parse args and run this script
