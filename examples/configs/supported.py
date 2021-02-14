@@ -11,6 +11,7 @@ from wilds.datasets.fmow_dataset import FMoWDataset
 from wilds.datasets.iwildcam_dataset import IWildCamDataset
 from wilds.datasets.ogbmolpcba_dataset import OGBPCBADataset
 from wilds.datasets.poverty_dataset import PovertyMapDataset
+from wilds.datasets.sqf_dataset import SQFDataset
 from wilds.datasets.waterbirds_dataset import WaterbirdsDataset
 from wilds.datasets.yelp_dataset import YelpDataset
 # metrics
@@ -29,6 +30,7 @@ datasets = {
     'poverty': PovertyMapDataset,
     'fmow': FMoWDataset,
     'bdd100k': BDD100KDataset,
+    'sqf': SQFDataset,
 }
 
 losses = {

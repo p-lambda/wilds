@@ -223,6 +223,25 @@ dataset_defaults = {
         'n_epochs': 3,
         'n_groups_per_batch': 2,
     },
+    'sqf': {
+        'split_scheme': 'all_race',
+        'model': 'logistic_regression',
+        'train_transform': None,
+        'eval_transform': None,
+        'model_kwargs': {'in_features': 104},
+        'loss_function': 'cross_entropy',
+        'groupby_fields': ['y'],
+        'val_metric': 'precision_at_global_recall_all',
+        'val_metric_decreasing': False,
+        'algo_log_metric': 'accuracy',
+        'optimizer': 'Adam',
+        'optimizer_kwargs': {},
+        'scheduler': None,
+        'batch_size': 4,
+        'lr': 5e-5,
+        'weight_decay': 0,
+        'n_epochs': 4,
+    },
 }
 
 ##########################################
