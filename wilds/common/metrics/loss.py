@@ -69,6 +69,8 @@ class MultiTaskLoss(MultiTaskMetric):
         if isinstance(self.loss_fn, torch.nn.BCEWithLogitsLoss):
             flattened_y_pred = flattened_y_pred.float()
             flattened_y_true = flattened_y_true.float()
+        elif isinstance(self.loss_fn, torch.nn.CrossEntropyLoss):
+            flattened_y_true = flattened_y_true.long()
         flattened_loss = self.loss_fn(flattened_y_pred, flattened_y_true)
         return flattened_loss
 
@@ -81,13 +83,3 @@ class MultiTaskLoss(MultiTaskMetric):
             - worst_metric (float): Worst-case metric
         """
         return maximum(metrics)
-
-
-def lm_cross_entropy_loss(input, target):
-    """
-    Cross entropy loss for language model head (input's dimenstionality is 3)
-        input: [batch_size, seqlen, vocab_size]
-        target: [batch_size, seqlen]
-    """
-    loss_fn = torch.nn.CrossEntropyLoss(reduction='none')
-    return loss_fn(input.transpose(1,2), target) #[batch_size, seqlen]

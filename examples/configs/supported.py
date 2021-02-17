@@ -15,7 +15,7 @@ from wilds.datasets.waterbirds_dataset import WaterbirdsDataset
 from wilds.datasets.yelp_dataset import YelpDataset
 from wilds.datasets.py150_dataset import Py150Dataset
 # metrics
-from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss, lm_cross_entropy_loss
+from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
 from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE
 
 datasets = {
@@ -35,7 +35,7 @@ datasets = {
 
 losses = {
     'cross_entropy': ElementwiseLoss(loss_fn=nn.CrossEntropyLoss(reduction='none')),
-    'lm_cross_entropy': ElementwiseLoss(loss_fn=lm_cross_entropy_loss),
+    'lm_cross_entropy': MultiTaskLoss(loss_fn=nn.CrossEntropyLoss(reduction='none')),
     'mse': MSE(name='loss'),
     'multitask_bce': MultiTaskLoss(loss_fn=nn.BCEWithLogitsLoss(reduction='none')),
 }

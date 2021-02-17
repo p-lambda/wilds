@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import json
 import gc
-
+from wilds.common.metrics.all_metrics import Accuracy
 from wilds.datasets.wilds_dataset import WILDSDataset
 from transformers import GPT2Tokenizer
 
@@ -55,10 +55,10 @@ class Py150Dataset(WILDSDataset):
 
         # Splits
         data = {}
-        self._split_dict = {'train': 0, 'val': 1, 'test': 2, 'IDval': 3, 'IDtest': 4}
+        self._split_dict = {'train': 0, 'val': 1, 'test': 2, 'id_val': 3, 'id_test': 4}
         self._split_names = {'train': 'Train', 'val': 'Validation (OOD)',
-                                'test': 'Test (OOD)', 'IDval': 'Validation (ID)',
-                                'IDtest': 'Test (ID)'}
+                                'test': 'Test (OOD)', 'id_val': 'Validation (ID)',
+                                'id_test': 'Test (ID)'}
 
         df['split_id'] = df['split'].apply(lambda x: self._split_dict[x])
         self._split_array = df['split_id'].values
@@ -78,16 +78,20 @@ class Py150Dataset(WILDSDataset):
         self._metadata_array = _repo
         self._metadata_fields = ['repo']
 
-        self._y_array = self._y_array * _mask + torch.full(self._y_array.size(), -100) * (1-_mask)
+        self._y_array = self._y_array.float()
+        self._y_array[(1-_mask).bool()] = float('nan')
+
 
         super().__init__(root_dir, download, split_scheme)
 
     def eval(self, y_pred, y_true, metadata):
         #y_pred: [n_samples, seqlen-1]
         #y_true: [n_samples, seqlen-1]
-        mask = (y_true != -100).long()
-        assert y_pred.size() == mask.size() == y_true.size(), (y_pred.size(), y_true.size(), mask.size())
-        acc = ((y_pred==y_true)*mask).float().sum() / (mask.float().sum() +1e-8)
+        is_labeled = ~torch.isnan(y_true)
+        flattened_y_pred = y_pred[is_labeled]
+        flattened_y_true = y_true[is_labeled]
+        assert flattened_y_pred.size() == flattened_y_true.size() and flattened_y_pred.dim() == 1
+        acc = (flattened_y_pred==flattened_y_true).float().sum() / (len(flattened_y_pred) +1e-8)
 
         results = {'acc': acc}
         results_str = f"Average acc: {results['acc']:.3f}\n"
@@ -107,6 +111,11 @@ class Py150Dataset(WILDSDataset):
         def fname2repo_id(fname, repo_name2id):
             return repo_name2id['/'.join(fname.split('/')[:2])]
 
+        def get_split_name(name):
+            if name.startswith('OOD'): return name.replace('OOD','')
+            if name.startswith('ID'): return name.replace('ID','id_')
+            return name
+
         _df = pd.read_csv(self._data_dir/'metadata/repo_file_names/repo_ids.csv')
         repo_name2id = {repo_name: id for id, repo_name in zip(_df.id, _df.repo_name)}
 
@@ -116,7 +125,7 @@ class Py150Dataset(WILDSDataset):
             inputs = json.load(open(self._data_dir/f'processed/{type}_input.json'))
             fnames = open(self._data_dir/f'metadata/repo_file_names/{type}.txt').readlines()
             repo_ids = [fname2repo_id(fname, repo_name2id) for fname in fnames]
-            splits   = [type.replace('OOD','')] * len(inputs)
+            splits   = [get_split_name(type)] * len(inputs)
             if type == 'train':
                 masks = (np.array(inputs) != pad_token_id).astype(int).tolist()
             else:

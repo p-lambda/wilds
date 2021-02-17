@@ -203,7 +203,7 @@ class ElementwiseMetric(Metric):
         """
         element_wise_metrics = self._compute_element_wise(y_pred, y_true)
         batch_size = y_pred.size()[0]
-        assert (element_wise_metrics.dim()==1 and element_wise_metrics.numel()==batch_size) or (element_wise_metrics.dim()==2 and element_wise_metrics.size(0)==batch_size)
+        assert element_wise_metrics.dim()==1 and element_wise_metrics.numel()==batch_size
 
         if return_dict:
             return {self.name: element_wise_metrics}
