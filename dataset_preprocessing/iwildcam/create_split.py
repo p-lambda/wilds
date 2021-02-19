@@ -65,6 +65,10 @@ def _create_split(data_dir, seed, skip=True):
             })
 
 
+    # Extract the date from the datetime.
+    df['datetime_obj'] = df['datetime'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f'))
+    df['date'] = df['datetime_obj'].apply(lambda x: x.date())
+
     # Split by location to get the cis & trans validation set
     locations = np.unique(df['location'])
     n_locations = len(locations)
@@ -84,7 +88,7 @@ def _create_split(data_dir, seed, skip=True):
     # Split remaining samples by dates to get the cis validation and test set
     frac_validation = 0.05
     frac_test = 0.05
-    unique_dates = np.unique(remaining_df['datetime'])
+    unique_dates = np.unique(remaining_df['date'])
     n_dates = len(unique_dates)
     n_val_dates = int(n_dates * frac_validation)
     n_test_dates = int(n_dates * frac_test)
@@ -94,9 +98,9 @@ def _create_split(data_dir, seed, skip=True):
     train_dates, val_cis_dates = unique_dates[:n_train_dates], unique_dates[n_train_dates:(n_train_dates+n_val_dates)]
     test_cis_dates = unique_dates[(n_train_dates+n_val_dates):]
 
-    val_cis_df = remaining_df[remaining_df['datetime'].isin(val_cis_dates)]
-    test_cis_df = remaining_df[remaining_df['datetime'].isin(test_cis_dates)]
-    train_df = remaining_df[remaining_df['datetime'].isin(train_dates)]
+    val_cis_df = remaining_df[remaining_df['date'].isin(val_cis_dates)]
+    test_cis_df = remaining_df[remaining_df['date'].isin(test_cis_dates)]
+    train_df = remaining_df[remaining_df['date'].isin(train_dates)]
 
     # Locations in val_cis and test_cis but not in train are all moved to train set
     # since we want all locations in tcis splits to be in the train set.
