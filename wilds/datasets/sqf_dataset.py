@@ -25,6 +25,9 @@ class SQFDataset(WILDSDataset):
             29 pre-stop observable features.
             As these split schemes study location shifts, we remove the district
             indicators here as they prevent generalizing to new locations.
+            In order to run the example code with these split_schemes,
+            pass in the command-line parameter `--model_kwargs in_features=29`
+            to `examples/run_expt.py`.
 
      Label (y):
         Binary. It is 1 if the stop is listed as finding a weapon, and 0 otherwise.
