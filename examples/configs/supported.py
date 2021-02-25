@@ -17,6 +17,15 @@ from wilds.datasets.yelp_dataset import YelpDataset
 from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
 from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE
 
+benchmark_datasets = [
+    'amazon',
+    'camelyon17',
+    'civilcomments',
+    'iwildcam',
+    'ogb-molpcba',
+    'poverty',
+    'fmow']
+
 datasets = {
     'amazon': AmazonDataset,
     'camelyon17': Camelyon17Dataset,

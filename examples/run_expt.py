@@ -53,7 +53,7 @@ def main():
     # Transforms
     parser.add_argument('--train_transform', choices=supported.transforms)
     parser.add_argument('--eval_transform', choices=supported.transforms)
-    parser.add_argument('--target_resolution', nargs='+', type=int, help='target resolution. for example --target_resolution 224 224 for standard resnet.')
+    parser.add_argument('--target_resolution', nargs='+', type=int, help='The input resolution that images will be resized to before being passed into the model. For example, use --target_resolution 224 224 for a standard ResNet.')
     parser.add_argument('--resize_scale', type=float)
     parser.add_argument('--max_token_length', type=int)
 
@@ -193,7 +193,7 @@ def main():
         datasets[split]['split'] = split
         datasets[split]['name'] = full_dataset.split_names[split]
         datasets[split]['verbose'] = verbose
-        # Loggers
+
         # Loggers
         datasets[split]['eval_logger'] = BatchLogger(
             os.path.join(config.log_dir, f'{split}_eval.csv'), mode=mode, use_wandb=(config.use_wandb and verbose))
@@ -204,7 +204,8 @@ def main():
             initialize_wandb(config)
 
     # Logging dataset info
-    if config.no_group_logging and full_dataset.is_classification and full_dataset.y_size==1:
+    # Show class breakdown if feasible
+    if config.no_group_logging and full_dataset.is_classification and full_dataset.y_size==1 and full_dataset.n_classes <= 10:
         log_grouper = CombinatorialGrouper(
             dataset=full_dataset,
             groupby_fields=['y'])
@@ -243,7 +244,6 @@ def main():
         if resume_success == False:
             epoch_offset=0
             best_val_metric=None
-
 
         train(
             algorithm=algorithm,

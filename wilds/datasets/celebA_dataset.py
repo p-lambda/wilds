@@ -51,11 +51,14 @@ class CelebADataset(WILDSDataset):
 
         It is available for non-commercial research purposes only.
     """
+    _dataset_name = 'celebA'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xa174edc9c11041869d11f98d1dc19935/contents/blob/',
+            'compressed_size': None}}
 
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
-        self._dataset_name = 'celebA'
-        self._version = '1.0'
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0xa174edc9c11041869d11f98d1dc19935/contents/blob/'
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
+        self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
         target_name = 'Blond_Hair'
         confounder_names = ['Male']

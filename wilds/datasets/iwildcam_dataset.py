@@ -36,18 +36,23 @@ class IWildCamDataset(WILDSDataset):
             This dataset is distributed under Community Data License Agreement – Permissive – Version 1.0
             https://cdla.io/permissive-1-0/
         """
+    _dataset_name = 'iwildcam'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x3f1b346ff2d74b5daf1a08685d68c6ec/contents/blob/',
+            'compressed_size': 90_094_666_806},
+        '2.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xc7205ccf81d34247b68f34a40f54747f/contents/blob/',
+            'compressed_size': 12_000_000_000}}
 
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
 
-        self._dataset_name = 'iwildcam'
-        self._version = '2.0'
+        self._version = version
         self._split_scheme = split_scheme
         if self._split_scheme != 'official':
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
 
         # path
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0xc7205ccf81d34247b68f34a40f54747f/contents/blob/'
-        self._compressed_size = 12_000_000_000
         self._data_dir = Path(self.initialize_data_dir(root_dir, download))
 
         # Load splits

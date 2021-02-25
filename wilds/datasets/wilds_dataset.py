@@ -110,6 +110,24 @@ class WILDSDataset:
             assert 'y' in self.metadata_fields
 
     @property
+    def latest_version(cls):
+        def is_later(u, v):
+            """Returns true if u is a later version than v."""
+            u_major, u_minor = tuple(map(int, u.split('.')))
+            v_major, v_minor = tuple(map(int, v.split('.')))
+            if (u_major > v_major) or (
+                (u_major == v_major) and (u_minor > v_minor)):
+                return True
+            else:
+                return False
+
+        latest_version = '0.0'
+        for key in cls.versions_dict.keys():
+            if is_later(key, latest_version):
+                latest_version = key
+        return latest_version
+
+    @property
     def dataset_name(self):
         """
         A string that identifies the dataset, e.g., 'amazon', 'camelyon17'.
@@ -121,16 +139,25 @@ class WILDSDataset:
         """
         A string that identifies the dataset version, e.g., '1.0'.
         """
-        return self._version
+        if self._version is None:
+            return self.latest_version
+        else:
+            return self._version
 
     @property
-    def download_url(self):
+    def versions_dict(self):
         """
-        URL for downloading the dataset archive.
+        A dictionary where each key is a version string (e.g., '1.0')
+        and each value is a dictionary containing the 'download_url' and
+        'compressed_size' keys.
+
+        'download_url' is the URL for downloading the dataset archive.
         If None, the dataset cannot be downloaded automatically
         (e.g., because it first requires accepting a usage agreement).
+
+        'compressed_size' is the approximate size of the compressed dataset in bytes.
         """
-        return getattr(self, '_download_url', None)
+        return self._versions_dict
 
     @property
     def data_dir(self):
@@ -256,13 +283,6 @@ class WILDSDataset:
         """
         return getattr(self, '_original_resolution', None)
 
-    @property
-    def compressed_size(self):
-        """
-        Size of the compressed bundle
-        """
-        return getattr(self, '_compressed_size', None)
-
     def initialize_data_dir(self, root_dir, download):
         """
         Helper function for downloading/updating the dataset if required.
@@ -271,102 +291,74 @@ class WILDSDataset:
         Datasets for which we don't control the download, like Yelp,
         might not handle versions similarly.
         """
+        if self.version not in self.versions_dict:
+            raise ValueError(f'Version {self.version} not recognized. Must be in {self.versions_dict.keys()}.')
+
+        download_url = self.versions_dict[self.version]['download_url']
+        compressed_size = self.versions_dict[self.version]['compressed_size']
+
         os.makedirs(root_dir, exist_ok=True)
 
         data_dir = os.path.join(root_dir, f'{self.dataset_name}_v{self.version}')
         version_file = os.path.join(data_dir, f'RELEASE_v{self.version}.txt')
         current_major_version, current_minor_version = tuple(map(int, self.version.split('.')))
 
+        # Check if we specified the latest version. Otherwise, print a warning.
+        latest_major_version, latest_minor_version = tuple(map(int, self.latest_version.split('.')))
+        if latest_major_version > current_major_version:
+            print(
+                f'*****************************\n'
+                f'{self.dataset_name} has been updated to version {self.latest_version}.\n'
+                f'You are currently using version {self.version}.\n'
+                f'We highly recommend updating the dataset.\n'
+                f'See https://wilds.stanford.edu/changelog for changes.\n'
+                f'*****************************\n')
+        elif latest_minor_version > current_minor_version:
+            print(
+                f'*****************************\n'
+                f'{self.dataset_name} has been updated to version {self.latest_version}.\n'
+                f'You are currently using version {self.version}.\n'
+                f'Please consider updating the dataset.\n'
+                f'See https://wilds.stanford.edu/changelog for changes.\n'
+                f'*****************************\n')
+
         # If the data_dir exists and contains the right RELEASE file,
         # we assume the dataset is correctly set up
         if os.path.exists(data_dir) and os.path.exists(version_file):
             return data_dir
 
-        # If the data_dir exists and is not empty, and the download_url is set,
+        # If the data_dir exists and does not contain the right RELEASE file, but it is not empty and the download_url is not set,
         # we assume the dataset is correctly set up
         if ((os.path.exists(data_dir)) and
             (len(os.listdir(data_dir)) > 0) and
-            (self.download_url is None)):
+            (download_url is None)):
             return data_dir
 
-        # Otherwise, check if there's an older version of the dataset around
-        old_major_version, old_minor_version = -1, -1
-        old_folders = [
-            f for f in os.listdir(root_dir) if (
-                os.path.isdir(os.path.join(root_dir, f)) and
-                f.startswith(self.dataset_name))]
-        for old_folder in old_folders:
-            prefix = f'{self.dataset_name}_v'
-            try:
-                version = old_folder.split(prefix)[1]
-                if os.path.exists(
-                    os.path.join(root_dir, old_folder, f'RELEASE_v{version}.txt')):
-                    major_version, minor_version = tuple(map(int, version.split('.')))
-                    if ((old_major_version < major_version) or
-                        ((old_major_version == major_version) and
-                         (old_minor_version < minor_version))):
-                         old_major_version, old_minor_version = major_version, minor_version
-                         latest_existing_data_dir = os.path.join(root_dir, old_folder)
-            except:
-                continue
-
-        do_download = False
-
-        # No existing dataset
-        if (old_major_version == -1):
-            if download == False:
-                if self.download_url is None:
-                    raise FileNotFoundError(f'The {self.dataset_name} dataset could not be found in {data_dir}. {self.dataset_name} cannot be automatically downloaded. Please download it manually.')
-                else:
-                    raise FileNotFoundError(f'The {self.dataset_name} dataset could not be found in {data_dir}. Initialize the dataset with download=True to download the dataset. If you are using the example script, run with --download. This might take some time for large datasets.')
+        # Otherwise, we assume the dataset needs to be downloaded.
+        # If download == False, then return an error.
+        if download == False:
+            if download_url is None:
+                raise FileNotFoundError(f'The {self.dataset_name} dataset could not be found in {data_dir}. {self.dataset_name} cannot be automatically downloaded. Please download it manually.')
             else:
-                do_download = True
+                raise FileNotFoundError(f'The {self.dataset_name} dataset could not be found in {data_dir}. Initialize the dataset with download=True to download the dataset. If you are using the example script, run with --download. This might take some time for large datasets.')
 
-        # Older major version:
-        # Prompt for update, ignore `download` flag
-        elif (old_major_version < current_major_version):
-            print(
-                '***********\n'
-                f'{self.dataset_name} has been updated to a new major version.\n'
-                f'We recommend updating the dataset.\n')
-            confirm = input(f'Will you update the dataset now? This might take some time for large datasets. (y/n)\n').lower()
-            if confirm == 'y':
-                do_download = True
+        # Otherwise, proceed with downloading.
+        if download_url is None:
+            raise ValueError(f'Sorry, {self.dataset_name} cannot be automatically downloaded. Please download it manually.')
 
-        # Same major version, older minor version:
-        # Notify user but do not prompt unless `download` is set
-        elif ((old_major_version == current_major_version) and
-              (old_minor_version < current_minor_version)):
-            print(
-                '***********\n'
-                f'{self.dataset_name} has been updated to a new minor version.\n')
-            if download == False:
-                print(
-                    'Initialize the dataset with download=True to download the dataset. If you are using the example script, run with --download. This might take some time for large datasets.\n'
-                    '***********\n')
-            else:
-                do_download = True
-
-        # Download if necessary
-        if do_download == False:
-            data_dir = latest_existing_data_dir
-        else:
-            if self.download_url is None:
-                raise ValueError(f'Sorry, {self.dataset_name} cannot be automatically downloaded. Please download it manually.')
-
-            from wilds.datasets.download_utils import download_and_extract_archive
-            print(f'Downloading dataset to {data_dir}...')
-            print(f'You can also download the dataset manually at https://wilds.stanford.edu/downloads.')
-            try:
-                download_and_extract_archive(
-                    url=self.download_url,
-                    download_root=data_dir,
-                    filename='archive.tar.gz',
-                    remove_finished=True,
-                    size=self.compressed_size)
-            except Exception as e:
-                print(f"\n{os.path.join(data_dir, 'archive.tar.gz')} may be corrupted. Please try deleting it and rerunning this command.\n")
-                print(f"Exception: ", e)
+        from wilds.datasets.download_utils import download_and_extract_archive
+        print(f'Downloading dataset to {data_dir}...')
+        print(f'You can also download the dataset manually at https://wilds.stanford.edu/downloads.')
+        try:
+            download_and_extract_archive(
+                url=download_url,
+                download_root=data_dir,
+                filename='archive.tar.gz',
+                remove_finished=True,
+                size=compressed_size)
+        except Exception as e:
+            print(f"\n{os.path.join(data_dir, 'archive.tar.gz')} may be corrupted. Please try deleting it and rerunning this command.\n")
+            print(f"Exception: ", e)
 
         return data_dir
 

@@ -50,12 +50,14 @@ class AmazonDataset(WILDSDataset):
     License:
         None. However, the original authors request that the data be used for research purposes only.
     """
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
-        # set variables
-        self._dataset_name = 'amazon'
-        self._version = '1.0'
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x60237058e01749cda7b0701c2bd01420/contents/blob/'
-        self._compressed_size = 4_066_541_568
+    _dataset_name = 'amazon'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x60237058e01749cda7b0701c2bd01420/contents/blob/',
+            'compressed_size': 4_066_541_568}}
+
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
+        self._version = version
         # the official split is the user split
         if split_scheme=='official':
             split_scheme = 'user'

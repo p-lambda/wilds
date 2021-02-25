@@ -51,12 +51,20 @@ class OGBPCBADataset(WILDSDataset):
         https://github.com/snap-stanford/ogb/blob/master/LICENSE
     """
 
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
+    _dataset_name = 'ogbg-molpcba'
+    _versions_dict = {
+        '1.0': {
+            'download_url': None,
+            'compressed_size': None}}
+
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
+        self._version = version
+        if version is not None:
+            raise ValueError('Versioning for OGB-MolPCBA is handled through the OGB package. Please set version=none.')
         # internally call ogb package
         self.ogb_dataset = PygGraphPropPredDataset(name = 'ogbg-molpcba', root = root_dir)
 
         # set variables
-        self._dataset_name = 'ogbg-molpcba'
         self._data_dir = self.ogb_dataset.root
         if split_scheme=='official':
             split_scheme = 'scaffold'
