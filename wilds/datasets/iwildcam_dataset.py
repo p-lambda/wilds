@@ -128,9 +128,7 @@ class IWildCamDataset(WILDSDataset):
         results_str = (
             f"Average acc: {results[self._metrics[0].agg_metric_field]:.3f}\n"
             f"Recall macro: {results[self._metrics[1].agg_metric_field]:.3f}\n"
-            f"Recall weighted: {results[self._metrics[2].agg_metric_field]:.3f}\n"
-            f"F1 macro: {results[self._metrics[3].agg_metric_field]:.3f}\n"
-            f"F1 weighted: {results[self._metrics[4].agg_metric_field]:.3f}\n"
+            f"F1 macro: {results[self._metrics[2].agg_metric_field]:.3f}\n"
         )
 
         return results, results_str
