@@ -34,10 +34,11 @@ dataset_defaults = {
     },
     'camelyon17': {
         'split_scheme': 'official',
-        'model': 'densenet121',
+        'model': 'resnet50',
         'model_kwargs': {'pretrained': False},
         'train_transform': 'image_base',
         'eval_transform': 'image_base',
+        'target_resolution': (96, 96),
         'loss_function': 'cross_entropy',
         'groupby_fields': ['hospital'],
         'val_metric': 'acc_avg',
