@@ -90,7 +90,7 @@ def _create_split(data_dir, seed, skip=True):
 
     # Split remaining samples by dates to get the cis validation and test set
     frac_validation = 0.08
-    frac_test = 0.06
+    frac_test = 0.07
     unique_dates = np.unique(remaining_df['date'])
     n_dates = len(unique_dates)
     n_val_dates = int(n_dates * frac_validation)
@@ -141,6 +141,11 @@ def _create_split(data_dir, seed, skip=True):
     # Make sure there's no overlap
     for df in [val_cis_df, val_trans_df, test_cis_df, test_trans_df]:
         assert not check_overlap(train_df, df)
+
+
+    print("val cis df : ", len(val_cis_df))
+    print("test cis df : ", len(test_cis_df))
+    print("test cis df : ", len(train_df))
 
     return train_df, val_cis_df, val_trans_df, test_cis_df, test_trans_df
 
