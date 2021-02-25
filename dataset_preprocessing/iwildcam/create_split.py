@@ -6,8 +6,9 @@ import json
 import pandas as pd
 import numpy as np
 
-# Examples to skip due to e.g them missing, loading issues
-LOCATIONS_TO_SKIP = [537]
+# For more info see https://www.kaggle.com/c/iwildcam-2020-fgvc7/discussion/135200
+# 485 had multiple images from indoors, and just a few were actually from out in the wild.
+LOCATIONS_TO_SKIP = [537, 485]
 
 CANNOT_OPEN = ['99136aa6-21bc-11ea-a13a-137349068a90.jpg',
                '87022118-21bc-11ea-a13a-137349068a90.jpg',
