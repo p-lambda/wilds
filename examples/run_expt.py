@@ -35,6 +35,7 @@ def main():
                         help='If true, tries to downloads the dataset if it does not exist in root_dir.')
     parser.add_argument('--frac', type=float, default=1.0,
                         help='Convenience parameter that scales all dataset splits down to the specified fraction, for development purposes.')
+    parser.add_argument('--version', default=None, type=str)
 
     # Loaders
     parser.add_argument('--loader_kwargs', nargs='*', action=ParseKwargs, default={})
@@ -134,6 +135,7 @@ def main():
 
     # Data
     full_dataset = supported.datasets[config.dataset](
+        version=config.version,
         root_dir=config.root_dir,
         download=config.download,
         split_scheme=config.split_scheme,

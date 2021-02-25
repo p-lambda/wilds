@@ -30,7 +30,7 @@ class ParseKwargs(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, dict())
         for value in values:
-            key, value_str = value.split('=')
+            key, value_str = value.split('=')            
             if value_str.replace('-','').isnumeric():
                 processed_val = int(value_str)
             elif value_str.replace('-','').replace('.','').isnumeric():
