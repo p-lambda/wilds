@@ -27,7 +27,7 @@ def initialize_model(config, d_out):
         model = nn.Linear(out_features=d_out, **config.model_kwargs)
     elif config.model == 'gin-virtual':
         model = GINVirtual(num_tasks=d_out, **config.model_kwargs)
-    elif config.model in ('efficientnet-b0', 'efficientnet-b1', 'efficientnet-b2'):
+    elif config.model in ('efficientnet-b0', 'efficientnet-b1', 'efficientnet-b2', 'efficientnet-b3', 'efficientnet-b4'):
         model = EfficientNet.from_pretrained(config.model)
     else:
         raise ValueError('Model not recognized.')

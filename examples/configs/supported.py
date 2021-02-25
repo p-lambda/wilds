@@ -46,8 +46,10 @@ algo_log_metrics = {
 
 # see initialize_*() functions for correspondence
 transforms = ['bert', 'image_base', 'image_resize_and_center_crop', 'poverty_train']
-models = ['resnet18_ms', 'resnet50', 'resnet34', 'wideresnet50', 'densenet121', 'bert-base-uncased', 'gin-virtual',
-    'logistic_regression', 'efficientnet-b0', 'efficientnet-b1', 'efficientnet-b2']
+models = ['resnet18_ms', 'resnet50', 'resnet34', 'wideresnet50',
+         'densenet121', 'bert-base-uncased', 'gin-virtual',
+         'logistic_regression',
+         'efficientnet-b0', 'efficientnet-b1', 'efficientnet-b2', 'efficientnet-b3', 'efficientnet-b4']
 algorithms = ['ERM', 'groupDRO', 'deepCORAL', 'IRM']
 optimizers = ['SGD', 'Adam', 'AdamW']
 schedulers = ['linear_schedule_with_warmup', 'ReduceLROnPlateau', 'StepLR']
