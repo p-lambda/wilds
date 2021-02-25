@@ -2,6 +2,7 @@ import torch.nn as nn
 import torchvision
 from models.bert import BertClassifier, BertFeaturizer
 from models.resnet_multispectral import ResNet18
+from efficientnet_pytorch import EfficientNet
 from models.layers import Identity
 from models.gnn import GINVirtual
 
@@ -26,6 +27,8 @@ def initialize_model(config, d_out):
         model = nn.Linear(out_features=d_out, **config.model_kwargs)
     elif config.model == 'gin-virtual':
         model = GINVirtual(num_tasks=d_out, **config.model_kwargs)
+    elif config.model in ('efficientnet-b0', 'efficientnet-b1', 'efficientnet-b2'):
+        model = EfficientNet.from_pretrained(config.model)
     else:
         raise ValueError('Model not recognized.')
     return model

@@ -26,5 +26,14 @@ model_defaults = {
     'resnet18_ms': {
         'target_resolution': (224, 224),
     },
+    'efficientnet-b0': {
+        'target_resolution': (224, 224),
+    },
+    'efficientnet-b1': {
+        'target_resolution': (224, 224),
+    },
+    'efficientnet-b2': {
+        'target_resolution': (224, 224),
+    },
     'logistic_regression': {},
 }
