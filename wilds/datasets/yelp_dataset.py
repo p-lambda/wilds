@@ -41,12 +41,17 @@ class YelpDataset(WILDSDataset):
     License:
         Because of the Dataset License provided by Yelp, we are unable to redistribute the data.
         Please download the data through the website (https://www.yelp.com/dataset/download) by
-        agreeing to the Dataset License. 
+        agreeing to the Dataset License.
     """
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
-        # set variables
-        self._dataset_name = 'yelp'
-        self._version = '1.0'
+    _dataset_name = 'yelp'
+    _versions_dict = {
+        '1.0': {
+            'download_url': None,
+            'compressed_size': None}}
+
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
+        # set variables        
+        self._version = version
         if split_scheme=='official':
             split_scheme = 'time'
         self._split_scheme = split_scheme

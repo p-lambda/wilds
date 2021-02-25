@@ -122,7 +122,7 @@ dataset_defaults = {
         'model_kwargs': {'pretrained': True},
         'train_transform': 'image_base',
         'eval_transform': 'image_base',
-        'target_resolution': (448, 448),
+        # 'target_resolution': (448, 448),
         'val_metric_decreasing': False,
         'algo_log_metric': 'accuracy',
         'model': 'resnet50',

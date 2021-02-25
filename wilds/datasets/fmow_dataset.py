@@ -57,12 +57,13 @@ class FMoWDataset(WILDSDataset):
 
     """
     _dataset_name = 'fmow'
-    _download_url = 'https://worksheets.codalab.org/rest/bundles/0xc59ea8261dfe4d2baa3820866e33d781/contents/blob/'
-    _version = '1.0'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xc59ea8261dfe4d2baa3820866e33d781/contents/blob/',
+            'compressed_size': 70_000_000_000}}
 
-    def __init__(self, root_dir='data', download=False, split_scheme='official',
-                 oracle_training_set=False, seed=111, use_ood_val=False):
-        self._compressed_size = 70_000_000_000
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official', oracle_training_set=False, seed=111, use_ood_val=False):
+        self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
         self._split_dict = {'train': 0, 'id_val': 1, 'id_test': 2, 'val': 3, 'test': 4}
