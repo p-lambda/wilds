@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 import os
 
@@ -93,15 +94,27 @@ class IWildCamDataset(WILDSDataset):
         df['group_id' ] = df['location'].apply(lambda x: location_to_group_id[x])
 
         self._n_groups = n_groups
-        self._metadata_array = torch.tensor(np.stack([df['group_id'].values, self.y_array], axis=1))
-        self._metadata_fields = ['location', 'y']
+
+        # Extract datetime subcomponents and include in metadata
+        df['datetime_obj'] = df['datetime'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f'))
+        df['year'] = df['datetime_obj'].apply(lambda x: int(x.year))
+        df['month'] = df['datetime_obj'].apply(lambda x: int(x.month))
+        df['day'] = df['datetime_obj'].apply(lambda x: int(x.day))
+        df['hour'] = df['datetime_obj'].apply(lambda x: int(x.hour))
+        df['minute'] = df['datetime_obj'].apply(lambda x: int(x.minute))
+        df['second'] = df['datetime_obj'].apply(lambda x: int(x.second))
+
+        self._metadata_array = torch.tensor(np.stack([df['group_id'].values,
+                            df['year'].values, df['month'].values, df['day'].values,
+                            df['hour'].values, df['minute'].values, df['second'].values,
+                            self.y_array], axis=1))
+        self._metadata_fields = ['location', 'year', 'month', 'day', 'hour', 'minute', 'second', 'y']
         # eval grouper
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
             groupby_fields=(['location']))
 
-        self._metrics = [Accuracy(), Recall(average='macro'), Recall(average='weighted'),
-                        F1(average='macro'), F1(average='weighted')]
+        self._metrics = [Accuracy(), Recall(average='macro'), F1(average='macro')]
         super().__init__(root_dir, download, split_scheme)
 
     def eval(self, y_pred, y_true, metadata):
