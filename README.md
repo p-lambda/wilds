@@ -52,7 +52,8 @@ pip install -e .
 - torch-scatter>=2.0.5
 - torch-geometric>=1.6.1
 
-Running `pip install wilds` will check for all of these requirements except for the `torch-scatter` and `torch-geometric` packages, which require a [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
+Running `pip install wilds` or `pip install -e .` will automatically check for and install all of these requirements
+except for the `torch-scatter` and `torch-geometric` packages, which require a [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
 
 
 ### Default models
