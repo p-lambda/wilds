@@ -6,6 +6,8 @@ from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import Accuracy
 
+all_chrom_names = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX']
+
 class EncodeTFBSDataset(WILDSDataset):
     """
     ENCODE-DREAM-wilds dataset of transcription factor binding sites. 
@@ -33,8 +35,8 @@ class EncodeTFBSDataset(WILDSDataset):
         self._y_size = 1
         self._n_classes = 2
         
-        # self._train_chroms = ['chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
-        self._train_chroms = ['chr2', 'chr9', 'chr11']
+        self._train_chroms = ['chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
+        # self._train_chroms = ['chr2', 'chr9', 'chr11']
         self._test_chroms = ['chr1', 'chr8', 'chr21']
         self._transcription_factor = 'MAX'
         self._train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
@@ -44,7 +46,7 @@ class EncodeTFBSDataset(WILDSDataset):
         self._all_celltypes = self._train_celltypes + self._val_celltype + self._test_celltype
         
         self._metadata_map = {}
-        self._metadata_map['chr'] = self._all_chroms #['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX']
+        self._metadata_map['chr'] = self._all_chroms
         self._metadata_map['celltype'] = self._all_celltypes
         
         # Get the splits
@@ -75,11 +77,14 @@ class EncodeTFBSDataset(WILDSDataset):
         
         self._dnase_allcelltypes = {}
         for ct in self._all_celltypes:
+            """
             dnase_filename = os.path.join(self._data_dir, '{}_dnase.npz'.format(ct))
             dnase_npz_contents = np.load(dnase_filename)
             self._dnase_allcelltypes[ct] = {}
             for chrom in self._all_chroms: #self._seq_bp:
                 self._dnase_allcelltypes[ct][chrom] = dnase_npz_contents[chrom]
+            """
+            self._dnase_allcelltypes[ct] = 'DNASE.{}.fc.signal.bigwig'
             print(ct, time.time() - itime)
         
         # Read in metadata dataframe from training+validation data
@@ -90,9 +95,11 @@ class EncodeTFBSDataset(WILDSDataset):
         all_df = pd.concat([training_df, val_df])
         
         # Filter by start/stop coordinate if needed (TODO: remove for final version)
+        """
         filter_msk = all_df['start'] >= 0
         filter_msk = all_df['start']%1000 == 0
         all_df = all_df[filter_msk]
+        """
         
         pd_list = []
         for ct in self._all_celltypes:

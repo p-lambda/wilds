@@ -27,5 +27,5 @@ model_defaults = {
         'target_resolution': (224, 224),
     },
     'logistic_regression': {}, 
-    'beagle': {}, 
+    'leopard': {}, 
 }
