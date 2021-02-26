@@ -4,51 +4,82 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class Beagle(nn.Module):
-    """
-    Neural net models over genomic sequence. Adapted from https://github.com/kundajelab/ChromDragoNN
-    
-    Input:
-        - s (Tensor): float torch tensor of shape (N, 5, 1000, 1) with batch size N.
-    
-    Output:
-        - prediction (Tensor): float torch tensor of shape (N, )
-    """
-    def __init__(self):
-        super(Beagle, self).__init__()
 
-        self.dropout = 0.3
-        self.num_cell_types = 1
-        self.conv1 = nn.Conv2d(5, 300, (19, 1), stride = (1, 1), padding=(9,0))
-        self.conv2 = nn.Conv2d(300, 200, (11, 1), stride = (1, 1), padding = (5,0))
-        self.conv3 = nn.Conv2d(200, 200, (7, 1), stride = (1, 1), padding = (4,0))
-        self.bn1 = nn.BatchNorm2d(300)
-        self.bn2 = nn.BatchNorm2d(200)
-        self.bn3 = nn.BatchNorm2d(200)
-        self.maxpool1 = nn.MaxPool2d((3, 1))
-        self.maxpool2 = nn.MaxPool2d((4, 1))
-        self.maxpool3 = nn.MaxPool2d((4, 1))
 
-        self.fc1 = nn.Linear(4200, 1000)
-        self.bn4 = nn.BatchNorm1d(1000)
+def double_conv(in_channels, out_channels):    
+    return nn.Sequential(
+        nn.Conv1d(in_channels, out_channels, 7, padding=3), 
+        nn.BatchNorm1d(out_channels), 
+        nn.ReLU(inplace=True),
+        nn.Conv1d(out_channels, out_channels, 7, padding=3), 
+        nn.BatchNorm1d(out_channels), 
+        nn.ReLU(inplace=True)
+    )
 
-        self.fc2 = nn.Linear(1000, 1000)
-        self.bn5 = nn.BatchNorm1d(1000)
 
-        self.fc3 = nn.Linear(1000, self.num_cell_types)
+class UNet(nn.Module):
 
-    def forward(self, s):
-        s = s.permute(0, 2, 1).contiguous()                          # batch_size x 5 x 1000
-        s = s.view(-1, 5, 1000, 1)                                   # batch_size x 5 x 1000 x 1 [5 channels]
-        s = self.maxpool1(F.relu(self.bn1(self.conv1(s))))           # batch_size x 300 x 333 x 1
-        s = self.maxpool2(F.relu(self.bn2(self.conv2(s))))           # batch_size x 200 x 83 x 1
-        s = self.maxpool3(F.relu(self.bn3(self.conv3(s))))           # batch_size x 200 x 21 x 1
-        s = s.view(-1, 4200)
-        conv_out = s
-
-        s = F.dropout(F.relu(self.bn4(self.fc1(s))), p=self.dropout, training=self.training)  # batch_size x 1000
-        s = F.dropout(F.relu(self.bn5(self.fc2(s))), p=self.dropout, training=self.training)  # batch_size x 1000
+    def __init__(self, n_class):
+        super().__init__()
         
-        prediction = self.fc3(s)
+        self.dconv_down1 = double_conv(6, 15)
+        self.dconv_down2 = double_conv(15, 22)
+        self.dconv_down3 = double_conv(22, 33)
+        self.dconv_down4 = double_conv(33, 49)
+        self.dconv_down5 = double_conv(49, 73)
+        self.dconv_down6 = double_conv(73, 109)
 
-        return s #, conv_out
+        self.maxpool = nn.MaxPool1d(2)
+        self.upsample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)        
+        
+        self.dconv_up5 = double_conv(73 + 109, 73)
+        self.dconv_up4 = double_conv(49 + 73, 49)
+        self.dconv_up3 = double_conv(33 + 49, 33)
+        self.dconv_up2 = double_conv(22 + 33, 22)
+        self.dconv_up1 = double_conv(15 + 22, 15)
+        
+        self.conv_last = nn.Conv2d(15, n_class, 1)
+        
+        
+    def forward(self, x):
+        conv1 = self.dconv_down1(x)
+        x = self.maxpool(conv1)
+
+        conv2 = self.dconv_down2(x)
+        x = self.maxpool(conv2)
+        
+        conv3 = self.dconv_down3(x)
+        x = self.maxpool(conv3)
+        
+        conv4 = self.dconv_down4(x)
+        x = self.maxpool(conv4)
+        
+        conv5 = self.dconv_down5(x)
+        x = self.maxpool(conv5)
+        
+        x = self.dconv_down6(x)
+        
+        x = self.upsample(x)        
+        x = torch.cat([x, conv5], dim=1)
+        
+        x = self.dconv_up5(x)
+        x = self.upsample(x)        
+        x = torch.cat([x, conv4], dim=1)
+        
+        x = self.dconv_up4(x)
+        x = self.upsample(x)        
+        x = torch.cat([x, conv3], dim=1)
+        
+        x = self.dconv_up3(x)
+        x = self.upsample(x)        
+        x = torch.cat([x, conv2], dim=1)       
+
+        x = self.dconv_up2(x)
+        x = self.upsample(x)        
+        x = torch.cat([x, conv1], dim=1)   
+        
+        x = self.dconv_up1(x)
+        
+        out = self.conv_last(x)
+        
+        return out

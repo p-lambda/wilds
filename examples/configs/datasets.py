@@ -107,7 +107,7 @@ dataset_defaults = {
     },
     'encode-tfbs': {
         'split_scheme': 'official',
-        'model': 'beagle',
+        'model': 'leopard',
         'model_kwargs': {'pretrained': False},
         'train_transform': None,
         'eval_transform': None,
@@ -121,7 +121,7 @@ dataset_defaults = {
         'batch_size': 64,
         'lr': 0.001,
         'weight_decay': 0.01,
-        'n_epochs': 1,
+        'n_epochs': 5,
         'n_groups_per_batch': 2,
         'algo_log_metric': 'accuracy',
         # 'irm_lambda': 1.0,
