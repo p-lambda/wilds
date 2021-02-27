@@ -145,13 +145,16 @@ class PovertyMapDataset(WILDSDataset):
     _versions_dict = {
         '1.0': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x9a2add5219db4ebc89965d7f42719750/contents/blob/',
-            'compressed_size': 18_630_656_000}}
+            'compressed_size': 18_630_656_000},
+        '1.1': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xfc0aa86ad9af4eb08c42dfc40eacf094/contents/blob/',
+            'compressed_size': 13_091_823_616}}
 
     def __init__(self, version=None, root_dir='data', download=False,
                  split_scheme='official',
                  no_nl=False, fold='A', oracle_training_set=False,
                  use_ood_val=True):
-        self._version = version        
+        self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
         self._split_dict = {'train': 0, 'id_val': 1, 'id_test': 2, 'val': 3, 'test': 4}
@@ -211,10 +214,6 @@ class PovertyMapDataset(WILDSDataset):
             self._split_dict = {'train': 0, 'val': 1, 'id_test': 2, 'ood_val': 3, 'test': 4}
             self._split_names = {'train': 'Train', 'val': 'ID Val', 'id_test': 'ID Test', 'ood_val': 'OOD Val', 'test': 'OOD Test'}
 
-
-        self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
-
-        self.imgs = self.imgs.transpose((0, 3, 1, 2))
         self._y_array = torch.from_numpy(np.asarray(self.metadata['wealthpooled'])[:, np.newaxis]).float()
         self._y_size = 1
 
@@ -236,21 +235,12 @@ class PovertyMapDataset(WILDSDataset):
         super().__init__(root_dir, download, split_scheme)
 
     def get_input(self, idx):
-       """
-       Returns x for a given idx.
-       """
-       img = self.imgs[idx].copy()
-       if self.no_nl:
-           img[-1] = 0
-       img = torch.from_numpy(img).float()
-
-       self.cache_counter += 1
-       if self.cache_counter > 1000:
-           self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
-           self.imgs = self.imgs.transpose((0, 3, 1, 2))
-           self.cache_counter = 0
-
-       return img
+        """
+        Returns x for a given idx.
+        """
+        img = np.load(self.root / 'images' / f'landsat_poverty_img_{idx}.npz')['x']
+        img = torch.from_numpy(img).float()
+        return img
 
     def eval(self, y_pred, y_true, metadata):
         all_results = {}
