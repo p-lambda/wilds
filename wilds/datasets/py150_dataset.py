@@ -38,16 +38,20 @@ class Py150Dataset(WILDSDataset):
             This dataset is distributed under the MIT license.
         """
 
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
+    _dataset_name = 'py150'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x3441a145a298405a966f7288373349bf/contents/blob/',
+            'compressed_size': 154_304_512}}
 
-        self._dataset_name = 'py150'
-        self._version = '1.0'
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
+
+        self._version = version
         self._split_scheme = split_scheme
         if self._split_scheme != 'official':
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
 
         # path
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x3441a145a298405a966f7288373349bf/contents/blob/'
         self._data_dir = Path(self.initialize_data_dir(root_dir, download))
 
         # Load data
