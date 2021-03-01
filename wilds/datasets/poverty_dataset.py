@@ -216,6 +216,7 @@ class PovertyMapDataset(WILDSDataset):
             self._split_names = {'train': 'Train', 'val': 'ID Val', 'id_test': 'ID Test', 'ood_val': 'OOD Val', 'test': 'OOD Test'}
 
         if self.version == '1.0':
+            self.cache_size = cache_size
             self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
             self.imgs = self.imgs.transpose((0, 3, 1, 2))
 
