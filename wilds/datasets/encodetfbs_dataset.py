@@ -2,6 +2,7 @@ import os, time
 import torch
 import pandas as pd
 import numpy as np
+import pyBigWig
 from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import Accuracy
@@ -76,6 +77,9 @@ class EncodeTFBSDataset(WILDSDataset):
             print(chrom, time.time() - itime)
         
         self._dnase_allcelltypes = {}
+        ct = 'avg'
+        dnase_avg_bw_path = os.path.join(self._data_dir, 'Leopard_dnase/{}.bigwig'.format(ct))
+        self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_avg_bw_path)
         for ct in self._all_celltypes:
             """
             dnase_filename = os.path.join(self._data_dir, '{}_dnase.npz'.format(ct))
@@ -84,8 +88,8 @@ class EncodeTFBSDataset(WILDSDataset):
             for chrom in self._all_chroms: #self._seq_bp:
                 self._dnase_allcelltypes[ct][chrom] = dnase_npz_contents[chrom]
             """
-            self._dnase_allcelltypes[ct] = 'DNASE.{}.fc.signal.bigwig'
-            print(ct, time.time() - itime)
+            dnase_bw_path = os.path.join(self._data_dir, 'Leopard_dnase/{}.bigwig'.format(ct))
+            self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_bw_path)
         
         # Read in metadata dataframe from training+validation data
         train_regions_labeled = pd.read_csv(os.path.join(self._data_dir, 'labels/{}.train.labels.tsv.gz'.format(self._transcription_factor)), sep='\t')
@@ -94,34 +98,36 @@ class EncodeTFBSDataset(WILDSDataset):
         val_df = val_regions_labeled[np.isin(val_regions_labeled['chr'], self._test_chroms)]
         all_df = pd.concat([training_df, val_df])
         
-        # Filter by start/stop coordinate if needed (TODO: remove for final version)
-        """
-        filter_msk = all_df['start'] >= 0
-        filter_msk = all_df['start']%1000 == 0
-        all_df = all_df[filter_msk]
-        """
-        
+        # Get the y values, and remove ambiguous labels by default.
         pd_list = []
         for ct in self._all_celltypes:
             tc_chr = all_df[['chr', 'start', 'stop', ct]]
             tc_chr.columns = ['chr', 'start', 'stop', 'y']
+            y_array = tc_chr['y'].replace({'U': 0, 'B': 1, 'A': -1}).values
+
+            # Now filter out ambiguous labels
+            non_ambig_mask = (y_array != -1)
+            tc_chr['y'] = y_array
+            tc_chr = tc_chr[non_ambig_mask]
+
             tc_chr.insert(len(tc_chr.columns), 'celltype', ct)
             pd_list.append(tc_chr)
-        metadata_df = pd.concat(pd_list)
+            print(time.time() - itime)
+        self._metadata_df = pd.concat(pd_list)
         
-        # Get the y values, and remove ambiguous labels by default.
-        y_array = metadata_df['y'].replace({'U': 0, 'B': 1, 'A': -1}).values
-        non_ambig_mask = (y_array != -1)
-        metadata_df['y'] = y_array
-        self._metadata_df = metadata_df[non_ambig_mask]
-        
+        # Downsample negatives to balance each celltype
         samp_ndces = []
         itime = time.time()
-        for ct in self._all_celltypes:
-            neg_msk = np.logical_and((self._metadata_df['celltype'] == ct), (self._metadata_df['y'] == 0))
-            pos_msk = np.logical_and((self._metadata_df['celltype'] == ct), (self._metadata_df['y'] == 1))
-            neg_ndces = np.where(neg_msk)[0]
-            pos_ndces = np.where(pos_msk)[0]
+        neg_msk = (self._metadata_df['y'] == 0)
+        pos_msk = (self._metadata_df['y'] == 1)
+        for ct in _all_celltypes:
+            celltype_msk = (self._metadata_df['celltype'] == ct)
+            print(ct, time.time() - itime)
+            neg_ct_msk = np.logical_and(celltype_msk, neg_msk)
+            pos_ct_msk = np.logical_and(celltype_msk, pos_msk)
+            print(ct, time.time() - itime)
+            neg_ndces = np.where(neg_ct_msk)[0]
+            pos_ndces = np.where(pos_ct_msk)[0]
             np.random.seed(42)
             samp_neg_ndces = np.random.choice(neg_ndces, size=len(pos_ndces), replace=False)
             samp_ndces.extend(samp_neg_ndces)
@@ -169,21 +175,46 @@ class EncodeTFBSDataset(WILDSDataset):
         
         super().__init__(root_dir, download, split_scheme)
 
+    def get_random_label_vec(metadata_df, output_size=128):
+        # Sample a positively labeled region at random
+        pos_mdf = metadata_df[metadata_df['y'] == 1] #.iloc[ metadata_df['chr'] == s['chr'], : ]
+        pos_seed_region = pos_mdf.iloc[np.random.randint(pos_mdf.shape[0])]
+
+        # Extract regions from this chromosome in this celltype, to get a window of labels from
+        chr_msk = np.array(metadata_df['chr']) == pos_seed_region['chr']
+        ct_msk = np.array(metadata_df['celltype']) == pos_seed_region['celltype']
+        mdf = metadata_df[chr_msk & ct_msk]
+
+        # Get labels
+        start_ndx = np.where(mdf['start'] == pos_seed_region['start'])[0][0]
+        y_label_vec = mdf.iloc[start_ndx:start_ndx+output_size, :]['y']
+    
     def get_input(self, idx):
         """
-        Returns x for a given idx.
+        Returns x for a given idx in metadata_array, which has been filtered to only take windows with the desired stride.
         Computes this from: 
         (1) sequence features in self._seq_bp
-        (2) DNase features in self._dnase_allcelltypes
+        (2) DNase bigwig file handles in self._dnase_allcelltypes
         (3) Metadata for the index (location along the genome with 200bp window width)
         """
+        
         this_metadata = self._metadata_df.iloc[idx, :]
+        """
         flank_size = 400
         interval_start = this_metadata['start'] - flank_size
         interval_end = this_metadata['stop'] + flank_size
         dnase_this = self._dnase_allcelltypes[this_metadata['celltype']][this_metadata['chr']][interval_start:interval_end]
         seq_this = self._seq_bp[this_metadata['chr']][interval_start:interval_end]
         return torch.tensor(np.column_stack([seq_this, dnase_this]))
+        """
+        window_size = 12800
+        interval_start = this_metadata['start']
+        interval_end = window_size + interval_start #this_metadata['stop']
+        seq_this = self._seq_bp[this_metadata['chr']][interval_start:interval_end]
+        dnase_bw = self._dnase_allcelltypes[this_metadata['celltype']]
+        dnase_this = dnase_bw.values(chrom, interval_start, interval_end, numpy=True)
+        dnase_avg = self._dnase_allcelltypes['avg'].values(chrom, interval_start, interval_end, numpy=True)
+        return torch.tensor(np.column_stack([seq_this, dnase_this, dnase_avg]))
 
     def eval(self, y_pred, y_true, metadata):
         return self.standard_group_eval(
