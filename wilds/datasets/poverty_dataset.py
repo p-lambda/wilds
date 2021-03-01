@@ -258,6 +258,8 @@ class PovertyMapDataset(WILDSDataset):
 
         elif self.version == '1.1':
             img = np.load(self.root / 'images' / f'landsat_poverty_img_{idx}.npz')['x']
+            if self.no_nl:
+                img[-1] = 0
             img = torch.from_numpy(img).float()
 
         return img
