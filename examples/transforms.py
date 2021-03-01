@@ -1,5 +1,5 @@
 import torchvision.transforms as transforms
-from transformers import BertTokenizerFast
+from transformers import BertTokenizerFast, DistilBertTokenizerFast
 import torch
 
 def initialize_transform(transform_name, config, dataset):
@@ -17,9 +17,10 @@ def initialize_transform(transform_name, config, dataset):
         raise ValueError(f"{transform_name} not recognized")
 
 def initialize_bert_transform(config):
-    assert config.model.startswith('bert')
+    assert 'bert' in config.model
     assert config.max_token_length is not None
-    tokenizer = BertTokenizerFast.from_pretrained(config.model)
+
+    tokenizer = getBertTokenizer(config.model)
     def transform(text):
         tokens = tokenizer(
             text,
@@ -27,14 +28,30 @@ def initialize_bert_transform(config):
             truncation=True,
             max_length=config.max_token_length,
             return_tensors='pt')
-        x = torch.stack(
-            (tokens['input_ids'],
-             tokens['attention_mask'],
-             tokens['token_type_ids']),
-            dim=2)
+        if config.model == 'bert-base-uncased':
+            x = torch.stack(
+                (tokens['input_ids'],
+                 tokens['attention_mask'],
+                 tokens['token_type_ids']),
+                dim=2)
+        elif config.model == 'distilbert-base-uncased':
+            x = torch.stack(
+                (tokens['input_ids'],
+                 tokens['attention_mask']),
+                dim=2)
         x = torch.squeeze(x, dim=0) # First shape dim is always 1
         return x
     return transform
+
+def getBertTokenizer(model):
+    if model == 'bert-base-uncased':
+        tokenizer = BertTokenizerFast.from_pretrained(model)
+    elif model == 'distilbert-base-uncased':
+        tokenizer = DistilBertTokenizerFast.from_pretrained(model)
+    else:
+        raise ValueError(f'Model: {model} not recognized.')
+
+    return tokenizer
 
 def initialize_image_base_transform(config, dataset):
     transform_steps = []
