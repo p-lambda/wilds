@@ -90,9 +90,10 @@ class CombinatorialGrouper(Grouper):
                 raise ValueError('At least one group field not found in dataset.metadata_fields')
             grouped_metadata = dataset.metadata_array[:, self.groupby_field_indices]
             if not isinstance(grouped_metadata, torch.LongTensor):
-                if not torch.all(grouped_metadata == grouped_metadata.long()):
+                grouped_metadata_long = grouped_metadata.long()
+                if not torch.all(grouped_metadata == grouped_metadata_long):
                     warnings.warn(f'CombinatorialGrouper: converting metadata with fields [{", ".join(groupby_fields)}] into long')
-                grouped_metadata = grouped_metadata.long()
+                grouped_metadata = grouped_metadata_long
             for idx, field in enumerate(self.groupby_fields):
                 min_value = grouped_metadata[:,idx].min()
                 if min_value < 0:
