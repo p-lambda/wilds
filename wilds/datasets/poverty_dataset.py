@@ -217,6 +217,7 @@ class PovertyMapDataset(WILDSDataset):
 
         if self.version == '1.0':
             self.cache_size = cache_size
+            self.cache_counter = 0            
             self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
             self.imgs = self.imgs.transpose((0, 3, 1, 2))
 
@@ -236,7 +237,6 @@ class PovertyMapDataset(WILDSDataset):
             groupby_fields=['urban'])
 
         self._metrics = [MSE(), PearsonCorrelation()]
-        self.cache_counter = 0
 
         super().__init__(root_dir, download, split_scheme)
 
