@@ -17,8 +17,6 @@ from wilds.common.metrics.all_metrics import Accuracy
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.datasets.wilds_dataset import WILDSDataset
 
-import IPython
-
 Image.MAX_IMAGE_PIXELS = 10000000000
 
 
@@ -181,7 +179,15 @@ class FMoWDataset(WILDSDataset):
         """
         Returns x for a given idx.
         """
-        img = Image.open(self.root / 'images' /f'rgb_img_{idx}.png').convert('RGB')
+        idx = self.full_idxs[idx]
+        if self.version == '1.0':
+            batch_idx = idx // self.chunk_size
+            within_batch_idx = idx % self.chunk_size
+            img_batch = np.load(self.root / f'rgb_all_imgs_{batch_idx}.npy', mmap_mode='r')
+            img = img_batch[within_batch_idx].copy()
+        elif self.version == '1.1':
+            img = Image.open(self.root / 'images' / f'rgb_img_{idx}.png').convert('RGB')
+
         return img
 
     def eval(self, y_pred, y_true, metadata):

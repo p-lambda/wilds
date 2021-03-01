@@ -3,7 +3,6 @@ import torch
 from wilds.common.utils import get_counts
 from wilds.datasets.wilds_dataset import WILDSSubset
 import warnings
-import IPython
 
 class Grouper:
     """

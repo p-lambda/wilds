@@ -153,7 +153,8 @@ class PovertyMapDataset(WILDSDataset):
     def __init__(self, version=None, root_dir='data', download=False,
                  split_scheme='official',
                  no_nl=False, fold='A', oracle_training_set=False,
-                 use_ood_val=True):
+                 use_ood_val=True,
+                 cache_size=100):
         self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
@@ -214,6 +215,10 @@ class PovertyMapDataset(WILDSDataset):
             self._split_dict = {'train': 0, 'val': 1, 'id_test': 2, 'ood_val': 3, 'test': 4}
             self._split_names = {'train': 'Train', 'val': 'ID Val', 'id_test': 'ID Test', 'ood_val': 'OOD Val', 'test': 'OOD Test'}
 
+        if self.version == '1.0':
+            self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
+            self.imgs = self.imgs.transpose((0, 3, 1, 2))
+
         self._y_array = torch.from_numpy(np.asarray(self.metadata['wealthpooled'])[:, np.newaxis]).float()
         self._y_size = 1
 
@@ -238,8 +243,23 @@ class PovertyMapDataset(WILDSDataset):
         """
         Returns x for a given idx.
         """
-        img = np.load(self.root / 'images' / f'landsat_poverty_img_{idx}.npz')['x']
-        img = torch.from_numpy(img).float()
+        if self.version == '1.0':
+            img = self.imgs[idx].copy()
+            if self.no_nl:
+                img[-1] = 0
+            img = torch.from_numpy(img).float()
+            # consider refreshing cache if cache_size is limited
+            if self.cache_size < self.imgs.shape[0]:
+                self.cache_counter += 1
+                if self.cache_counter > self.cache_size:
+                    self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
+                    self.imgs = self.imgs.transpose((0, 3, 1, 2))
+                    self.cache_counter = 0
+
+        elif self.version == '1.1':
+            img = np.load(self.root / 'images' / f'landsat_poverty_img_{idx}.npz')['x']
+            img = torch.from_numpy(img).float()
+
         return img
 
     def eval(self, y_pred, y_true, metadata):
