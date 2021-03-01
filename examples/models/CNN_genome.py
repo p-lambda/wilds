@@ -6,7 +6,14 @@ import torch.nn.functional as F
 
 
 
-def double_conv(in_channels, out_channels):    
+def single_conv(in_channels, out_channels):
+    return nn.Sequential(
+        nn.Conv1d(in_channels, out_channels, 7, padding=3), 
+        nn.BatchNorm1d(out_channels), 
+        nn.ReLU(inplace=True)
+    )
+
+def double_conv(in_channels, out_channels):
     return nn.Sequential(
         nn.Conv1d(in_channels, out_channels, 7, padding=3), 
         nn.BatchNorm1d(out_channels), 
@@ -19,10 +26,10 @@ def double_conv(in_channels, out_channels):
 
 class UNet(nn.Module):
 
-    def __init__(self, n_class):
+    def __init__(self, n_class, n_channels_in=6):
         super().__init__()
         
-        self.dconv_down1 = double_conv(6, 15)
+        self.dconv_down1 = double_conv(n_channels_in, 15)
         self.dconv_down2 = double_conv(15, 22)
         self.dconv_down3 = double_conv(22, 33)
         self.dconv_down4 = double_conv(33, 49)
@@ -30,7 +37,8 @@ class UNet(nn.Module):
         self.dconv_down6 = double_conv(73, 109)
 
         self.maxpool = nn.MaxPool1d(2)
-        self.upsample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)        
+        self.upsample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+        self.conv_middle = single_conv(109, 109)
         
         self.dconv_up5 = double_conv(73 + 109, 73)
         self.dconv_up4 = double_conv(49 + 73, 49)
@@ -60,6 +68,8 @@ class UNet(nn.Module):
         x = self.maxpool(conv5)         # (input_size / 32) x 73
         
         conv6 = self.dconv_down6(x)     # (input_size / 32) x 109
+        # conv6 = self.conv_middle(conv6)  # Optional: convolution here. 
+        
         # Encoder finished.
         
         x = self.upsample(conv6)          # (input_size / 16) x 109
