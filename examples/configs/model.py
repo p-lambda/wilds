@@ -4,6 +4,11 @@ model_defaults = {
         'max_grad_norm': 1.0,
         'scheduler': 'linear_schedule_with_warmup',
     },
+    'code-gpt-py': {
+        'optimizer': 'AdamW',
+        'max_grad_norm': 1.0,
+        'scheduler': 'linear_schedule_with_warmup',
+    },
     'densenet121': {
         'model_kwargs':{
             'pretrained':True,

@@ -4,6 +4,8 @@ from models.bert import BertClassifier, BertFeaturizer
 from models.resnet_multispectral import ResNet18
 from models.layers import Identity
 from models.gnn import GINVirtual
+from models.code_gpt import GPT2LMHeadLogit, GPT2FeaturizerLMHeadLogit
+from transformers import GPT2Tokenizer
 
 def initialize_model(config, d_out):
     if config.model == 'resnet18_ms':
@@ -22,6 +24,14 @@ def initialize_model(config, d_out):
                 config.model,
                 num_labels=d_out,
                 **config.model_kwargs)
+    elif config.model == 'code-gpt-py':
+        name = 'microsoft/CodeGPT-small-py'
+        if d_out is None:
+            model = GPT2FeaturizerLMHeadLogit.from_pretrained(name)
+        else:
+            model = GPT2LMHeadLogit.from_pretrained(name)
+        tokenizer = GPT2Tokenizer.from_pretrained(name)
+        model.resize_token_embeddings(len(tokenizer))
     elif config.model == 'logistic_regression':
         model = nn.Linear(out_features=d_out, **config.model_kwargs)
     elif config.model == 'gin-virtual':

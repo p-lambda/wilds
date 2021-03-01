@@ -29,7 +29,7 @@ class Loss(Metric):
             - worst_metric (float): Worst-case metric
         """
         return maximum(metrics)
-    
+
 class ElementwiseLoss(ElementwiseMetric):
     def __init__(self, loss_fn, name=None):
         self.loss_fn = loss_fn
@@ -69,6 +69,8 @@ class MultiTaskLoss(MultiTaskMetric):
         if isinstance(self.loss_fn, torch.nn.BCEWithLogitsLoss):
             flattened_y_pred = flattened_y_pred.float()
             flattened_y_true = flattened_y_true.float()
+        elif isinstance(self.loss_fn, torch.nn.CrossEntropyLoss):
+            flattened_y_true = flattened_y_true.long()
         flattened_loss = self.loss_fn(flattened_y_pred, flattened_y_true)
         return flattened_loss
 
@@ -81,4 +83,3 @@ class MultiTaskLoss(MultiTaskMetric):
             - worst_metric (float): Worst-case metric
         """
         return maximum(metrics)
-

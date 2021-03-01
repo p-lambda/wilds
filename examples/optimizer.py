@@ -13,7 +13,7 @@ def initialize_optimizer(config, model):
             weight_decay=config.weight_decay,
             **config.optimizer_kwargs)
     elif config.optimizer=='AdamW':
-        assert config.model.startswith('bert'), "Only BERT supported for AdamW"
+        assert config.model.startswith('bert') or 'gpt' in config.model, "Only BERT/GPT supported for AdamW"
         no_decay = ['bias', 'LayerNorm.weight']
         params = [
             {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)], 'weight_decay': config.weight_decay},
