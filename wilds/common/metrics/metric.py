@@ -212,7 +212,7 @@ class ElementwiseMetric(Metric):
 
     def compute_flattened(self, y_pred, y_true, return_dict=True):
         flattened_metrics = self.compute_element_wise(y_pred, y_true, return_dict=False)
-        index =  torch.arange(y_true.numel())
+        index = torch.arange(y_true.numel())
         if return_dict:
             return {self.name: flattened_metrics, 'index': index}
         else:

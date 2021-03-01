@@ -128,3 +128,20 @@ class MSE(ElementwiseLoss):
         if name is None:
             name = 'mse'
         super().__init__(name=name, loss_fn=mse_loss)
+
+class PrecisionAtRecall(Metric):
+    """Given a specific model threshold, determine the precision score achieved"""
+    def __init__(self, threshold, score_fn=logits_to_score, name=None):
+        self.score_fn = score_fn
+        self.threshold = threshold
+        if name is None:
+            name = "precision_at_global_recall"
+        super().__init__(name=name)
+
+    def _compute(self, y_pred, y_true):
+        score = self.score_fn(y_pred)
+        predictions = (score > self.threshold)
+        return torch.tensor(sklearn.metrics.precision_score(y_true, predictions))
+
+    def worst(self, metrics):
+        return minimum(metrics)

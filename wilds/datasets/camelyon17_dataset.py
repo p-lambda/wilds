@@ -45,11 +45,14 @@ class Camelyon17Dataset(WILDSDataset):
         https://creativecommons.org/publicdomain/zero/1.0/
     """
 
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
-        self._dataset_name = 'camelyon17'
-        self._version = '1.0'
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0xe45e15f39fb54e9d9e919556af67aabe/contents/blob/'
-        self._compressed_size = 10_658_709_504
+    _dataset_name = 'camelyon17'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xe45e15f39fb54e9d9e919556af67aabe/contents/blob/',
+            'compressed_size': 10_658_709_504}}
+
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
+        self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
         self._original_resolution = (96,96)
 

@@ -1,9 +1,14 @@
+from datetime import datetime
+from pathlib import Path
+import argparse
+import json
 
 import pandas as pd
 import numpy as np
 
-# Examples to skip due to e.g them missing, loading issues
-LOCATIONS_TO_SKIP = [537]
+# For more info see https://www.kaggle.com/c/iwildcam-2020-fgvc7/discussion/135200
+# 485 had multiple images from indoors, and just a few were actually from out in the wild.
+LOCATIONS_TO_SKIP = [537, 485]
 
 CANNOT_OPEN = ['99136aa6-21bc-11ea-a13a-137349068a90.jpg',
                '87022118-21bc-11ea-a13a-137349068a90.jpg',
@@ -43,7 +48,6 @@ def create_split(data_dir):
 
 
 def _create_split(data_dir, seed, skip=True):
-    data_dir = Path(data_dir)
     np_rng = np.random.default_rng(seed)
 
     # Load Kaggle train data
@@ -65,6 +69,10 @@ def _create_split(data_dir, seed, skip=True):
             })
 
 
+    # Extract the date from the datetime.
+    df['datetime_obj'] = df['datetime'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f'))
+    df['date'] = df['datetime_obj'].apply(lambda x: x.date())
+
     # Split by location to get the cis & trans validation set
     locations = np.unique(df['location'])
     n_locations = len(locations)
@@ -82,9 +90,9 @@ def _create_split(data_dir, seed, skip=True):
     test_trans_df = df[df['location'].isin(test_trans_locations)]
 
     # Split remaining samples by dates to get the cis validation and test set
-    frac_validation = 0.05
-    frac_test = 0.05
-    unique_dates = np.unique(remaining_df['datetime'])
+    frac_validation = 0.08
+    frac_test = 0.07
+    unique_dates = np.unique(remaining_df['date'])
     n_dates = len(unique_dates)
     n_val_dates = int(n_dates * frac_validation)
     n_test_dates = int(n_dates * frac_test)
@@ -94,9 +102,9 @@ def _create_split(data_dir, seed, skip=True):
     train_dates, val_cis_dates = unique_dates[:n_train_dates], unique_dates[n_train_dates:(n_train_dates+n_val_dates)]
     test_cis_dates = unique_dates[(n_train_dates+n_val_dates):]
 
-    val_cis_df = remaining_df[remaining_df['datetime'].isin(val_cis_dates)]
-    test_cis_df = remaining_df[remaining_df['datetime'].isin(test_cis_dates)]
-    train_df = remaining_df[remaining_df['datetime'].isin(train_dates)]
+    val_cis_df = remaining_df[remaining_df['date'].isin(val_cis_dates)]
+    test_cis_df = remaining_df[remaining_df['date'].isin(test_cis_dates)]
+    train_df = remaining_df[remaining_df['date'].isin(train_dates)]
 
     # Locations in val_cis and test_cis but not in train are all moved to train set
     # since we want all locations in tcis splits to be in the train set.
@@ -135,6 +143,11 @@ def _create_split(data_dir, seed, skip=True):
     for df in [val_cis_df, val_trans_df, test_cis_df, test_trans_df]:
         assert not check_overlap(train_df, df)
 
+
+    print("val cis df : ", len(val_cis_df))
+    print("test cis df : ", len(test_cis_df))
+    print("test cis df : ", len(train_df))
+
     return train_df, val_cis_df, val_trans_df, test_cis_df, test_trans_df
 
 def remove(dfs):
@@ -152,3 +165,12 @@ def check_overlap(df1, df2):
     n_intersection = len(intersection)
 
     return False if n_intersection == 0 else True
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_dir', type=str)
+    args = parser.parse_args()
+
+    create_split(Path(args.data_dir))

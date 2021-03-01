@@ -35,7 +35,7 @@ def initialize_model(config, d_out):
     elif config.model == 'logistic_regression':
         model = nn.Linear(out_features=d_out, **config.model_kwargs)
     elif config.model == 'gin-virtual':
-        model = GINVirtual(num_tasks=d_out, **config.model_kwargs)
+        model = GINVirtual(num_tasks=d_out, **config.model_kwargs)    
     else:
         raise ValueError('Model not recognized.')
     return model
