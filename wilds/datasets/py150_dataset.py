@@ -47,7 +47,7 @@ class Py150Dataset(WILDSDataset):
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
 
         # path
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x45343bd9e1c64acfbcb4a22a76302994/contents/blob/'
+        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x3441a145a298405a966f7288373349bf/contents/blob/'
         self._data_dir = Path(self.initialize_data_dir(root_dir, download))
 
         # Load data
