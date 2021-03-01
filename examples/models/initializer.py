@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torchvision
 from models.bert.bert import BertClassifier, BertFeaturizer
-from models.bert.distil_bert import DistilBertClassifier, DistilBertFeaturizer
+from models.bert.distilbert import DistilBertClassifier, DistilBertFeaturizer
 from models.resnet_multispectral import ResNet18
 from models.layers import Identity
 from models.gnn import GINVirtual
