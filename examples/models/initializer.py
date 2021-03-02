@@ -100,7 +100,7 @@ def initialize_torchvision_model(name, d_out, **kwargs):
         last_layer = Identity(d_features)
         model.d_out = d_features
     else: # want to initialize a classifier for a particular num_classes
-        last_layer = nn.Linear(d, d_out)
+        last_layer = nn.Linear(d_features, d_out)
         model.d_out = d_out
     setattr(model, last_layer_name, last_layer)
     return model
