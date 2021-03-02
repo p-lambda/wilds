@@ -42,15 +42,15 @@ pip install -e .
 
 ### Requirements
 - numpy>=1.19.1
+- ogb>=1.2.5
+- outdated>=0.2.0
 - pandas>=1.1.0
 - pillow>=7.2.0
-- torch>=1.7.0
-- tqdm>=4.53.0
 - pytz>=2020.4
-- outdated>=0.2.0
-- ogb>=1.2.5
+- torch>=1.7.0
 - torch-scatter>=2.0.5
 - torch-geometric>=1.6.1
+- tqdm>=4.53.0 
 
 Running `pip install wilds` or `pip install -e .` will automatically check for and install all of these requirements
 except for the `torch-scatter` and `torch-geometric` packages, which require a [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
