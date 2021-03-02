@@ -71,9 +71,8 @@ To run these scripts, you will need to install these additional dependencies:
 All baseline experiments in the paper were run on Python 3.8.5 and CUDA 10.1.
 
 
-## Usage
+## Using the example scripts
 
-### Example scripts with default models and dataset downloading
 In the `examples/` folder, we provide a set of scripts that can be used to download WILDS datasets and train models on them.
 These scripts are configured with the default models and hyperparameters that we used for all of the baselines described in our paper. All baseline results in the paper can be easily replicated with commands like:
 
@@ -111,6 +110,10 @@ These are the sizes of each of our datasets, as well as their approximate time t
 | Amazon        |                    |                   |                 |
 | Py150         | 0.1                | 0.8               |                 |
 
+We have an [executable version](https://worksheets.codalab.org/worksheets/0x52cea64d1d3f4fa89de326b4e31aa50a) of our paper on CodaLab that contains all of the output of  This contains the exact commands, code, and data used for each experiment reported in our paper. The trained model weights for every experiment can also be found there.
+
+
+## Using the WILDS package
 ### Data loading
 
 The WILDS package provides a simple, standardized interface for all datasets in the benchmark.
