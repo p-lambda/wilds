@@ -8,6 +8,9 @@ from models.code_gpt import GPT2LMHeadLogit, GPT2FeaturizerLMHeadLogit
 from transformers import GPT2Tokenizer
 
 def initialize_model(config, d_out):
+    """
+    This function is called within each algorithm (e.g., ERM, groupDRO).
+    """
     if config.model == 'resnet18_ms':
         # multispectral resnet 18
         model = ResNet18(num_classes=d_out, **config.model_kwargs)
@@ -35,7 +38,7 @@ def initialize_model(config, d_out):
     elif config.model == 'logistic_regression':
         model = nn.Linear(out_features=d_out, **config.model_kwargs)
     elif config.model == 'gin-virtual':
-        model = GINVirtual(num_tasks=d_out, **config.model_kwargs)    
+        model = GINVirtual(num_tasks=d_out, **config.model_kwargs)
     else:
         raise ValueError('Model not recognized.')
     return model

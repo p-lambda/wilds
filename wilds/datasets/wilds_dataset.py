@@ -310,7 +310,7 @@ class WILDSDataset:
                 f'*****************************\n'
                 f'{self.dataset_name} has been updated to version {self.latest_version}.\n'
                 f'You are currently using version {self.version}.\n'
-                f'We highly recommend updating the dataset.\n'
+                f'We highly recommend updating the dataset by not specifying the older version in the command-line argument or dataset constructor.\n'
                 f'See https://wilds.stanford.edu/changelog for changes.\n'
                 f'*****************************\n')
         elif latest_minor_version > current_minor_version:
