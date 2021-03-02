@@ -7,38 +7,73 @@ from models.gnn import GINVirtual
 from models.code_gpt import GPT2LMHeadLogit, GPT2FeaturizerLMHeadLogit
 from transformers import GPT2Tokenizer
 
-def initialize_model(config, d_out):
+def initialize_model(config, d_out, featurizer=False):
     """
-    This function is called within each algorithm (e.g., ERM, groupDRO).
+    Initializes models according to the config
+        Args:
+            - config (dictionary): config dictionary
+            - d_out (int): the dimensionality of the model output
+            - featurizer (bool): whether to return a model or a (featurizer, classifier) pair that constitutes a model.
+        Output:
+            If feauturizer=True:
+            - featurizer: a model that outputs feature Tensors of shape (batch_size, ..., feature dimensionality)
+            - classifier: a model that takes in feature Tensors and outputs predictions. In most cases, this is a linear layer.
+            
+            If featurizer=False:
+            - model: a model that is equivalent to nn.Sequential(featurizer, classifier)
     """
-    if config.model == 'resnet18_ms':
-        # multispectral resnet 18
-        model = ResNet18(num_classes=d_out, **config.model_kwargs)
-    elif config.model in ('resnet50', 'resnet34', 'wideresnet50','densenet121'):
-        model = initialize_torchvision_model(
-            name=config.model,
-            d_out=d_out,
-            **config.model_kwargs)
+    if config.model in ('resnet50', 'resnet34', 'wideresnet50','densenet121'):
+        if featurizer:
+            featurizer = initialize_torchvision_model(
+                name=config.model,
+                d_out=None,
+                **config.model_kwargs)
+            classifier = nn.Linear(featurizer.d_out, d_out)
+            model = (featurizer, classifier)
+        else:
+            model = initialize_torchvision_model(
+                name=config.model,
+                d_out=d_out,
+                **config.model_kwargs)
     elif config.model.startswith('bert'):
-        if d_out is None:
-            model = BertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
+        if featurizer:
+            featurizer = BertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
+            classifier = nn.Linear(featurizer.d_out, d_out)
+            model = (featurizer, classifier)
         else:
             model = BertClassifier.from_pretrained(
                 config.model,
                 num_labels=d_out,
                 **config.model_kwargs)
+    elif config.model == 'resnet18_ms': # multispectral resnet 18
+        if featurizer:
+            featurizer = ResNet18(num_classes=None, **config.model_kwargs)
+            classifier = nn.Linear(featurizer.d_out, d_out)
+            model = (featurizer, classifier)
+        else:
+            model = ResNet18(num_classes=d_out, **config.model_kwargs)
+    elif config.model == 'gin-virtual':
+        if featurizer:
+            featurizer = GINVirtual(num_tasks=None, **config.model_kwargs)    
+            classifier = nn.Linear(featurizer.d_out, d_out)
+            model = (featurizer, classifier)
+        else:
+            model = GINVirtual(num_tasks=d_out, **config.model_kwargs)    
     elif config.model == 'code-gpt-py':
         name = 'microsoft/CodeGPT-small-py'
-        if d_out is None:
+        tokenizer = GPT2Tokenizer.from_pretrained(name)
+        if featurizer:
             model = GPT2FeaturizerLMHeadLogit.from_pretrained(name)
+            model.resize_token_embeddings(len(tokenizer))
+            featurizer = model.transformer
+            classifier = model.lm_head
+            model = (featurizer, classifier)
         else:
             model = GPT2LMHeadLogit.from_pretrained(name)
-        tokenizer = GPT2Tokenizer.from_pretrained(name)
-        model.resize_token_embeddings(len(tokenizer))
+            model.resize_token_embeddings(len(tokenizer))
     elif config.model == 'logistic_regression':
+        assert not featurizer, "Featurizer not supported for logistic regression"
         model = nn.Linear(out_features=d_out, **config.model_kwargs)
-    elif config.model == 'gin-virtual':
-        model = GINVirtual(num_tasks=d_out, **config.model_kwargs)
     else:
         raise ValueError('Model not recognized.')
     return model
@@ -60,13 +95,12 @@ def initialize_torchvision_model(name, d_out, **kwargs):
     constructor = getattr(torchvision.models, constructor_name)
     model = constructor(**kwargs)
     # adjust the last layer
-    d = getattr(model, last_layer_name).in_features
+    d_features = getattr(model, last_layer_name).in_features
     if d_out is None: # want to initialize a featurizer model
-        last_layer = Identity(d)
-        model.d_out = d
+        last_layer = Identity(d_features)
+        model.d_out = d_features
     else: # want to initialize a classifier for a particular num_classes
         last_layer = nn.Linear(d, d_out)
         model.d_out = d_out
     setattr(model, last_layer_name, last_layer)
-    # set the feature dimension as an attribute for convenience
     return model
