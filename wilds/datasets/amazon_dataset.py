@@ -57,7 +57,7 @@ class AmazonDataset(WILDSDataset):
             'compressed_size': 4_066_541_568
         },
         '2.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x9de7edd6e3f14034809dc8cf3b060ba3/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x2732a175b5a644468b0342081544d1fd/contents/blob/',
             'compressed_size': 1_987_523_759
         },
     }
