@@ -5,6 +5,8 @@ import os
 import pandas as pd
 import numpy as np
 
+# Fix the seed for reproducibility
+np.random.seed(0)
 
 """
 Subsample the Amazon dataset.
@@ -54,16 +56,18 @@ def main(dataset_path, frac=0.25):
     train_reviewer_ids = train_data_df.reviewerID.unique()
     print(f"Number of unique reviewers in train set: {len(train_reviewer_ids)}")
 
-    blackout_indices = []
-    for i, reviewer_id in enumerate(train_reviewer_ids):
-        reviews = train_data_df[train_data_df["reviewerID"] == reviewer_id]
+    # Randomly sample (1 - frac) x number of reviewers
+    # Blackout all the reviews belonging to the randomly sampled reviewers
+    subsampled_reviewers_count = int((1 - frac) * len(train_reviewer_ids))
+    subsampled_reviewers = np.random.choice(
+        train_reviewer_ids, subsampled_reviewers_count, replace=False
+    )
+    print(subsampled_reviewers)
 
-        # Randomly sample (1 - frac) x number of reviews this particular user has.
-        # Add to blackout_indices to blackout later, so frac x number of reviews remain.
-        blackout_count = int((1 - frac) * len(reviews))
-        blackout_indices.extend(
-            np.random.choice(reviews.index, blackout_count, replace=False)
-        )
+    blackout_indices = []
+    for reviewer_id in subsampled_reviewers:
+        reviews = train_data_df[train_data_df["reviewerID"] == reviewer_id]
+        blackout_indices.extend(reviews.index)
 
     # Mark all the corresponding reviews of blackout_indices as -1
     split_df.loc[blackout_indices, "split"] = NOT_IN_DATASET

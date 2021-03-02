@@ -3,7 +3,6 @@ from transformers import DistilBertForSequenceClassification, DistilBertModel
 class DistilBertClassifier(DistilBertForSequenceClassification):
     def __init__(self, config):
         super().__init__(config)
-        self.d_out = config.num_labels
 
     def __call__(self, x):
         input_ids = x[:, :, 0]
@@ -18,7 +17,6 @@ class DistilBertClassifier(DistilBertForSequenceClassification):
 class DistilBertFeaturizer(DistilBertModel):
     def __init__(self, config):
         super().__init__(config)
-        self.d_out = config.hidden_size
 
     def __call__(self, x):
         input_ids = x[:, :, 0]
