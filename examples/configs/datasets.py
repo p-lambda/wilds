@@ -38,7 +38,7 @@ dataset_defaults = {
     },
     'camelyon17': {
         'split_scheme': 'official',
-        'model': 'resnet50',
+        'model': 'densenet121',
         'model_kwargs': {'pretrained': False},
         'train_transform': 'image_base',
         'eval_transform': 'image_base',
@@ -168,6 +168,24 @@ dataset_defaults = {
         'coral_penalty_weight': 0.1,
         'no_group_logging': True,
     },
+    'py150': {
+        'split_scheme': 'official',
+        'model': 'code-gpt-py',
+        'loss_function': 'lm_cross_entropy',
+        'val_metric': 'acc',
+        'val_metric_decreasing': False,
+        'optimizer': 'AdamW',
+        'optimizer_kwargs': {'eps':1e-8},
+        'lr': 8e-5,
+        'weight_decay': 0.01,
+        'n_epochs': 5,
+        'batch_size': 40,
+        'groupby_fields': ['repo',],
+        'n_groups_per_batch': 10,
+        'irm_lambda': 1.,
+        'coral_penalty_weight': 0.1,
+        'no_group_logging': True,
+    },
     'poverty': {
         'split_scheme': 'official',
         'dataset_kwargs': {
@@ -175,10 +193,6 @@ dataset_defaults = {
             'fold': 'A',
             'oracle_training_set': False,
             'use_ood_val': True
-        },
-        'loader_kwargs': {
-            'num_workers': 1,
-            'pin_memory': False,
         },
         'model': 'resnet18_ms',
         'model_kwargs': {'num_channels': 8},

@@ -14,6 +14,8 @@ def initialize_algorithm(config, datasets, train_grouper):
     if (train_dataset.is_classification) and (train_dataset.y_size == 1):
         # For single-task classification, we have one output per class
         d_out = train_dataset.n_classes
+    elif (train_dataset.is_classification) and (train_dataset.y_size is None):
+        d_out = train_dataset.n_classes
     elif (train_dataset.is_classification) and (train_dataset.y_size > 1) and (train_dataset.n_classes == 2):
         # For multi-task binary classification (each output is the logit for each binary class)
         d_out = train_dataset.y_size

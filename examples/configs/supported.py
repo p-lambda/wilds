@@ -14,6 +14,7 @@ from wilds.datasets.poverty_dataset import PovertyMapDataset
 from wilds.datasets.sqf_dataset import SQFDataset
 from wilds.datasets.waterbirds_dataset import WaterbirdsDataset
 from wilds.datasets.yelp_dataset import YelpDataset
+from wilds.datasets.py150_dataset import Py150Dataset
 # metrics
 from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
 from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE
@@ -25,7 +26,8 @@ benchmark_datasets = [
     'iwildcam',
     'ogb-molpcba',
     'poverty',
-    'fmow']
+    'fmow',
+    'py150']
 
 datasets = {
     'amazon': AmazonDataset,
@@ -39,11 +41,13 @@ datasets = {
     'poverty': PovertyMapDataset,
     'fmow': FMoWDataset,
     'bdd100k': BDD100KDataset,
+    'py150': Py150Dataset,
     'sqf': SQFDataset,
 }
 
 losses = {
     'cross_entropy': ElementwiseLoss(loss_fn=nn.CrossEntropyLoss(reduction='none')),
+    'lm_cross_entropy': MultiTaskLoss(loss_fn=nn.CrossEntropyLoss(reduction='none')),
     'mse': MSE(name='loss'),
     'multitask_bce': MultiTaskLoss(loss_fn=nn.BCEWithLogitsLoss(reduction='none')),
 }
@@ -59,7 +63,7 @@ algo_log_metrics = {
 transforms = ['bert', 'image_base', 'image_resize_and_center_crop', 'poverty_train']
 models = ['resnet18_ms', 'resnet50', 'resnet34', 'wideresnet50',
          'densenet121', 'bert-base-uncased', 'distilbert-base-uncased',
-         'gin-virtual', 'logistic_regression']
+         'gin-virtual', 'logistic_regression', 'code-gpt-py']
 algorithms = ['ERM', 'groupDRO', 'deepCORAL', 'IRM']
 optimizers = ['SGD', 'Adam', 'AdamW']
 schedulers = ['linear_schedule_with_warmup', 'ReduceLROnPlateau', 'StepLR']

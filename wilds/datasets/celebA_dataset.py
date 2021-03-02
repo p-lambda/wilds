@@ -54,8 +54,8 @@ class CelebADataset(WILDSDataset):
     _dataset_name = 'celebA'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xa174edc9c11041869d11f98d1dc19935/contents/blob/',
-            'compressed_size': None}}
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xfe55077f5cd541f985ebf9ec50473293/contents/blob/',
+            'compressed_size': 1_308_557_312}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
         self._version = version

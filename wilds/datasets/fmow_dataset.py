@@ -60,7 +60,11 @@ class FMoWDataset(WILDSDataset):
     _versions_dict = {
         '1.0': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0xc59ea8261dfe4d2baa3820866e33d781/contents/blob/',
-            'compressed_size': 70_000_000_000}}
+            'compressed_size': 70_000_000_000},
+        '1.1': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xaec91eb7c9d548ebb15e1b5e60f966ab/contents/blob/',
+            'compressed_size': 53_893_324_800}
+    }
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official', oracle_training_set=False, seed=111, use_ood_val=False):
         self._version = version
@@ -172,14 +176,19 @@ class FMoWDataset(WILDSDataset):
         super().__init__(root_dir, download, split_scheme)
 
     def get_input(self, idx):
-       """
-       Returns x for a given idx.
-       """
-       idx = self.full_idxs[idx]
-       batch_idx = idx // self.chunk_size
-       within_batch_idx = idx % self.chunk_size
-       img_batch = np.load(self.root / f'rgb_all_imgs_{batch_idx}.npy', mmap_mode='r')
-       return img_batch[within_batch_idx]
+        """
+        Returns x for a given idx.
+        """
+        idx = self.full_idxs[idx]
+        if self.version == '1.0':
+            batch_idx = idx // self.chunk_size
+            within_batch_idx = idx % self.chunk_size
+            img_batch = np.load(self.root / f'rgb_all_imgs_{batch_idx}.npy', mmap_mode='r')
+            img = img_batch[within_batch_idx].copy()
+        elif self.version == '1.1':
+            img = Image.open(self.root / 'images' / f'rgb_img_{idx}.png').convert('RGB')
+
+        return img
 
     def eval(self, y_pred, y_true, metadata):
         # Overall evaluation + evaluate by year

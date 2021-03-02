@@ -87,11 +87,13 @@ class CombinatorialGrouper(Grouper):
             # Note that this might result in some empty groups.
             self.groupby_field_indices = [i for (i, field) in enumerate(dataset.metadata_fields) if field in groupby_fields]
             if len(self.groupby_field_indices) != len(self.groupby_fields):
-                raise ValueError('at least one group field not found in dataset.metadata_fields')
+                raise ValueError('At least one group field not found in dataset.metadata_fields')
             grouped_metadata = dataset.metadata_array[:, self.groupby_field_indices]
             if not isinstance(grouped_metadata, torch.LongTensor):
-                warnings.warn(f'CombinatorialGrouper: converting metadata with fields [{", ".join(groupby_fields)}] into long')
-                grouped_metadata = grouped_metadata.long()
+                grouped_metadata_long = grouped_metadata.long()
+                if not torch.all(grouped_metadata == grouped_metadata_long):
+                    warnings.warn(f'CombinatorialGrouper: converting metadata with fields [{", ".join(groupby_fields)}] into long')
+                grouped_metadata = grouped_metadata_long
             for idx, field in enumerate(self.groupby_fields):
                 min_value = grouped_metadata[:,idx].min()
                 if min_value < 0:
@@ -150,4 +152,3 @@ class CombinatorialGrouper(Grouper):
 
     def group_field_str(self, group):
         return self.group_str(group).replace('=', ':').replace(',','_').replace(' ','')
-
