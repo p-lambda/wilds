@@ -29,7 +29,7 @@ pip install wilds
 If you have already installed it, please check that you have the latest version:
 ```bash
 python -c "import wilds; print(wilds.__version__)"
-# This should print "1.0.0". If it doesn't, update by running:
+# This should print "1.1.0". If it doesn't, update by running:
 pip install -U wilds
 ```
 
@@ -48,7 +48,7 @@ pip install -e .
 - tqdm>=4.53.0
 - pytz>=2020.4
 - outdated>=0.2.0
-- ogb>=1.2.3
+- ogb>=1.2.5
 - torch-scatter>=2.0.5
 - torch-geometric>=1.6.1
 
@@ -70,9 +70,12 @@ To run these scripts, you will need to install these additional dependencies:
 
 All baseline experiments in the paper were run on Python 3.8.5 and CUDA 10.1.
 
+
 ## Usage
-### Default models
-In the `examples/` folder, we provide a set of scripts that we used to train models on the WILDS package. These scripts are configured with the default models and hyperparameters that we used for all of the baselines described in our paper. All baseline results in the paper can be easily replicated with commands like:
+
+### Example scripts with default models and dataset downloading
+In the `examples/` folder, we provide a set of scripts that can be used to download WILDS datasets and train models on them.
+These scripts are configured with the default models and hyperparameters that we used for all of the baselines described in our paper. All baseline results in the paper can be easily replicated with commands like:
 
 ```bash
 cd examples
@@ -86,6 +89,27 @@ The first time you run these scripts, you might need to download the datasets. Y
 ```
 python run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data --download
 ```
+
+Alternatively, you can use the standalone `examples/download_datasets.py` script, for example:
+
+```bash
+python download_datasets.py --root_dir data
+```
+
+This will download all datasets to the specified `data` folder. You can also pass in the `--datasets` argument to only download specified datasets.
+
+These are the sizes of each of our datasets, as well as their approximate time taken to train and evaluate the default model for a single run using a NVIDIA V100 GPU.
+
+| Dataset       | Download size (GB) | Size on disk (GB) | Train+eval time |
+|---------------|--------------------|-------------------|-----------------|
+| iWildCam      | 11                 | 25                |                 |
+| Camelyon17    | 10                 | 15                |                 |
+| MolPCBA       | 0.04               | 2                 |                 |
+| CivilComments | 0.1                | 0.3               |                 |
+| FMoW          | 50                 | 55                |                 |
+| PovertyMap    | 12                 | 14                |                 |
+| Amazon        |                    |                   |                 |
+| Py150         | 0.1                | 0.8               |                 |
 
 ### Data loading
 
@@ -175,7 +199,7 @@ Invoking the `eval` method of each dataset yields all metrics reported in the pa
 ## Citing WILDS
 If you use WILDS datasets in your work, please cite [our paper](https://arxiv.org/abs/2012.07421) ([Bibtex](https://wilds.stanford.edu/assets/files/bibtex.md)):
 
-- **WILDS: A Benchmark of in-the-Wild Distribution Shifts** (2020). Pang Wei Koh*, Shiori Sagawa*, Henrik Marklund, Sang Michael Xie, Marvin Zhang, Akshay Balsubramani, Weihua Hu, Michihiro Yasunaga, Richard Lanas Phillips, Sara Beery, Jure Leskovec, Anshul Kundaje, Emma Pierson, Sergey Levine, Chelsea Finn, and Percy Liang.
+- **WILDS: A Benchmark of in-the-Wild Distribution Shifts** (2021). Pang Wei Koh*, Shiori Sagawa*, Henrik Marklund, Sang Michael Xie, Marvin Zhang, Akshay Balsubramani, Weihua Hu, Michihiro Yasunaga, Richard Lanas Phillips, Irena Gao, Tony Lee, Etienne David, Ian Stavness, Wei Guo, Berton A. Earnshaw, Imran S. Haque, Sara Beery, Jure Leskovec, Anshul Kundaje, Emma Pierson, Sergey Levine, Chelsea Finn, and Percy Liang.
 
 Please also cite the original papers that introduce the datasets, as listed on the [datasets page](https://wilds.stanford.edu/datasets/).
 
