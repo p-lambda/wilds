@@ -34,7 +34,7 @@ dataset_defaults = {
     },
     'camelyon17': {
         'split_scheme': 'official',
-        'model': 'resnet50',
+        'model': 'densenet121',
         'model_kwargs': {'pretrained': False},
         'train_transform': 'image_base',
         'eval_transform': 'image_base',
@@ -183,10 +183,6 @@ dataset_defaults = {
             'fold': 'A',
             'oracle_training_set': False,
             'use_ood_val': True
-        },
-        'loader_kwargs': {
-            'num_workers': 1,
-            'pin_memory': False,
         },
         'model': 'resnet18_ms',
         'model_kwargs': {'num_channels': 8},
