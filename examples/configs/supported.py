@@ -26,7 +26,8 @@ benchmark_datasets = [
     'iwildcam',
     'ogb-molpcba',
     'poverty',
-    'fmow']
+    'fmow',
+    'py150']
 
 datasets = {
     'amazon': AmazonDataset,
