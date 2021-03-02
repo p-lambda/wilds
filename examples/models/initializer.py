@@ -16,7 +16,7 @@ def initialize_model(config, d_out, featurizer=False):
             - d_out (int): the dimensionality of the model output
             - featurizer (bool): whether to return a model or a (featurizer, classifier) pair that constitutes a model.
         Output:
-            If feauturizer=True:
+            If featurizer=True:
             - featurizer: a model that outputs feature Tensors of shape (batch_size, ..., feature dimensionality)
             - classifier: a model that takes in feature Tensors and outputs predictions. In most cases, this is a linear layer.
 
@@ -37,7 +37,12 @@ def initialize_model(config, d_out, featurizer=False):
                 d_out=d_out,
                 **config.model_kwargs)
     elif 'bert' in config.model:
-            model = initializeBertBasedModel(config, d_out)
+        if featurizer:
+            featurizer = initialize_bert_based_model(config, d_out, featurizer)
+            classifier = nn.Linear(featurizer.d_out, d_out)
+            model = (featurizer, classifier)
+        else:
+            model = initialize_bert_based_model(config, d_out)
     elif config.model == 'resnet18_ms':  # multispectral resnet 18
         if featurizer:
             featurizer = ResNet18(num_classes=None, **config.model_kwargs)
@@ -71,9 +76,9 @@ def initialize_model(config, d_out, featurizer=False):
         raise ValueError(f'Model: {config.model} not recognized.')
     return model
 
-def initializeBertBasedModel(config, d_out):
+def initialize_bert_based_model(config, d_out, is_featurizer=False):
     if config.model == 'bert-base-uncased':
-        if d_out is None:
+        if is_featurizer:
             model = BertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
         else:
             model = BertClassifier.from_pretrained(
@@ -81,7 +86,7 @@ def initializeBertBasedModel(config, d_out):
                 num_labels=d_out,
                 **config.model_kwargs)
     elif config.model == 'distilbert-base-uncased':
-        if d_out is None:
+        if is_featurizer:
             model = DistilBertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
         else:
             model = DistilBertClassifier.from_pretrained(
