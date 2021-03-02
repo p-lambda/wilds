@@ -19,7 +19,10 @@ class Py150Dataset(WILDSDataset):
         Label (y):
             A sequence of next tokens (shifted x)
         Metadata:
-            Each image is annotated with the original GitHub repo id and file name
+            Each example is annotated with the original GitHub repo id.
+            This repo id can be matched with the name of the repo in natural language by
+            matching it with the contents of the metadata/ folder in the downloaded dataset.
+            Similarly, each example can also associated with the name of the file in natural language.
         Website:
             https://www.sri.inf.ethz.ch/py150
             https://github.com/microsoft/CodeXGLUE
