@@ -96,7 +96,7 @@ Alternatively, you can use the standalone `examples/download_datasets.py` script
 python download_datasets.py --root_dir data
 ```
 
-This will download all datasets to the specified `data` folder. You can also pass in the `--datasets` argument to only download specified datasets.
+This will download all datasets to the specified `data` folder. You can also use the `--datasets` argument to download particular datasets.
 
 These are the sizes of each of our datasets, as well as their approximate time taken to train and evaluate the default model for a single run using a NVIDIA V100 GPU.
 
