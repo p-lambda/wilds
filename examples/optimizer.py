@@ -2,8 +2,9 @@ from torch.optim import SGD, Adam
 from transformers import AdamW
 
 def initialize_optimizer(config, model):
-    if config.model.startswith('bert'):
-        assert config.optimizer=='AdamW', 'Only AdamW supported for BERT models'
+    if 'bert' in config.model:
+        assert config.optimizer=='AdamW', 'Only AdamW is supported for BERT-based models'
+
     # initialize optimizers
     if config.optimizer=='SGD':
         params = filter(lambda p: p.requires_grad, model.parameters())
@@ -13,7 +14,7 @@ def initialize_optimizer(config, model):
             weight_decay=config.weight_decay,
             **config.optimizer_kwargs)
     elif config.optimizer=='AdamW':
-        assert config.model.startswith('bert') or 'gpt' in config.model, "Only BERT/GPT supported for AdamW"
+        assert 'bert' in config.model or 'gpt' in config.model, "Only BERT-based models and GPT supported for AdamW"
         no_decay = ['bias', 'LayerNorm.weight']
         params = [
             {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)], 'weight_decay': config.weight_decay},

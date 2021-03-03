@@ -54,7 +54,13 @@ class AmazonDataset(WILDSDataset):
     _versions_dict = {
         '1.0': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x60237058e01749cda7b0701c2bd01420/contents/blob/',
-            'compressed_size': 4_066_541_568}}
+            'compressed_size': 4_066_541_568
+        },
+        '2.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x2732a175b5a644468b0342081544d1fd/contents/blob/',
+            'compressed_size': 1_987_523_759
+        },
+    }
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
         self._version = version

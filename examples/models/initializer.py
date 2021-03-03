@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torchvision
-from models.bert import BertClassifier, BertFeaturizer
+from models.bert.bert import BertClassifier, BertFeaturizer
+from models.bert.distilbert import DistilBertClassifier, DistilBertFeaturizer
 from models.resnet_multispectral import ResNet18
 from models.layers import Identity
 from models.gnn import GINVirtual
@@ -15,14 +16,14 @@ def initialize_model(config, d_out, featurizer=False):
             - d_out (int): the dimensionality of the model output
             - featurizer (bool): whether to return a model or a (featurizer, classifier) pair that constitutes a model.
         Output:
-            If feauturizer=True:
+            If featurizer=True:
             - featurizer: a model that outputs feature Tensors of shape (batch_size, ..., feature dimensionality)
             - classifier: a model that takes in feature Tensors and outputs predictions. In most cases, this is a linear layer.
-            
+
             If featurizer=False:
             - model: a model that is equivalent to nn.Sequential(featurizer, classifier)
     """
-    if config.model in ('resnet50', 'resnet34', 'wideresnet50','densenet121'):
+    if config.model in ('resnet50', 'resnet34', 'wideresnet50', 'densenet121'):
         if featurizer:
             featurizer = initialize_torchvision_model(
                 name=config.model,
@@ -35,17 +36,14 @@ def initialize_model(config, d_out, featurizer=False):
                 name=config.model,
                 d_out=d_out,
                 **config.model_kwargs)
-    elif config.model.startswith('bert'):
+    elif 'bert' in config.model:
         if featurizer:
-            featurizer = BertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
+            featurizer = initialize_bert_based_model(config, d_out, featurizer)
             classifier = nn.Linear(featurizer.d_out, d_out)
             model = (featurizer, classifier)
         else:
-            model = BertClassifier.from_pretrained(
-                config.model,
-                num_labels=d_out,
-                **config.model_kwargs)
-    elif config.model == 'resnet18_ms': # multispectral resnet 18
+            model = initialize_bert_based_model(config, d_out)
+    elif config.model == 'resnet18_ms':  # multispectral resnet 18
         if featurizer:
             featurizer = ResNet18(num_classes=None, **config.model_kwargs)
             classifier = nn.Linear(featurizer.d_out, d_out)
@@ -54,11 +52,11 @@ def initialize_model(config, d_out, featurizer=False):
             model = ResNet18(num_classes=d_out, **config.model_kwargs)
     elif config.model == 'gin-virtual':
         if featurizer:
-            featurizer = GINVirtual(num_tasks=None, **config.model_kwargs)    
+            featurizer = GINVirtual(num_tasks=None, **config.model_kwargs)
             classifier = nn.Linear(featurizer.d_out, d_out)
             model = (featurizer, classifier)
         else:
-            model = GINVirtual(num_tasks=d_out, **config.model_kwargs)    
+            model = GINVirtual(num_tasks=d_out, **config.model_kwargs)
     elif config.model == 'code-gpt-py':
         name = 'microsoft/CodeGPT-small-py'
         tokenizer = GPT2Tokenizer.from_pretrained(name)
@@ -75,15 +73,36 @@ def initialize_model(config, d_out, featurizer=False):
         assert not featurizer, "Featurizer not supported for logistic regression"
         model = nn.Linear(out_features=d_out, **config.model_kwargs)
     else:
-        raise ValueError('Model not recognized.')
+        raise ValueError(f'Model: {config.model} not recognized.')
+    return model
+
+def initialize_bert_based_model(config, d_out, is_featurizer=False):
+    if config.model == 'bert-base-uncased':
+        if is_featurizer:
+            model = BertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
+        else:
+            model = BertClassifier.from_pretrained(
+                config.model,
+                num_labels=d_out,
+                **config.model_kwargs)
+    elif config.model == 'distilbert-base-uncased':
+        if is_featurizer:
+            model = DistilBertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
+        else:
+            model = DistilBertClassifier.from_pretrained(
+                config.model,
+                num_labels=d_out,
+                **config.model_kwargs)
+    else:
+        raise ValueError(f'Model: {config.model} not recognized.')
     return model
 
 def initialize_torchvision_model(name, d_out, **kwargs):
     # get constructor and last layer names
-    if name=='wideresnet50':
+    if name == 'wideresnet50':
         constructor_name = 'wide_resnet50_2'
         last_layer_name = 'fc'
-    elif name=='densenet121':
+    elif name == 'densenet121':
         constructor_name = name
         last_layer_name = 'classifier'
     elif name in ('resnet50', 'resnet34'):
@@ -96,7 +115,7 @@ def initialize_torchvision_model(name, d_out, **kwargs):
     model = constructor(**kwargs)
     # adjust the last layer
     d_features = getattr(model, last_layer_name).in_features
-    if d_out is None: # want to initialize a featurizer model
+    if d_out is None:  # want to initialize a featurizer model
         last_layer = Identity(d_features)
         model.d_out = d_features
     else: # want to initialize a classifier for a particular num_classes
