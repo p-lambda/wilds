@@ -13,7 +13,7 @@ dataset_defaults = {
         'n_epochs': 3,
         'n_groups_per_batch': 2,
         'irm_lambda': 1.0,
-        'coral_penalty_weight': 0.1,
+        'coral_penalty_weight': 1.0,
         'loader_kwargs': {
             'num_workers': 1,
             'pin_memory': True,
