@@ -99,16 +99,16 @@ This will download all datasets to the specified `data` folder. You can also use
 
 These are the sizes of each of our datasets, as well as their approximate time taken to train and evaluate the default model for a single ERM run using a NVIDIA V100 GPU.
 
-| Dataset command | Download size (GB) | Size on disk (GB) | Train+eval time |
-|-----------------|--------------------|-------------------|-----------------|
-| iwildcam        | 11                 | 25                |                 |
-| camelyon17      | 10                 | 15                |                 |
-| ogb-molpcba     | 0.04               | 2                 |                 |
-| civilcomments   | 0.1                | 0.3               |                 |
-| fmow            | 50                 | 55                |                 |
-| poverty         | 12                 | 14                |                 |
-| amazon          |                    |                   |                 |
-| py150           | 0.1                | 0.8               |                 |
+| Dataset command | Download size (GB) | Size on disk (GB) | Train+eval time (h) |
+|-----------------|--------------------|-------------------|---------------------|
+| iwildcam        | 11                 | 25                |                     |
+| camelyon17      | 10                 | 15                |                     |
+| ogb-molpcba     | 0.04               | 2                 |                     |
+| civilcomments   | 0.1                | 0.3               |                     |
+| fmow            | 50                 | 55                |                     |
+| poverty         | 12                 | 14                |                     |
+| amazon          |                    |                   |                     |
+| py150           | 0.1                | 0.8               |                     |
 
 We have an [executable version](https://worksheets.codalab.org/worksheets/0x52cea64d1d3f4fa89de326b4e31aa50a) of our paper on CodaLab that contains all of the output of  This contains the exact commands, code, and data used for each experiment reported in our paper. The trained model weights for every experiment can also be found there.
 
