@@ -104,7 +104,7 @@ dataset_defaults = {
         'split_scheme': 'official',
         'dataset_kwargs': {
             'oracle_training_set': False,
-            'seed':111,
+            'seed': 111,
             'use_ood_val': True
         },
         'model': 'densenet121',
