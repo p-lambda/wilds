@@ -97,7 +97,7 @@ python download_datasets.py --root_dir data
 
 This will download all datasets to the specified `data` folder. You can also use the `--datasets` argument to download particular datasets.
 
-These are the sizes of each of our datasets, as well as their approximate time taken to train and evaluate the default model for a single run using a NVIDIA V100 GPU.
+These are the sizes of each of our datasets, as well as their approximate time taken to train and evaluate the default model for a single ERM run using a NVIDIA V100 GPU.
 
 | Dataset command | Download size (GB) | Size on disk (GB) | Train+eval time |
 |-----------------|--------------------|-------------------|-----------------|
