@@ -62,14 +62,18 @@ class SQFDataset(WILDSDataset):
         The original data frmo the NYPD is in the public domain.
         The cleaned data from Goel, Rao, and Shroff is shared with permission.
     """
-    def __init__(self, root_dir, download, split_scheme):
+    _dataset_name = 'sqf'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xea27fd7daef642d2aa95b02f1e3ac404/contents/blob/',
+            'compressed_size': None}}
+
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='all_race'):
         # set variables
-        self._dataset_name = 'sqf'
-        self._version = '1.0'
+        self._version = version
         self._split_scheme = split_scheme
         self._y_size = 1
         self._n_classes = 2
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0xea27fd7daef642d2aa95b02f1e3ac404/contents/blob/'
         # path
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
