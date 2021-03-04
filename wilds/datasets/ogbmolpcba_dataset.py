@@ -97,6 +97,18 @@ class OGBPCBADataset(WILDSDataset):
         return self.ogb_dataset[int(idx)]
 
     def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        """
+        Computes all evaluation metrics.
+        Args:
+            - y_pred (FloatTensor): Binary logits from a model
+            - y_true (LongTensor): Ground-truth labels
+            - metadata (Tensor): Metadata
+            - prediction_fn (function): A function that turns y_pred into predicted labels. 
+                                        Only None is supported because OGB Evaluators accept binary logits
+        Output:
+            - results (dictionary): Dictionary of evaluation metrics
+            - results_str (str): String summarizing the evaluation metrics
+        """
         assert prediction_fn is None, "OGBPCBADataset.eval() does not support prediction_fn. Only binary logits accepted"
         input_dict = {"y_true": y_true, "y_pred": y_pred}
         results = self._metric.eval(input_dict)

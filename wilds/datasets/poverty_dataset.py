@@ -264,6 +264,17 @@ class PovertyMapDataset(WILDSDataset):
         return img
 
     def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        """
+        Computes all evaluation metrics.
+        Args:
+            - y_pred (Tensor): Predictions from a model
+            - y_true (LongTensor): Ground-truth values
+            - metadata (Tensor): Metadata
+            - prediction_fn (function): Only None supported
+        Output:
+            - results (dictionary): Dictionary of evaluation metrics
+            - results_str (str): String summarizing the evaluation metrics
+        """
         assert prediction_fn is None, "PovertyMapDataset.eval() does not support prediction_fn"
 
         metrics = [MSE(), PearsonCorrelation()]

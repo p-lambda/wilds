@@ -255,6 +255,19 @@ class SQFDataset(WILDSDataset):
         return torch.FloatTensor(self._input_array.loc[idx].values)
 
     def eval(self, y_pred, y_true, metadata, prediction_fn=multiclass_logits_to_pred, score_fn=binary_logits_to_score):
+        """
+        Computes all evaluation metrics.
+        Args:
+            - y_pred (Tensor): Predictions from a model. By default, they are multi-class logits (FloatTensor).
+                               But they can also be other model outputs such that prediction_fn(y_pred)
+                               are predicted labels and score_fn(y_pred) are confidence scores.
+            - y_true (LongTensor): Ground-truth labels
+            - metadata (Tensor): Metadata
+            - prediction_fn (function): A function that turns y_pred into predicted labels 
+        Output:
+            - results (dictionary): Dictionary of evaluation metrics
+            - results_str (str): String summarizing the evaluation metrics
+        """
         """Evaluate the precision achieved overall and across groups for a given global recall"""
         g = self._eval_grouper.metadata_to_group(metadata)
 
