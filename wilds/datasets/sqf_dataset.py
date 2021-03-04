@@ -3,7 +3,7 @@ import torch
 import pandas as pd
 import numpy as np
 from wilds.datasets.wilds_dataset import WILDSDataset
-from wilds.common.metrics.all_metrics import Accuracy, PrecisionAtRecall, binary_logits_to_score, binary_logits_to_pred
+from wilds.common.metrics.all_metrics import Accuracy, PrecisionAtRecall, binary_logits_to_score, multiclass_logits_to_pred
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.utils import subsample_idxs, threshold_at_recall
 import torch.nn.functional as F
@@ -62,14 +62,18 @@ class SQFDataset(WILDSDataset):
         The original data frmo the NYPD is in the public domain.
         The cleaned data from Goel, Rao, and Shroff is shared with permission.
     """
-    def __init__(self, root_dir, download, split_scheme):
+    _dataset_name = 'sqf'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xea27fd7daef642d2aa95b02f1e3ac404/contents/blob/',
+            'compressed_size': None}}
+
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='all_race'):
         # set variables
-        self._dataset_name = 'sqf'
-        self._version = '1.0'
+        self._version = version
         self._split_scheme = split_scheme
         self._y_size = 1
         self._n_classes = 2
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0xea27fd7daef642d2aa95b02f1e3ac404/contents/blob/'
         # path
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
@@ -250,7 +254,7 @@ class SQFDataset(WILDSDataset):
     def get_input(self, idx):
         return torch.FloatTensor(self._input_array.loc[idx].values)
 
-    def eval(self, y_pred, y_true, metadata, prediction_fn=binary_logits_to_pred, score_fn=binary_logits_to_score):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=multiclass_logits_to_pred, score_fn=binary_logits_to_score):
         """Evaluate the precision achieved overall and across groups for a given global recall"""
         g = self._eval_grouper.metadata_to_group(metadata)
 
@@ -258,7 +262,7 @@ class SQFDataset(WILDSDataset):
         threshold_60 = threshold_at_recall(y_scores, y_true, global_recall=60)
 
         accuracy_metric = Accuracy(prediction_fn=prediction_fn)
-        PAR_metric = PrecisionAtRecall(threshold_60)
+        PAR_metric = PrecisionAtRecall(threshold_60, score_fn=score_fn)
 
         results = accuracy_metric.compute(y_pred, y_true)
         results.update(PAR_metric.compute(y_pred, y_true))
