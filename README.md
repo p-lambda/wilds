@@ -112,7 +112,7 @@ These are the sizes of each of our datasets, as well as their approximate time t
 
 The image datasets (iwildcam, camelyon17, fmow, and poverty) tend to have high disk I/O usage. If training time is much slower for you than the approximate times listed above, consider checking if I/O is a bottleneck (e.g., by moving to a local disk if you are using a network drive, or by increasing the number of data loader workers). To speed up training, you could also disable evaluation at each epoch or for all splits by toggling `--evaluate_all_splits` and related arguments.
 
-We have an [executable version](https://worksheets.codalab.org/worksheets/0x52cea64d1d3f4fa89de326b4e31aa50a) of our paper on CodaLab that contains all of the output of  This contains the exact commands, code, and data used for each experiment reported in our paper. The trained model weights for every experiment can also be found there.
+We have an [executable version](https://wilds.stanford.edu/codalab) of our paper on CodaLab that contains the exact commands, code, and data used for the experiments reported in our paper. Trained model weights for all datasets can also be found there.
 
 
 ## Using the WILDS package
