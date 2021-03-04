@@ -44,8 +44,8 @@ class Py150Dataset(WILDSDataset):
     _dataset_name = 'py150'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x3441a145a298405a966f7288373349bf/contents/blob/',
-            'compressed_size': 154_304_512}}
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x442a0661a84649e69c0a946cc5f84237/contents/blob/',
+            'compressed_size': 162_811_706}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
 
@@ -59,6 +59,8 @@ class Py150Dataset(WILDSDataset):
 
         # Load data
         df = self._load_all_data()
+        self._TYPE2ID = {'class':0, 'method':1, 'punctuation':2, 'keyword':3, 'builtin':4, 'literal':5, 'other_identifier':6}
+        self._ID2TYPE = {v: k for k, v in self._TYPE2ID.items()}
 
         # Splits
         data = {}
@@ -81,14 +83,22 @@ class Py150Dataset(WILDSDataset):
         self._y_size = None
 
         _repo = torch.tensor(df['repo'].values).reshape(-1,1)  #[n_samples, 1]
-        _mask = torch.tensor(list(df['mask'].apply(lambda x: x[1:]).values)) #[n_samples, seqlen-1]
-        self._metadata_array = _repo
-        self._metadata_fields = ['repo']
+        _tok_type = torch.tensor(list(df['tok_type'].apply(lambda x: x[1:]).values)) #[n_samples, seqlen-1]
+        length = _tok_type.size(1)
+        self._metadata_fields = ['repo'] + [f'tok_{i+1}_type' for i in range(length)]
+        self._metadata_array = torch.cat([_repo, _tok_type], dim=1)
 
         self._y_array = self._y_array.float()
-        self._y_array[(1-_mask).bool()] = float('nan')
+        self._y_array[(_tok_type==-100).bool()] = float('nan')
 
         super().__init__(root_dir, download, split_scheme)
+
+    def _compute_acc(self, y_pred, y_true, eval_pos):
+        flattened_y_pred = y_pred[eval_pos]
+        flattened_y_true = y_true[eval_pos]
+        assert flattened_y_pred.size()==flattened_y_true.size() and flattened_y_pred.dim()==1
+        acc = (flattened_y_pred==flattened_y_true).sum() / (len(flattened_y_pred) +1e-8)
+        return acc
 
     def eval(self, y_pred, y_true, metadata, prediction_fn=None):
         """
@@ -99,23 +109,37 @@ class Py150Dataset(WILDSDataset):
                                are predicted labels.
             - y_true (LongTensor): Ground-truth labels
             - metadata (Tensor): Metadata
-            - prediction_fn (function): A function that turns y_pred into predicted labels 
+            - prediction_fn (function): A function that turns y_pred into predicted labels
         Output:
             - results (dictionary): Dictionary of evaluation metrics
             - results_str (str): String summarizing the evaluation metrics
         """
         #y_pred: [n_samples, seqlen-1]
         #y_true: [n_samples, seqlen-1]
-        is_labeled = ~torch.isnan(y_true)
-        flattened_y_pred = y_pred[is_labeled]
-        if prediction_fn is not None:
-            flattened_y_pred = prediction_fn(flattened_y_pred)
-        flattened_y_true = y_true[is_labeled]
-        assert flattened_y_pred.size() == flattened_y_true.size() and flattened_y_pred.dim() == 1
-        acc = (flattened_y_pred==flattened_y_true).float().sum() / (len(flattened_y_pred) +1e-8)
+        tok_type = metadata[:, 1:] #[n_samples, seqlen-1]
+        results = {}
+        results_str = ""
 
-        results = {'acc': acc.item()}
-        results_str = f"Average acc: {results['acc']:.3f}\n"
+        #Acc for class & method combined
+        eval_pos = (tok_type == self._TYPE2ID['class']) | (tok_type == self._TYPE2ID['method'])
+        acc = self._compute_acc(y_pred, y_true, eval_pos)
+        results['acc'] = acc
+        results['Acc (Class-Method)'] = acc
+        results_str += f"Acc (Class-Method): {acc:.3f}\n"
+
+        #Overall acc
+        eval_pos = ~torch.isnan(y_true)
+        acc = self._compute_acc(y_pred, y_true, eval_pos)
+        results['Acc (Overall)'] = acc
+        results_str += f"Acc (Overall): {acc:.3f}\n"
+
+        #Acc for each token type
+        for TYPE, TYPEID in self._TYPE2ID.items():
+            eval_pos = (tok_type == TYPEID)
+            acc = self._compute_acc(y_pred, y_true, eval_pos)
+            results[f'Acc ({TYPE})'] = acc
+            results_str += f"Acc ({TYPE}): {acc:.3f}\n"
+
         return results, results_str
 
     def get_input(self, idx):
@@ -147,13 +171,10 @@ class Py150Dataset(WILDSDataset):
             fnames = open(self._data_dir/f'metadata/repo_file_names/{type}.txt').readlines()
             repo_ids = [fname2repo_id(fname, repo_name2id) for fname in fnames]
             splits   = [get_split_name(type)] * len(inputs)
-            if type == 'train':
-                masks = (np.array(inputs) != pad_token_id).astype(int).tolist()
-            else:
-                masks = json.load(open(self._data_dir/f'processed/{type}_input_mask.json'))
-            assert len(repo_ids) == len(inputs) == len(masks)
+            tok_types = json.load(open(self._data_dir/f'processed/{type}_input_tok_type.json'))
+            assert len(repo_ids) == len(inputs) == len(tok_types)
 
-            _df  = pd.DataFrame({'input':inputs, 'mask': masks, 'repo': repo_ids, 'split': splits})
+            _df  = pd.DataFrame({'input': inputs, 'tok_type': tok_types, 'repo': repo_ids, 'split': splits})
             dfs.append(_df)
 
         return pd.concat(dfs)
