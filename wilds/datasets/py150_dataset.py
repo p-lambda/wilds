@@ -97,7 +97,10 @@ class Py150Dataset(WILDSDataset):
         flattened_y_pred = y_pred[eval_pos]
         flattened_y_true = y_true[eval_pos]
         assert flattened_y_pred.size()==flattened_y_true.size() and flattened_y_pred.dim()==1
-        acc = (flattened_y_pred==flattened_y_true).sum() / (len(flattened_y_pred) +1e-8)
+        if len(flattened_y_pred) == 0:
+            acc = 0
+        else:
+            acc = (flattened_y_pred==flattened_y_true).float().mean().item()
         return acc
 
     def eval(self, y_pred, y_true, metadata, prediction_fn=None):
@@ -136,7 +139,7 @@ class Py150Dataset(WILDSDataset):
         #Acc for each token type
         for TYPE, TYPEID in self._TYPE2ID.items():
             if TYPE == 'masked':
-               continue 
+               continue
             eval_pos = (tok_type == TYPEID)
             acc = self._compute_acc(y_pred, y_true, eval_pos)
             results[f'Acc ({TYPE})'] = acc
