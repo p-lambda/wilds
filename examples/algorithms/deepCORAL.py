@@ -27,7 +27,7 @@ class DeepCORAL(SingleModelAlgorithm):
         assert config.uniform_over_groups
         assert config.distinct_groups
         # initialize models
-        featurizer, classifier = initialize_model(config, d_out=d_out, featurizer=True)
+        featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
         featurizer = featurizer.to(config.device)
         classifier = classifier.to(config.device)
         model = torch.nn.Sequential(featurizer, classifier).to(config.device)
