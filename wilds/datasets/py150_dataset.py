@@ -59,7 +59,7 @@ class Py150Dataset(WILDSDataset):
 
         # Load data
         df = self._load_all_data()
-        self._TYPE2ID = {'class':0, 'method':1, 'punctuation':2, 'keyword':3, 'builtin':4, 'literal':5, 'other_identifier':6}
+        self._TYPE2ID = {'class':0, 'method':1, 'punctuation':2, 'keyword':3, 'builtin':4, 'literal':5, 'other_identifier':6, 'masked':-100}
         self._ID2TYPE = {v: k for k, v in self._TYPE2ID.items()}
 
         # Splits
@@ -85,11 +85,11 @@ class Py150Dataset(WILDSDataset):
         _repo = torch.tensor(df['repo'].values).reshape(-1,1)  #[n_samples, 1]
         _tok_type = torch.tensor(list(df['tok_type'].apply(lambda x: x[1:]).values)) #[n_samples, seqlen-1]
         length = _tok_type.size(1)
-        self._metadata_fields = ['repo'] + [f'tok_{i+1}_type' for i in range(length)]
+        self._metadata_fields = ['repo'] + [f'tok_{i}_type' for i in range(length)]
         self._metadata_array = torch.cat([_repo, _tok_type], dim=1)
 
         self._y_array = self._y_array.float()
-        self._y_array[(_tok_type==-100).bool()] = float('nan')
+        self._y_array[(_tok_type==self._TYPE2ID['masked']).bool()] = float('nan')
 
         super().__init__(root_dir, download, split_scheme)
 
@@ -135,6 +135,8 @@ class Py150Dataset(WILDSDataset):
 
         #Acc for each token type
         for TYPE, TYPEID in self._TYPE2ID.items():
+            if TYPE == 'masked':
+               continue 
             eval_pos = (tok_type == TYPEID)
             acc = self._compute_acc(y_pred, y_true, eval_pos)
             results[f'Acc ({TYPE})'] = acc
