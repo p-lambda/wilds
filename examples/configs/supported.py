@@ -17,7 +17,7 @@ from wilds.datasets.yelp_dataset import YelpDataset
 from wilds.datasets.py150_dataset import Py150Dataset
 # metrics
 from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
-from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE
+from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE, multiclass_logits_to_pred, binary_logits_to_pred
 
 benchmark_datasets = [
     'amazon',
@@ -53,9 +53,16 @@ losses = {
 }
 
 algo_log_metrics = {
-    'accuracy': Accuracy(),
+    'accuracy': Accuracy(prediction_fn=multiclass_logits_to_pred),
     'mse': MSE(),
-    'multitask_accuracy': MultiTaskAccuracy(),
+    'multitask_accuracy': MultiTaskAccuracy(prediction_fn=multiclass_logits_to_pred),
+    'multitask_binary_accuracy': MultiTaskAccuracy(prediction_fn=binary_logits_to_pred),
+    None: None,
+}
+
+process_outputs_functions = {
+    'binary_logits_to_pred': binary_logits_to_pred,
+    'multiclass_logits_to_pred': multiclass_logits_to_pred,
     None: None,
 }
 

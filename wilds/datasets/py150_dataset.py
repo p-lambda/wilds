@@ -88,19 +88,20 @@ class Py150Dataset(WILDSDataset):
         self._y_array = self._y_array.float()
         self._y_array[(1-_mask).bool()] = float('nan')
 
-
         super().__init__(root_dir, download, split_scheme)
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
         #y_pred: [n_samples, seqlen-1]
         #y_true: [n_samples, seqlen-1]
         is_labeled = ~torch.isnan(y_true)
         flattened_y_pred = y_pred[is_labeled]
+        if prediction_fn is not None:
+            flattened_y_pred = prediction_fn(flattened_y_pred)
         flattened_y_true = y_true[is_labeled]
         assert flattened_y_pred.size() == flattened_y_true.size() and flattened_y_pred.dim() == 1
         acc = (flattened_y_pred==flattened_y_true).float().sum() / (len(flattened_y_pred) +1e-8)
 
-        results = {'acc': acc}
+        results = {'acc': acc.item()}
         results_str = f"Average acc: {results['acc']:.3f}\n"
         return results, results_str
 

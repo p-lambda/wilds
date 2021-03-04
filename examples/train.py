@@ -3,6 +3,7 @@ from tqdm import tqdm
 import torch
 from utils import save
 import torch.autograd.profiler as profiler
+from configs.supported import process_outputs_functions
 
 def log_results(algorithm, dataset, general_logger, epoch, batch_idx):
     if algorithm.has_log:
@@ -49,11 +50,10 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
         # The subsequent detach is just for safety
         # (they should already be detached in batch_results)
         epoch_y_true.append(batch_results['y_true'].clone().detach())
-        if batch_results['y_pred'].dim() == 3:
-            #language model preds have a very big vocab size (e.g. 50000), so need to do argmax here. otherwise get OOM
-            epoch_y_pred.append(batch_results['y_pred'].clone().detach().argmax(-1))
-        else:
-            epoch_y_pred.append(batch_results['y_pred'].clone().detach())
+        y_pred = batch_results['y_pred'].clone().detach()
+        if config.process_outputs_function is not None:
+            y_pred = process_outputs_functions[config.process_outputs_function](y_pred)
+        epoch_y_pred.append(y_pred)
         epoch_metadata.append(batch_results['metadata'].clone().detach())
 
         if train and (batch_idx+1) % config.log_every==0:
@@ -139,11 +139,10 @@ def evaluate(algorithm, datasets, epoch, general_logger, config):
         for batch in iterator:
             batch_results = algorithm.evaluate(batch)
             epoch_y_true.append(batch_results['y_true'].clone().detach())
-            if batch_results['y_pred'].dim() == 3:
-                #language model preds have a very big vocab size (e.g. 50000), so need to do argmax here. otherwise get OOM
-                epoch_y_pred.append(batch_results['y_pred'].clone().detach().argmax(-1))
-            else:
-                epoch_y_pred.append(batch_results['y_pred'].clone().detach())
+            y_pred = batch_results['y_pred'].clone().detach()
+            if config.process_outputs_function is not None:
+                y_pred = process_outputs_functions[config.process_outputs_function](y_pred)
+            epoch_y_pred.append(y_pred)
             epoch_metadata.append(batch_results['metadata'].clone().detach())
 
         results, results_str = dataset['dataset'].eval(

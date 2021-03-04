@@ -3,7 +3,7 @@ import torch
 import pandas as pd
 import numpy as np
 from wilds.datasets.wilds_dataset import WILDSDataset
-from wilds.common.metrics.all_metrics import Accuracy, PrecisionAtRecall
+from wilds.common.metrics.all_metrics import Accuracy, PrecisionAtRecall, binary_logits_to_score, binary_logits_to_pred
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.utils import subsample_idxs, threshold_at_recall
 import torch.nn.functional as F
@@ -250,21 +250,24 @@ class SQFDataset(WILDSDataset):
     def get_input(self, idx):
         return torch.FloatTensor(self._input_array.loc[idx].values)
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=binary_logits_to_pred, score_fn=binary_logits_to_score):
         """Evaluate the precision achieved overall and across groups for a given global recall"""
         g = self._eval_grouper.metadata_to_group(metadata)
 
-        y_scores = F.softmax(y_pred, dim=1)[:,1]
+        y_scores = score_fn(y_pred)
         threshold_60 = threshold_at_recall(y_scores, y_true, global_recall=60)
-        results = Accuracy().compute(y_pred, y_true)
-        results.update(PrecisionAtRecall(threshold_60).compute(y_pred, y_true))
-        results.update(Accuracy().compute_group_wise(y_pred, y_true, g, self._eval_grouper.n_groups))
-        results.update(
-        PrecisionAtRecall(threshold_60).compute_group_wise(y_pred, y_true, g, self._eval_grouper.n_groups))
+
+        accuracy_metric = Accuracy(prediction_fn=prediction_fn)
+        PAR_metric = PrecisionAtRecall(threshold_60)
+
+        results = accuracy_metric.compute(y_pred, y_true)
+        results.update(PAR_metric.compute(y_pred, y_true))
+        results.update(accuracy_metric.compute_group_wise(y_pred, y_true, g, self._eval_grouper.n_groups))
+        results.update(PAR_metric.compute_group_wise(y_pred, y_true, g, self._eval_grouper.n_groups))
 
         results_str = (
-            f"Average {PrecisionAtRecall(threshold=threshold_60).name }:  {results[PrecisionAtRecall(threshold=threshold_60).agg_metric_field]:.3f}\n"
-            f"Average {Accuracy().name}:  {results[Accuracy().agg_metric_field]:.3f}\n"
+            f"Average {PAR_metric.name}:  {results[PAR_metric.agg_metric_field]:.3f}\n"
+            f"Average {accuracy_metric.name}:  {results[accuracy_metric.agg_metric_field]:.3f}\n"
         )
 
         return results, results_str

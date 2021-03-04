@@ -96,7 +96,8 @@ class OGBPCBADataset(WILDSDataset):
     def get_input(self, idx):
         return self.ogb_dataset[int(idx)]
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        assert prediction_fn is None, "OGBPCBADataset.eval() does not support prediction_fn. Only binary logits accepted"
         input_dict = {"y_true": y_true, "y_pred": y_pred}
         results = self._metric.eval(input_dict)
 

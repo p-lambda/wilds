@@ -103,7 +103,6 @@ class CelebADataset(WILDSDataset):
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
             groupby_fields=(confounder_names + ['y']))
-        self._metric = Accuracy()
 
         # Extract splits
         self._split_scheme = split_scheme
@@ -124,8 +123,9 @@ class CelebADataset(WILDSDataset):
        x = Image.open(img_filename).convert('RGB')
        return x
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        metric = Accuracy(prediction_fn=prediction_fn)
         return self.standard_group_eval(
-            self._metric,
+            metric,
             self._eval_grouper,
             y_pred, y_true, metadata)

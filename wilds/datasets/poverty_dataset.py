@@ -236,8 +236,6 @@ class PovertyMapDataset(WILDSDataset):
             dataset=self,
             groupby_fields=['urban'])
 
-        self._metrics = [MSE(), PearsonCorrelation()]
-
         super().__init__(root_dir, download, split_scheme)
 
     def get_input(self, idx):
@@ -265,10 +263,14 @@ class PovertyMapDataset(WILDSDataset):
 
         return img
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        assert prediction_fn is None, "PovertyMapDataset.eval() does not support prediction_fn"
+
+        metrics = [MSE(), PearsonCorrelation()]
+
         all_results = {}
         all_results_str = ''
-        for metric in self._metrics:
+        for metric in metrics:
             results, results_str = self.standard_group_eval(
                 metric,
                 self._eval_grouper,

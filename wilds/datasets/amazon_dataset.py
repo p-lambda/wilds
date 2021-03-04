@@ -93,41 +93,41 @@ class AmazonDataset(WILDSDataset):
         self.initialize_split_dicts()
         # eval
         self.initialize_eval_grouper()
-        self._metric = Accuracy()
         super().__init__(root_dir, download, split_scheme)
 
     def get_input(self, idx):
         return self._input_array[idx]
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        metric = Accuracy(prediction_fn=prediction_fn)
         if self.split_scheme=='user':
             # first compute groupwise accuracies
             g = self._eval_grouper.metadata_to_group(metadata)
             results = {
-                **self._metric.compute(y_pred, y_true),
-                **self._metric.compute_group_wise(y_pred, y_true, g, self._eval_grouper.n_groups)
+                **metric.compute(y_pred, y_true),
+                **metric.compute_group_wise(y_pred, y_true, g, self._eval_grouper.n_groups)
             }
             accs = []
             for group_idx in range(self._eval_grouper.n_groups):
                 group_str = self._eval_grouper.group_field_str(group_idx)
-                group_metric = results.pop(self._metric.group_metric_field(group_idx))
-                group_counts = results.pop(self._metric.group_count_field(group_idx))
-                results[f'{self._metric.name}_{group_str}'] = group_metric
+                group_metric = results.pop(metric.group_metric_field(group_idx))
+                group_counts = results.pop(metric.group_count_field(group_idx))
+                results[f'{metric.name}_{group_str}'] = group_metric
                 results[f'count_{group_str}'] = group_counts
                 if group_counts>0:
                     accs.append(group_metric)
             accs = np.array(accs)
             results['10th_percentile_acc'] = np.percentile(accs, 10)
-            results[f'{self._metric.worst_group_metric_field}'] = self._metric.worst(accs)
+            results[f'{metric.worst_group_metric_field}'] = metric.worst(accs)
             results_str = (
-                f"Average {self._metric.name}: {results[self._metric.agg_metric_field]:.3f}\n"
-                f"10th percentile {self._metric.name}: {results['10th_percentile_acc']:.3f}\n"
-                f"Worst-group {self._metric.name}: {results[self._metric.worst_group_metric_field]:.3f}\n"
+                f"Average {metric.name}: {results[metric.agg_metric_field]:.3f}\n"
+                f"10th percentile {metric.name}: {results['10th_percentile_acc']:.3f}\n"
+                f"Worst-group {metric.name}: {results[metric.worst_group_metric_field]:.3f}\n"
             )
             return results, results_str
         else:
             return self.standard_group_eval(
-                self._metric,
+                metric,
                 self._eval_grouper,
                 y_pred, y_true, metadata)
 

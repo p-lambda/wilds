@@ -172,7 +172,6 @@ class FMoWDataset(WILDSDataset):
             'region': CombinatorialGrouper(dataset=self, groupby_fields=['region']),
         }
 
-        self._metric = Accuracy()
         super().__init__(root_dir, download, split_scheme)
 
     def get_input(self, idx):
@@ -190,35 +189,36 @@ class FMoWDataset(WILDSDataset):
 
         return img
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        metric = Accuracy(prediction_fn=prediction_fn)
         # Overall evaluation + evaluate by year
         all_results, all_results_str = self.standard_group_eval(
-            self._metric,
+            metric,
             self._eval_groupers['year'],
             y_pred, y_true, metadata)
         # Evaluate by region and ignore the "Other" region
         region_grouper = self._eval_groupers['region']
-        region_results = self._metric.compute_group_wise(
+        region_results = metric.compute_group_wise(
             y_pred,
             y_true,
             region_grouper.metadata_to_group(metadata),
             region_grouper.n_groups)
-        all_results[f'{self._metric.name}_worst_year'] = all_results.pop(self._metric.worst_group_metric_field)
+        all_results[f'{metric.name}_worst_year'] = all_results.pop(metric.worst_group_metric_field)
         region_metric_list = []
         for group_idx in range(region_grouper.n_groups):
             group_str = region_grouper.group_field_str(group_idx)
-            group_metric = region_results[self._metric.group_metric_field(group_idx)]
-            group_counts = region_results[self._metric.group_count_field(group_idx)]
-            all_results[f'{self._metric.name}_{group_str}'] = group_metric
+            group_metric = region_results[metric.group_metric_field(group_idx)]
+            group_counts = region_results[metric.group_count_field(group_idx)]
+            all_results[f'{metric.name}_{group_str}'] = group_metric
             all_results[f'count_{group_str}'] = group_counts
-            if region_results[self._metric.group_count_field(group_idx)] == 0 or "Other" in group_str:
+            if region_results[metric.group_count_field(group_idx)] == 0 or "Other" in group_str:
                 continue
             all_results_str += (
                 f'  {region_grouper.group_str(group_idx)}  '
-                f"[n = {region_results[self._metric.group_count_field(group_idx)]:6.0f}]:\t"
-                f"{self._metric.name} = {region_results[self._metric.group_metric_field(group_idx)]:5.3f}\n")
-            region_metric_list.append(region_results[self._metric.group_metric_field(group_idx)])
-        all_results[f'{self._metric.name}_worst_region'] = self._metric.worst(region_metric_list)
-        all_results_str += f"Worst-group {self._metric.name}: {all_results[f'{self._metric.name}_worst_region']:.3f}\n"
+                f"[n = {region_results[metric.group_count_field(group_idx)]:6.0f}]:\t"
+                f"{metric.name} = {region_results[metric.group_metric_field(group_idx)]:5.3f}\n")
+            region_metric_list.append(region_results[metric.group_metric_field(group_idx)])
+        all_results[f'{metric.name}_worst_region'] = metric.worst(region_metric_list)
+        all_results_str += f"Worst-group {metric.name}: {all_results[f'{metric.name}_worst_region']:.3f}\n"
 
         return all_results, all_results_str

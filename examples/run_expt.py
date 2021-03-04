@@ -88,6 +88,7 @@ def main():
     parser.add_argument('--scheduler_metric_name')
 
     # Evaluation
+    parser.add_argument('--process_outputs_function', choices = supported.process_outputs_functions)
     parser.add_argument('--evaluate_all_splits', type=parse_bool, const=True, nargs='?', default=True)
     parser.add_argument('--eval_splits', nargs='+', default=[])
     parser.add_argument('--eval_only', type=parse_bool, const=True, nargs='?', default=False)

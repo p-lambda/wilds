@@ -119,21 +119,26 @@ class IWildCamDataset(WILDSDataset):
             dataset=self,
             groupby_fields=(['location']))
 
-        self._metrics = [Accuracy(), Recall(average='macro'), F1(average='macro')]
         super().__init__(root_dir, download, split_scheme)
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        metrics = [
+            Accuracy(prediction_fn=prediction_fn), 
+            Recall(prediction_fn=prediction_fn, average='macro'), 
+            F1(prediction_fn=prediction_fn, average='macro'),
+        ]
+
         results = {}
 
-        for i in range(len(self._metrics)):
+        for i in range(len(metrics)):
             results.update({
-                **self._metrics[i].compute(y_pred, y_true),
+                **metrics[i].compute(y_pred, y_true),
                         })
 
         results_str = (
-            f"Average acc: {results[self._metrics[0].agg_metric_field]:.3f}\n"
-            f"Recall macro: {results[self._metrics[1].agg_metric_field]:.3f}\n"
-            f"F1 macro: {results[self._metrics[2].agg_metric_field]:.3f}\n"
+            f"Average acc: {results[metrics[0].agg_metric_field]:.3f}\n"
+            f"Recall macro: {results[metrics[1].agg_metric_field]:.3f}\n"
+            f"F1 macro: {results[metrics[2].agg_metric_field]:.3f}\n"
         )
 
         return results, results_str
@@ -149,6 +154,5 @@ class IWildCamDataset(WILDSDataset):
         # All images are in the train folder
         img_path = self.data_dir / 'train' / self._input_array[idx]
         img = Image.open(img_path)
-
 
         return img

@@ -18,6 +18,7 @@ dataset_defaults = {
             'num_workers': 1,
             'pin_memory': True,
         },
+        'process_outputs_function': 'multiclass_logits_to_pred',
     },
     'bdd100k': {
         'split_scheme': 'official',
@@ -32,9 +33,10 @@ dataset_defaults = {
         'lr': 0.001,
         'weight_decay': 0.0001,
         'n_epochs': 10,
-        'algo_log_metric': 'multitask_accuracy',
+        'algo_log_metric': 'multitask_binary_accuracy',
         'train_transform': 'image_base',
         'eval_transform': 'image_base',
+        'process_outputs_function': 'binary_logits_to_pred',
     },
     'camelyon17': {
         'split_scheme': 'official',
@@ -58,6 +60,7 @@ dataset_defaults = {
         'irm_lambda': 1.0,
         'coral_penalty_weight': 0.1,
         'algo_log_metric': 'accuracy',
+        'process_outputs_function': 'multiclass_logits_to_pred',
     },
     'celebA': {
         'split_scheme': 'official',
@@ -77,6 +80,7 @@ dataset_defaults = {
         'weight_decay': 0.0,
         'n_epochs': 200,
         'algo_log_metric': 'accuracy',
+        'process_outputs_function': 'multiclass_logits_to_pred',
     },
     'civilcomments': {
         'split_scheme': 'official',
@@ -99,6 +103,7 @@ dataset_defaults = {
             'num_workers': 1,
             'pin_memory': True,
         },
+        'process_outputs_function': 'multiclass_logits_to_pred',
     },
     'fmow': {
         'split_scheme': 'official',
@@ -126,6 +131,7 @@ dataset_defaults = {
         'irm_lambda': 1.0,
         'coral_penalty_weight': 0.1,
         'algo_log_metric': 'accuracy',
+        'process_outputs_function': 'multiclass_logits_to_pred',
     },
     'iwildcam': {
         'loss_function': 'cross_entropy',
@@ -149,6 +155,7 @@ dataset_defaults = {
         'irm_lambda': 1.,
         'coral_penalty_weight': 0.1,
         'no_group_logging': True,
+        'process_outputs_function': 'multiclass_logits_to_pred'
     },
     'ogb-molpcba': {
         'split_scheme': 'official',
@@ -167,6 +174,8 @@ dataset_defaults = {
         'irm_lambda': 1.,
         'coral_penalty_weight': 0.1,
         'no_group_logging': True,
+        'process_outputs_function': None,
+        'algo_log_metric': 'multitask_binary_accuracy',
     },
     'py150': {
         'split_scheme': 'official',
@@ -185,6 +194,8 @@ dataset_defaults = {
         'irm_lambda': 1.,
         'coral_penalty_weight': 0.1,
         'no_group_logging': True,
+        'algo_log_metric': 'multitask_accuracy',
+        'process_outputs_function': 'multiclass_logits_to_pred',
     },
     'poverty': {
         'split_scheme': 'official',
@@ -213,6 +224,7 @@ dataset_defaults = {
         'n_groups_per_batch': 8,
         'irm_lambda': 1.0,
         'coral_penalty_weight': 10,
+        'process_outputs_function': None,
     },
     'waterbirds': {
         'split_scheme': 'official',
@@ -233,6 +245,7 @@ dataset_defaults = {
         'lr': 1e-5,
         'weight_decay': 1.0,
         'n_epochs': 300,
+        'process_outputs_function': 'multiclass_logits_to_pred',
     },
     'yelp': {
         'split_scheme': 'official',
@@ -247,6 +260,7 @@ dataset_defaults = {
         'weight_decay': 0.01,
         'n_epochs': 3,
         'n_groups_per_batch': 2,
+        'process_outputs_function': 'multiclass_logits_to_pred',
     },
     'sqf': {
         'split_scheme': 'all_race',
@@ -266,6 +280,7 @@ dataset_defaults = {
         'lr': 5e-5,
         'weight_decay': 0,
         'n_epochs': 4,
+        'process_outputs_function': None,
     },
 }
 

@@ -100,7 +100,6 @@ class WaterbirdsDataset(WILDSDataset):
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
             groupby_fields=(['background', 'y']))
-        self._metric = Accuracy()
 
         super().__init__(root_dir, download, split_scheme)
 
@@ -114,8 +113,9 @@ class WaterbirdsDataset(WILDSDataset):
        x = Image.open(img_filename).convert('RGB')
        return x
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        metric = Accuracy(prediction_fn=prediction_fn)
         return self.standard_group_eval(
-            self._metric,
+            metric,
             self._eval_grouper,
             y_pred, y_true, metadata)
