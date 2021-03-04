@@ -190,7 +190,7 @@ dataset_defaults = {
         'n_epochs': 3,
         'batch_size': 6,
         'groupby_fields': ['repo',],
-        'n_groups_per_batch': 3,
+        'n_groups_per_batch': 2,
         'irm_lambda': 1.,
         'coral_penalty_weight': 0.1,
         'no_group_logging': True,
