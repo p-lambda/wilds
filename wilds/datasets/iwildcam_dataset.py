@@ -42,7 +42,7 @@ class IWildCamDataset(WILDSDataset):
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x3f1b346ff2d74b5daf1a08685d68c6ec/contents/blob/',
             'compressed_size': 90_094_666_806},
         '2.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x95b53cfe322f44a08b70cc638d946422/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x5a405f743c4b4c66a16cc09cc3a858ca/contents/blob/',
             'compressed_size': 12_000_000_000}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
