@@ -186,7 +186,7 @@ dataset_defaults = {
         'optimizer': 'AdamW',
         'optimizer_kwargs': {'eps':1e-8},
         'lr': 8e-5,
-        'weight_decay': 0.01,
+        'weight_decay': 0.,
         'n_epochs': 3,
         'batch_size': 6,
         'groupby_fields': ['repo',],
