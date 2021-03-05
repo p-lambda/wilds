@@ -1,5 +1,3 @@
-
-
 model_defaults = {
     'bert-base-uncased': {
         'optimizer': 'AdamW',
@@ -27,21 +25,6 @@ model_defaults = {
     'gin-virtual': {},
     'resnet18_ms': {
         'target_resolution': (224, 224),
-    },
-    'efficientnet-b0': {
-        'target_resolution': (224, 224),
-    },
-    'efficientnet-b1': {
-        'target_resolution': (240, 240),
-    },
-    'efficientnet-b2': {
-        'target_resolution': (260, 260),
-    },
-    'efficientnet-b3': {
-        'target_resolution': (300, 300),
-    },
-    'efficientnet-b4': {
-        'target_resolution': (380, 380),
     },
     'logistic_regression': {},
 }

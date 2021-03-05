@@ -45,18 +45,18 @@ class BDD100KDataset(WILDSDataset):
 
     License (original text):
         Copyright ©2018. The Regents of the University of California (Regents). All Rights Reserved.
-        Permission to use, copy, modify, and distribute this software and its documentation for educational, research, and 
-        not-for-profit purposes, without fee and without a signed licensing agreement; and permission use, copy, modify and 
-        distribute this software for commercial purposes (such rights not subject to transfer) to BDD member and its affiliates, 
-        is hereby granted, provided that the above copyright notice, this paragraph and the following two paragraphs appear in 
-        all copies, modifications, and distributions. Contact The Office of Technology Licensing, UC Berkeley, 2150 Shattuck 
+        Permission to use, copy, modify, and distribute this software and its documentation for educational, research, and
+        not-for-profit purposes, without fee and without a signed licensing agreement; and permission use, copy, modify and
+        distribute this software for commercial purposes (such rights not subject to transfer) to BDD member and its affiliates,
+        is hereby granted, provided that the above copyright notice, this paragraph and the following two paragraphs appear in
+        all copies, modifications, and distributions. Contact The Office of Technology Licensing, UC Berkeley, 2150 Shattuck
         Avenue, Suite 510, Berkeley, CA 94720-1620, (510) 643-7201, otl@berkeley.edu,
         http://ipira.berkeley.edu/industry-info for commercial licensing opportunities.
-        IN NO EVENT SHALL REGENTS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, 
-        INCLUDING LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF REGENTS HAS BEEN ADVISED 
+        IN NO EVENT SHALL REGENTS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES,
+        INCLUDING LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF REGENTS HAS BEEN ADVISED
         OF THE POSSIBILITY OF SUCH DAMAGE.
-        REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
-        AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED 
+        REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+        AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
         "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
     """
 
@@ -65,11 +65,15 @@ class BDD100KDataset(WILDSDataset):
     TIMEOFDAY_SPLITS = ['daytime', 'night', 'dawn/dusk', 'undefined']
     LOCATION_SPLITS = ['New York', 'California']
 
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
-        self._dataset_name = 'bdd100k'
-        self._version = '1.0'
+    _dataset_name = 'bdd100k'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x0ac62ae89a644676a57fa61d6aa2f87d/contents/blob/',
+            'compressed_size': None}}
+
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
+        self._version = version
         self._original_resolution = (1280, 720)
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x0ac62ae89a644676a57fa61d6aa2f87d/contents/blob/'
         self._data_dir = self.initialize_data_dir(root_dir, download)
         self.root = Path(self.data_dir)
 

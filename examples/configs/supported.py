@@ -17,6 +17,15 @@ from wilds.datasets.yelp_dataset import YelpDataset
 from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
 from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE
 
+benchmark_datasets = [
+    'amazon',
+    'camelyon17',
+    'civilcomments',
+    'iwildcam',
+    'ogb-molpcba',
+    'poverty',
+    'fmow']
+
 datasets = {
     'amazon': AmazonDataset,
     'camelyon17': Camelyon17Dataset,
@@ -48,8 +57,7 @@ algo_log_metrics = {
 transforms = ['bert', 'image_base', 'image_resize_and_center_crop', 'poverty_train']
 models = ['resnet18_ms', 'resnet50', 'resnet34', 'wideresnet50',
          'densenet121', 'bert-base-uncased', 'gin-virtual',
-         'logistic_regression',
-         'efficientnet-b0', 'efficientnet-b1', 'efficientnet-b2', 'efficientnet-b3', 'efficientnet-b4']
+         'logistic_regression']
 algorithms = ['ERM', 'groupDRO', 'deepCORAL', 'IRM']
 optimizers = ['SGD', 'Adam', 'AdamW']
 schedulers = ['linear_schedule_with_warmup', 'ReduceLROnPlateau', 'StepLR']

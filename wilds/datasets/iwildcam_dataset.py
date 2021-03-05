@@ -36,18 +36,23 @@ class IWildCamDataset(WILDSDataset):
             This dataset is distributed under Community Data License Agreement – Permissive – Version 1.0
             https://cdla.io/permissive-1-0/
         """
+    _dataset_name = 'iwildcam'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x3f1b346ff2d74b5daf1a08685d68c6ec/contents/blob/',
+            'compressed_size': 90_094_666_806},
+        '2.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x95b53cfe322f44a08b70cc638d946422/contents/blob/',
+            'compressed_size': 12_000_000_000}}
 
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
 
-        self._dataset_name = 'iwildcam'
-        self._version = '2.0'
+        self._version = version
         self._split_scheme = split_scheme
         if self._split_scheme != 'official':
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
 
         # path
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x95b53cfe322f44a08b70cc638d946422/contents/blob/'
-        self._compressed_size = 12_000_000_000
         self._data_dir = Path(self.initialize_data_dir(root_dir, download))
 
         # Load splits
@@ -92,8 +97,15 @@ class IWildCamDataset(WILDSDataset):
         n_groups = len(locations)
         location_to_group_id = {locations[i]: i for i in range(n_groups)}
         df['group_id' ] = df['location'].apply(lambda x: location_to_group_id[x])
-
         self._n_groups = n_groups
+
+        # Sequence info
+        sequence_ids = df['seq_id']
+        sequences = np.unique(sequence_ids)
+        n_sequences = len(sequences)
+        sequence_to_normalized_id = {sequences[i]: i for i in range(n_sequences)}
+        df['sequence_id_normalized' ] = df['seq_id'].apply(lambda x: sequence_to_normalized_id[x])
+        self._n_sequences = n_sequences
 
         # Extract datetime subcomponents and include in metadata
         df['datetime_obj'] = df['datetime'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f'))
@@ -105,10 +117,12 @@ class IWildCamDataset(WILDSDataset):
         df['second'] = df['datetime_obj'].apply(lambda x: int(x.second))
 
         self._metadata_array = torch.tensor(np.stack([df['group_id'].values,
+                            df['sequence_id_normalized'].values,
                             df['year'].values, df['month'].values, df['day'].values,
                             df['hour'].values, df['minute'].values, df['second'].values,
                             self.y_array], axis=1))
-        self._metadata_fields = ['location', 'year', 'month', 'day', 'hour', 'minute', 'second', 'y']
+        self._metadata_fields = ['location', 'sequence', 'year', 'month', 'day', 'hour', 'minute', 'second', 'y']
+
         # eval grouper
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,

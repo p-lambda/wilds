@@ -53,10 +53,14 @@ class WaterbirdsDataset(WILDSDataset):
         The use of this dataset is restricted to non-commercial research and educational purposes.
     """
 
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
-        self._dataset_name = 'waterbirds'
-        self._version = '1.0'
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x505056d5cdea4e4eaa0e242cbfe2daa4/contents/blob/'
+    _dataset_name = 'waterbirds'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x505056d5cdea4e4eaa0e242cbfe2daa4/contents/blob/',
+            'compressed_size': None}}
+
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
+        self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
         if not os.path.exists(self.data_dir):
