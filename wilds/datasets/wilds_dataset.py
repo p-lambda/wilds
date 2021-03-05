@@ -358,7 +358,9 @@ class WILDSDataset:
                 filename='archive.tar.gz',
                 remove_finished=True,
                 size=compressed_size)
-            print(f"It took {(time.time() - start_time) / 60} minutes to download and uncompress the dataset.")
+
+            download_time_in_minutes = (time.time() - start_time) / 60
+            print(f"It took {round(download_time_in_minutes, 2)} minutes to download and uncompress the dataset.")
         except Exception as e:
             print(f"\n{os.path.join(data_dir, 'archive.tar.gz')} may be corrupted. Please try deleting it and rerunning this command.\n")
             print(f"Exception: ", e)
