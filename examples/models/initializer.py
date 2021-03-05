@@ -4,6 +4,7 @@ from models.bert import BertClassifier, BertFeaturizer
 from models.resnet_multispectral import ResNet18
 from models.layers import Identity
 from models.gnn import GINVirtual
+from models.CNN_genome import UNet
 
 def initialize_model(config, d_out):
     print('Dout: {}'.format(d_out))
@@ -23,12 +24,12 @@ def initialize_model(config, d_out):
                 config.model,
                 num_labels=d_out,
                 **config.model_kwargs)
+    elif config.model == 'leopard':
+        model = UNet(d_out)
     elif config.model == 'logistic_regression':
         model = nn.Linear(out_features=d_out, **config.model_kwargs)
     elif config.model == 'gin-virtual':
         model = GINVirtual(num_tasks=d_out, **config.model_kwargs)
-    # elif config.model == 'leopard':
-    #     model = GINVirtual(num_tasks=d_out, **config.model_kwargs)
     else:
         raise ValueError('Model not recognized.')
     return model
