@@ -25,7 +25,7 @@ def initialize_model(config, d_out):
                 num_labels=d_out,
                 **config.model_kwargs)
     elif config.model == 'leopard':
-        model = UNet(d_out)
+        model = UNet(out_features=d_out)
     elif config.model == 'logistic_regression':
         model = nn.Linear(out_features=d_out, **config.model_kwargs)
     elif config.model == 'gin-virtual':

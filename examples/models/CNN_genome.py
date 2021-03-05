@@ -26,7 +26,7 @@ def double_conv(in_channels, out_channels):
 
 class UNet(nn.Module):
 
-    def __init__(self, n_class, n_channels_in=6):
+    def __init__(self, out_features=16, n_channels_in=6):
         super().__init__()
         
         self.dconv_down1 = double_conv(n_channels_in, 15)
@@ -46,7 +46,7 @@ class UNet(nn.Module):
         self.dconv_up2 = double_conv(22 + 33, 22)
         self.dconv_up1 = double_conv(15 + 22, 15)
         
-        self.conv_last = nn.Conv2d(15, n_class, 1)
+        self.conv_last = nn.Conv1d(15, out_features, 1)
         
         
     def forward(self, x):
