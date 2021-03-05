@@ -223,7 +223,7 @@ dataset_defaults = {
         'n_epochs': 200,
         'n_groups_per_batch': 8,
         'irm_lambda': 1.0,
-        'coral_penalty_weight': 10,
+        'coral_penalty_weight': 0.1,
         'process_outputs_function': None,
     },
     'waterbirds': {
