@@ -8,9 +8,6 @@ import torchvision
 import sys
 from collections import defaultdict
 
-# TODO: delete later -Tony
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
-
 from wilds.common.data_loaders import get_train_loader, get_eval_loader
 from wilds.common.grouper import CombinatorialGrouper
 
