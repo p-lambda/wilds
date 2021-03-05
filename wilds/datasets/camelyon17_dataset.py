@@ -123,8 +123,6 @@ class Camelyon17Dataset(WILDSDataset):
             dataset=self,
             groupby_fields=['slide'])
 
-        self._metric = Accuracy()
-
         super().__init__(root_dir, download, split_scheme)
 
     def get_input(self, idx):
@@ -137,8 +135,22 @@ class Camelyon17Dataset(WILDSDataset):
        x = Image.open(img_filename).convert('RGB')
        return x
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        """
+        Computes all evaluation metrics.
+        Args:
+            - y_pred (Tensor): Predictions from a model. By default, they are predicted labels (LongTensor).
+                               But they can also be other model outputs such that prediction_fn(y_pred)
+                               are predicted labels.
+            - y_true (LongTensor): Ground-truth labels
+            - metadata (Tensor): Metadata
+            - prediction_fn (function): A function that turns y_pred into predicted labels 
+        Output:
+            - results (dictionary): Dictionary of evaluation metrics
+            - results_str (str): String summarizing the evaluation metrics
+        """
+        metric = Accuracy(prediction_fn=prediction_fn)
         return self.standard_group_eval(
-            self._metric,
+            metric,
             self._eval_grouper,
             y_pred, y_true, metadata)

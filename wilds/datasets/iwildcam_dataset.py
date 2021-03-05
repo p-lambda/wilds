@@ -42,7 +42,7 @@ class IWildCamDataset(WILDSDataset):
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x3f1b346ff2d74b5daf1a08685d68c6ec/contents/blob/',
             'compressed_size': 90_094_666_806},
         '2.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x95b53cfe322f44a08b70cc638d946422/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x5a405f743c4b4c66a16cc09cc3a858ca/contents/blob/',
             'compressed_size': 12_000_000_000}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
@@ -97,8 +97,15 @@ class IWildCamDataset(WILDSDataset):
         n_groups = len(locations)
         location_to_group_id = {locations[i]: i for i in range(n_groups)}
         df['group_id' ] = df['location'].apply(lambda x: location_to_group_id[x])
-
         self._n_groups = n_groups
+
+        # Sequence info
+        sequence_ids = df['seq_id']
+        sequences = np.unique(sequence_ids)
+        n_sequences = len(sequences)
+        sequence_to_normalized_id = {sequences[i]: i for i in range(n_sequences)}
+        df['sequence_id_normalized' ] = df['seq_id'].apply(lambda x: sequence_to_normalized_id[x])
+        self._n_sequences = n_sequences
 
         # Extract datetime subcomponents and include in metadata
         df['datetime_obj'] = df['datetime'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f'))
@@ -110,30 +117,50 @@ class IWildCamDataset(WILDSDataset):
         df['second'] = df['datetime_obj'].apply(lambda x: int(x.second))
 
         self._metadata_array = torch.tensor(np.stack([df['group_id'].values,
+                            df['sequence_id_normalized'].values,
                             df['year'].values, df['month'].values, df['day'].values,
                             df['hour'].values, df['minute'].values, df['second'].values,
                             self.y_array], axis=1))
-        self._metadata_fields = ['location', 'year', 'month', 'day', 'hour', 'minute', 'second', 'y']
+        self._metadata_fields = ['location', 'sequence', 'year', 'month', 'day', 'hour', 'minute', 'second', 'y']
+
         # eval grouper
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
             groupby_fields=(['location']))
 
-        self._metrics = [Accuracy(), Recall(average='macro'), F1(average='macro')]
         super().__init__(root_dir, download, split_scheme)
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        """
+        Computes all evaluation metrics.
+        Args:
+            - y_pred (Tensor): Predictions from a model. By default, they are predicted labels (LongTensor).
+                               But they can also be other model outputs such that prediction_fn(y_pred)
+                               are predicted labels.
+            - y_true (LongTensor): Ground-truth labels
+            - metadata (Tensor): Metadata
+            - prediction_fn (function): A function that turns y_pred into predicted labels 
+        Output:
+            - results (dictionary): Dictionary of evaluation metrics
+            - results_str (str): String summarizing the evaluation metrics
+        """
+        metrics = [
+            Accuracy(prediction_fn=prediction_fn), 
+            Recall(prediction_fn=prediction_fn, average='macro'), 
+            F1(prediction_fn=prediction_fn, average='macro'),
+        ]
+
         results = {}
 
-        for i in range(len(self._metrics)):
+        for i in range(len(metrics)):
             results.update({
-                **self._metrics[i].compute(y_pred, y_true),
+                **metrics[i].compute(y_pred, y_true),
                         })
 
         results_str = (
-            f"Average acc: {results[self._metrics[0].agg_metric_field]:.3f}\n"
-            f"Recall macro: {results[self._metrics[1].agg_metric_field]:.3f}\n"
-            f"F1 macro: {results[self._metrics[2].agg_metric_field]:.3f}\n"
+            f"Average acc: {results[metrics[0].agg_metric_field]:.3f}\n"
+            f"Recall macro: {results[metrics[1].agg_metric_field]:.3f}\n"
+            f"F1 macro: {results[metrics[2].agg_metric_field]:.3f}\n"
         )
 
         return results, results_str
@@ -149,6 +176,5 @@ class IWildCamDataset(WILDSDataset):
         # All images are in the train folder
         img_path = self.data_dir / 'train' / self._input_array[idx]
         img = Image.open(img_path)
-
 
         return img

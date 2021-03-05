@@ -107,14 +107,27 @@ class BDD100KDataset(WILDSDataset):
         split_names = (self.TIMEOFDAY_SPLITS if split_to_load == 'timeofday'
                        else self.LOCATION_SPLITS)
         self._metadata_map = {split_to_load: split_names}
-        self._metric = MultiTaskAccuracy()
 
     def get_input(self, idx):
         img = Image.open(self.root / 'images' / self._image_array[idx])
         return img
 
-    def eval(self, y_pred, y_true, metadata):
-        results = self._metric.compute(y_pred, y_true)
-        results_str = (f'{self._metric.name}: '
-                       f'{results[self._metric.agg_metric_field]:.3f}\n')
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        """
+        Computes all evaluation metrics.
+        Args:
+            - y_pred (Tensor): Predictions from a model. By default, they are predicted labels (LongTensor).
+                               But they can also be other model outputs such that prediction_fn(y_pred)
+                               are predicted labels.
+            - y_true (LongTensor): Ground-truth labels
+            - metadata (Tensor): Metadata
+            - prediction_fn (function): A function that turns y_pred into predicted labels 
+        Output:
+            - results (dictionary): Dictionary of evaluation metrics
+            - results_str (str): String summarizing the evaluation metrics
+        """
+        metric = MultiTaskAccuracy(prediction_fn=prediction_fn)
+        results = metric.compute(y_pred, y_true)
+        results_str = (f'{metric.name}: '
+                       f'{results[metric.agg_metric_field]:.3f}\n')
         return results, results_str

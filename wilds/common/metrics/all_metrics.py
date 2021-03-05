@@ -8,7 +8,7 @@ from wilds.common.utils import avg_over_groups, minimum, maximum
 import sklearn.metrics
 from scipy.stats import pearsonr
 
-def logits_to_score(logits):
+def binary_logits_to_score(logits):
     assert logits.dim() in (1,2)
     if logits.dim()==2: #multi-class logits
         assert logits.size(1)==2, "Only binary classification"
@@ -17,22 +17,19 @@ def logits_to_score(logits):
         score = logits
     return score
 
-def logits_to_pred(logits):
-    assert logits.dim() in (1,2)
-    if logits.dim()==2: #multi-class logits
-        pred = torch.argmax(logits, 1)
-    else:
-        pred = (logits>0).long()
-    return pred
+def multiclass_logits_to_pred(logits):
+    """
+    Takes multi-class logits of size (batch_size, ..., n_classes) and returns predictions 
+    by taking an argmax at the last dimension
+    """
+    assert logits.dim() > 1
+    return logits.argmax(-1)
 
-def logits_to_binary_pred(logits):
-    assert logits.dim() in (1,2)
-    pred = (logits>0).long()
-    return pred
-
+def binary_logits_to_pred(logits):
+    return (logits>0).long()
 
 class Accuracy(ElementwiseMetric):
-    def __init__(self, prediction_fn=logits_to_pred, name=None):
+    def __init__(self, prediction_fn=None, name=None):
         self.prediction_fn = prediction_fn
         if name is None:
             name = 'acc'
@@ -47,7 +44,7 @@ class Accuracy(ElementwiseMetric):
         return minimum(metrics)
 
 class MultiTaskAccuracy(MultiTaskMetric):
-    def __init__(self, prediction_fn=logits_to_binary_pred, name=None):
+    def __init__(self, prediction_fn=None, name=None):
         self.prediction_fn = prediction_fn  # should work on flattened inputs
         if name is None:
             name = 'acc'
@@ -62,7 +59,7 @@ class MultiTaskAccuracy(MultiTaskMetric):
         return minimum(metrics)
 
 class Recall(Metric):
-    def __init__(self, prediction_fn=logits_to_pred, name=None, average='binary'):
+    def __init__(self, prediction_fn=None, name=None, average='binary'):
         self.prediction_fn = prediction_fn
         if name is None:
             name = f'recall'
@@ -81,7 +78,7 @@ class Recall(Metric):
         return minimum(metrics)
 
 class F1(Metric):
-    def __init__(self, prediction_fn=logits_to_pred, name=None, average='binary'):
+    def __init__(self, prediction_fn=None, name=None, average='binary'):
         self.prediction_fn = prediction_fn
         if name is None:
             name = f'F1'
@@ -131,7 +128,7 @@ class MSE(ElementwiseLoss):
 
 class PrecisionAtRecall(Metric):
     """Given a specific model threshold, determine the precision score achieved"""
-    def __init__(self, threshold, score_fn=logits_to_score, name=None):
+    def __init__(self, threshold, score_fn=None, name=None):
         self.score_fn = score_fn
         self.threshold = threshold
         if name is None:

@@ -37,7 +37,7 @@ def main():
     parser.add_argument('--download', default=False, type=parse_bool, const=True, nargs='?',
                         help='If true, tries to downloads the dataset if it does not exist in root_dir.')
     parser.add_argument('--frac', type=float, default=1.0,
-                        help='Convenience parameter that scales all dataset splits down to the specified fraction, for development purposes.')
+                        help='Convenience parameter that scales all dataset splits down to the specified fraction, for development purposes. Note that this also scales the test set down, so the reported numbers are not comparable with the full test set.')
     parser.add_argument('--version', default=None, type=str)
 
     # Loaders
@@ -91,6 +91,7 @@ def main():
     parser.add_argument('--scheduler_metric_name')
 
     # Evaluation
+    parser.add_argument('--process_outputs_function', choices = supported.process_outputs_functions)
     parser.add_argument('--evaluate_all_splits', type=parse_bool, const=True, nargs='?', default=True)
     parser.add_argument('--eval_splits', nargs='+', default=[])
     parser.add_argument('--eval_only', type=parse_bool, const=True, nargs='?', default=False)

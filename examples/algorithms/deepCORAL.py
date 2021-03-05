@@ -27,8 +27,9 @@ class DeepCORAL(SingleModelAlgorithm):
         assert config.uniform_over_groups
         assert config.distinct_groups
         # initialize models
-        featurizer = initialize_model(config, d_out=None).to(config.device)
-        classifier = torch.nn.Linear(featurizer.d_out, d_out).to(config.device)
+        featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
+        featurizer = featurizer.to(config.device)
+        classifier = classifier.to(config.device)
         model = torch.nn.Sequential(featurizer, classifier).to(config.device)
         # initialize module
         super().__init__(
@@ -48,6 +49,12 @@ class DeepCORAL(SingleModelAlgorithm):
         self.classifier = classifier
 
     def coral_penalty(self, x, y):
+        if x.dim() > 2: 
+            # featurizers output Tensors of size (batch_size, ..., feature dimensionality).
+            # we flatten to Tensors of size (*, feature dimensionality)
+            x = x.view(-1, x.size(-1))
+            y = y.view(-1, y.size(-1))
+
         mean_x = x.mean(0, keepdim=True)
         mean_y = y.mean(0, keepdim=True)
         cent_x = x - mean_x

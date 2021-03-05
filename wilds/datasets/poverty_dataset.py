@@ -145,13 +145,17 @@ class PovertyMapDataset(WILDSDataset):
     _versions_dict = {
         '1.0': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x9a2add5219db4ebc89965d7f42719750/contents/blob/',
-            'compressed_size': 18_630_656_000}}
+            'compressed_size': 18_630_656_000},
+        '1.1': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xfc0aa86ad9af4eb08c42dfc40eacf094/contents/blob/',
+            'compressed_size': 13_091_823_616}}
 
     def __init__(self, version=None, root_dir='data', download=False,
                  split_scheme='official',
                  no_nl=False, fold='A', oracle_training_set=False,
-                 use_ood_val=True):
-        self._version = version        
+                 use_ood_val=True,
+                 cache_size=100):
+        self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
         self._split_dict = {'train': 0, 'id_val': 1, 'id_test': 2, 'val': 3, 'test': 4}
@@ -211,10 +215,12 @@ class PovertyMapDataset(WILDSDataset):
             self._split_dict = {'train': 0, 'val': 1, 'id_test': 2, 'ood_val': 3, 'test': 4}
             self._split_names = {'train': 'Train', 'val': 'ID Val', 'id_test': 'ID Test', 'ood_val': 'OOD Val', 'test': 'OOD Test'}
 
+        if self.version == '1.0':
+            self.cache_size = cache_size
+            self.cache_counter = 0            
+            self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
+            self.imgs = self.imgs.transpose((0, 3, 1, 2))
 
-        self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
-
-        self.imgs = self.imgs.transpose((0, 3, 1, 2))
         self._y_array = torch.from_numpy(np.asarray(self.metadata['wealthpooled'])[:, np.newaxis]).float()
         self._y_size = 1
 
@@ -230,32 +236,52 @@ class PovertyMapDataset(WILDSDataset):
             dataset=self,
             groupby_fields=['urban'])
 
-        self._metrics = [MSE(), PearsonCorrelation()]
-        self.cache_counter = 0
-
         super().__init__(root_dir, download, split_scheme)
 
     def get_input(self, idx):
-       """
-       Returns x for a given idx.
-       """
-       img = self.imgs[idx].copy()
-       if self.no_nl:
-           img[-1] = 0
-       img = torch.from_numpy(img).float()
+        """
+        Returns x for a given idx.
+        """
+        if self.version == '1.0':
+            img = self.imgs[idx].copy()
+            if self.no_nl:
+                img[-1] = 0
+            img = torch.from_numpy(img).float()
+            # consider refreshing cache if cache_size is limited
+            if self.cache_size < self.imgs.shape[0]:
+                self.cache_counter += 1
+                if self.cache_counter > self.cache_size:
+                    self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
+                    self.imgs = self.imgs.transpose((0, 3, 1, 2))
+                    self.cache_counter = 0
 
-       self.cache_counter += 1
-       if self.cache_counter > 1000:
-           self.imgs = np.load(self.root / 'landsat_poverty_imgs.npy', mmap_mode='r')
-           self.imgs = self.imgs.transpose((0, 3, 1, 2))
-           self.cache_counter = 0
+        elif self.version == '1.1':
+            img = np.load(self.root / 'images' / f'landsat_poverty_img_{idx}.npz')['x']
+            if self.no_nl:
+                img[-1] = 0
+            img = torch.from_numpy(img).float()
 
-       return img
+        return img
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        """
+        Computes all evaluation metrics.
+        Args:
+            - y_pred (Tensor): Predictions from a model
+            - y_true (LongTensor): Ground-truth values
+            - metadata (Tensor): Metadata
+            - prediction_fn (function): Only None supported
+        Output:
+            - results (dictionary): Dictionary of evaluation metrics
+            - results_str (str): String summarizing the evaluation metrics
+        """
+        assert prediction_fn is None, "PovertyMapDataset.eval() does not support prediction_fn"
+
+        metrics = [MSE(), PearsonCorrelation()]
+
         all_results = {}
         all_results_str = ''
-        for metric in self._metrics:
+        for metric in metrics:
             results, results_str = self.standard_group_eval(
                 metric,
                 self._eval_grouper,

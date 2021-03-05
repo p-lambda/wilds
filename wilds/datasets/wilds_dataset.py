@@ -1,5 +1,6 @@
 import os
-import shutil
+import time
+
 import torch
 import numpy as np
 
@@ -310,7 +311,7 @@ class WILDSDataset:
                 f'*****************************\n'
                 f'{self.dataset_name} has been updated to version {self.latest_version}.\n'
                 f'You are currently using version {self.version}.\n'
-                f'We highly recommend updating the dataset.\n'
+                f'We highly recommend updating the dataset by not specifying the older version in the command-line argument or dataset constructor.\n'
                 f'See https://wilds.stanford.edu/changelog for changes.\n'
                 f'*****************************\n')
         elif latest_minor_version > current_minor_version:
@@ -350,12 +351,16 @@ class WILDSDataset:
         print(f'Downloading dataset to {data_dir}...')
         print(f'You can also download the dataset manually at https://wilds.stanford.edu/downloads.')
         try:
+            start_time = time.time()
             download_and_extract_archive(
                 url=download_url,
                 download_root=data_dir,
                 filename='archive.tar.gz',
                 remove_finished=True,
                 size=compressed_size)
+
+            download_time_in_minutes = (time.time() - start_time) / 60
+            print(f"It took {round(download_time_in_minutes, 2)} minutes to download and uncompress the dataset.")
         except Exception as e:
             print(f"\n{os.path.join(data_dir, 'archive.tar.gz')} may be corrupted. Please try deleting it and rerunning this command.\n")
             print(f"Exception: ", e)
