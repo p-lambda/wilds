@@ -66,7 +66,7 @@ class SQFDataset(WILDSDataset):
     _versions_dict = {
         '1.0': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0xea27fd7daef642d2aa95b02f1e3ac404/contents/blob/',
-            'compressed_size': None}}
+            'compressed_size': 36_708_352}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='all_race'):
         # set variables
@@ -263,7 +263,7 @@ class SQFDataset(WILDSDataset):
                                are predicted labels and score_fn(y_pred) are confidence scores.
             - y_true (LongTensor): Ground-truth labels
             - metadata (Tensor): Metadata
-            - prediction_fn (function): A function that turns y_pred into predicted labels 
+            - prediction_fn (function): A function that turns y_pred into predicted labels
         Output:
             - results (dictionary): Dictionary of evaluation metrics
             - results_str (str): String summarizing the evaluation metrics
