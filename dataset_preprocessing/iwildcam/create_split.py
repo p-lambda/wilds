@@ -90,10 +90,6 @@ def _create_split(data_dir, seed, skip=True):
     n_test_locations = int(frac_test_locations * n_locations)
     n_train_locations = n_locations - n_val_locations - n_test_locations
 
-    print("n val locations", n_val_locations)
-    print("n test locations", n_test_locations)
-    print("n train locations", n_train_locations)
-
     np_rng.shuffle(locations) # Shuffle, then split
     train_locations, val_trans_locations = locations[:n_train_locations], locations[n_train_locations:(n_train_locations+n_val_locations)]
     test_trans_locations = locations[(n_train_locations+n_val_locations):]
@@ -166,13 +162,6 @@ def _create_split(data_dir, seed, skip=True):
     # Make sure there's no overlap
     for split_df in [val_cis_df, val_trans_df, test_cis_df, test_trans_df]:
         assert not check_overlap(train_df, split_df)
-
-    print("val trans df : ", len(val_trans_df))
-    print("test trans df : ", len(test_trans_df))
-
-    print("val cis df : ", len(val_cis_df))
-    print("test cis df : ", len(test_cis_df))
-    print("train cis df : ", len(train_df))
 
     return train_df, val_cis_df, val_trans_df, test_cis_df, test_trans_df
 
