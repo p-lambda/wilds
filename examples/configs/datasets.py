@@ -112,7 +112,7 @@ dataset_defaults = {
         'train_transform': None,
         'eval_transform': None,
         'loss_function': 'cross_entropy',
-        'groupby_fields': ['celltype', 'y'],
+        'groupby_fields': ['celltype'],
         'val_metric': 'acc_avg',
         'val_metric_decreasing': False,
         'optimizer': 'Adam',
