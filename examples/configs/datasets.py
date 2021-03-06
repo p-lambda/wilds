@@ -143,7 +143,7 @@ dataset_defaults = {
         'val_metric_decreasing': False,
         'algo_log_metric': 'accuracy',
         'model': 'resnet50',
-        'lr': 3e-5,
+        'lr': 1e-4,
         'weight_decay': 0.0,
         'batch_size': 16,
         'n_epochs': 12,
