@@ -99,18 +99,20 @@ This will download all datasets to the specified `data` folder. You can also use
 
 These are the sizes of each of our datasets, as well as their approximate time taken to train and evaluate the default model for a single ERM run using a NVIDIA V100 GPU.
 
-| Dataset command | Download size (GB) | Size on disk (GB) | Train+eval time (h) |
-|-----------------|--------------------|-------------------|---------------------|
-| iwildcam        | 11                 | 25                |                     |
-| camelyon17      | 10                 | 15                |                     |
-| ogb-molpcba     | 0.04               | 2                 |                     |
-| civilcomments   | 0.1                | 0.3               |                     |
-| fmow            | 50                 | 55                |                     |
-| poverty         | 12                 | 14                |                     |
-| amazon          |                    |                   |                     |
-| py150           | 0.1                | 0.8               |                     |
+| Dataset command | Modality | Download size (GB) | Size on disk (GB) | Train+eval time |
+|-----------------|----------|--------------------|-------------------|-----------------|
+| iwildcam        | Image    | 11                 | 25                |                 |
+| camelyon17      | Image    | 10                 | 15                |                 |
+| ogb-molpcba     | Graph    | 0.04               | 2                 |                 |
+| civilcomments   | Text     | 0.1                | 0.3               |                 |
+| fmow            | Image    | 50                 | 55                |                 |
+| poverty         | Image    | 12                 | 14                |                 |
+| amazon          | Text     |                    |                   |                 |
+| py150           | Text     | 0.1                | 0.8               |                 |
 
-The image datasets (iwildcam, camelyon17, fmow, and poverty) tend to have high disk I/O usage. If training time is much slower for you than the approximate times listed above, consider checking if I/O is a bottleneck (e.g., by moving to a local disk if you are using a network drive, or by increasing the number of data loader workers). To speed up training, you could also disable evaluation at each epoch or for all splits by toggling `--evaluate_all_splits` and related arguments.
+While the `camelyon17` dataset is small and fast to train on, we advise against using it as the only dataset to prototype methods on, as the test performance of models trained on this dataset tend to exhibit a large degree of variability over random seeds.
+
+The image datasets (`iwildcam`, `camelyon17`, `fmow`, and `poverty`) tend to have high disk I/O usage. If training time is much slower for you than the approximate times listed above, consider checking if I/O is a bottleneck (e.g., by moving to a local disk if you are using a network drive, or by increasing the number of data loader workers). To speed up training, you could also disable evaluation at each epoch or for all splits by toggling `--evaluate_all_splits` and related arguments.
 
 We have an [executable version](https://wilds.stanford.edu/codalab) of our paper on CodaLab that contains the exact commands, code, and data used for the experiments reported in our paper. Trained model weights for all datasets can also be found there.
 
