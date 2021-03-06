@@ -192,7 +192,7 @@ dataset_defaults = {
         'groupby_fields': ['repo',],
         'n_groups_per_batch': 2,
         'irm_lambda': 1.,
-        'coral_penalty_weight': 0.1,
+        'coral_penalty_weight': 1.,
         'no_group_logging': True,
         'algo_log_metric': 'multitask_accuracy',
         'process_outputs_function': 'multiclass_logits_to_pred',
