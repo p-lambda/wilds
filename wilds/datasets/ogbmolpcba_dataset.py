@@ -51,12 +51,20 @@ class OGBPCBADataset(WILDSDataset):
         https://github.com/snap-stanford/ogb/blob/master/LICENSE
     """
 
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
+    _dataset_name = 'ogbg-molpcba'
+    _versions_dict = {
+        '1.0': {
+            'download_url': None,
+            'compressed_size': None}}
+
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
+        self._version = version
+        if version is not None:
+            raise ValueError('Versioning for OGB-MolPCBA is handled through the OGB package. Please set version=none.')
         # internally call ogb package
         self.ogb_dataset = PygGraphPropPredDataset(name = 'ogbg-molpcba', root = root_dir)
 
         # set variables
-        self._dataset_name = 'ogbg-molpcba'
         self._data_dir = self.ogb_dataset.root
         if split_scheme=='official':
             split_scheme = 'scaffold'
@@ -88,7 +96,20 @@ class OGBPCBADataset(WILDSDataset):
     def get_input(self, idx):
         return self.ogb_dataset[int(idx)]
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        """
+        Computes all evaluation metrics.
+        Args:
+            - y_pred (FloatTensor): Binary logits from a model
+            - y_true (LongTensor): Ground-truth labels
+            - metadata (Tensor): Metadata
+            - prediction_fn (function): A function that turns y_pred into predicted labels. 
+                                        Only None is supported because OGB Evaluators accept binary logits
+        Output:
+            - results (dictionary): Dictionary of evaluation metrics
+            - results_str (str): String summarizing the evaluation metrics
+        """
+        assert prediction_fn is None, "OGBPCBADataset.eval() does not support prediction_fn. Only binary logits accepted"
         input_dict = {"y_true": y_true, "y_pred": y_pred}
         results = self._metric.eval(input_dict)
 

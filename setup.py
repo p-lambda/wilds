@@ -26,7 +26,7 @@ setuptools.setup(
         'scikit-learn>=0.20.0',
         'pillow>=7.2.0',
         'torch>=1.7.0',
-        'ogb>=1.2.3',
+        'ogb>=1.2.5',
         'tqdm>=4.53.0',
         'outdated>=0.2.0',
         'pytz>=2020.4',

@@ -135,7 +135,7 @@ class Metric:
                         y_true[g == group_idx]))
         group_metrics = torch.stack(group_metrics)
         worst_group_metric = self.worst(group_metrics[group_counts>0])
-        
+
         return group_metrics, group_counts, worst_group_metric
 
 class ElementwiseMetric(Metric):
@@ -212,7 +212,7 @@ class ElementwiseMetric(Metric):
 
     def compute_flattened(self, y_pred, y_true, return_dict=True):
         flattened_metrics = self.compute_element_wise(y_pred, y_true, return_dict=False)
-        index =  torch.arange(y_true.numel())
+        index = torch.arange(y_true.numel())
         if return_dict:
             return {self.name: flattened_metrics, 'index': index}
         else:

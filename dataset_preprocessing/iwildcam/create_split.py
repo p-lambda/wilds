@@ -1,9 +1,15 @@
+from datetime import datetime
+from pathlib import Path
+import argparse
+import json
+from PIL import Image
 
 import pandas as pd
 import numpy as np
 
-# Examples to skip due to e.g them missing, loading issues
-LOCATIONS_TO_SKIP = [537]
+# For more info see https://www.kaggle.com/c/iwildcam-2020-fgvc7/discussion/135200
+# 485 had multiple images from indoors, and just a few were actually from out in the wild.
+LOCATIONS_TO_SKIP = [485]
 
 CANNOT_OPEN = ['99136aa6-21bc-11ea-a13a-137349068a90.jpg',
                '87022118-21bc-11ea-a13a-137349068a90.jpg',
@@ -43,12 +49,13 @@ def create_split(data_dir):
 
 
 def _create_split(data_dir, seed, skip=True):
-    data_dir = Path(data_dir)
     np_rng = np.random.default_rng(seed)
 
     # Load Kaggle train data
-    with open(data_dir / r'iwildcam2020_train_annotations.json' ) as json_file:
+    filename = f'iwildcam2021_train_annotations.json'
+    with open(data_dir / filename ) as json_file:
         data = json.load(json_file)
+
 
     # This line was adapted from
     # https://www.kaggle.com/ateplyuk/iwildcam2020-pytorch-start
@@ -65,6 +72,15 @@ def _create_split(data_dir, seed, skip=True):
             })
 
 
+    # Extract the date from the datetime.
+    df['datetime_obj'] = df['datetime'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f'))
+    df['date'] = df['datetime_obj'].apply(lambda x: x.date())
+
+    # Retrieve the sequences that span 2 days
+    grouped_by = df.groupby('seq_id')
+    nunique_dates = grouped_by['date'].nunique()
+    seq_ids_that_span_across_days = nunique_dates[nunique_dates.values > 1].reset_index()['seq_id'].values
+
     # Split by location to get the cis & trans validation set
     locations = np.unique(df['location'])
     n_locations = len(locations)
@@ -78,13 +94,14 @@ def _create_split(data_dir, seed, skip=True):
     train_locations, val_trans_locations = locations[:n_train_locations], locations[n_train_locations:(n_train_locations+n_val_locations)]
     test_trans_locations = locations[(n_train_locations+n_val_locations):]
 
+
     remaining_df, val_trans_df = df[df['location'].isin(train_locations)], df[df['location'].isin(val_trans_locations)]
     test_trans_df = df[df['location'].isin(test_trans_locations)]
 
     # Split remaining samples by dates to get the cis validation and test set
-    frac_validation = 0.05
-    frac_test = 0.05
-    unique_dates = np.unique(remaining_df['datetime'])
+    frac_validation = 0.07
+    frac_test = 0.09
+    unique_dates = np.unique(remaining_df['date'])
     n_dates = len(unique_dates)
     n_val_dates = int(n_dates * frac_validation)
     n_test_dates = int(n_dates * frac_test)
@@ -94,9 +111,9 @@ def _create_split(data_dir, seed, skip=True):
     train_dates, val_cis_dates = unique_dates[:n_train_dates], unique_dates[n_train_dates:(n_train_dates+n_val_dates)]
     test_cis_dates = unique_dates[(n_train_dates+n_val_dates):]
 
-    val_cis_df = remaining_df[remaining_df['datetime'].isin(val_cis_dates)]
-    test_cis_df = remaining_df[remaining_df['datetime'].isin(test_cis_dates)]
-    train_df = remaining_df[remaining_df['datetime'].isin(train_dates)]
+    val_cis_df = remaining_df[remaining_df['date'].isin(val_cis_dates)]
+    test_cis_df = remaining_df[remaining_df['date'].isin(test_cis_dates)]
+    train_df = remaining_df[remaining_df['date'].isin(train_dates)]
 
     # Locations in val_cis and test_cis but not in train are all moved to train set
     # since we want all locations in tcis splits to be in the train set.
@@ -120,11 +137,22 @@ def _create_split(data_dir, seed, skip=True):
     test_cis_df = test_cis_df[test_cis_df['category_id'].isin(train_classes)]
     test_trans_df = test_trans_df[test_trans_df['category_id'].isin(train_classes)]
 
+
+
     # Remove examples that are corrupted in some way
     if skip:
         train_df, val_cis_df, val_trans_df, test_cis_df, test_trans_df = remove([train_df, val_cis_df,
                                                                                 val_trans_df, test_cis_df,
                                                                                 test_trans_df])
+
+    # Assert that all sequences that spanned across multiple days ended up in the same split
+    for seq_id in seq_ids_that_span_across_days:
+        n_splits = 0
+        for split_df in train_df, val_cis_df, test_cis_df:
+            if seq_id in split_df['seq_id'].values:
+                n_splits += 1
+            assert n_splits == 1, "Each sequence should only be in one split. Please move manually"
+
 
 
     # Reset index
@@ -132,8 +160,8 @@ def _create_split(data_dir, seed, skip=True):
     test_cis_df.reset_index(inplace=True), test_trans_df.reset_index(inplace=True)
 
     # Make sure there's no overlap
-    for df in [val_cis_df, val_trans_df, test_cis_df, test_trans_df]:
-        assert not check_overlap(train_df, df)
+    for split_df in [val_cis_df, val_trans_df, test_cis_df, test_trans_df]:
+        assert not check_overlap(train_df, split_df)
 
     return train_df, val_cis_df, val_trans_df, test_cis_df, test_trans_df
 
@@ -145,10 +173,19 @@ def remove(dfs):
         new_dfs.append(df)
     return new_dfs
 
-def check_overlap(df1, df2):
-    files1 = set(df1['filename'])
-    files2 = set(df2['filename'])
+def check_overlap(df1, df2, column='filename'):
+    files1 = set(df1[column])
+    files2 = set(df2[column])
     intersection = files1.intersection(files2)
     n_intersection = len(intersection)
 
     return False if n_intersection == 0 else True
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_dir', type=str)
+    args = parser.parse_args()
+
+    create_split(Path(args.data_dir))

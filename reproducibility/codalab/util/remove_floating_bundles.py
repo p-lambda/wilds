@@ -34,9 +34,12 @@ def run(command):
 
 def main():
     run(["cl", "work", "https://worksheets.codalab.org::"])
+
+    # Search for your own floating bundles
     floating_bundles = run(
         ["cl", "search", ".floating", ".mine", ".limit=200", "--uuid-only"]
     ).split("\n")
+
     for bundle in floating_bundles:
         if bundle:
             run(["cl", "rm", bundle, "--force"])

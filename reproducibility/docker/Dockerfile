@@ -5,7 +5,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install dependencies
-RUN pip install -r requirements.txt && \
+RUN pip install wilds && \
     # Install torch-scatter and torch-geometric with the PyTorch and CUDA version specified
     # All baseline experiments in the paper were run on Python 3.8.5 and CUDA 10.1.
     pip install --no-index torch-scatter -f https://pytorch-geometric.com/whl/torch-1.7.0+cu101.html && \

@@ -1,42 +1,92 @@
 import torch.nn as nn
 import torchvision
-from models.bert import BertClassifier, BertFeaturizer
-from models.distil_bert import DistilBertClassifier, DistilBertFeaturizer
+from models.bert.bert import BertClassifier, BertFeaturizer
+from models.bert.distilbert import DistilBertClassifier, DistilBertFeaturizer
 from models.resnet_multispectral import ResNet18
 from models.layers import Identity
 from models.gnn import GINVirtual
+from models.code_gpt import GPT2LMHeadLogit, GPT2FeaturizerLMHeadLogit
+from transformers import GPT2Tokenizer
 
-def initialize_model(config, d_out):
-    if config.model == 'resnet18_ms':
-        # multispectral resnet 18
-        model = ResNet18(num_classes=d_out, **config.model_kwargs)
-    elif config.model in ('resnet50', 'resnet34', 'wideresnet50','densenet121'):
-        model = initialize_torchvision_model(
-            name=config.model,
-            d_out=d_out,
-            **config.model_kwargs)
+def initialize_model(config, d_out, is_featurizer=False):
+    """
+    Initializes models according to the config
+        Args:
+            - config (dictionary): config dictionary
+            - d_out (int): the dimensionality of the model output
+            - is_featurizer (bool): whether to return a model or a (featurizer, classifier) pair that constitutes a model.
+        Output:
+            If is_featurizer=True:
+            - featurizer: a model that outputs feature Tensors of shape (batch_size, ..., feature dimensionality)
+            - classifier: a model that takes in feature Tensors and outputs predictions. In most cases, this is a linear layer.
+
+            If is_featurizer=False:
+            - model: a model that is equivalent to nn.Sequential(featurizer, classifier)
+    """
+    if config.model in ('resnet50', 'resnet34', 'wideresnet50', 'densenet121'):
+        if is_featurizer:
+            featurizer = initialize_torchvision_model(
+                name=config.model,
+                d_out=None,
+                **config.model_kwargs)
+            classifier = nn.Linear(featurizer.d_out, d_out)
+            model = (featurizer, classifier)
+        else:
+            model = initialize_torchvision_model(
+                name=config.model,
+                d_out=d_out,
+                **config.model_kwargs)
     elif 'bert' in config.model:
-        model = initializeBertBasedModel(config, d_out)
-    elif config.model == 'logistic_regression':
-        model = nn.Linear(out_features=d_out, **config.model_kwargs)
+        if is_featurizer:
+            featurizer = initialize_bert_based_model(config, d_out, is_featurizer)
+            classifier = nn.Linear(featurizer.d_out, d_out)
+            model = (featurizer, classifier)
+        else:
+            model = initialize_bert_based_model(config, d_out)
+    elif config.model == 'resnet18_ms':  # multispectral resnet 18
+        if is_featurizer:
+            featurizer = ResNet18(num_classes=None, **config.model_kwargs)
+            classifier = nn.Linear(featurizer.d_out, d_out)
+            model = (featurizer, classifier)
+        else:
+            model = ResNet18(num_classes=d_out, **config.model_kwargs)
     elif config.model == 'gin-virtual':
-        model = GINVirtual(num_tasks=d_out, **config.model_kwargs)
+        if is_featurizer:
+            featurizer = GINVirtual(num_tasks=None, **config.model_kwargs)
+            classifier = nn.Linear(featurizer.d_out, d_out)
+            model = (featurizer, classifier)
+        else:
+            model = GINVirtual(num_tasks=d_out, **config.model_kwargs)
+    elif config.model == 'code-gpt-py':
+        name = 'microsoft/CodeGPT-small-py'
+        tokenizer = GPT2Tokenizer.from_pretrained(name)
+        if is_featurizer:
+            model = GPT2FeaturizerLMHeadLogit.from_pretrained(name)
+            model.resize_token_embeddings(len(tokenizer))
+            featurizer = model.transformer
+            classifier = model.lm_head
+            model = (featurizer, classifier)
+        else:
+            model = GPT2LMHeadLogit.from_pretrained(name)
+            model.resize_token_embeddings(len(tokenizer))
+    elif config.model == 'logistic_regression':
+        assert not is_featurizer, "Featurizer not supported for logistic regression"
+        model = nn.Linear(out_features=d_out, **config.model_kwargs)
     else:
-        raise ValueError('Model not recognized.')
+        raise ValueError(f'Model: {config.model} not recognized.')
     return model
 
-def initializeBertBasedModel(config, d_out):
-    if config.model == 'bert-based-uncased':
-        if d_out is None:
+def initialize_bert_based_model(config, d_out, is_featurizer=False):
+    if config.model == 'bert-base-uncased':
+        if is_featurizer:
             model = BertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
         else:
             model = BertClassifier.from_pretrained(
                 config.model,
                 num_labels=d_out,
                 **config.model_kwargs)
-    elif config.model == 'distilbert-based-uncased':
-        print('Initializing DistilBERT model instead of the default BERT')
-        if d_out is None:
+    elif config.model == 'distilbert-base-uncased':
+        if is_featurizer:
             model = DistilBertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
         else:
             model = DistilBertClassifier.from_pretrained(
@@ -44,16 +94,15 @@ def initializeBertBasedModel(config, d_out):
                 num_labels=d_out,
                 **config.model_kwargs)
     else:
-        raise RuntimeError(f'Unhandled model: {config.model}')
-
+        raise ValueError(f'Model: {config.model} not recognized.')
     return model
 
 def initialize_torchvision_model(name, d_out, **kwargs):
     # get constructor and last layer names
-    if name=='wideresnet50':
+    if name == 'wideresnet50':
         constructor_name = 'wide_resnet50_2'
         last_layer_name = 'fc'
-    elif name=='densenet121':
+    elif name == 'densenet121':
         constructor_name = name
         last_layer_name = 'classifier'
     elif name in ('resnet50', 'resnet34'):
@@ -65,13 +114,12 @@ def initialize_torchvision_model(name, d_out, **kwargs):
     constructor = getattr(torchvision.models, constructor_name)
     model = constructor(**kwargs)
     # adjust the last layer
-    d = getattr(model, last_layer_name).in_features
-    if d_out is None: # want to initialize a featurizer model
-        last_layer = Identity(d)
-        model.d_out = d
+    d_features = getattr(model, last_layer_name).in_features
+    if d_out is None:  # want to initialize a featurizer model
+        last_layer = Identity(d_features)
+        model.d_out = d_features
     else: # want to initialize a classifier for a particular num_classes
-        last_layer = nn.Linear(d, d_out)
+        last_layer = nn.Linear(d_features, d_out)
         model.d_out = d_out
     setattr(model, last_layer_name, last_layer)
-    # set the feature dimension as an attribute for convenience
     return model
