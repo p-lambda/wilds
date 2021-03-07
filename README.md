@@ -101,7 +101,7 @@ These are the sizes of each of our datasets, as well as their approximate time t
 
 | Dataset command | Modality | Download size (GB) | Size on disk (GB) | Train+eval time (Hours) |
 |-----------------|----------|--------------------|-------------------|-------------------------|
-| iwildcam        | Image    | 11                 | 25                | 7.5                     |
+| iwildcam        | Image    | 11                 | 25                | 7                       |
 | camelyon17      | Image    | 10                 | 15                | 2                       |
 | ogb-molpcba     | Graph    | 0.04               | 2                 | 15                      |
 | civilcomments   | Text     | 0.1                | 0.3               | 4.5                     |
