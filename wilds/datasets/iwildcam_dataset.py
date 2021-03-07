@@ -72,19 +72,19 @@ class IWildCamDataset(WILDSDataset):
 
         # Labels
         self._y_array = torch.tensor(df['y'].values)
-        self._n_classes = max(df['y'])
+        self._n_classes = max(df['y']) + 1
         self._y_size = 1
-        assert len(np.unique(df['y']) == self._n_classes)
+        assert len(np.unique(df['y'])) == self._n_classes
 
         # Location/group info
         n_groups = max(df['location_remapped']) + 1
         self._n_groups = n_groups
-        assert len(np.unique(df['location_remapped']) == self._n_groups)
+        assert len(np.unique(df['location_remapped'])) == self._n_groups
 
         # Sequence info
         n_sequences = max(df['sequence_remapped']) + 1
         self._n_sequences = n_sequences
-        assert len(np.unique(df['sequence_remapped']) == self._n_sequences)
+        assert len(np.unique(df['sequence_remapped'])) == self._n_sequences
 
         # Extract datetime subcomponents and include in metadata
         df['datetime_obj'] = df['datetime'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f'))

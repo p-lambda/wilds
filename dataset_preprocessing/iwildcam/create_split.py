@@ -148,14 +148,14 @@ def create_split(data_dir, seed):
     categories_df = categories_df.sort_values('y').reset_index(drop=True)
     categories_df = categories_df[['y','category_id','name']]
 
-    # Create remapped location id such that they are contigious contiguous
+    # Create remapped location id such that they are contigious
     location_ids = df['location']
     locations = np.unique(location_ids)
     n_groups = len(locations)
     location_to_group_id = {locations[i]: i for i in range(n_groups)}
     df['location_remapped' ] = df['location'].apply(lambda x: location_to_group_id[x])
 
-    # Create remapped location id such that they are contigious contiguous
+    # Create remapped sequence id such that they are contigious
     sequence_ids = df['seq_id']
     sequences = np.unique(sequence_ids)
     n_sequences = len(sequences)
