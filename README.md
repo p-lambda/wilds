@@ -99,16 +99,16 @@ This will download all datasets to the specified `data` folder. You can also use
 
 These are the sizes of each of our datasets, as well as their approximate time taken to train and evaluate the default model for a single ERM run using a NVIDIA V100 GPU.
 
-| Dataset command | Modality | Download size (GB) | Size on disk (GB) | Train+eval time |
-|-----------------|----------|--------------------|-------------------|-----------------|
-| iwildcam        | Image    | 11                 | 25                |                 |
-| camelyon17      | Image    | 10                 | 15                |                 |
-| ogb-molpcba     | Graph    | 0.04               | 2                 |                 |
-| civilcomments   | Text     | 0.1                | 0.3               |                 |
-| fmow            | Image    | 50                 | 55                |                 |
-| poverty         | Image    | 12                 | 14                |                 |
-| amazon          | Text     |                    |                   |                 |
-| py150           | Text     | 0.1                | 0.8               |                 |
+| Dataset command | Modality | Download size (GB) | Size on disk (GB) | Train+eval time (Hours) |
+|-----------------|----------|--------------------|-------------------|-------------------------|
+| iwildcam        | Image    | 11                 | 25                | 7.5                     |
+| camelyon17      | Image    | 10                 | 15                | 2                       |
+| ogb-molpcba     | Graph    | 0.04               | 2                 | 15                      |
+| civilcomments   | Text     | 0.1                | 0.3               | 4.5                     |
+| fmow            | Image    | 50                 | 55                | 6                       |
+| poverty         | Image    | 12                 | 14                | 5                       |
+| amazon          | Text     | 6.6                | 7                 | 5                       |
+| py150           | Text     | 0.1                | 0.8               | 9.5                     |
 
 While the `camelyon17` dataset is small and fast to train on, we advise against using it as the only dataset to prototype methods on, as the test performance of models trained on this dataset tend to exhibit a large degree of variability over random seeds.
 
