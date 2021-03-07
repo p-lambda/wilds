@@ -293,7 +293,7 @@ class WILDSDataset:
         might not handle versions similarly.
         """
         if self.version not in self.versions_dict:
-            raise ValueError(f'Version {self.version} not recognized. Must be in {self.versions_dict.keys()}.')
+            raise ValueError(f'Version {self.version} not supported. Must be in {self.versions_dict.keys()}.')
 
         download_url = self.versions_dict[self.version]['download_url']
         compressed_size = self.versions_dict[self.version]['compressed_size']
