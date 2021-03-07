@@ -42,7 +42,7 @@ class IWildCamDataset(WILDSDataset):
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x3f1b346ff2d74b5daf1a08685d68c6ec/contents/blob/',
             'compressed_size': 90_094_666_806},
         '2.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x5a405f743c4b4c66a16cc09cc3a858ca/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x6313da2b204647e79a14b468131fcd64/contents/blob/',
             'compressed_size': 12_000_000_000}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
@@ -118,14 +118,14 @@ class IWildCamDataset(WILDSDataset):
                                are predicted labels.
             - y_true (LongTensor): Ground-truth labels
             - metadata (Tensor): Metadata
-            - prediction_fn (function): A function that turns y_pred into predicted labels 
+            - prediction_fn (function): A function that turns y_pred into predicted labels
         Output:
             - results (dictionary): Dictionary of evaluation metrics
             - results_str (str): String summarizing the evaluation metrics
         """
         metrics = [
-            Accuracy(prediction_fn=prediction_fn), 
-            Recall(prediction_fn=prediction_fn, average='macro'), 
+            Accuracy(prediction_fn=prediction_fn),
+            Recall(prediction_fn=prediction_fn, average='macro'),
             F1(prediction_fn=prediction_fn, average='macro'),
         ]
 
