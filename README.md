@@ -77,22 +77,21 @@ In the `examples/` folder, we provide a set of scripts that can be used to downl
 These scripts are configured with the default models and hyperparameters that we used for all of the baselines described in our paper. All baseline results in the paper can be easily replicated with commands like:
 
 ```bash
-cd examples
-python run_expt.py --dataset iwildcam --algorithm ERM --root_dir data
-python run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data
+python examples/run_expt.py --dataset iwildcam --algorithm ERM --root_dir data
+python examples/run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data
 ```
 
 The scripts are set up to facilitate general-purpose algorithm development: new algorithms can be added to `examples/algorithms` and then run on all of the WILDS datasets using the default models.
 
 The first time you run these scripts, you might need to download the datasets. You can do so with the `--download` argument, for example:
 ```
-python run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data --download
+python examples/run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data --download
 ```
 
-Alternatively, you can use the standalone `examples/download_datasets.py` script, for example:
+Alternatively, you can use the standalone `wilds/download_datasets.py` script to download the datasets, for example:
 
 ```bash
-python download_datasets.py --root_dir data
+python wilds/download_datasets.py --root_dir data
 ```
 
 This will download all datasets to the specified `data` folder. You can also use the `--datasets` argument to download particular datasets.
