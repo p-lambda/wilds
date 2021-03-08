@@ -202,6 +202,7 @@ Invoking the `eval` method of each dataset yields all metrics reported in the pa
 >>> dataset.eval(all_y_pred, all_y_true, all_metadata)
 {'recall_macro_all': 0.66, ...}
 ```
+The `eval` method expects `all_y_pred` in a certain form by default and this vaires by dataset (e.g., predicted labels for most datasets, and binary logits for OGB-MolPCBA), as documented in the docstrings of each `eval` method. 
 
 ## Citing WILDS
 If you use WILDS datasets in your work, please cite [our paper](https://arxiv.org/abs/2012.07421) ([Bibtex](https://wilds.stanford.edu/assets/files/bibtex.md)):
