@@ -124,16 +124,16 @@ The WILDS package provides a simple, standardized interface for all datasets in 
 This short Python snippet covers all of the steps of getting started with a WILDS dataset, including dataset download and initialization, accessing various splits, and preparing a user-customizable data loader.
 
 ```py
->>> from wilds.datasets.iwildcam_dataset import IWildCamDataset
+>>> from wilds import get_dataset
 >>> from wilds.common.data_loaders import get_train_loader
 >>> import torchvision.transforms as transforms
 
 # Load the full dataset, and download it if necessary
->>> dataset = IWildCamDataset(download=True)
+>>> dataset = get_dataset(dataset='iwildcam', download=True)
 
 # Get the training set
 >>> train_data = dataset.get_subset('train',
-...                                 transform=transforms.Compose([transforms.Resize((224,224)),
+...                                 transform=transforms.Compose([transforms.Resize((448,448)),
 ...                                                               transforms.ToTensor()]))
 
 # Prepare the standard data loader
