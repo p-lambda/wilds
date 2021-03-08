@@ -58,9 +58,6 @@ class FMoWDataset(WILDSDataset):
     """
     _dataset_name = 'fmow'
     _versions_dict = {
-        '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xc59ea8261dfe4d2baa3820866e33d781/contents/blob/',
-            'compressed_size': 70_000_000_000},
         '1.1': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0xaec91eb7c9d548ebb15e1b5e60f966ab/contents/blob/',
             'compressed_size': 53_893_324_800}
@@ -179,14 +176,7 @@ class FMoWDataset(WILDSDataset):
         Returns x for a given idx.
         """
         idx = self.full_idxs[idx]
-        if self.version == '1.0':
-            batch_idx = idx // self.chunk_size
-            within_batch_idx = idx % self.chunk_size
-            img_batch = np.load(self.root / f'rgb_all_imgs_{batch_idx}.npy', mmap_mode='r')
-            img = img_batch[within_batch_idx].copy()
-        elif self.version == '1.1':
-            img = Image.open(self.root / 'images' / f'rgb_img_{idx}.png').convert('RGB')
-
+        img = Image.open(self.root / 'images' / f'rgb_img_{idx}.png').convert('RGB')
         return img
 
     def eval(self, y_pred, y_true, metadata, prediction_fn=None):
@@ -198,7 +188,7 @@ class FMoWDataset(WILDSDataset):
                                are predicted labels.
             - y_true (LongTensor): Ground-truth labels
             - metadata (Tensor): Metadata
-            - prediction_fn (function): A function that turns y_pred into predicted labels 
+            - prediction_fn (function): A function that turns y_pred into predicted labels
         Output:
             - results (dictionary): Dictionary of evaluation metrics
             - results_str (str): String summarizing the evaluation metrics

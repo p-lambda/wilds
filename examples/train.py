@@ -23,9 +23,6 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
         algorithm.train()
     else:
         algorithm.eval()
-    # process = psutil.Process(os.getpid())
-
-    # process = psutil.Process(os.getpid())
 
     # Not preallocating memory is slower
     # but makes it easier to handle different types of data loaders
