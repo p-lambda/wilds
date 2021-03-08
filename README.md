@@ -42,7 +42,7 @@ pip install -e .
 
 ### Requirements
 - numpy>=1.19.1
-- ogb>=1.2.5
+- ogb>=1.2.6
 - outdated>=0.2.0
 - pandas>=1.1.0
 - pillow>=7.2.0
