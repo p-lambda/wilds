@@ -202,7 +202,7 @@ Invoking the `eval` method of each dataset yields all metrics reported in the pa
 >>> dataset.eval(all_y_pred, all_y_true, all_metadata)
 {'recall_macro_all': 0.66, ...}
 ```
-Most `eval` methods take in predicted labels for `all_y_pred` by default, but the default inputs vary across datasets and are documented in docstrings.
+Most `eval` methods take in predicted labels for `all_y_pred` by default, but the default inputs vary across datasets and are documented in the `eval` docstrings of the corresponding dataset class.
 
 ## Citing WILDS
 If you use WILDS datasets in your work, please cite [our paper](https://arxiv.org/abs/2012.07421) ([Bibtex](https://wilds.stanford.edu/assets/files/bibtex.md)):
