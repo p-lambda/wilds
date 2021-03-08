@@ -117,6 +117,9 @@ class Py150Dataset(WILDSDataset):
             - results (dictionary): Dictionary of evaluation metrics
             - results_str (str): String summarizing the evaluation metrics
         """
+        if prediction_fn is not None:
+            y_pred = prediction_fn(y_pred)
+
         #y_pred: [n_samples, seqlen-1]
         #y_true: [n_samples, seqlen-1]
         tok_type = metadata[:, 1:] #[n_samples, seqlen-1]
