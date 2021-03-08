@@ -42,7 +42,7 @@ pip install -e .
 
 ### Requirements
 - numpy>=1.19.1
-- ogb>=1.2.5
+- ogb>=1.2.6
 - outdated>=0.2.0
 - pandas>=1.1.0
 - pillow>=7.2.0
@@ -77,22 +77,21 @@ In the `examples/` folder, we provide a set of scripts that can be used to downl
 These scripts are configured with the default models and hyperparameters that we used for all of the baselines described in our paper. All baseline results in the paper can be easily replicated with commands like:
 
 ```bash
-cd examples
-python run_expt.py --dataset iwildcam --algorithm ERM --root_dir data
-python run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data
+python examples/run_expt.py --dataset iwildcam --algorithm ERM --root_dir data
+python examples/run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data
 ```
 
 The scripts are set up to facilitate general-purpose algorithm development: new algorithms can be added to `examples/algorithms` and then run on all of the WILDS datasets using the default models.
 
 The first time you run these scripts, you might need to download the datasets. You can do so with the `--download` argument, for example:
 ```
-python run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data --download
+python examples/run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data --download
 ```
 
-Alternatively, you can use the standalone `examples/download_datasets.py` script, for example:
+Alternatively, you can use the standalone `wilds/download_datasets.py` script to download the datasets, for example:
 
 ```bash
-python download_datasets.py --root_dir data
+python wilds/download_datasets.py --root_dir data
 ```
 
 This will download all datasets to the specified `data` folder. You can also use the `--datasets` argument to download particular datasets.
@@ -124,16 +123,16 @@ The WILDS package provides a simple, standardized interface for all datasets in 
 This short Python snippet covers all of the steps of getting started with a WILDS dataset, including dataset download and initialization, accessing various splits, and preparing a user-customizable data loader.
 
 ```py
->>> from wilds.datasets.iwildcam_dataset import IWildCamDataset
+>>> from wilds import get_dataset
 >>> from wilds.common.data_loaders import get_train_loader
 >>> import torchvision.transforms as transforms
 
 # Load the full dataset, and download it if necessary
->>> dataset = IWildCamDataset(download=True)
+>>> dataset = get_dataset(dataset='iwildcam', download=True)
 
 # Get the training set
 >>> train_data = dataset.get_subset('train',
-...                                 transform=transforms.Compose([transforms.Resize((224,224)),
+...                                 transform=transforms.Compose([transforms.Resize((448,448)),
 ...                                                               transforms.ToTensor()]))
 
 # Prepare the standard data loader
@@ -202,7 +201,7 @@ Invoking the `eval` method of each dataset yields all metrics reported in the pa
 >>> dataset.eval(all_y_pred, all_y_true, all_metadata)
 {'recall_macro_all': 0.66, ...}
 ```
-Most `eval` methods take in predicted labels for `all_y_pred` by default, but the default inputs vary across datasets and are documented in docstrings.
+Most `eval` methods take in predicted labels for `all_y_pred` by default, but the default inputs vary across datasets and are documented in the `eval` docstrings of the corresponding dataset class.
 
 ## Citing WILDS
 If you use WILDS datasets in your work, please cite [our paper](https://arxiv.org/abs/2012.07421) ([Bibtex](https://wilds.stanford.edu/assets/files/bibtex.md)):
