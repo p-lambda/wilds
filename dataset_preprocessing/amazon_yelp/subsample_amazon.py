@@ -103,6 +103,7 @@ def main(dataset_path, frac=0.25):
 
     # Regenerate ID val and ID test
     train_reviewer_ids = data_df[split_df["split"] == TRAIN]["reviewerID"].unique()
+    np.random.shuffle(train_reviewer_ids)
     cutoff = int(len(train_reviewer_ids) / 2)
     id_val_reviewer_ids = train_reviewer_ids[:cutoff]
     id_test_reviewer_ids = train_reviewer_ids[cutoff:]
