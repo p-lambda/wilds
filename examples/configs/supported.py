@@ -1,49 +1,10 @@
 import torch.nn as nn
 import torch
 import sys, os
-# Datasets
-from wilds.datasets.amazon_dataset import AmazonDataset
-from wilds.datasets.bdd100k_dataset import BDD100KDataset
-from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
-from wilds.datasets.celebA_dataset import CelebADataset
-from wilds.datasets.civilcomments_dataset import CivilCommentsDataset
-from wilds.datasets.fmow_dataset import FMoWDataset
-from wilds.datasets.iwildcam_dataset import IWildCamDataset
-from wilds.datasets.ogbmolpcba_dataset import OGBPCBADataset
-from wilds.datasets.poverty_dataset import PovertyMapDataset
-from wilds.datasets.sqf_dataset import SQFDataset
-from wilds.datasets.waterbirds_dataset import WaterbirdsDataset
-from wilds.datasets.yelp_dataset import YelpDataset
-from wilds.datasets.py150_dataset import Py150Dataset
+
 # metrics
 from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
 from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE, multiclass_logits_to_pred, binary_logits_to_pred
-
-benchmark_datasets = [
-    'amazon',
-    'camelyon17',
-    'civilcomments',
-    'iwildcam',
-    'ogb-molpcba',
-    'poverty',
-    'fmow',
-    'py150']
-
-datasets = {
-    'amazon': AmazonDataset,
-    'camelyon17': Camelyon17Dataset,
-    'celebA': CelebADataset,
-    'civilcomments': CivilCommentsDataset,
-    'iwildcam': IWildCamDataset,
-    'waterbirds': WaterbirdsDataset,
-    'yelp': YelpDataset,
-    'ogb-molpcba': OGBPCBADataset,
-    'poverty': PovertyMapDataset,
-    'fmow': FMoWDataset,
-    'bdd100k': BDD100KDataset,
-    'py150': Py150Dataset,
-    'sqf': SQFDataset,
-}
 
 losses = {
     'cross_entropy': ElementwiseLoss(loss_fn=nn.CrossEntropyLoss(reduction='none')),

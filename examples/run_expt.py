@@ -8,6 +8,7 @@ import torchvision
 import sys
 from collections import defaultdict
 
+import wilds
 from wilds.common.data_loaders import get_train_loader, get_eval_loader
 from wilds.common.grouper import CombinatorialGrouper
 
@@ -23,7 +24,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     # Required arguments
-    parser.add_argument('-d', '--dataset', choices=supported.datasets, required=True)
+    parser.add_argument('-d', '--dataset', choices=wilds.supported_datasets, required=True)
     parser.add_argument('--algorithm', required=True, choices=supported.algorithms)
     parser.add_argument('--root_dir', required=True,
                         help='The directory where [dataset]/data can be found (or should be downloaded to, if it does not exist).')
@@ -92,7 +93,7 @@ def main():
     parser.add_argument('--evaluate_all_splits', type=parse_bool, const=True, nargs='?', default=True)
     parser.add_argument('--eval_splits', nargs='+', default=[])
     parser.add_argument('--eval_only', type=parse_bool, const=True, nargs='?', default=False)
-    parser.add_argument('--eval_epoch', default=None, type=int)
+    parser.add_argument('--eval_epoch', default=None, type=int, help='If eval_only is set, then eval_epoch allows you to specify evaluating at a particular epoch. By default, it evaluates the best epoch by validation performance.')
 
     # Misc
     parser.add_argument('--device', type=int, default=0)
@@ -135,7 +136,8 @@ def main():
     set_seed(config.seed)
 
     # Data
-    full_dataset = supported.datasets[config.dataset](
+    full_dataset = wilds.get_dataset(
+        dataset=config.dataset,
         version=config.version,
         root_dir=config.root_dir,
         download=config.download,
