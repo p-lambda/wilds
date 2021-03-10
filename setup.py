@@ -32,7 +32,7 @@ setuptools.setup(
         'pytz>=2020.4',
     ],
     license='MIT',
-    packages=setuptools.find_packages(exclude=['dataset_preprocessing', 'examples', 'examples.models']),
+    packages=setuptools.find_packages(exclude=['dataset_preprocessing', 'examples', 'examples.models', 'examples.models.bert']),
     classifiers=[
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Intended Audience :: Science/Research',
