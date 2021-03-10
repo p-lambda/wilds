@@ -51,11 +51,14 @@ class CelebADataset(WILDSDataset):
 
         It is available for non-commercial research purposes only.
     """
+    _dataset_name = 'celebA'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xfe55077f5cd541f985ebf9ec50473293/contents/blob/',
+            'compressed_size': 1_308_557_312}}
 
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
-        self._dataset_name = 'celebA'
-        self._version = '1.0'
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0xa174edc9c11041869d11f98d1dc19935/contents/blob/'
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
+        self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
         target_name = 'Blond_Hair'
         confounder_names = ['Male']
@@ -100,7 +103,6 @@ class CelebADataset(WILDSDataset):
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
             groupby_fields=(confounder_names + ['y']))
-        self._metric = Accuracy()
 
         # Extract splits
         self._split_scheme = split_scheme
@@ -121,8 +123,22 @@ class CelebADataset(WILDSDataset):
        x = Image.open(img_filename).convert('RGB')
        return x
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        """
+        Computes all evaluation metrics.
+        Args:
+            - y_pred (Tensor): Predictions from a model. By default, they are predicted labels (LongTensor).
+                               But they can also be other model outputs such that prediction_fn(y_pred)
+                               are predicted labels.
+            - y_true (LongTensor): Ground-truth labels
+            - metadata (Tensor): Metadata
+            - prediction_fn (function): A function that turns y_pred into predicted labels 
+        Output:
+            - results (dictionary): Dictionary of evaluation metrics
+            - results_str (str): String summarizing the evaluation metrics
+        """
+        metric = Accuracy(prediction_fn=prediction_fn)
         return self.standard_group_eval(
-            self._metric,
+            metric,
             self._eval_grouper,
             y_pred, y_true, metadata)

@@ -45,11 +45,14 @@ class Camelyon17Dataset(WILDSDataset):
         https://creativecommons.org/publicdomain/zero/1.0/
     """
 
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
-        self._dataset_name = 'camelyon17'
-        self._version = '1.0'
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0xe45e15f39fb54e9d9e919556af67aabe/contents/blob/'
-        self._compressed_size = 10_658_709_504
+    _dataset_name = 'camelyon17'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xe45e15f39fb54e9d9e919556af67aabe/contents/blob/',
+            'compressed_size': 10_658_709_504}}
+
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
+        self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
         self._original_resolution = (96,96)
 
@@ -120,8 +123,6 @@ class Camelyon17Dataset(WILDSDataset):
             dataset=self,
             groupby_fields=['slide'])
 
-        self._metric = Accuracy()
-
         super().__init__(root_dir, download, split_scheme)
 
     def get_input(self, idx):
@@ -134,8 +135,22 @@ class Camelyon17Dataset(WILDSDataset):
        x = Image.open(img_filename).convert('RGB')
        return x
 
-    def eval(self, y_pred, y_true, metadata):
+    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
+        """
+        Computes all evaluation metrics.
+        Args:
+            - y_pred (Tensor): Predictions from a model. By default, they are predicted labels (LongTensor).
+                               But they can also be other model outputs such that prediction_fn(y_pred)
+                               are predicted labels.
+            - y_true (LongTensor): Ground-truth labels
+            - metadata (Tensor): Metadata
+            - prediction_fn (function): A function that turns y_pred into predicted labels 
+        Output:
+            - results (dictionary): Dictionary of evaluation metrics
+            - results_str (str): String summarizing the evaluation metrics
+        """
+        metric = Accuracy(prediction_fn=prediction_fn)
         return self.standard_group_eval(
-            self._metric,
+            metric,
             self._eval_grouper,
             y_pred, y_true, metadata)
