@@ -6,6 +6,7 @@ import random
 from pathlib import Path
 import numpy as np
 import torch
+import pandas as pd
 
 try:
     import wandb
@@ -30,7 +31,7 @@ class ParseKwargs(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, dict())
         for value in values:
-            key, value_str = value.split('=')            
+            key, value_str = value.split('=')
             if value_str.replace('-','').isnumeric():
                 processed_val = int(value_str)
             elif value_str.replace('-','').replace('.','').isnumeric():
@@ -174,3 +175,12 @@ def initialize_wandb(config):
     wandb.init(name=name,
                project=f"wilds")
     wandb.config.update(config)
+
+def save_submission_csv(y_pred, dataset, config):
+    if dataset['dataset'].dataset_name == 'poverty':
+        log_file = f"{dataset}_preds_split:{dataset['split']}_fold:{config.fold}.csv"
+    else:
+        log_file = f"{dataset}_preds_split:{dataset['split']}_seed:{config.seed}.csv"
+
+    log_path = Path(config.log_dir) / log_file
+    IPython.embed()
