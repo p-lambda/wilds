@@ -239,7 +239,7 @@ def main():
                     for file in os.listdir(config.log_dir) if file.endswith('.pth')]
                 if len(epochs) > 0:
                     latest_epoch = max(epochs)
-                    save_path = model_prefix + f'epoch:{latest_epoch}_model.pth')
+                    save_path = model_prefix + f'epoch:{latest_epoch}_model.pth'
             try:
                 prev_epoch, best_val_metric = load(algorithm, save_path)
                 epoch_offset = prev_epoch + 1
