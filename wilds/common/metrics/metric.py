@@ -232,6 +232,7 @@ class MultiTaskMetric(Metric):
     def _compute_group_wise(self, y_pred, y_true, g, n_groups):
         flattened_metrics, indices = self.compute_flattened(y_pred, y_true, return_dict=False)
         flattened_g = g[indices]
+        print(flattened_metrics.shape, flattened_g.shape, y_pred.shape, y_true.shape)
         group_metrics, group_counts = avg_over_groups(flattened_metrics, flattened_g, n_groups)
         worst_group_metric = self.worst(group_metrics[group_counts>0])
         return group_metrics, group_counts, worst_group_metric

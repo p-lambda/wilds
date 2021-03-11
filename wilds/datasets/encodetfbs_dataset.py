@@ -15,7 +15,7 @@ class EncodeTFBSDataset(WILDSDataset):
     This is a subset of the dataset from the ENCODE-DREAM in vivo Transcription Factor Binding Site Prediction Challenge. 
     
     Input (x):
-        1000-base-pair regions of sequence with a quantified chromatin accessibility readout.
+        12800-base-pair regions of sequence with a quantified chromatin accessibility readout.
 
     Label (y):
         y is binary. It is 1 if the central 200bp region is bound by the transcription factor MAX, and 0 otherwise.
@@ -36,9 +36,9 @@ class EncodeTFBSDataset(WILDSDataset):
         self._y_size = 128
         # self._n_classes = 2
         
-        self._train_chroms = ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
-        self._val_chroms = ['chr2', 'chr9', 'chr11']
-        self._test_chroms = ['chr1', 'chr8', 'chr21']
+        self._train_chroms = ['chr3']#, 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
+        self._val_chroms = ['chr2']#, 'chr9', 'chr11']
+        self._test_chroms = ['chr1']#, 'chr8', 'chr21']
         self._transcription_factor = 'MAX'
         self._train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
         self._val_celltype = ['A549']
@@ -165,15 +165,18 @@ class EncodeTFBSDataset(WILDSDataset):
         (4) Window_size, the length of sequence returned (centered on the 6400bp region in (3))
         """
         this_metadata = self._metadata_df.iloc[idx, :]
+        chrom = this_metadata['chr']
         interval_start = this_metadata['start'] - int(window_size/4)
         interval_end = interval_start + window_size  #this_metadata['stop']
         seq_this = self._seq_bp[this_metadata['chr']][interval_start:interval_end]
         dnase_bw = self._dnase_allcelltypes[this_metadata['celltype']]
         dnase_this = dnase_bw.values(chrom, interval_start, interval_end, numpy=True)
+        # print("{}:{}-{}".format(chrom, interval_start, interval_end))
         dnase_avg = self._dnase_allcelltypes['avg'].values(chrom, interval_start, interval_end, numpy=True)
         return torch.tensor(np.column_stack(
-            [np.nan_to_num(seq_this), np.nan_to_num(dnase_this), np.nan_to_num(dnase_avg)]
-        ))
+            [np.nan_to_num(seq_this), 
+             np.nan_to_num(dnase_this), np.nan_to_num(dnase_avg)]
+        ).T)
 
     def eval(self, y_pred, y_true, metadata):
         return self.standard_group_eval(

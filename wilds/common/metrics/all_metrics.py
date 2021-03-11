@@ -58,6 +58,30 @@ class MultiTaskAccuracy(MultiTaskMetric):
     def worst(self, metrics):
         return minimum(metrics)
 
+class MultiTaskAveragePrecision(MultiTaskMetric):
+    def __init__(self, prediction_fn=logits_to_binary_pred, name=None, average='macro'):
+        self.prediction_fn = prediction_fn
+        if name is None:
+            name = f'avgprec'
+            if average is not None:
+                name+=f'-{average}'
+        self.average = average
+        super().__init__(name=name)
+
+    def _compute_flattened(self, flattened_y_pred, flattened_y_true):
+        if self.prediction_fn is not None:
+            flattened_y_pred = self.prediction_fn(flattened_y_pred)
+        score = sklearn.metrics.average_precision_score(
+            np.array(flattened_y_true.squeeze().detach().cpu().numpy() > 0), 
+            flattened_y_pred.squeeze().detach().cpu().numpy(), 
+            average=self.average
+        )
+        return torch.tensor(score).to(flattened_y_pred.device)
+
+    def worst(self, metrics):
+        return minimum(metrics)
+
+
 class Recall(Metric):
     def __init__(self, prediction_fn=None, name=None, average='binary'):
         self.prediction_fn = prediction_fn
@@ -90,7 +114,11 @@ class AveragePrecision(Metric):
     def _compute(self, y_pred, y_true):
         if self.prediction_fn is not None:
             y_pred = self.prediction_fn(y_pred)
-        score = sklearn.metrics.average_precision_score(y_true, y_pred, average=self.average, labels=torch.unique(y_true))
+        score = sklearn.metrics.average_precision_score(
+            np.array(y_true.squeeze().detach().cpu().numpy() > 0), 
+            y_pred.squeeze().detach().cpu().numpy(), 
+            average=self.average
+        )
         return torch.tensor(score)
 
     def worst(self, metrics):
