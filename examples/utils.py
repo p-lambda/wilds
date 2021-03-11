@@ -52,7 +52,7 @@ def parse_bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
-def save(algorithm, epoch, best_val_metric, path):
+def save_model(algorithm, epoch, best_val_metric, path):
     state = {}
     state['algorithm'] = algorithm.state_dict()
     state['epoch'] = epoch
@@ -176,11 +176,6 @@ def initialize_wandb(config):
                project=f"wilds")
     wandb.config.update(config)
 
-def save_submission_csv(y_pred, dataset, config):
-    if dataset['dataset'].dataset_name == 'poverty':
-        log_file = f"{dataset}_preds_split:{dataset['split']}_fold:{config.fold}.csv"
-    else:
-        log_file = f"{dataset}_preds_split:{dataset['split']}_seed:{config.seed}.csv"
-
-    log_path = Path(config.log_dir) / log_file
-    IPython.embed()
+def save_pred(y_pred, csv_path):
+    df = pd.DataFrame(y_pred.numpy())
+    df.to_csv(csv_path, index=False, header=False)

@@ -103,6 +103,7 @@ def main():
     parser.add_argument('--save_step', type=int)
     parser.add_argument('--save_best', type=parse_bool, const=True, nargs='?', default=True)
     parser.add_argument('--save_last', type=parse_bool, const=True, nargs='?', default=True)
+    parser.add_argument('--save_pred', type=parse_bool, const=True, nargs='?', default=True)    
     parser.add_argument('--no_group_logging', type=parse_bool, const=True, nargs='?')
     parser.add_argument('--use_wandb', type=parse_bool, const=True, nargs='?', default=False)
     parser.add_argument('--progress_bar', type=parse_bool, const=True, nargs='?', default=False)
