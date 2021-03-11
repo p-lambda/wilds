@@ -6,6 +6,7 @@ import random
 from pathlib import Path
 import numpy as np
 import torch
+import pandas as pd
 
 try:
     import wandb
@@ -30,7 +31,7 @@ class ParseKwargs(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, dict())
         for value in values:
-            key, value_str = value.split('=')            
+            key, value_str = value.split('=')
             if value_str.replace('-','').isnumeric():
                 processed_val = int(value_str)
             elif value_str.replace('-','').replace('.','').isnumeric():
@@ -51,7 +52,7 @@ def parse_bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
-def save(algorithm, epoch, best_val_metric, path):
+def save_model(algorithm, epoch, best_val_metric, path):
     state = {}
     state['algorithm'] = algorithm.state_dict()
     state['epoch'] = epoch
@@ -174,3 +175,31 @@ def initialize_wandb(config):
     wandb.init(name=name,
                project=f"wilds")
     wandb.config.update(config)
+
+def save_pred(y_pred, csv_path):
+    df = pd.DataFrame(y_pred.numpy())
+    df.to_csv(csv_path, index=False, header=False)
+
+def get_replicate_str(dataset, config):
+    if dataset['dataset'].dataset_name == 'poverty':
+        replicate_str = f"fold:{config.dataset_kwargs['fold']}"
+    else:
+        replicate_str = f"seed:{config.seed}"
+    return replicate_str
+
+def get_pred_prefix(dataset, config):
+    dataset_name = dataset['dataset'].dataset_name
+    split = dataset['split']
+    replicate_str = get_replicate_str(dataset, config)
+    prefix = os.path.join(
+        config.log_dir,
+        f"{dataset_name}_split:{split}_{replicate_str}_")
+    return prefix
+
+def get_model_prefix(dataset, config):
+    dataset_name = dataset['dataset'].dataset_name
+    replicate_str = get_replicate_str(dataset, config)
+    prefix = os.path.join(
+        config.log_dir,
+        f"{dataset_name}_{replicate_str}_")
+    return prefix
