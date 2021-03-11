@@ -12,7 +12,7 @@ import wilds
 from wilds.common.data_loaders import get_train_loader, get_eval_loader
 from wilds.common.grouper import CombinatorialGrouper
 
-from utils import set_seed, Logger, BatchLogger, log_config, ParseKwargs, load, initialize_wandb, log_group_data, parse_bool
+from utils import set_seed, Logger, BatchLogger, log_config, ParseKwargs, load, initialize_wandb, log_group_data, parse_bool, get_model_prefix
 from train import train, evaluate
 from algorithms.initializer import initialize_algorithm
 from transforms import initialize_transform
@@ -103,7 +103,7 @@ def main():
     parser.add_argument('--save_step', type=int)
     parser.add_argument('--save_best', type=parse_bool, const=True, nargs='?', default=True)
     parser.add_argument('--save_last', type=parse_bool, const=True, nargs='?', default=True)
-    parser.add_argument('--save_pred', type=parse_bool, const=True, nargs='?', default=True)    
+    parser.add_argument('--save_pred', type=parse_bool, const=True, nargs='?', default=True)
     parser.add_argument('--no_group_logging', type=parse_bool, const=True, nargs='?')
     parser.add_argument('--use_wandb', type=parse_bool, const=True, nargs='?', default=False)
     parser.add_argument('--progress_bar', type=parse_bool, const=True, nargs='?', default=False)
@@ -227,14 +227,15 @@ def main():
         datasets=datasets,
         train_grouper=train_grouper)
 
+    model_prefix = get_model_prefix(datasets['train'], config)
     if not config.eval_only:
         ## Load saved results if resuming
         resume_success = False
         if resume:
-            save_path = os.path.join(config.log_dir, 'last_model.pth')
+            save_path = model_prefix + 'epoch:last_model.pth'
             if not os.path.exists(save_path):
                 epochs = [
-                    int(file.split('_')[0])
+                    int(file.split('epoch:')[1].split('_')[0])
                     for file in os.listdir(config.log_dir) if file.endswith('.pth')]
                 if len(epochs) > 0:
                     latest_epoch = max(epochs)
@@ -260,9 +261,9 @@ def main():
             best_val_metric=best_val_metric)
     else:
         if config.eval_epoch is None:
-            eval_model_path = os.path.join(config.log_dir, 'best_model.pth')
+            eval_model_path = model_prefix + 'epoch:best_model.pth'
         else:
-            eval_model_path = os.path.join(config.log_dir, f'{config.eval_epoch}_model.pth')
+            eval_model_path = model_prefix +  f'epoch:{config.eval_epoch}_model.pth'
         best_epoch, best_val_metric = load(algorithm, eval_model_path)
         if config.eval_epoch is None:
             epoch = best_epoch

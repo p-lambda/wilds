@@ -1,7 +1,7 @@
 import os
 from tqdm import tqdm
 import torch
-from utils import save_model, save_pred
+from utils import save_model, save_pred, get_pred_prefix, get_model_prefix
 import torch.autograd.profiler as profiler
 from configs.supported import process_outputs_functions
 
@@ -156,23 +156,9 @@ def log_results(algorithm, dataset, general_logger, epoch, batch_idx):
         algorithm.reset_log()
 
 
-def get_replicate_str(dataset, config):
-    if dataset['dataset'].dataset_name == 'poverty':
-        replicate_str = f"fold:{config.dataset_kwargs['fold']}"
-    else:
-        replicate_str = f"seed:{config.seed}"
-    return replicate_str
-
-
 def save_pred_if_needed(y_pred, dataset, epoch, config, is_best, force_save=False):
     if config.save_pred:
-        dataset_name = dataset['dataset'].dataset_name
-        split = dataset['split']
-        replicate_str = get_replicate_str(dataset, config)
-        prefix = os.path.join(
-            config.log_dir,
-            f"{dataset_name}_split:{split}_{replicate_str}_")
-
+        prefix = get_pred_prefix(dataset, config)
         if force_save or (config.save_step is not None and (epoch + 1) % config.save_step == 0):
             save_pred(y_pred, prefix + f'epoch:{epoch}_pred.csv')
         if config.save_last:
@@ -182,15 +168,10 @@ def save_pred_if_needed(y_pred, dataset, epoch, config, is_best, force_save=Fals
 
 
 def save_model_if_needed(algorithm, dataset, epoch, config, is_best, best_val_metric):
-    dataset_name = dataset['dataset'].dataset_name
-    replicate_str = get_replicate_str(dataset, config)
-    prefix = os.path.join(
-        config.log_dir,
-        f"{dataset_name}_{replicate_str}_")
-
+    prefix = get_model_prefix(dataset, config)
     if config.save_step is not None and (epoch + 1) % config.save_step == 0:
         save_model(algorithm, epoch, best_val_metric, prefix + f'epoch:{epoch}_model.pth')
     if config.save_last:
-        save_model(algorithm, epoch, best_val_metric, prefix + f'epoch:last_model.pth')
+        save_model(algorithm, epoch, best_val_metric, prefix + 'epoch:last_model.pth')
     if config.save_best and is_best:
-        save_model(algorithm, epoch, best_val_metric, prefix + f'epoch:best_model.pth')
+        save_model(algorithm, epoch, best_val_metric, prefix + 'epoch:best_model.pth')
