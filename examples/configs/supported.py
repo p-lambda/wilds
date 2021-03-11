@@ -16,7 +16,7 @@ from wilds.datasets.waterbirds_dataset import WaterbirdsDataset
 from wilds.datasets.yelp_dataset import YelpDataset
 # metrics
 from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
-from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE
+from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE, MultiTaskAveragePrecision
 
 datasets = {
     'amazon': AmazonDataset,
@@ -43,6 +43,7 @@ algo_log_metrics = {
     'accuracy': Accuracy(),
     'mse': MSE(),
     'multitask_accuracy': MultiTaskAccuracy(),
+    'multitask_avgprec': MultiTaskAveragePrecision(), 
     None: None,
 }
 
