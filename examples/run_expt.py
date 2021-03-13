@@ -61,6 +61,8 @@ def main():
 
     # Objective
     parser.add_argument('--loss_function', choices = supported.losses)
+    parser.add_argument('--loss_kwargs', nargs='*', action=ParseKwargs, default={},
+        help='keyword arguments for loss initialization passed as key1=value1 key2=value2')    
 
     # Algorithm
     parser.add_argument('--groupby_fields', nargs='+')

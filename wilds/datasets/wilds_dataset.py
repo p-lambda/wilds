@@ -106,6 +106,10 @@ class WILDSDataset:
         # Check metadata
         assert len(self.metadata_array.shape) == 2
         assert len(self.metadata_fields) == self.metadata_array.shape[1]
+
+        # Check that it is not both classification and detection
+        assert not (self.is_classification and self.is_detection)
+
         # For convenience, include y in metadata_fields if y_size == 1
         if self.y_size == 1:
             assert 'y' in self.metadata_fields
@@ -242,9 +246,15 @@ class WILDSDataset:
     def is_classification(self):
         """
         Boolean. True if the task is classification, and false otherwise.
-        Used for logging purposes.
         """
         return (self.n_classes is not None)
+
+    @property
+    def is_detection(self):
+        """
+        Boolean. True if the task is detection, and false otherwise.
+        """
+        return getattr(self, '_is_detection', False)
 
     @property
     def metadata_fields(self):

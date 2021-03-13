@@ -19,7 +19,7 @@ def binary_logits_to_score(logits):
 
 def multiclass_logits_to_pred(logits):
     """
-    Takes multi-class logits of size (batch_size, ..., n_classes) and returns predictions 
+    Takes multi-class logits of size (batch_size, ..., n_classes) and returns predictions
     by taking an argmax at the last dimension
     """
     assert logits.dim() > 1
@@ -139,6 +139,19 @@ class PrecisionAtRecall(Metric):
         score = self.score_fn(y_pred)
         predictions = (score > self.threshold)
         return torch.tensor(sklearn.metrics.precision_score(y_true, predictions))
+
+    def worst(self, metrics):
+        return minimum(metrics)
+
+class DummyMetric(Metric):
+    def __init__(self, prediction_fn=None, name=None):
+        self.prediction_fn = prediction_fn
+        if name is None:
+            name = 'dummy'
+        super().__init__(name=name)
+
+    def _compute(self, y_pred, y_true):
+        return -1
 
     def worst(self, metrics):
         return minimum(metrics)

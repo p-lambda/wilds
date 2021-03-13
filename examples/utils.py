@@ -203,3 +203,14 @@ def get_model_prefix(dataset, config):
         config.log_dir,
         f"{dataset_name}_{replicate_str}_")
     return prefix
+
+# Adapted from https://discuss.pytorch.org/t/pytorch-tensor-to-device-for-a-list-of-dict/66283
+def move_to(obj, device):
+    if torch.is_tensor(obj):
+        return obj.to(device)
+    elif isinstance(obj, dict):
+        return {k: move_to(v, device) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [move_to(v, device) for v in obj]
+    else:
+        raise TypeError("Invalid type for move_to")

@@ -3,9 +3,19 @@ import pandas as pd
 import torch
 from pathlib import Path
 from PIL import Image
-#from wilds.common.metrics.all_metrics import MultiTaskAccuracy
 from wilds.datasets.wilds_dataset import WILDSDataset
+from wilds.common.grouper import CombinatorialGrouper
+from wilds.common.metrics.all_metrics import DummyMetric
 
+
+def _collate_fn(batch):
+    """
+    Stack x (batch[0]) and metadata (batch[2]), but not y.
+    """
+    batch = list(zip(*batch))
+    batch[0] = torch.stack(batch[0])
+    batch[2] = torch.stack(batch[2])
+    return tuple(batch)
 
 class GWHDDataset(WILDSDataset):
     """
@@ -23,7 +33,7 @@ class GWHDDataset(WILDSDataset):
     Input (x):
         1024x1024 RGB images of wheat field canopy between flowering and ripening.
     Output (y):
-        y is a nx4-dimensional vector where each line represents a box coordinate (top-x,top-y,height,width)
+        y is a nx4-dimensional vector where each line represents a box coordinate (x_min,y_min,x_max,y_max)
     Metadata:
         Each image is annotated with the ID of the domain it came from (integer from 0 to 10).
     Website:
@@ -58,6 +68,9 @@ class GWHDDataset(WILDSDataset):
         self._data_dir = self.initialize_data_dir(root_dir, download)
         self._original_resolution = (1024, 1024)
         self.root = Path(self.data_dir)
+        self._is_detection = True
+        self._y_size = 1
+        self._n_classes = 1
 
         self._split_scheme = split_scheme
 
@@ -91,29 +104,44 @@ class GWHDDataset(WILDSDataset):
             labels = list(df['labels'].values)
             self._split_array.extend([i] * len(labels))
 
+            labels = [{
+                "boxes": torch.stack([
+                    torch.tensor([int(i) for i in box.split(" ")])
+                    for box in boxes.split(";")
+                ]),
+                "labels": torch.tensor([1.]*len(list(boxes.split(";")))).long()
+            } if type(boxes) != float else {
+                "boxes": torch.empty(0,4),
+                "labels": torch.empty(0,1,dtype=torch.long)
+            } for boxes in labels]
+            # TODO: Figure out empty images
 
-
-            labels = [{"boxes": torch.stack([ torch.tensor([int(i) for i in box.split(" ")]) for box in boxes.split(";")]) ,"labels": torch.tensor([1.]*len(list(boxes.split(";")))).long() }  if type(boxes) != float else {"boxes":torch.empty(0,4),"labels":torch.empty(0,1,dtype=torch.long)} for boxes in labels]
+            # The above boxes are (x_min,y_min,x_max,y_max)
+            # Convert labels into (center_x, center_y, w, h) normalized, which is what DETR expects
+            # TODO: If it's not standard, we can probably put this in a transform somewhere
+            for label in labels:
+                boxes = label['boxes']
+                center_x = (boxes[:, 0] + boxes[:, 2]) / 2 / self._original_resolution[0]
+                center_y = (boxes[:, 1] + boxes[:, 3]) / 2 / self._original_resolution[1]
+                width = (boxes[:, 2] - boxes[:, 0]) / self._original_resolution[0]
+                height = (boxes[:, 3] - boxes[:, 1]) / self._original_resolution[1]
+                label['boxes'] = torch.stack((center_x, center_y, width, height), dim=1)
 
             self._y_array.extend(labels)
-
-
             self._metadata_array.extend(list(df['group'].values))
-
-
-        self._y_size = 1
-
-        self._metadata_fields = ["domain"]
 
         self._split_array = np.array(self._split_array)
 
-
-
-
+        self._metadata_fields = ['location']
         self._metadata_array = torch.tensor(self._metadata_array,
                                             dtype=torch.long).unsqueeze(1)
 
-        #self._metric = MultiTaskAccuracy()
+        self._eval_grouper = CombinatorialGrouper(
+            dataset=self,
+            groupby_fields=['location'])
+
+        self._metric = DummyMetric() # TODO
+        self._collate = _collate_fn
 
     def get_input(self, idx):
        """

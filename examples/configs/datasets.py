@@ -282,6 +282,29 @@ dataset_defaults = {
         'n_epochs': 4,
         'process_outputs_function': None,
     },
+    'gwhd': {
+        'split_scheme': 'official',
+        'model': 'detr',
+        'train_transform': 'image_base',
+        'eval_transform': 'image_base',
+        'model_kwargs': {
+            'aux_loss': True,
+            'n_queries': 150,
+            'n_classes': 1},
+        'loss_function': 'detr_set_criterion',
+        'groupby_fields': ['location'],
+        'val_metric': 'dummy_all', # TODO
+        'val_metric_decreasing': False,
+        'algo_log_metric': None, # TODO
+        'optimizer': 'Adam',
+        'optimizer_kwargs': {},
+        'scheduler': None,
+        'batch_size': 4,
+        'lr': 1e-4,
+        'weight_decay': 1e-4,
+        'n_epochs': 10,
+        'process_outputs_function': None,
+    }
 }
 
 ##########################################
