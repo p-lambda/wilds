@@ -24,7 +24,7 @@ import torch.multiprocessing
 def main():
     torch.multiprocessing.set_sharing_strategy('file_system')
 
-    ''' to set default hyperparams for each dataset/model, look at configs/ '''
+    ''' to see default hyperparams for each dataset/model, look at configs/ '''
     parser = argparse.ArgumentParser()
 
     # Required arguments
