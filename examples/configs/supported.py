@@ -1,5 +1,6 @@
 # metrics
 from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE, multiclass_logits_to_pred, binary_logits_to_pred
+from utils import remove_key
 
 algo_log_metrics = {
     'accuracy': Accuracy(prediction_fn=multiclass_logits_to_pred),
@@ -12,6 +13,7 @@ algo_log_metrics = {
 process_outputs_functions = {
     'binary_logits_to_pred': binary_logits_to_pred,
     'multiclass_logits_to_pred': multiclass_logits_to_pred,
+    'remove_detr_aux_outputs': remove_key('aux_outputs'),
     None: None,
 }
 

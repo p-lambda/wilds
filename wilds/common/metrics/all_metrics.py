@@ -4,7 +4,7 @@ import numpy as np
 import torch.nn.functional as F
 from wilds.common.metrics.metric import Metric, ElementwiseMetric, MultiTaskMetric
 from wilds.common.metrics.loss import ElementwiseLoss
-from wilds.common.utils import avg_over_groups, minimum, maximum
+from wilds.common.utils import avg_over_groups, minimum, maximum, get_counts
 import sklearn.metrics
 from scipy.stats import pearsonr
 
@@ -151,7 +151,13 @@ class DummyMetric(Metric):
         super().__init__(name=name)
 
     def _compute(self, y_pred, y_true):
-        return -1
+        return torch.tensor(-1)
+
+    def _compute_group_wise(self, y_pred, y_true, g, n_groups):
+        group_metrics = torch.ones(n_groups, device=g.device) * -1
+        group_counts = get_counts(g, n_groups)
+        worst_group_metric = self.worst(group_metrics)
+        return group_metrics, group_counts, worst_group_metric
 
     def worst(self, metrics):
         return minimum(metrics)

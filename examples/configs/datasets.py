@@ -289,8 +289,9 @@ dataset_defaults = {
         'eval_transform': 'image_base',
         'model_kwargs': {
             'aux_loss': True,
-            'n_queries': 150,
-            'n_classes': 1},
+            'n_queries': 200,
+            'n_classes': 1,
+            'pretrained': True},
         'loss_function': 'detr_set_criterion',
         'groupby_fields': ['location'],
         'val_metric': 'dummy_all', # TODO
@@ -303,7 +304,7 @@ dataset_defaults = {
         'lr': 1e-4,
         'weight_decay': 1e-4,
         'n_epochs': 10,
-        'process_outputs_function': None,
+        'process_outputs_function': 'remove_detr_aux_outputs',
     }
 }
 

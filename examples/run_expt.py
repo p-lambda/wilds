@@ -19,8 +19,12 @@ from transforms import initialize_transform
 from configs.utils import populate_defaults
 import configs.supported as supported
 
+import torch.multiprocessing
+
 def main():
-    ''' set default hyperparams in default_hyperparams.py '''
+    torch.multiprocessing.set_sharing_strategy('file_system')
+
+    ''' to set default hyperparams for each dataset/model, look at configs/ '''
     parser = argparse.ArgumentParser()
 
     # Required arguments
@@ -62,7 +66,7 @@ def main():
     # Objective
     parser.add_argument('--loss_function', choices = supported.losses)
     parser.add_argument('--loss_kwargs', nargs='*', action=ParseKwargs, default={},
-        help='keyword arguments for loss initialization passed as key1=value1 key2=value2')    
+        help='keyword arguments for loss initialization passed as key1=value1 key2=value2')
 
     # Algorithm
     parser.add_argument('--groupby_fields', nargs='+')

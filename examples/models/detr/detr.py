@@ -149,7 +149,6 @@ class SetCriterion(nn.Module):
         src_boxes = outputs['pred_boxes'][idx]
         target_boxes = torch.cat([t['boxes'][i] for t, (_, i) in zip(targets, indices)], dim=0)
 
-
         loss_bbox = F.l1_loss(src_boxes, target_boxes, reduction='none').sum(dim=1)
 
         loss_giou = 1 - torch.diag(box_ops.generalized_box_iou(
@@ -165,8 +164,12 @@ class SetCriterion(nn.Module):
 
         pos = 0
         for i, tgt_length in enumerate(tgt_lengths):
-            losses['loss_bbox'][i] = loss_bbox[pos:pos+tgt_length].mean()
-            losses['loss_giou'][i] = loss_giou[pos:pos+tgt_length].mean()
+            if tgt_length == 0:
+                losses['loss_bbox'][i] = 0
+                losses['loss_giou'][i] = 0
+            else:
+                losses['loss_bbox'][i] = loss_bbox[pos:pos+tgt_length].mean()
+                losses['loss_giou'][i] = loss_giou[pos:pos+tgt_length].mean()
             pos += tgt_length
 
         # losses['loss_bbox'] = loss_bbox.sum() / num_boxes

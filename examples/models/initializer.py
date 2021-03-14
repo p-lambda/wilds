@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 from models.layers import Identity
@@ -142,6 +143,7 @@ def initialize_torchvision_model(name, d_out, **kwargs):
     return model
 
 def initialize_detr_model(config, d_out):
+
     from models.detr.backbone import Backbone, Joiner
     from models.detr.position_encoding import PositionEmbeddingSine
     from models.detr.transformer import Transformer
@@ -179,5 +181,19 @@ def initialize_detr_model(config, d_out):
         num_queries=config.model_kwargs['n_queries'],
         aux_loss=config.model_kwargs['aux_loss'],
     )
+
+    if config.model_kwargs['pretrained']:
+        # Calling torch.hub.load('facebookresearch/detr', 'detr_resnet50', pretrained=True, num_classes=d_out) does not work
+        # due to a ModuleNotFoundError. Perhaps some configuration error there.
+        # So we have to do it manually.
+
+        checkpoint = torch.hub.load_state_dict_from_url(
+                    url='https://dl.fbaipublicfiles.com/detr/detr-r50-e632da11.pth',
+                    map_location='cpu',
+                    check_hash=True)
+        del checkpoint["model"]["query_embed.weight"]
+        del checkpoint["model"]["class_embed.weight"]
+        del checkpoint["model"]["class_embed.bias"]
+        model.load_state_dict(checkpoint["model"], strict=False)
 
     return model

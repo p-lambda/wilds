@@ -81,7 +81,11 @@ class SingleModelAlgorithm(GroupAlgorithm):
         assert not self.is_training
         results = self.process_batch(batch)
         results['objective'] = self.objective(results).item()
-        self.update_log(results)
+        try:
+            self.update_log(results)
+        except:
+            import IPython
+            IPython.embed()
         return self.sanitize_dict(results)
 
     def update(self, batch):

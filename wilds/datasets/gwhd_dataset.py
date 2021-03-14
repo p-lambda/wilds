@@ -112,7 +112,8 @@ class GWHDDataset(WILDSDataset):
                 "labels": torch.tensor([1.]*len(list(boxes.split(";")))).long()
             } if type(boxes) != float else {
                 "boxes": torch.empty(0,4),
-                "labels": torch.empty(0,1,dtype=torch.long)
+                # "labels": torch.empty(0,1,dtype=torch.long)
+                "labels": torch.empty(0,dtype=torch.long)
             } for boxes in labels]
             # TODO: Figure out empty images
 
@@ -126,6 +127,9 @@ class GWHDDataset(WILDSDataset):
                 width = (boxes[:, 2] - boxes[:, 0]) / self._original_resolution[0]
                 height = (boxes[:, 3] - boxes[:, 1]) / self._original_resolution[1]
                 label['boxes'] = torch.stack((center_x, center_y, width, height), dim=1)
+
+            # num_boxes = [len(example['boxes']) for example in labels]
+            # print(f'Max num_boxes is {max(num_boxes)}')            
 
             self._y_array.extend(labels)
             self._metadata_array.extend(list(df['group'].values))
@@ -149,6 +153,13 @@ class GWHDDataset(WILDSDataset):
        """
        img_filename = self.root / "images" / self._image_array[idx]
        x = Image.open(img_filename)
+       #
+       # import psutil
+       # for proc in psutil.process_iter():
+       #     try:
+       #         print(proc.open_files())
+       #     except (psutil.AccessDenied):
+       #         pass
        return x
 
     def eval(self, y_pred, y_true, metadata):

@@ -1,7 +1,7 @@
 import os
 from tqdm import tqdm
 import torch
-from utils import save_model, save_pred, get_pred_prefix, get_model_prefix
+from utils import save_model, save_pred, get_pred_prefix, get_model_prefix, detach_and_clone, collate_list
 import torch.autograd.profiler as profiler
 from configs.supported import process_outputs_functions
 
@@ -26,6 +26,9 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
     batch_idx = 0
     iterator = tqdm(dataset['loader']) if config.progress_bar else dataset['loader']
 
+    # import psutil
+    # process = psutil.Process(os.getpid())
+
     for batch in iterator:
         if train:
             batch_results = algorithm.update(batch)
@@ -34,23 +37,33 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
 
         # These tensors are already detached, but we need to clone them again
         # Otherwise they don't get garbage collected properly in some versions
-        # The subsequent detach is just for safety
+        # The extra detach is just for safety
         # (they should already be detached in batch_results)
-        epoch_y_true.append(batch_results['y_true'].clone().detach())
-        y_pred = batch_results['y_pred'].clone().detach()
+        epoch_y_true.append(detach_and_clone(batch_results['y_true']))
+        y_pred = detach_and_clone(batch_results['y_pred'])
         if config.process_outputs_function is not None:
             y_pred = process_outputs_functions[config.process_outputs_function](y_pred)
         epoch_y_pred.append(y_pred)
-        epoch_metadata.append(batch_results['metadata'].clone().detach())
+        epoch_metadata.append(detach_and_clone(batch_results['metadata']))
 
         if train and (batch_idx+1) % config.log_every==0:
             log_results(algorithm, dataset, general_logger, epoch, batch_idx)
+            # t = torch.cuda.get_device_properties(0).total_memory
+            # r = torch.cuda.memory_reserved(0)
+            # a = torch.cuda.memory_allocated(0)
+            # f = r-a  # free inside reserved
+            # print(f'Total: {f:10}   Reserved: {r:10}   Allocated: {a:10}   Free: {f:10}')
+            #
+            # mem = process.memory_info().rss
+            # print(f'Mem: {mem / 1024 / 1024:6.1f}M')
 
         batch_idx += 1
 
-    epoch_y_pred = torch.cat(epoch_y_pred)
-    epoch_y_true = torch.cat(epoch_y_true)
-    epoch_metadata = torch.cat(epoch_metadata)
+
+    epoch_y_pred = collate_list(epoch_y_pred)
+    epoch_y_true = collate_list(epoch_y_true)
+    epoch_metadata = collate_list(epoch_metadata)
+
     results, results_str = dataset['dataset'].eval(
         epoch_y_pred,
         epoch_y_true,
