@@ -305,6 +305,10 @@ dataset_defaults = {
         'weight_decay': 1e-4,
         'n_epochs': 10,
         'process_outputs_function': 'remove_detr_aux_outputs',
+        'loader_kwargs': {
+            'num_workers': 1,
+            'pin_memory': True,
+        },
     }
 }
 

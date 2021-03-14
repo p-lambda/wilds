@@ -275,12 +275,15 @@ def main():
             epoch = best_epoch
         else:
             epoch = config.eval_epoch
+        if epoch == best_epoch:
+            is_best = True
         evaluate(
             algorithm=algorithm,
             datasets=datasets,
             epoch=epoch,
             general_logger=logger,
-            config=config)
+            config=config,
+            is_best=is_best)
 
     logger.close()
     for split in datasets:

@@ -1,7 +1,6 @@
 import sys
 import os
 import csv
-import copy
 import argparse
 import random
 from pathlib import Path
@@ -177,9 +176,16 @@ def initialize_wandb(config):
                project=f"wilds")
     wandb.config.update(config)
 
-def save_pred(y_pred, csv_path):
-    df = pd.DataFrame(y_pred.numpy())
-    df.to_csv(csv_path, index=False, header=False)
+def save_pred(y_pred, path_prefix):
+    # Single tensor
+    if torch.is_tensor(y_pred):        
+        df = pd.DataFrame(y_pred.numpy())
+        df.to_csv(path_prefix + '.csv', index=False, header=False)
+    # Dictionary
+    elif isinstance(y_pred, dict):
+        torch.save(y_pred, path_prefix + '.pth')
+    else:
+        raise TypeError("Invalid type for save_pred")
 
 def get_replicate_str(dataset, config):
     if dataset['dataset'].dataset_name == 'poverty':
@@ -222,10 +228,8 @@ def detach_and_clone(obj):
     if torch.is_tensor(obj):
         return obj.detach().clone()
     elif isinstance(obj, dict):
-        obj = copy.copy(obj)
         return {k: detach_and_clone(v) for k, v in obj.items()}
     elif isinstance(obj, list):
-        obj = copy.copy(obj)
         return [detach_and_clone(v) for v in obj]
     elif isinstance(obj, float) or isinstance(obj, int):
         return obj

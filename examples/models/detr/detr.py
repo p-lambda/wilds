@@ -236,7 +236,6 @@ class SetCriterion(nn.Module):
                     losses.update(l_dict)
 
         # Sum up weighted losses by element
-
         device = outputs['pred_logits'].device
         elementwise_loss = torch.zeros(len(outputs['pred_logits']), device=device)
 
