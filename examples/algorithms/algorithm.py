@@ -94,7 +94,7 @@ class Algorithm(nn.Module):
         Helper function that sanitizes dictionaries by:
             - moving to the specified output device
             - removing any gradient information
-            - detaching and cloning the tensors            
+            - detaching and cloning the tensors
         Args:
             - in_dict (dictionary)
         Output:
@@ -103,14 +103,4 @@ class Algorithm(nn.Module):
         out_dict = detach_and_clone(in_dict)
         if to_out_device:
             out_dict = move_to(out_dict, self.out_device)
-        #
-        # out_dict = {}
-        # for k, v in in_dict.items():
-        #     if isinstance(v, torch.Tensor):
-        #         v_out = v.detach().clone()
-        #         if to_out_device:
-        #             v_out = v_out.to(self.out_device)
-        #     else:
-        #         v_out = v
-        #     out_dict[k] = v_out
         return out_dict

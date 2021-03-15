@@ -17,6 +17,8 @@ def initialize_loss(config, d_out):
     elif config.loss_function == 'detr_set_criterion':
         return ElementwiseLoss(loss_fn=get_detr_set_criterion(config, d_out))
 
+    else:
+        raise ValueError(f'config.loss_function {config.loss_function} not recognized')
 
 def get_detr_set_criterion(config, d_out):
     from examples.models.detr.matcher import HungarianMatcher

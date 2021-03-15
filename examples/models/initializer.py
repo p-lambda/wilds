@@ -173,7 +173,6 @@ def initialize_detr_model(config, d_out):
         return_intermediate_dec=True,
     )
 
-    # Update these with dataset configs
     model = DETR(
         backbone,
         transformer,
@@ -186,7 +185,6 @@ def initialize_detr_model(config, d_out):
         # Calling torch.hub.load('facebookresearch/detr', 'detr_resnet50', pretrained=True, num_classes=d_out) does not work
         # due to a ModuleNotFoundError. Perhaps some configuration error there.
         # So we have to do it manually.
-
         checkpoint = torch.hub.load_state_dict_from_url(
                     url='https://dl.fbaipublicfiles.com/detr/detr-r50-e632da11.pth',
                     map_location='cpu',
