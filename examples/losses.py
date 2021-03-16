@@ -15,7 +15,7 @@ def initialize_loss(config, d_out):
         return MultiTaskLoss(loss_fn=nn.BCEWithLogitsLoss(reduction='none'))
 
     elif config.loss_function == 'detr_set_criterion':
-        return ElementwiseLoss(loss_fn=get_detr_set_criterion(config, d_out))
+        return ElementwiseLoss(loss_fn=get_detr_set_criterion(config, d_out))        
 
     else:
         raise ValueError(f'config.loss_function {config.loss_function} not recognized')

@@ -69,7 +69,8 @@ class GWHDDataset(WILDSDataset):
         self._original_resolution = (1024, 1024)
         self.root = Path(self.data_dir)
         self._is_detection = True
-        self._y_size = 1
+        self._is_classification = False
+        self._y_size = None
         self._n_classes = 1
 
         self._split_scheme = split_scheme
@@ -109,7 +110,7 @@ class GWHDDataset(WILDSDataset):
                     torch.tensor([int(i) for i in box.split(" ")])
                     for box in boxes.split(";")
                 ]),
-                "labels": torch.tensor([1.]*len(list(boxes.split(";")))).long()
+                "labels": torch.tensor([0]*len(list(boxes.split(";")))).long()
             } if type(boxes) != float else {
                 "boxes": torch.empty(0,4),
                 # "labels": torch.empty(0,1,dtype=torch.long)
@@ -129,16 +130,16 @@ class GWHDDataset(WILDSDataset):
                 label['boxes'] = torch.stack((center_x, center_y, width, height), dim=1)
 
             # num_boxes = [len(example['boxes']) for example in labels]
-            # print(f'Max num_boxes is {max(num_boxes)}')            
+            # print(f'Max num_boxes is {max(num_boxes)}')
 
             self._y_array.extend(labels)
             self._metadata_array.extend(list(df['group'].values))
 
         self._split_array = np.array(self._split_array)
 
-        self._metadata_fields = ['location']
         self._metadata_array = torch.tensor(self._metadata_array,
                                             dtype=torch.long).unsqueeze(1)
+        self._metadata_fields = ['location']
 
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
@@ -147,19 +148,14 @@ class GWHDDataset(WILDSDataset):
         self._metric = DummyMetric() # TODO
         self._collate = _collate_fn
 
+        super().__init__(root_dir, download, split_scheme)
+
     def get_input(self, idx):
        """
        Returns x for a given idx.
        """
        img_filename = self.root / "images" / self._image_array[idx]
        x = Image.open(img_filename)
-       #
-       # import psutil
-       # for proc in psutil.process_iter():
-       #     try:
-       #         print(proc.open_files())
-       #     except (psutil.AccessDenied):
-       #         pass
        return x
 
     def eval(self, y_pred, y_true, metadata):

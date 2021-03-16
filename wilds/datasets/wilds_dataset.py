@@ -95,8 +95,8 @@ class WILDSDataset:
         assert 'train' in self.split_dict
         assert 'val' in self.split_dict
 
-        # Check that required arrays are Tensors
-        assert isinstance(self.y_array, torch.Tensor), 'y_array must be a torch.Tensor'
+        # Check the form of the required arrays
+        assert (isinstance(self.y_array, torch.Tensor) or isinstance(self.y_array, list))
         assert isinstance(self.metadata_array, torch.Tensor), 'metadata_array must be a torch.Tensor'
 
         # Check that dimensions match
@@ -247,7 +247,7 @@ class WILDSDataset:
         """
         Boolean. True if the task is classification, and false otherwise.
         """
-        return (self.n_classes is not None)
+        return getattr(self, '_is_classification', (self.n_classes is not None))
 
     @property
     def is_detection(self):

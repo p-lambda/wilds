@@ -178,7 +178,7 @@ def initialize_wandb(config):
 
 def save_pred(y_pred, path_prefix):
     # Single tensor
-    if torch.is_tensor(y_pred):        
+    if torch.is_tensor(y_pred):
         df = pd.DataFrame(y_pred.numpy())
         df.to_csv(path_prefix + '.csv', index=False, header=False)
     # Dictionary

@@ -245,35 +245,6 @@ class SetCriterion(nn.Module):
         return elementwise_loss
 
 
-class PostProcess(nn.Module):
-    """ This module converts the model's output into the format expected by the coco api"""
-    @torch.no_grad()
-    def forward(self, outputs, target_sizes):
-        """ Perform the computation
-        Parameters:
-            outputs: raw outputs of the model
-            target_sizes: tensor of dimension [batch_size x 2] containing the size of each images of the batch
-                          For evaluation, this must be the original image size (before any data augmentation)
-                          For visualization, this should be the image size after data augment, but before padding
-        """
-        out_logits, out_bbox = outputs['pred_logits'], outputs['pred_boxes']
-
-        assert len(out_logits) == len(target_sizes)
-        assert target_sizes.shape[1] == 2
-
-        prob = F.softmax(out_logits, -1)
-        scores, labels = prob[..., :-1].max(-1)
-
-        # convert to [x0, y0, x1, y1] format
-        boxes = box_ops.box_cxcywh_to_xyxy(out_bbox)
-        # and from relative [0, 1] to absolute [0, height] coordinates
-        img_h, img_w = target_sizes.unbind(1)
-        scale_fct = torch.stack([img_w, img_h, img_w, img_h], dim=1)
-        boxes = boxes * scale_fct[:, None, :]
-
-        results = [{'scores': s, 'labels': l, 'boxes': b} for s, l, b in zip(scores, labels, boxes)]
-
-        return results
 
 
 class MLP(nn.Module):
@@ -291,50 +262,84 @@ class MLP(nn.Module):
         return x
 
 
-def build(args):
-    # the `num_classes` naming here is somewhat misleading.
-    # it indeed corresponds to `max_obj_id + 1`, where max_obj_id
-    # is the maximum id for a class in your dataset. For example,
-    # COCO has a max_obj_id of 90, so we pass `num_classes` to be 91.
-    # As another example, for a dataset that has a single class with id 1,
-    # you should pass `num_classes` to be 2 (max_obj_id + 1).
-    # For more details on this, check the following discussion
-    # https://github.com/facebookresearch/detr/issues/108#issuecomment-650269223
-    num_classes = 20 if args.dataset_file != 'coco' else 91
-    if args.dataset_file == "coco_panoptic":
-        # for panoptic, we just add a num_classes that is large enough to hold
-        # max_obj_id + 1, but the exact value doesn't really matter
-        num_classes = 250
-    device = torch.device(args.device)
-
-    backbone = build_backbone(args)
-
-    transformer = build_transformer(args)
-
-    model = DETR(
-        backbone,
-        transformer,
-        num_classes=num_classes,
-        num_queries=args.num_queries,
-        aux_loss=args.aux_loss,
-    )
-
-    matcher = build_matcher(args)
-    weight_dict = {'loss_ce': 1, 'loss_bbox': args.bbox_loss_coef}
-    weight_dict['loss_giou'] = args.giou_loss_coef
-
-    # TODO this is a hack
-    if args.aux_loss:
-        aux_weight_dict = {}
-        for i in range(args.dec_layers - 1):
-            aux_weight_dict.update({k + f'_{i}': v for k, v in weight_dict.items()})
-        weight_dict.update(aux_weight_dict)
-
-    losses = ['labels', 'boxes', 'cardinality']
-
-    criterion = SetCriterion(num_classes, matcher=matcher, weight_dict=weight_dict,
-                             eos_coef=args.eos_coef, losses=losses)
-    criterion.to(device)
-    postprocessors = {'bbox': PostProcess()}
-
-    return model, criterion, postprocessors
+#
+# class PostProcess(nn.Module):
+#     """ This module converts the model's output into the format expected by the coco api"""
+#     @torch.no_grad()
+#     def forward(self, outputs, target_sizes):
+#         """ Perform the computation
+#         Parameters:
+#             outputs: raw outputs of the model
+#             target_sizes: tensor of dimension [batch_size x 2] containing the size of each images of the batch
+#                           For evaluation, this must be the original image size (before any data augmentation)
+#                           For visualization, this should be the image size after data augment, but before padding
+#         """
+#         out_logits, out_bbox = outputs['pred_logits'], outputs['pred_boxes']
+#
+#         assert len(out_logits) == len(target_sizes)
+#         assert target_sizes.shape[1] == 2
+#
+#         prob = F.softmax(out_logits, -1)
+#         scores, labels = prob[..., :-1].max(-1)
+#
+#         # convert to [x0, y0, x1, y1] format
+#         boxes = box_ops.box_cxcywh_to_xyxy(out_bbox)
+#         # and from relative [0, 1] to absolute [0, height] coordinates
+#         img_h, img_w = target_sizes.unbind(1)
+#         scale_fct = torch.stack([img_w, img_h, img_w, img_h], dim=1)
+#         boxes = boxes * scale_fct[:, None, :]
+#
+#         results = [{'scores': s, 'labels': l, 'boxes': b} for s, l, b in zip(scores, labels, boxes)]
+#
+#         return results
+#
+#
+#
+#
+# def build(args):
+#     # the `num_classes` naming here is somewhat misleading.
+#     # it indeed corresponds to `max_obj_id + 1`, where max_obj_id
+#     # is the maximum id for a class in your dataset. For example,
+#     # COCO has a max_obj_id of 90, so we pass `num_classes` to be 91.
+#     # As another example, for a dataset that has a single class with id 1,
+#     # you should pass `num_classes` to be 2 (max_obj_id + 1).
+#     # For more details on this, check the following discussion
+#     # https://github.com/facebookresearch/detr/issues/108#issuecomment-650269223
+#     num_classes = 20 if args.dataset_file != 'coco' else 91
+#     if args.dataset_file == "coco_panoptic":
+#         # for panoptic, we just add a num_classes that is large enough to hold
+#         # max_obj_id + 1, but the exact value doesn't really matter
+#         num_classes = 250
+#     device = torch.device(args.device)
+#
+#     backbone = build_backbone(args)
+#
+#     transformer = build_transformer(args)
+#
+#     model = DETR(
+#         backbone,
+#         transformer,
+#         num_classes=num_classes,
+#         num_queries=args.num_queries,
+#         aux_loss=args.aux_loss,
+#     )
+#
+#     matcher = build_matcher(args)
+#     weight_dict = {'loss_ce': 1, 'loss_bbox': args.bbox_loss_coef}
+#     weight_dict['loss_giou'] = args.giou_loss_coef
+#
+#     # TODO this is a hack
+#     if args.aux_loss:
+#         aux_weight_dict = {}
+#         for i in range(args.dec_layers - 1):
+#             aux_weight_dict.update({k + f'_{i}': v for k, v in weight_dict.items()})
+#         weight_dict.update(aux_weight_dict)
+#
+#     losses = ['labels', 'boxes', 'cardinality']
+#
+#     criterion = SetCriterion(num_classes, matcher=matcher, weight_dict=weight_dict,
+#                              eos_coef=args.eos_coef, losses=losses)
+#     criterion.to(device)
+#     postprocessors = {'bbox': PostProcess()}
+#
+#     return model, criterion, postprocessors
