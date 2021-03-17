@@ -2,3 +2,5 @@ __pycache__
 build
 dist
 wilds.egg-info
+data
+logs
