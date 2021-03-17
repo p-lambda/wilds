@@ -1,5 +1,8 @@
 import torch
 import torch.nn as nn
+from torchvision.ops.boxes import box_iou
+from torchvision.models.detection._utils import Matcher
+from torchvision.ops import nms, box_convert
 import numpy as np
 import torch.nn.functional as F
 from wilds.common.metrics.metric import Metric, ElementwiseMetric, MultiTaskMetric
@@ -161,3 +164,77 @@ class DummyMetric(Metric):
 
     def worst(self, metrics):
         return minimum(metrics)
+
+class DetectionAccuracy(ElementwiseMetric):
+    """
+    Given a specific Intersection over union threshold,
+    determine the accuracy achieved for a one-class detector
+    """
+    def __init__(self, prediction_fn=None, iou_threshold=0.5,score_threshold=0.5, name=None):
+        self.prediction_fn = prediction_fn
+        self.iou_threshold = iou_threshold
+        self.score_threshold = score_threshold
+        if name is None:
+            name = "detection_accuracy"
+        super().__init__(name=name)
+
+    def _compute_element_wise(self, y_pred ,y_true ):
+
+
+
+        batch_results = []
+        for src_boxes, target_boxes, target_logits in zip( y_true, y_pred['pred_boxes'], y_pred['pred_logits']):
+
+            # Here should be prediction_fn ? 
+
+            target_scores =  F.softmax(target_logits, dim=1)[..., 0]
+            pred_boxes = target_boxes[target_scores > self.score_threshold]
+
+            det_accuracy = self._accuracy(src_boxes["boxes"],pred_boxes,iou_threshold=self.iou_threshold)
+            batch_results.append(det_accuracy)
+
+        return torch.tensor(batch_results)
+
+
+    def _accuracy(self, src_boxes,pred_boxes ,  iou_threshold = 1.):
+        total_gt = len(src_boxes)
+        total_pred = len(pred_boxes)
+
+
+        if total_gt > 0 and total_pred > 0:
+
+            # Define the matcher and distance matrix based on iou
+            matcher = Matcher(iou_threshold,iou_threshold,allow_low_quality_matches=False) 
+
+            src_boxes = box_convert(src_boxes , "cxcywh" ,"xyxy")
+            pred_boxes = box_convert(pred_boxes , "cxcywh" ,"xyxy")
+
+
+            match_quality_matrix = box_iou(src_boxes,pred_boxes)
+
+            results = matcher(match_quality_matrix)
+            
+            true_positive = torch.count_nonzero(results.unique() != -1)
+            matched_elements = results[results > -1]
+            
+            #in Matcher, a pred element can be matched only twice 
+            false_positive = torch.count_nonzero(results == -1) + ( len(matched_elements) - len(matched_elements.unique()))
+            false_negative = total_gt - true_positive
+
+                
+            return  true_positive / ( true_positive + false_positive + false_negative )
+
+        elif total_gt == 0:
+            if total_pred > 0:
+                return torch.tensor(0.)
+            else:
+                return torch.tensor(1.)
+        elif total_gt > 0 and total_pred == 0:
+            return torch.tensor(0.)
+        
+
+
+    def worst(self, metrics):
+        return minimum(metrics)
+
+

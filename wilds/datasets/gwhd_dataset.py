@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image
 from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
-from wilds.common.metrics.all_metrics import DummyMetric
+from wilds.common.metrics.all_metrics import DetectionAccuracy
 
 
 def _collate_fn(batch):
@@ -145,7 +145,7 @@ class GWHDDataset(WILDSDataset):
             dataset=self,
             groupby_fields=['location'])
 
-        self._metric = DummyMetric() # TODO
+        self._metric = DetectionAccuracy() # TODO
         self._collate = _collate_fn
 
         super().__init__(root_dir, download, split_scheme)

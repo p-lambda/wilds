@@ -294,7 +294,7 @@ dataset_defaults = {
             'pretrained': True},
         'loss_function': 'detr_set_criterion',
         'groupby_fields': ['location'],
-        'val_metric': 'dummy_all', # TODO
+        'val_metric': 'detection_accuracy_avg', # TODO
         'val_metric_decreasing': False,
         'algo_log_metric': None, # TODO
         'optimizer': 'Adam',
