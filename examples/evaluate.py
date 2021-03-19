@@ -16,12 +16,12 @@ from wilds.datasets.wilds_dataset import WILDSDataset, WILDSSubset
 
 
 """
-Evaluate models and predictions for WILDS datasets.
+Evaluate predictions for WILDS datasets.
 
 Usage:
 
-    python examples/evaluate.py <Path to directory with models or predictions>  <Path to output directory>
-    python examples/evaluate.py <Path to directory with models or predictions>  <Path to output directory> --dataset <A WILDS dataset>
+    python examples/evaluate.py <Path to directory with predictions>  <Path to output directory>
+    python examples/evaluate.py <Path to directory with predictions>  <Path to output directory> --dataset <A WILDS dataset>
 
 """
 
@@ -31,7 +31,7 @@ def evaluate_all(path: str, output_path: str, dataset_path: str):
     Evaluate for all the WILDS datasets.
 
     Parameters:
-        path (str): Path to the directory with models or predictions. Can be a URL
+        path (str): Path to the directory with predictions. Can be a URL
         output_path (str): Output directory
         dataset_path (str): Path to the dataset directory
     """
@@ -55,7 +55,7 @@ def evaluate_multiple_replicates(
 
     Parameters:
         dataset_name (str): Name of the dataset. See datasets.py for the complete list of datasets.
-        path (str): Path to the directory with models or predictions. Can be a URL.
+        path (str): Path to the directory with predictions. Can be a URL.
         output_path (str): Output directory
         dataset_path (str): Path to the dataset directory
 
@@ -229,7 +229,7 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Evaluate models and predictions for WILDS datasets."
+        description="Evaluate predictions for WILDS datasets."
     )
     parser.add_argument(
         "path",
