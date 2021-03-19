@@ -210,11 +210,12 @@ class SetCriterion(nn.Module):
         indices = self.matcher(outputs_without_aux, targets)
 
         # Compute the average number of target boxes accross all nodes, for normalization purposes
-        num_boxes = sum(len(t["labels"]) for t in targets)
-        num_boxes = torch.as_tensor([num_boxes], dtype=torch.float, device=next(iter(outputs.values())).device)
-        if is_dist_avail_and_initialized():
-            torch.distributed.all_reduce(num_boxes)
-        num_boxes = torch.clamp(num_boxes / get_world_size(), min=1).item()
+        # num_boxes = sum(len(t["labels"]) for t in targets)
+        # num_boxes = torch.as_tensor([num_boxes], dtype=torch.float, device=next(iter(outputs.values())).device)
+        # if is_dist_avail_and_initialized():
+        #     torch.distributed.all_reduce(num_boxes)
+        # num_boxes = torch.clamp(num_boxes / get_world_size(), min=1).item()
+        num_boxes = None
 
         # Compute all the requested losses
         total_loss = 0
@@ -238,6 +239,8 @@ class SetCriterion(nn.Module):
         # Sum up weighted losses by element
         device = outputs['pred_logits'].device
         elementwise_loss = torch.zeros(len(outputs['pred_logits']), device=device)
+
+        # print(f"Losses: class {losses['loss_ce'].detach().cpu().numpy()}, bbox {losses['loss_bbox'].detach().cpu().numpy()}, giou {losses['loss_giou'].detach().cpu().numpy()}")
 
         for k in self.weight_dict:
             elementwise_loss += self.weight_dict[k] * losses[k]

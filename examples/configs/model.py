@@ -63,7 +63,8 @@ model_defaults = {
             'dice_loss_coef': 1,
             'bbox_loss_coef': 5,
             'giou_loss_coef': 2,
-            'eos_coef': 0.1,
+            # 'eos_coef': 0.1,
+            'eos_coef': 0.5,
         }
     }
 }

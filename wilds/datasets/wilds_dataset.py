@@ -453,7 +453,7 @@ class WILDSSubset(WILDSDataset):
     def __getitem__(self, idx):
         x, y, metadata = self.dataset[self.indices[idx]]
         if self.transform is not None:
-            x = self.transform(x)
+            x, y = self.transform(x, y)
         return x, y, metadata
 
     def __len__(self):

@@ -185,7 +185,7 @@ class DetectionAccuracy(ElementwiseMetric):
         batch_results = []
         for src_boxes, target_boxes, target_logits in zip( y_true, y_pred['pred_boxes'], y_pred['pred_logits']):
 
-            # Here should be prediction_fn ? 
+            # Here should be prediction_fn ?
 
             target_scores =  F.softmax(target_logits, dim=1)[..., 0]
             pred_boxes = target_boxes[target_scores > self.score_threshold]
@@ -204,7 +204,7 @@ class DetectionAccuracy(ElementwiseMetric):
         if total_gt > 0 and total_pred > 0:
 
             # Define the matcher and distance matrix based on iou
-            matcher = Matcher(iou_threshold,iou_threshold,allow_low_quality_matches=False) 
+            matcher = Matcher(iou_threshold,iou_threshold,allow_low_quality_matches=False)
 
             src_boxes = box_convert(src_boxes , "cxcywh" ,"xyxy")
             pred_boxes = box_convert(pred_boxes , "cxcywh" ,"xyxy")
@@ -213,16 +213,15 @@ class DetectionAccuracy(ElementwiseMetric):
             match_quality_matrix = box_iou(src_boxes,pred_boxes)
 
             results = matcher(match_quality_matrix)
-            
+
             true_positive = torch.count_nonzero(results.unique() != -1)
             matched_elements = results[results > -1]
-            
-            #in Matcher, a pred element can be matched only twice 
+
+            #in Matcher, a pred element can be matched only twice
             false_positive = torch.count_nonzero(results == -1) + ( len(matched_elements) - len(matched_elements.unique()))
             false_negative = total_gt - true_positive
 
-                
-            return  true_positive / ( true_positive + false_positive + false_negative )
+            return  true_positive / ( true_positive + false_positive + false_negative )            
 
         elif total_gt == 0:
             if total_pred > 0:
@@ -231,10 +230,8 @@ class DetectionAccuracy(ElementwiseMetric):
                 return torch.tensor(1.)
         elif total_gt > 0 and total_pred == 0:
             return torch.tensor(0.)
-        
+
 
 
     def worst(self, metrics):
         return minimum(metrics)
-
-
