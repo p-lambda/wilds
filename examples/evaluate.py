@@ -43,7 +43,7 @@ def evaluate_all(path: str, output_path: str, dataset_path: str):
 
     # Write out aggregated results to output file
     print(f"Writing complete results to {output_path}...")
-    with open(os.path.join(output_path, f"all_results.json"), "w") as f:
+    with open(os.path.join(output_path, "all_results.json"), "w") as f:
         json.dump(all_results, f, indent=4)
 
 
@@ -62,16 +62,6 @@ def evaluate_multiple_replicates(
     Returns:
         Metrics as a dictionary with metrics as the keys and metric values as the values
     """
-
-    def get_splits(dataset_name: str) -> List[str]:
-        if dataset_name in ["amazon", "fmow", "iwildcam", "poverty", "py150"]:
-            return ["id_val", "id_test", "val", "test"]
-        elif dataset_name == "camelyon17":
-            return ["id_val", "val", "test"]
-        elif dataset_name in ["civilcomments", "ogb-molpcba"]:
-            return ["val", "test"]
-        else:
-            raise ValueError(f"Invalid dataset: {dataset_name}")
 
     def get_replicates(dataset_name: str) -> List[Union[str, int]]:
         if dataset_name == "camelyon17":
@@ -109,8 +99,12 @@ def evaluate_multiple_replicates(
         else:
             raise ValueError(f"Invalid dataset: {dataset_name}")
 
+    # Dataset will only be downloaded if it does not exist
+    wilds_dataset: WILDSDataset = get_dataset(
+        dataset=dataset_name, root_dir=dataset_path, download=True
+    )
+    splits: List[str] = wilds_dataset.split_dict.keys()
     replicates_results: Dict[str, Dict[str, List[float]]] = dict()
-    splits: List[str] = get_splits(dataset_name)
     replicates: List[Union[str, int]] = get_replicates(dataset_name)
     metrics: List[str] = get_metrics(dataset_name)
 
@@ -133,7 +127,7 @@ def evaluate_multiple_replicates(
                 np.array(predicted_labels)
             )
             metric_results: Dict[str, float] = evaluate(
-                dataset_name, split, predicted_labels_tensor, dataset_path
+                wilds_dataset, split, predicted_labels_tensor
             )
             for metric in metrics:
                 replicates_results[split][metric].append(metric_results[metric])
@@ -159,23 +153,20 @@ def evaluate_multiple_replicates(
 
 
 def evaluate(
-    dataset_name: str, split: str, predicted_labels: torch.Tensor, dataset_path: str
+    dataset: WILDSDataset, split: str, predicted_labels: torch.Tensor
 ) -> Dict[str, float]:
     """
     Evaluate the given predictions and return the appropriate metrics.
 
     Parameters:
-        dataset_name (str): Name of the dataset.
+        dataset (WILDSDataset): A WILDS Dataset
+        split (str): split we are evaluating on
         predicted_labels (torch.Tensor): Predictions
-        dataset_path (str): Path to the dataset directory
 
     Returns:
         Metrics as a dictionary with metrics as the keys and metric values as the values
     """
     # Dataset will only be downloaded if it does not exist
-    dataset: WILDSDataset = get_dataset(
-        dataset=dataset_name, root_dir=dataset_path, download=True
-    )
     subset: WILDSSubset = dataset.get_subset(split)
     true_labels: torch.Tensor = subset.y_array
     metadata: torch.Tensor = subset.metadata_array
