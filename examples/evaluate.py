@@ -121,9 +121,6 @@ def evaluate_multiple_replicates(
             replicates_results[split][metric] = []
 
         for replicate in replicates:
-            # TODO: do I need to set seed here? -Tony
-            # set_seed_for_dataset(dataset_name, seed=replicate)
-
             predictions_file = get_best_prediction_filename(
                 dataset_name, split, replicate
             )
