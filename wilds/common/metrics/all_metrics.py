@@ -71,16 +71,19 @@ class MultiTaskAveragePrecision(MultiTaskMetric):
     def _compute_flattened(self, flattened_y_pred, flattened_y_true):
         if self.prediction_fn is not None:
             flattened_y_pred = self.prediction_fn(flattened_y_pred)
+        ytr = np.array(flattened_y_true.squeeze().detach().cpu().numpy() > 0)
+        ypr = flattened_y_pred.squeeze().detach().cpu().numpy()
         score = sklearn.metrics.average_precision_score(
-            np.array(flattened_y_true.squeeze().detach().cpu().numpy() > 0), 
-            flattened_y_pred.squeeze().detach().cpu().numpy(), 
+            ytr, 
+            ypr, 
             average=self.average
         )
-        return torch.tensor(score).to(flattened_y_pred.device)
+        to_ret = torch.tensor(score).to(flattened_y_pred.device)
+        print("why  ", ytr, ytr.shape, ypr, ypr.shape, score, to_ret)
+        return to_ret
 
     def worst(self, metrics):
         return minimum(metrics)
-
 
 class Recall(Metric):
     def __init__(self, prediction_fn=None, name=None, average='binary'):
