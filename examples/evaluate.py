@@ -104,6 +104,9 @@ def evaluate_multiple_replicates(
         dataset=dataset_name, root_dir=dataset_path, download=True
     )
     splits: List[str] = wilds_dataset.split_dict.keys()
+    if "train" in splits:
+        splits.remove("train")
+
     replicates_results: Dict[str, Dict[str, List[float]]] = dict()
     replicates: List[Union[str, int]] = get_replicates(dataset_name)
     metrics: List[str] = get_metrics(dataset_name)
