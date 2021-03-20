@@ -84,6 +84,9 @@ class MultiTaskAveragePrecision(MultiTaskMetric):
         to_ret = torch.tensor(score).to(flattened_y_pred.device)
         print("why  ", ytr, ytr.shape, ypr, ypr.shape, score, to_ret)
         return to_ret
+    
+    def _compute(self, y_pred, y_true):
+        return self._compute_flattened(y_pred, y_true)
 
     def worst(self, metrics):
         return minimum(metrics)
@@ -126,6 +129,33 @@ class AveragePrecision(Metric):
             average=self.average
         )
         return torch.tensor(score)
+
+    def worst(self, metrics):
+        return minimum(metrics)
+
+class MTAveragePrecision(Metric):
+    def __init__(self, prediction_fn=logits_to_binary_pred, name=None, average='macro'):
+        self.prediction_fn = prediction_fn
+        if name is None:
+            name = f'avgprec'
+            if average is not None:
+                name+=f'-{average}'
+        self.average = average
+        super().__init__(name=name)
+
+    def _compute(self, y_pred, y_true):
+        if self.prediction_fn is not None:
+            y_pred = self.prediction_fn(y_pred)
+        ytr = np.array(torch.flatten(y_true.squeeze()).detach().cpu().numpy() > 0)
+        ypr = torch.flatten(y_pred.squeeze()).detach().cpu().numpy()
+        score = sklearn.metrics.average_precision_score(
+            ytr, 
+            ypr, 
+            average=self.average
+        )
+        to_ret = torch.tensor(score)#.to(flattened_y_pred.device)
+        print("why  ", ytr, ytr.shape, ypr, ypr.shape, score, to_ret)
+        return to_ret
 
     def worst(self, metrics):
         return minimum(metrics)
