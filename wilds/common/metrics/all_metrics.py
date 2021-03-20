@@ -79,7 +79,6 @@ class MultiTaskAveragePrecision(MultiTaskMetric):
             average=self.average
         )
         to_ret = torch.tensor(score).to(flattened_y_pred.device)
-        print("why  ", ytr, ytr.shape, ypr, ypr.shape, score, to_ret)
         return to_ret
     
     def _compute(self, y_pred, y_true):
