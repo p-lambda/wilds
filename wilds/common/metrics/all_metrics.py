@@ -153,8 +153,7 @@ class MTAveragePrecision(Metric):
             ypr, 
             average=self.average
         )
-        to_ret = torch.tensor(score)#.to(flattened_y_pred.device)
-        print("why  ", ytr, ytr.shape, ypr, ypr.shape, score, to_ret)
+        to_ret = torch.tensor(score).to(y_pred.device)
         return to_ret
 
     def worst(self, metrics):
