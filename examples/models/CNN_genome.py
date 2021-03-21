@@ -8,27 +8,27 @@ import torch.nn.functional as F
 
 def single_conv(in_channels, out_channels):
     return nn.Sequential(
-        nn.Conv1d(in_channels, out_channels, 7, padding=3), 
-        nn.BatchNorm1d(out_channels), 
+        nn.Conv1d(in_channels, out_channels, 7, padding=3),
+        nn.BatchNorm1d(out_channels),
         nn.ReLU(inplace=True)
     )
 
 def double_conv(in_channels, out_channels):
     return nn.Sequential(
-        nn.Conv1d(in_channels, out_channels, 7, padding=3), 
-        nn.BatchNorm1d(out_channels), 
+        nn.Conv1d(in_channels, out_channels, 7, padding=3),
+        nn.BatchNorm1d(out_channels),
         nn.ReLU(inplace=True),
-        nn.Conv1d(out_channels, out_channels, 7, padding=3), 
-        nn.BatchNorm1d(out_channels), 
+        nn.Conv1d(out_channels, out_channels, 7, padding=3),
+        nn.BatchNorm1d(out_channels),
         nn.ReLU(inplace=True)
     )
 
 
 class UNet(nn.Module):
-
-    def __init__(self, out_features=16, n_channels_in=6):
+    # TODO: This is currently hard-coded to not use out_features
+    def __init__(self, out_features=16, n_channels_in=5):
         super().__init__()
-        
+
         self.dconv_down1 = double_conv(n_channels_in, 15)
         self.dconv_down2 = double_conv(15, 22)
         self.dconv_down3 = double_conv(22, 33)
@@ -41,7 +41,7 @@ class UNet(nn.Module):
         self.upsample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         self.conv_middle = single_conv(109, 109)
         self.upsamp_6 = nn.ConvTranspose1d(109, 109, 2, stride=2)
-        
+
         self.dconv_up5 = double_conv(73 + 109, 73)
         self.upsamp_5 = nn.ConvTranspose1d(73, 73, 2, stride=2)
         self.dconv_up4 = double_conv(49 + 73, 49)
@@ -52,10 +52,10 @@ class UNet(nn.Module):
         self.upsamp_2 = nn.ConvTranspose1d(22, 22, 2, stride=2)
         self.dconv_up1 = double_conv(15 + 22, 15)
         self.upsamp_1 = nn.ConvTranspose1d(15, 15, 2, stride=2)
-        
+
         self.conv_last = nn.Conv1d(15, 1, 200, stride=50, padding=0)
-        
-        
+
+
     def forward(self, x):
         # input_size = 12800
         # input_channels = 6
@@ -64,32 +64,32 @@ class UNet(nn.Module):
 
         conv2 = self.dconv_down2(x)     # (input_size / 2) x 22
         x = self.maxpool(conv2)         # (input_size / 4) x 22
-        
+
         conv3 = self.dconv_down3(x)     # (input_size / 4) x 33
         x = self.maxpool(conv3)         # (input_size / 8) x 33
-        
+
         conv4 = self.dconv_down4(x)     # (input_size / 8) x 49
         x = self.maxpool(conv4)         # (input_size / 16) x 49
-        
+
         conv5 = self.dconv_down5(x)     # (input_size / 16) x 73
         x = self.maxpool(conv5)         # (input_size / 32) x 73
-        
+
         conv6 = self.dconv_down6(x)     # (input_size / 32) x 109
-        # conv6 = self.conv_middle(conv6)  # Optional: convolution here. 
-        
+        # conv6 = self.conv_middle(conv6)  # Optional: convolution here.
+
         # Encoder finished.
-        
+
         x = self.upsamp_6(conv6)          # (input_size / 16) x 109
         x = torch.cat([x, conv5], dim=1)  # (input_size / 16) x (109 + 73)
-        
+
         x = self.dconv_up5(x)             # (input_size / 16) x 73
         x = self.upsamp_5(x)              # (input_size / 8) x 73
         x = torch.cat([x, conv4], dim=1)  # (input_size / 8) x (73 + 49)
-        
+
         x = self.dconv_up4(x)             # (input_size / 8) x 49
         x = self.upsamp_4(x)              # (input_size / 4) x 49
         x = torch.cat([x, conv3], dim=1)  # (input_size / 4) x (49 + 33)
-        
+
         x = self.dconv_up3(x)             # (input_size / 4) x 33
         x = self.upsamp_3(x)              # (input_size / 2) x 33
         x = torch.cat([x, conv2], dim=1)  # (input_size / 2) x (33 + 22)
@@ -97,10 +97,10 @@ class UNet(nn.Module):
         x = self.dconv_up2(x)             # (input_size / 2) x 22
         x = self.upsamp_2(x)              # (input_size) x 22
         x = torch.cat([x, conv1], dim=1)  # (input_size) x (22 + 15)
-        
+
         x = self.dconv_up1(x)             # (input_size) x 15
-        
+
         # middle 128 bits
         out = self.conv_last(x)[:, :, 64:192]
-        
+
         return torch.squeeze(out)

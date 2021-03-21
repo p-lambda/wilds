@@ -77,7 +77,7 @@ def initialize_model(config, d_out, is_featurizer=False):
         if is_featurizer:
             raise NotImplementedError("Featurizer not supported for UNet")
         else:
-            model = UNet(out_features=d_out)
+            model = UNet(out_features=d_out, **config.model_kwargs)
     else:
         raise ValueError(f'Model: {config.model} not recognized.')
     return model

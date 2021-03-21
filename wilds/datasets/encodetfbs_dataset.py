@@ -11,9 +11,9 @@ all_chrom_names = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8
 
 class EncodeTFBSDataset(WILDSDataset):
     """
-    ENCODE-DREAM-wilds dataset of transcription factor binding sites. 
-    This is a subset of the dataset from the ENCODE-DREAM in vivo Transcription Factor Binding Site Prediction Challenge. 
-    
+    ENCODE-DREAM-wilds dataset of transcription factor binding sites.
+    This is a subset of the dataset from the ENCODE-DREAM in vivo Transcription Factor Binding Site Prediction Challenge.
+
     Input (x):
         12800-base-pair regions of sequence with a quantified chromatin accessibility readout.
 
@@ -22,20 +22,24 @@ class EncodeTFBSDataset(WILDSDataset):
 
     Metadata:
         Each sequence is annotated with the celltype of origin (a string) and the chromosome of origin (a string).
-    
+
     Website:
         https://www.synapse.org/#!Synapse:syn6131484
     """
 
-    def __init__(self, root_dir='data', download=False, split_scheme='official'):
+    _dataset_name = 'encode-tfbs'
+    _versions_dict = {
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8b3255e21e164cd98d3aeec09cd0bc26/contents/blob/',
+            'compressed_size': None}}
+
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
         itime = time.time()
-        self._dataset_name = 'encode-tfbs'
-        self._version = '1.0'
-        self._download_url = 'https://worksheets.codalab.org/rest/bundles/0x8b3255e21e164cd98d3aeec09cd0bc26/contents/blob/'
+        self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
         self._y_size = 128
         # self._n_classes = 2
-        
+
         self._train_chroms = ['chr3']#, 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
         self._val_chroms = ['chr2']#, 'chr9', 'chr11']
         self._test_chroms = ['chr1']#, 'chr8', 'chr21']
@@ -45,15 +49,15 @@ class EncodeTFBSDataset(WILDSDataset):
         self._test_celltype = ['GM12878']
         self._all_chroms = self._train_chroms + self._val_chroms + self._test_chroms
         self._all_celltypes = self._train_celltypes + self._val_celltype + self._test_celltype
-        
+
         self._metadata_map = {}
         self._metadata_map['chr'] = self._all_chroms
         self._metadata_map['celltype'] = self._all_celltypes
-        
+
         # Get the splits
         if split_scheme=='official':
             split_scheme = 'standard'
-        
+
         self._split_scheme = split_scheme
         self._split_dict = {
             'train': 0,
@@ -67,7 +71,7 @@ class EncodeTFBSDataset(WILDSDataset):
             'test': 'Test',
             'val': 'Validation (OOD)',
         }
-        
+
         # Load sequence and DNase features
         sequence_filename = os.path.join(self._data_dir, 'sequence.npz')
         seq_arr = np.load(sequence_filename)
@@ -75,7 +79,9 @@ class EncodeTFBSDataset(WILDSDataset):
         for chrom in self._all_chroms: #seq_arr:
             self._seq_bp[chrom] = seq_arr[chrom]
             print(chrom, time.time() - itime)
-        
+
+        # Delete seq_arr?
+
         self._dnase_allcelltypes = {}
         # ct = 'avg'
         # dnase_avg_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
@@ -90,61 +96,61 @@ class EncodeTFBSDataset(WILDSDataset):
             """
             dnase_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
             self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_bw_path)
-        
+
         self._metadata_df = pd.read_csv(
-            self._data_dir + '/labels/{}/metadata_df.bed'.format(self._transcription_factor), 
-            sep='\t', header=None, 
+            self._data_dir + '/labels/{}/metadata_df.bed'.format(self._transcription_factor),
+            sep='\t', header=None,
             index_col=None, names=['chr', 'start', 'stop', 'celltype']
         )
-        
+
         train_regions_mask = np.isin(self._metadata_df['chr'], self._train_chroms)
         val_regions_mask = np.isin(self._metadata_df['chr'], self._val_chroms)
         test_regions_mask = np.isin(self._metadata_df['chr'], self._test_chroms)
         train_celltype_mask = np.isin(self._metadata_df['celltype'], self._train_celltypes)
         val_celltype_mask = np.isin(self._metadata_df['celltype'], self._val_celltype)
         test_celltype_mask = np.isin(self._metadata_df['celltype'], self._test_celltype)
-        
+
         split_array = -1*np.ones(self._metadata_df.shape[0]).astype(int)
         split_array[np.logical_and(train_regions_mask, train_celltype_mask)] = self._split_dict['train']
         split_array[np.logical_and(test_regions_mask, test_celltype_mask)] = self._split_dict['test']
         # Validate using validation chr, either using a designated validation cell line ('val') or a training cell line ('id_val')
         split_array[np.logical_and(val_regions_mask, val_celltype_mask)] = self._split_dict['val']
         split_array[np.logical_and(val_regions_mask, train_celltype_mask)] = self._split_dict['id_val']
-        
+
         if self._split_scheme=='standard':
             self._metadata_df.insert(len(self._metadata_df.columns), 'split', split_array)
         else:
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
-        
+
         metadata_mask = (self._metadata_df['split'] != -1)
         self._metadata_df = self._metadata_df[self._metadata_df['split'] != -1]
-        
+
         chr_ints = self._metadata_df['chr'].replace(dict( [(y, x) for x, y in enumerate(self._metadata_map['chr'])] )).values
         celltype_ints = self._metadata_df['celltype'].replace(dict( [(y, x) for x, y in enumerate(self._metadata_map['celltype'])] )).values
         self._split_array = self._metadata_df['split'].values
         self._y_array = torch.Tensor(np.load(
             self._data_dir + '/labels/{}/metadata_y.npy'.format(self._transcription_factor)))
         self._y_array = self._y_array[metadata_mask]
-        
+
         self._metadata_array = torch.stack(
-            (torch.LongTensor(chr_ints), 
+            (torch.LongTensor(chr_ints),
              torch.LongTensor(celltype_ints)
             ),
             dim=1)
         self._metadata_fields = ['chr', 'celltype']
-        
+
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
             groupby_fields=['celltype'])
-        
+
         self._metric = MTAveragePrecision()
-        
+
         super().__init__(root_dir, download, split_scheme)
-    
+
     def get_input(self, idx, window_size=12800):
         """
         Returns x for a given idx in metadata_array, which has been filtered to only take windows with the desired stride.
-        Computes this from: 
+        Computes this from:
         (1) sequence features in self._seq_bp
         (2) DNase bigwig file handles in self._dnase_allcelltypes
         (3) Metadata for the index (location along the genome with 6400bp window width)
@@ -160,7 +166,7 @@ class EncodeTFBSDataset(WILDSDataset):
         # print("{}:{}-{}".format(chrom, interval_start, interval_end))
         # dnase_avg = self._dnase_allcelltypes['avg'].values(chrom, interval_start, interval_end, numpy=True)
         return torch.tensor(np.column_stack(
-            [np.nan_to_num(seq_this), 
+            [np.nan_to_num(seq_this),
              np.nan_to_num(dnase_this)]#, np.nan_to_num(dnase_avg)]
         ).T)
 

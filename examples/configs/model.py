@@ -36,8 +36,8 @@ model_defaults = {
     'resnet18_ms': {
         'target_resolution': (224, 224),
     },
-    'logistic_regression': {}, 
-    'leopard': {
+    'logistic_regression': {},
+    'unet-seq': {
         'optimizer': 'Adam'
-    }, 
+    },
 }
