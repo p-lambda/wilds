@@ -138,22 +138,7 @@ class EncodeTFBSDataset(WILDSDataset):
         self._metric = MultiTaskAccuracy()
         
         super().__init__(root_dir, download, split_scheme)
-    
-    """
-    def get_random_label_vec(metadata_df, output_size=128):
-        # Sample a positively labeled region at random
-        pos_mdf = metadata_df[metadata_df['y'] == 1] #.iloc[ metadata_df['chr'] == s['chr'], : ]
-        pos_seed_region = pos_mdf.iloc[np.random.randint(pos_mdf.shape[0])]
-
-        # Extract regions from this chromosome in this celltype, to get a window of labels from
-        chr_msk = np.array(metadata_df['chr']) == pos_seed_region['chr']
-        ct_msk = np.array(metadata_df['celltype']) == pos_seed_region['celltype']
-        mdf = metadata_df[chr_msk & ct_msk]
-
-        # Get labels
-        start_ndx = np.where(mdf['start'] == pos_seed_region['start'])[0][0]
-        y_label_vec = mdf.iloc[start_ndx:start_ndx+output_size, :]['y']
-    """
+        
     
     def get_input(self, idx, window_size=12800):
         """
