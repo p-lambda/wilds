@@ -10,6 +10,7 @@ benchmark_datasets = [
     'poverty',
     'fmow',
     'py150',
+    'encode-tfbs'
 ]
 
 additional_datasets = [
