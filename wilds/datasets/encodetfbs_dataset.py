@@ -5,7 +5,7 @@ import numpy as np
 import pyBigWig
 from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
-from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy
+from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MTAveragePrecision
 
 all_chrom_names = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX']
 
@@ -77,9 +77,9 @@ class EncodeTFBSDataset(WILDSDataset):
             print(chrom, time.time() - itime)
         
         self._dnase_allcelltypes = {}
-        ct = 'avg'
-        dnase_avg_bw_path = os.path.join(self._data_dir, 'Leopard_dnase/{}.bigwig'.format(ct))
-        self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_avg_bw_path)
+        # ct = 'avg'
+        # dnase_avg_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
+        # self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_avg_bw_path)
         for ct in self._all_celltypes:
             """
             dnase_filename = os.path.join(self._data_dir, '{}_dnase.npz'.format(ct))
@@ -88,11 +88,12 @@ class EncodeTFBSDataset(WILDSDataset):
             for chrom in self._all_chroms: #self._seq_bp:
                 self._dnase_allcelltypes[ct][chrom] = dnase_npz_contents[chrom]
             """
-            dnase_bw_path = os.path.join(self._data_dir, 'Leopard_dnase/{}.bigwig'.format(ct))
+            dnase_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
             self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_bw_path)
         
         self._metadata_df = pd.read_csv(
-            self._data_dir + '/labels/MAX/metadata_df.bed', sep='\t', header=None, 
+            self._data_dir + '/labels/{}/metadata_df.bed'.format(self._transcription_factor), 
+            sep='\t', header=None, 
             index_col=None, names=['chr', 'start', 'stop', 'celltype']
         )
         
@@ -121,7 +122,8 @@ class EncodeTFBSDataset(WILDSDataset):
         chr_ints = self._metadata_df['chr'].replace(dict( [(y, x) for x, y in enumerate(self._metadata_map['chr'])] )).values
         celltype_ints = self._metadata_df['celltype'].replace(dict( [(y, x) for x, y in enumerate(self._metadata_map['celltype'])] )).values
         self._split_array = self._metadata_df['split'].values
-        self._y_array = torch.Tensor(np.load(self._data_dir + '/labels/MAX/metadata_y.npy'))
+        self._y_array = torch.Tensor(np.load(
+            self._data_dir + '/labels/{}/metadata_y.npy'.format(self._transcription_factor)))
         self._y_array = self._y_array[metadata_mask]
         
         self._metadata_array = torch.stack(
@@ -135,10 +137,9 @@ class EncodeTFBSDataset(WILDSDataset):
             dataset=self,
             groupby_fields=['celltype'])
         
-        self._metric = MultiTaskAccuracy()
+        self._metric = MTAveragePrecision()
         
         super().__init__(root_dir, download, split_scheme)
-        
     
     def get_input(self, idx, window_size=12800):
         """
@@ -157,10 +158,10 @@ class EncodeTFBSDataset(WILDSDataset):
         dnase_bw = self._dnase_allcelltypes[this_metadata['celltype']]
         dnase_this = dnase_bw.values(chrom, interval_start, interval_end, numpy=True)
         # print("{}:{}-{}".format(chrom, interval_start, interval_end))
-        dnase_avg = self._dnase_allcelltypes['avg'].values(chrom, interval_start, interval_end, numpy=True)
+        # dnase_avg = self._dnase_allcelltypes['avg'].values(chrom, interval_start, interval_end, numpy=True)
         return torch.tensor(np.column_stack(
             [np.nan_to_num(seq_this), 
-             np.nan_to_num(dnase_this), np.nan_to_num(dnase_avg)]
+             np.nan_to_num(dnase_this)]#, np.nan_to_num(dnase_avg)]
         ).T)
 
     def eval(self, y_pred, y_true, metadata):

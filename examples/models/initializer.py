@@ -7,6 +7,7 @@ from models.layers import Identity
 from models.gnn import GINVirtual
 from models.code_gpt import GPT2LMHeadLogit, GPT2FeaturizerLMHeadLogit
 from transformers import GPT2Tokenizer
+from models.CNN_genome import UNet
 
 def initialize_model(config, d_out, is_featurizer=False):
     """
@@ -72,6 +73,11 @@ def initialize_model(config, d_out, is_featurizer=False):
     elif config.model == 'logistic_regression':
         assert not is_featurizer, "Featurizer not supported for logistic regression"
         model = nn.Linear(out_features=d_out, **config.model_kwargs)
+    elif config.model == 'unet-seq':
+        if is_featurizer:
+            raise NotImplementedError("Featurizer not supported for UNet")
+        else:
+            model = UNet(out_features=d_out)
     else:
         raise ValueError(f'Model: {config.model} not recognized.')
     return model

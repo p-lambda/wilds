@@ -59,7 +59,7 @@ class MultiTaskAccuracy(MultiTaskMetric):
         return minimum(metrics)
 
 class MultiTaskAveragePrecision(MultiTaskMetric):
-    def __init__(self, prediction_fn=logits_to_binary_pred, name=None, average='macro'):
+    def __init__(self, prediction_fn=None, name=None, average='macro'):
         self.prediction_fn = prediction_fn
         if name is None:
             name = f'avgprec'
@@ -107,7 +107,7 @@ class Recall(Metric):
         return minimum(metrics)
 
 class AveragePrecision(Metric):
-    def __init__(self, prediction_fn=logits_to_pred, name=None, average='macro'):
+    def __init__(self, prediction_fn=None, name=None, average='macro'):
         self.prediction_fn = prediction_fn
         if name is None:
             name = f'avgprec'
@@ -130,7 +130,7 @@ class AveragePrecision(Metric):
         return minimum(metrics)
 
 class MTAveragePrecision(Metric):
-    def __init__(self, prediction_fn=logits_to_binary_pred, name=None, average='macro'):
+    def __init__(self, prediction_fn=None, name=None, average='macro'):
         self.prediction_fn = prediction_fn
         if name is None:
             name = f'avgprec'
