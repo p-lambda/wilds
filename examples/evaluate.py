@@ -78,7 +78,7 @@ def evaluate_benchmark(
                 seeds = range(0, 3)
             return [f"seed:{seed}" for seed in seeds]
 
-    def get_prediction_filename(
+    def get_prediction_file(
         predictions_dir: str, dataset_name: str, split: str, replicate: str
     ) -> str:
         run_id = f"{dataset_name}_split:{split}_{replicate}"
@@ -128,7 +128,7 @@ def evaluate_benchmark(
             replicates_results[split][metric] = []
 
         for replicate in replicates:
-            predictions_file = get_prediction_filename(
+            predictions_file = get_prediction_file(
                 predictions_dir, dataset_name, split, replicate
             )
             print(
