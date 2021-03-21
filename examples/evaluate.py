@@ -4,13 +4,13 @@ import os
 import sys
 import urllib.request
 from ast import literal_eval
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 from urllib.parse import urlparse
 
 import numpy as np
 import torch
 
-from configs.datasets import main_datasets
+from wilds import benchmark_datasets
 from wilds import get_dataset
 from wilds.datasets.wilds_dataset import WILDSDataset, WILDSSubset
 
@@ -26,58 +26,68 @@ Usage:
 """
 
 
-def evaluate_all(path: str, output_path: str, dataset_path: str):
+def evaluate_all_benchmarks(predictions_dir: str, output_dir: str, root_dir: str):
     """
-    Evaluate for all the WILDS datasets.
+    Evaluate predictions for all the WILDS benchmarks.
 
     Parameters:
-        path (str): Path to the directory with predictions. Can be a URL
-        output_path (str): Output directory
-        dataset_path (str): Path to the dataset directory
+        predictions_dir (str): Path to the directory with predictions. Can be a URL
+        output_dir (str): Output directory
+        root_dir (str): The directory where datasets can be found
     """
     all_results: Dict[str, Dict[str, Dict[str, float]]] = dict()
-    for dataset in main_datasets:
-        all_results[dataset] = evaluate_multiple_replicates(
-            dataset, path, output_path, dataset_path
-        )
+    for dataset in benchmark_datasets:
+        try:
+            all_results[dataset] = evaluate_benchmark(
+                dataset, predictions_dir, output_dir, root_dir
+            )
+        except Exception as e:
+            print(f"Could not evaluate predictions for {dataset}:\n{str(e)}")
 
     # Write out aggregated results to output file
-    print(f"Writing complete results to {output_path}...")
-    with open(os.path.join(output_path, "all_results.json"), "w") as f:
+    print(f"Writing complete results to {output_dir}...")
+    with open(os.path.join(output_dir, "all_results.json"), "w") as f:
         json.dump(all_results, f, indent=4)
 
 
-def evaluate_multiple_replicates(
-    dataset_name: str, path: str, output_path: str, dataset_path: str
+def evaluate_benchmark(
+    dataset_name: str, predictions_dir: str, output_dir: str, root_dir: str
 ) -> Dict[str, Dict[str, float]]:
     """
-    Evaluate across multiple replicates.
+    Evaluate across multiple replicates for a single benchmark.
 
     Parameters:
         dataset_name (str): Name of the dataset. See datasets.py for the complete list of datasets.
-        path (str): Path to the directory with predictions. Can be a URL.
-        output_path (str): Output directory
-        dataset_path (str): Path to the dataset directory
+        predictions_dir (str): Path to the directory with predictions. Can be a URL.
+        output_dir (str): Output directory
+        root_dir (str): The directory where datasets can be found
 
     Returns:
         Metrics as a dictionary with metrics as the keys and metric values as the values
     """
 
-    def get_replicates(dataset_name: str) -> List[Union[str, int]]:
-        if dataset_name == "camelyon17":
-            return list(range(0, 10))
-        elif dataset_name == "poverty":
-            return ["A", "B", "C", "D", "E"]
+    def get_replicates(dataset_name: str) -> List[str]:
+        if dataset_name == "poverty":
+            return [f"fold:{fold}" for fold in ["A", "B", "C", "D", "E"]]
         else:
-            return list(range(0, 3))
+            if dataset_name == "camelyon17":
+                seeds = range(0, 10)
+            elif dataset_name == "civilcomments":
+                seeds = range(0, 5)
+            else:
+                seeds = range(0, 3)
+            return [f"seed:{seed}" for seed in seeds]
 
     def get_best_prediction_filename(
-        dataset_name: str, split: str, replicate: Union[str, int]
+        predictions_dir: str, dataset_name: str, split: str, replicate: str
     ) -> str:
-        if dataset_name == "poverty":
-            return f"{dataset_name}_split:{split}_fold:{replicate}_epoch:best_pred.csv"
-        else:
-            return f"{dataset_name}_split:{split}_seed:{replicate}_epoch:best_pred.csv"
+        run_id = f"{dataset_name}_split:{split}_{replicate}"
+        for file in os.listdir(predictions_dir):
+            if file.startswith(run_id) and file.endswith(".csv"):
+                return file
+        raise FileNotFoundError(
+            f"Could not find CSV prediction file that starts with {run_id}."
+        )
 
     def get_metrics(dataset_name: str) -> List[str]:
         if "amazon" == dataset_name:
@@ -101,14 +111,14 @@ def evaluate_multiple_replicates(
 
     # Dataset will only be downloaded if it does not exist
     wilds_dataset: WILDSDataset = get_dataset(
-        dataset=dataset_name, root_dir=dataset_path, download=True
+        dataset=dataset_name, root_dir=root_dir, download=True
     )
-    splits: List[str] = wilds_dataset.split_dict.keys()
+    splits: List[str] = list(wilds_dataset.split_dict.keys())
     if "train" in splits:
         splits.remove("train")
 
     replicates_results: Dict[str, Dict[str, List[float]]] = dict()
-    replicates: List[Union[str, int]] = get_replicates(dataset_name)
+    replicates: List[str] = get_replicates(dataset_name)
     metrics: List[str] = get_metrics(dataset_name)
 
     # Store the results for each replicate
@@ -119,17 +129,17 @@ def evaluate_multiple_replicates(
 
         for replicate in replicates:
             predictions_file = get_best_prediction_filename(
-                dataset_name, split, replicate
+                predictions_dir, dataset_name, split, replicate
             )
             print(
                 f"Processing split={split}, replicate={replicate}, predictions_file={predictions_file}..."
             )
-            full_path = os.path.join(path, predictions_file)
+            full_path = os.path.join(predictions_dir, predictions_file)
             predicted_labels: List[Any] = get_predictions(full_path)
             predicted_labels_tensor: torch.Tensor = torch.from_numpy(
                 np.array(predicted_labels)
             )
-            metric_results: Dict[str, float] = evaluate(
+            metric_results: Dict[str, float] = evaluate_replicate(
                 wilds_dataset, split, predicted_labels_tensor
             )
             for metric in metrics:
@@ -148,14 +158,14 @@ def evaluate_multiple_replicates(
             aggregated_results[split][metric] = np.mean(replicates_metric_values)
 
     # Write out aggregated results to output file
-    print(f"Writing aggregated results for {dataset_name} to {output_path}...")
-    with open(os.path.join(output_path, f"{dataset_name}_results.json"), "w") as f:
+    print(f"Writing aggregated results for {dataset_name} to {output_dir}...")
+    with open(os.path.join(output_dir, f"{dataset_name}_results.json"), "w") as f:
         json.dump(aggregated_results, f, indent=4)
 
     return aggregated_results
 
 
-def evaluate(
+def evaluate_replicate(
     dataset: WILDSDataset, split: str, predicted_labels: torch.Tensor
 ) -> Dict[str, float]:
     """
@@ -173,8 +183,9 @@ def evaluate(
     subset: WILDSSubset = dataset.get_subset(split)
     true_labels: torch.Tensor = subset.y_array
     metadata: torch.Tensor = subset.metadata_array
-    # Attempt to resize predicted_labels tensor to match true_labels tensor's shape
-    predicted_labels.resize_(true_labels.shape)
+    # predicted_labels.resize_(true_labels.shape)
+    if predicted_labels.shape != true_labels.shape:
+        predicted_labels.unsqueeze_(-1)
     return dataset.eval(predicted_labels, true_labels, metadata)[0]
 
 
@@ -212,12 +223,12 @@ def is_path_url(path: str) -> bool:
 
 def main():
     if args.dataset:
-        evaluate_multiple_replicates(
-            args.dataset, args.path, args.output_path, args.dataset_path
+        evaluate_benchmark(
+            args.dataset, args.predictions_dir, args.output_dir, args.root_dir
         )
     else:
         print("A dataset was not specified. Evaluating for all WILDS datasets...")
-        evaluate_all(args.path, args.output_path, args.dataset_path)
+        evaluate_all_benchmarks(args.predictions_dir, args.output_dir, args.root_dir)
     print("\nDone.")
 
 
@@ -226,26 +237,26 @@ if __name__ == "__main__":
         description="Evaluate predictions for WILDS datasets."
     )
     parser.add_argument(
-        "path",
+        "predictions_dir",
         type=str,
         help="Path to prediction CSV files.",
     )
     parser.add_argument(
-        "output_path",
+        "output_dir",
         type=str,
         help="Path to output directory.",
     )
     parser.add_argument(
         "--dataset",
         type=str,
-        choices=main_datasets,
+        choices=benchmark_datasets,
         help="WILDS dataset to evaluate for.",
     )
     parser.add_argument(
-        "--dataset-path",
+        "--root-dir",
         type=str,
         default="data",
-        help="Path to dataset. Defaults to `data` if not specified.",
+        help="The directory where the datasets can be found (or should be downloaded to, if they do not exist).",
     )
 
     # Parse args and run this script

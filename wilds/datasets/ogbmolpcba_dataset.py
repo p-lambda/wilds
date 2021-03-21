@@ -51,7 +51,7 @@ class OGBPCBADataset(WILDSDataset):
         https://github.com/snap-stanford/ogb/blob/master/LICENSE
     """
 
-    _dataset_name = 'ogbg-molpcba'
+    _dataset_name = 'ogb-molpcba'
     _versions_dict = {
         '1.0': {
             'download_url': None,

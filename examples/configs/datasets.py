@@ -284,21 +284,6 @@ dataset_defaults = {
     },
 }
 
-#######################################
-### List of the main WILDS datasets ###
-#######################################
-
-main_datasets = [
-    'amazon',
-    'camelyon17',
-    'civilcomments',
-    'fmow',
-    'iwildcam',
-    'ogb-molpcba',
-    'py150',
-    'poverty',
-]
-
 ##########################################
 ### Split-specific defaults for Amazon ###
 ##########################################
