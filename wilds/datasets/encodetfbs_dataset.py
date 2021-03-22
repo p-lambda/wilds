@@ -54,24 +54,30 @@ class EncodeTFBSDataset(WILDSDataset):
         self.y_array[self.y_array == 0.5] = float('nan')
 
         # Construct splits
+        train_chroms = ['chr3']#, 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
+        val_chroms = ['chr2']#, 'chr9', 'chr11']
+        test_chroms = ['chr1']#, 'chr8', 'chr21']
+        train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
+        val_celltype = ['A549']
+        test_celltype = ['GM12878']
         self._split_scheme = split_scheme
         if self._split_scheme == 'official':
             splits = {
                 'train': {
-                    'chroms': ['chr3'],
-                    'celltypes': ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
+                    'chroms': train_chroms,
+                    'celltypes': train_celltypes
                 },
                 'id_val': {
-                    'chroms': ['chr2'],
-                    'celltypes': ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
+                    'chroms': val_chroms,
+                    'celltypes': train_celltypes
                 },
                 'val': {
-                    'chroms': ['chr2'],
-                    'celltypes': ['A549']
+                    'chroms': val_chroms,
+                    'celltypes': val_celltype
                 },
                 'test': {
-                    'chroms': ['chr1'],
-                    'celltypes': ['GM12878']
+                    'chroms': test_chroms,
+                    'celltypes': test_celltype
                 },
             }
             self._split_dict = {
@@ -89,16 +95,16 @@ class EncodeTFBSDataset(WILDSDataset):
         elif self._split_scheme == 'in-dist':
             splits = {
                 'train': {
-                    'chroms': ['chr3'],
-                    'celltypes': ['GM12878'],
+                    'chroms': train_chroms,
+                    'celltypes': test_celltype,
                 },
                 'val': {
-                    'chroms': ['chr2'],
-                    'celltypes': ['GM12878']
+                    'chroms': val_chroms,
+                    'celltypes': test_celltype
                 },
                 'test': {
-                    'chroms': ['chr1'],
-                    'celltypes': ['GM12878']
+                    'chroms': test_chroms,
+                    'celltypes': test_celltype
                 },
             }
             self._split_dict = {
