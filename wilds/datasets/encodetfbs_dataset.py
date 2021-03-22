@@ -5,9 +5,7 @@ import numpy as np
 import pyBigWig
 from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
-from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MTAveragePrecision, MultiTaskAveragePrecision
-
-all_chrom_names = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX']
+from wilds.common.metrics.all_metrics import MultiTaskAveragePrecision
 
 class EncodeTFBSDataset(WILDSDataset):
     """
@@ -38,105 +36,119 @@ class EncodeTFBSDataset(WILDSDataset):
         self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
         self._y_size = 128
-        # self._n_classes = 2
-
-        self._train_chroms = ['chr3']#, 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
-        self._val_chroms = ['chr2']#, 'chr9', 'chr11']
-        self._test_chroms = ['chr1']#, 'chr8', 'chr21']
         self._transcription_factor = 'MAX'
-        self._train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
-        self._val_celltype = ['A549']
-        self._test_celltype = ['GM12878']
-        self._all_chroms = self._train_chroms + self._val_chroms + self._test_chroms
-        self._all_celltypes = self._train_celltypes + self._val_celltype + self._test_celltype
 
-        self._metadata_map = {}
-        self._metadata_map['chr'] = self._all_chroms
-        self._metadata_map['celltype'] = self._all_celltypes
-
-        # Get the splits
-        if split_scheme=='official':
-            split_scheme = 'standard'
-
-        self._split_scheme = split_scheme
-        self._split_dict = {
-            'train': 0,
-            'id_val': 1,
-            'test': 2,
-            'val': 3
-        }
-        self._split_names = {
-            'train': 'Train',
-            'id_val': 'Validation (ID)',
-            'test': 'Test',
-            'val': 'Validation (OOD)',
-        }
-
-        # Load sequence and DNase features
-        sequence_filename = os.path.join(self._data_dir, 'sequence.npz')
-        seq_arr = np.load(sequence_filename)
-        self._seq_bp = {}
-        for chrom in self._all_chroms: #seq_arr:
-            self._seq_bp[chrom] = seq_arr[chrom]
-            print(chrom, time.time() - itime)
-
-        # Delete seq_arr?
-
-        self._dnase_allcelltypes = {}
-        # ct = 'avg'
-        # dnase_avg_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
-        # self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_avg_bw_path)
-        for ct in self._all_celltypes:
-            """
-            dnase_filename = os.path.join(self._data_dir, '{}_dnase.npz'.format(ct))
-            dnase_npz_contents = np.load(dnase_filename)
-            self._dnase_allcelltypes[ct] = {}
-            for chrom in self._all_chroms: #self._seq_bp:
-                self._dnase_allcelltypes[ct][chrom] = dnase_npz_contents[chrom]
-            """
-            dnase_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
-            self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_bw_path)
-
+        # Read in metadata and labels
         self._metadata_df = pd.read_csv(
             self._data_dir + '/labels/{}/metadata_df.bed'.format(self._transcription_factor),
             sep='\t', header=None,
             index_col=None, names=['chr', 'start', 'stop', 'celltype']
         )
-
-        train_regions_mask = np.isin(self._metadata_df['chr'], self._train_chroms)
-        val_regions_mask = np.isin(self._metadata_df['chr'], self._val_chroms)
-        test_regions_mask = np.isin(self._metadata_df['chr'], self._test_chroms)
-        train_celltype_mask = np.isin(self._metadata_df['celltype'], self._train_celltypes)
-        val_celltype_mask = np.isin(self._metadata_df['celltype'], self._val_celltype)
-        test_celltype_mask = np.isin(self._metadata_df['celltype'], self._test_celltype)
-
-        split_array = -1*np.ones(self._metadata_df.shape[0]).astype(int)
-        split_array[np.logical_and(train_regions_mask, train_celltype_mask)] = self._split_dict['train']
-        split_array[np.logical_and(test_regions_mask, test_celltype_mask)] = self._split_dict['test']
-        # Validate using validation chr, either using a designated validation cell line ('val') or a training cell line ('id_val')
-        split_array[np.logical_and(val_regions_mask, val_celltype_mask)] = self._split_dict['val']
-        split_array[np.logical_and(val_regions_mask, train_celltype_mask)] = self._split_dict['id_val']
-
-        if self._split_scheme=='standard':
-            self._metadata_df.insert(len(self._metadata_df.columns), 'split', split_array)
-        else:
-            raise ValueError(f'Split scheme {self._split_scheme} not recognized')
-
-        metadata_mask = (self._metadata_df['split'] != -1)
-        self._metadata_df = self._metadata_df[self._metadata_df['split'] != -1]
-
-        chr_ints = self._metadata_df['chr'].replace(dict( [(y, x) for x, y in enumerate(self._metadata_map['chr'])] )).values
-        celltype_ints = self._metadata_df['celltype'].replace(dict( [(y, x) for x, y in enumerate(self._metadata_map['celltype'])] )).values
-        self._split_array = self._metadata_df['split'].values
         self._y_array = torch.tensor(np.load(
             self._data_dir + '/labels/{}/metadata_y.npy'.format(self._transcription_factor)))
-        self._y_array = self._y_array[metadata_mask]
 
         # ~10% of the dataset has ambiguous labels
         # i.e., we can't tell if there is a binding event or not.
         # This typically happens at the flanking regions of peaks.
         # For our purposes, we will ignore these ambiguous labels during training and eval.
         self.y_array[self.y_array == 0.5] = float('nan')
+
+        # Construct splits
+        self._split_scheme = split_scheme
+        if self._split_scheme == 'official':
+            splits = {
+                'train': {
+                    'chroms': ['chr3'],
+                    'celltypes': ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
+                },
+                'id_val': {
+                    'chroms': ['chr2'],
+                    'celltypes': ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
+                },
+                'val': {
+                    'chroms': ['chr2'],
+                    'celltypes': ['A549']
+                },
+                'test': {
+                    'chroms': ['chr1'],
+                    'celltypes': ['GM12878']
+                },
+            }
+            self._split_dict = {
+                'train': 0,
+                'val': 1,
+                'test': 2,
+                'id_val': 3,
+            }
+            self._split_names = {
+                'train': 'Train',
+                'id_val': 'Validation (ID)',
+                'test': 'Test',
+                'val': 'Validation (OOD)',
+            }
+        elif self._split_scheme == 'in-dist':
+            splits = {
+                'train': {
+                    'chroms': ['chr3'],
+                    'celltypes': ['GM12878'],
+                },
+                'val': {
+                    'chroms': ['chr2'],
+                    'celltypes': ['GM12878']
+                },
+                'test': {
+                    'chroms': ['chr1'],
+                    'celltypes': ['GM12878']
+                },
+            }
+            self._split_dict = {
+                'train': 0,
+                'val': 1,
+                'test': 2,
+            }
+            self._split_names = {
+                'train': 'Train',
+                'test': 'Test',
+                'val': 'Validation (OOD)',
+            }
+        else:
+            raise ValueError(f'Split scheme {self._split_scheme} not recognized')
+
+        self._split_array = -1 * np.ones(self._metadata_df.shape[0]).astype(int)
+        for split, d in splits.items():
+            chrom_mask = np.isin(self._metadata_df['chr'], d['chroms'])
+            celltype_mask = np.isin(self._metadata_df['celltype'], d['celltypes'])
+            self._split_array[chrom_mask & celltype_mask] = self._split_dict[split]
+
+        indices_to_keep = (self._split_array != -1)
+        self._metadata_df = self._metadata_df[indices_to_keep]
+        self._split_array = self._split_array[indices_to_keep]
+        self._y_array = self._y_array[indices_to_keep]
+
+        self._all_chroms = sorted(list({chrom for _, d in splits.items() for chrom in d['chroms']}))
+        self._all_celltypes = sorted(list({chrom for _, d in splits.items() for chrom in d['celltypes']}))
+
+        self._metadata_map = {}
+        self._metadata_map['chr'] = self._all_chroms
+        self._metadata_map['celltype'] = self._all_celltypes
+
+        # Load sequence into memory
+        sequence_filename = os.path.join(self._data_dir, 'sequence.npz')
+        seq_arr = np.load(sequence_filename)
+        self._seq_bp = {}
+        for chrom in self._all_chroms:
+            self._seq_bp[chrom] = seq_arr[chrom]
+            print(chrom, time.time() - itime)
+        del seq_arr
+
+        # Set up file handles for DNase features
+        self._dnase_allcelltypes = {}
+        for ct in self._all_celltypes:
+            dnase_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
+            self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_bw_path)
+
+        chr_ints = self._metadata_df['chr'].replace(dict( [(y, x) for x, y in enumerate(self._metadata_map['chr'])] )).values
+        celltype_ints = self._metadata_df['celltype'].replace(dict( [(y, x) for x, y in enumerate(self._metadata_map['celltype'])] )).values
 
         self._metadata_array = torch.stack(
             (torch.LongTensor(chr_ints),
@@ -149,7 +161,6 @@ class EncodeTFBSDataset(WILDSDataset):
             dataset=self,
             groupby_fields=['celltype'])
 
-        # self._metric = MTAveragePrecision()
         self._metric = MultiTaskAveragePrecision()
 
         super().__init__(root_dir, download, split_scheme)
@@ -166,18 +177,16 @@ class EncodeTFBSDataset(WILDSDataset):
         this_metadata = self._metadata_df.iloc[idx, :]
         chrom = this_metadata['chr']
         interval_start = this_metadata['start'] - int(window_size/4)
-        interval_end = interval_start + window_size  #this_metadata['stop']
+        interval_end = interval_start + window_size
         seq_this = self._seq_bp[this_metadata['chr']][interval_start:interval_end]
         dnase_bw = self._dnase_allcelltypes[this_metadata['celltype']]
         dnase_this = dnase_bw.values(chrom, interval_start, interval_end, numpy=True)
-        # print("{}:{}-{}".format(chrom, interval_start, interval_end))
-        # dnase_avg = self._dnase_allcelltypes['avg'].values(chrom, interval_start, interval_end, numpy=True)
 
         assert(np.isnan(seq_this).sum() == 0)
         assert(np.isnan(dnase_this).sum() == 0)
         return torch.tensor(np.column_stack(
             [seq_this,
-             dnase_this]#, np.nan_to_num(dnase_avg)]
+             dnase_this]
         ).T)
 
     def eval(self, y_pred, y_true, metadata):
