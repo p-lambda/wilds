@@ -82,9 +82,9 @@ class EncodeTFBSDataset(WILDSDataset):
             }
             self._split_names = {
                 'train': 'Train',
-                'id_val': 'Validation (ID)',
-                'test': 'Test',
                 'val': 'Validation (OOD)',
+                'test': 'Test',
+                'id_val': 'Validation (ID)',
             }
         elif self._split_scheme == 'in-dist':
             splits = {
@@ -108,8 +108,8 @@ class EncodeTFBSDataset(WILDSDataset):
             }
             self._split_names = {
                 'train': 'Train',
-                'test': 'Test',
                 'val': 'Validation (OOD)',
+                'test': 'Test',
             }
         else:
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
