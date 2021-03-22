@@ -39,14 +39,12 @@ class Algorithm(nn.Module):
         """
         raise NotImplementedError
 
-    # Taken from domainbed
     def train(self, mode=True):
         """
         Switch to train mode
         """
         self.is_training = mode
         super().train(mode)
-        torch.set_grad_enabled(mode)
         self.reset_log()
 
     @property
