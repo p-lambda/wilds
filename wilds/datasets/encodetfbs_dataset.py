@@ -5,7 +5,7 @@ import numpy as np
 import pyBigWig
 from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
-from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MTAveragePrecision
+from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MTAveragePrecision, MultiTaskAveragePrecision
 
 all_chrom_names = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX']
 
@@ -143,7 +143,8 @@ class EncodeTFBSDataset(WILDSDataset):
             dataset=self,
             groupby_fields=['celltype'])
 
-        self._metric = MTAveragePrecision()
+        # self._metric = MTAveragePrecision()
+        self._metric = MultiTaskAveragePrecision()
 
         super().__init__(root_dir, download, split_scheme)
 

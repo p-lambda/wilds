@@ -4,7 +4,7 @@ import numpy as np
 import torch.nn.functional as F
 from wilds.common.metrics.metric import Metric, ElementwiseMetric, MultiTaskMetric
 from wilds.common.metrics.loss import ElementwiseLoss
-from wilds.common.utils import avg_over_groups, minimum, maximum
+from wilds.common.utils import avg_over_groups, minimum, maximum, get_counts
 import sklearn.metrics
 from scipy.stats import pearsonr
 
@@ -19,7 +19,7 @@ def binary_logits_to_score(logits):
 
 def multiclass_logits_to_pred(logits):
     """
-    Takes multi-class logits of size (batch_size, ..., n_classes) and returns predictions 
+    Takes multi-class logits of size (batch_size, ..., n_classes) and returns predictions
     by taking an argmax at the last dimension
     """
     assert logits.dim() > 1
@@ -74,13 +74,30 @@ class MultiTaskAveragePrecision(MultiTaskMetric):
         ytr = np.array(flattened_y_true.squeeze().detach().cpu().numpy() > 0)
         ypr = flattened_y_pred.squeeze().detach().cpu().numpy()
         score = sklearn.metrics.average_precision_score(
-            ytr, 
-            ypr, 
+            ytr,
+            ypr,
             average=self.average
         )
         to_ret = torch.tensor(score).to(flattened_y_pred.device)
         return to_ret
-    
+
+    def _compute_group_wise(self, y_pred, y_true, g, n_groups):
+        group_metrics = []
+        group_counts = get_counts(g, n_groups)
+        for group_idx in range(n_groups):
+            if group_counts[group_idx]==0:
+                group_metrics.append(torch.tensor(0., device=g.device))
+            else:
+                flattened_metrics, _ = self.compute_flattened(
+                    y_pred[g == group_idx],
+                    y_true[g == group_idx],
+                    return_dict=False)
+                group_metrics.append(flattened_metrics)
+        group_metrics = torch.stack(group_metrics)
+        worst_group_metric = self.worst(group_metrics[group_counts>0])
+
+        return group_metrics, group_counts, worst_group_metric
+
     def _compute(self, y_pred, y_true):
         return self._compute_flattened(y_pred, y_true)
 
@@ -120,8 +137,8 @@ class AveragePrecision(Metric):
         if self.prediction_fn is not None:
             y_pred = self.prediction_fn(y_pred)
         score = sklearn.metrics.average_precision_score(
-            np.array(y_true.squeeze().detach().cpu().numpy() > 0), 
-            y_pred.squeeze().detach().cpu().numpy(), 
+            np.array(y_true.squeeze().detach().cpu().numpy() > 0),
+            y_pred.squeeze().detach().cpu().numpy(),
             average=self.average
         )
         return torch.tensor(score)
@@ -145,8 +162,8 @@ class MTAveragePrecision(Metric):
         ytr = np.array(torch.flatten(y_true.squeeze()).detach().cpu().numpy() > 0)
         ypr = torch.flatten(y_pred.squeeze()).detach().cpu().numpy()
         score = sklearn.metrics.average_precision_score(
-            ytr, 
-            ypr, 
+            ytr,
+            ypr,
             average=self.average
         )
         to_ret = torch.tensor(score).to(y_pred.device)
