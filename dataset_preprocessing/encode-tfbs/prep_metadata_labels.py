@@ -78,6 +78,4 @@ def write_label_bigwigs():
 
 if __name__ == '__main__':
     write_label_bigwigs()
-    generate_accessibility_archives(
-        input_dir=args.input_dir,
-        output_dir=args.output_dir)
+    
