@@ -143,17 +143,18 @@ class EncodeTFBSDataset(WILDSDataset):
             dnase_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
             self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_bw_path)
 
-        self._metadata_array = torch.stack(
-            (torch.LongTensor(chr_ints),
-             torch.LongTensor(celltype_ints)
-            ),
-            dim=1)
+        # Set up metadata fields, map, array
         self._metadata_fields = ['chr', 'celltype']
         self._metadata_map = {}
         self._metadata_map['chr'] = self._all_chroms
         self._metadata_map['celltype'] = self._all_celltypes
         chr_ints = self._metadata_df['chr'].replace(dict( [(y, x) for x, y in enumerate(self._metadata_map['chr'])] )).values
         celltype_ints = self._metadata_df['celltype'].replace(dict( [(y, x) for x, y in enumerate(self._metadata_map['celltype'])] )).values
+        self._metadata_array = torch.stack(
+            (torch.LongTensor(chr_ints),
+             torch.LongTensor(celltype_ints)
+            ),
+            dim=1)
 
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
