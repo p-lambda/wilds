@@ -128,10 +128,6 @@ class EncodeTFBSDataset(WILDSDataset):
         self._all_chroms = sorted(list({chrom for _, d in splits.items() for chrom in d['chroms']}))
         self._all_celltypes = sorted(list({chrom for _, d in splits.items() for chrom in d['celltypes']}))
 
-        self._metadata_map = {}
-        self._metadata_map['chr'] = self._all_chroms
-        self._metadata_map['celltype'] = self._all_celltypes
-
         # Load sequence into memory
         sequence_filename = os.path.join(self._data_dir, 'sequence.npz')
         seq_arr = np.load(sequence_filename)
@@ -156,6 +152,9 @@ class EncodeTFBSDataset(WILDSDataset):
             ),
             dim=1)
         self._metadata_fields = ['chr', 'celltype']
+        self._metadata_map = {}
+        self._metadata_map['chr'] = self._all_chroms
+        self._metadata_map['celltype'] = self._all_celltypes
 
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
