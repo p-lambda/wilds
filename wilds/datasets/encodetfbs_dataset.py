@@ -128,9 +128,15 @@ class EncodeTFBSDataset(WILDSDataset):
         chr_ints = self._metadata_df['chr'].replace(dict( [(y, x) for x, y in enumerate(self._metadata_map['chr'])] )).values
         celltype_ints = self._metadata_df['celltype'].replace(dict( [(y, x) for x, y in enumerate(self._metadata_map['celltype'])] )).values
         self._split_array = self._metadata_df['split'].values
-        self._y_array = torch.Tensor(np.load(
+        self._y_array = torch.tensor(np.load(
             self._data_dir + '/labels/{}/metadata_y.npy'.format(self._transcription_factor)))
         self._y_array = self._y_array[metadata_mask]
+
+        # ~10% of the dataset has ambiguous labels
+        # i.e., we can't tell if there is a binding event or not.
+        # This typically happens at the flanking regions of peaks.
+        # For our purposes, we will ignore these ambiguous labels during training and eval.
+        self.y_array[self.y_array == 0.5] = float('nan')
 
         self._metadata_array = torch.stack(
             (torch.LongTensor(chr_ints),
@@ -166,9 +172,12 @@ class EncodeTFBSDataset(WILDSDataset):
         dnase_this = dnase_bw.values(chrom, interval_start, interval_end, numpy=True)
         # print("{}:{}-{}".format(chrom, interval_start, interval_end))
         # dnase_avg = self._dnase_allcelltypes['avg'].values(chrom, interval_start, interval_end, numpy=True)
+
+        assert(np.isnan(seq_this).sum() == 0)
+        assert(np.isnan(dnase_this).sum() == 0)
         return torch.tensor(np.column_stack(
-            [np.nan_to_num(seq_this),
-             np.nan_to_num(dnase_this)]#, np.nan_to_num(dnase_avg)]
+            [seq_this,
+             dnase_this]#, np.nan_to_num(dnase_avg)]
         ).T)
 
     def eval(self, y_pred, y_true, metadata):
