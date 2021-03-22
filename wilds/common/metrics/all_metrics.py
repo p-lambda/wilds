@@ -98,8 +98,8 @@ class MultiTaskAveragePrecision(MultiTaskMetric):
 
         return group_metrics, group_counts, worst_group_metric
 
-    def _compute(self, y_pred, y_true):
-        return self._compute_flattened(y_pred, y_true)
+    # def _compute(self, y_pred, y_true):
+    #     return self._compute_flattened(y_pred, y_true)
 
     def worst(self, metrics):
         return minimum(metrics)
