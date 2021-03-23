@@ -39,7 +39,7 @@ def evaluate_all_benchmarks(predictions_dir: str, output_dir: str, root_dir: str
     for dataset in benchmark_datasets:
         try:
             all_results[dataset] = evaluate_benchmark(
-                dataset, predictions_dir, output_dir, root_dir
+                dataset, os.path.join(predictions_dir, dataset), output_dir, root_dir
             )
         except Exception as e:
             print(f"Could not evaluate predictions for {dataset}:\n{str(e)}")
