@@ -28,7 +28,7 @@ class EncodeTFBSDataset(WILDSDataset):
     _dataset_name = 'encode-tfbs'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8b3255e21e164cd98d3aeec09cd0bc26/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xf1fdad4a8af1449eb519bc89d4af8f0a/contents/blob/',
             'compressed_size': None}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
@@ -185,7 +185,10 @@ class EncodeTFBSDataset(WILDSDataset):
         interval_end = interval_start + window_size
         seq_this = self._seq_bp[this_metadata['chr']][interval_start:interval_end]
         dnase_bw = self._dnase_allcelltypes[this_metadata['celltype']]
-        dnase_this = dnase_bw.values(chrom, interval_start, interval_end, numpy=True)
+        try:
+            dnase_this = dnase_bw.values(chrom, interval_start, interval_end, numpy=True)
+        except RuntimeError:
+            print("error", chrom, interval_start, interval_end)
         
         assert(np.isnan(seq_this).sum() == 0)
         assert(np.isnan(dnase_this).sum() == 0)

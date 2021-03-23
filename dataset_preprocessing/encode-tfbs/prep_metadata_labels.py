@@ -10,30 +10,24 @@ chrom_sizes = {'chr1': 249250621, 'chr10': 135534747, 'chr11': 135006516, 'chr12
 _data_dir = '../../examples/data/encode-tfbs_v1.0/'
 
 
-def write_label_bigwigs():
+def write_label_bigwigs(celltypes):
     itime = time.time()
-    transcription_factor = 'MAX'
+    tf_name = 'MAX'
     _train_chroms = ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
     _val_chroms = ['chr2', 'chr9', 'chr11']
     _test_chroms = ['chr1', 'chr8', 'chr21']
     _all_chroms = _train_chroms + _val_chroms + _test_chroms
-    _train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
-    _val_celltype = ['A549']
-    _test_celltype = ['GM12878']
-    _all_celltypes = _train_celltypes + _val_celltype + _test_celltype
 
     # Read in metadata dataframe from training+validation data
-    train_regions_labeled = pd.read_csv(os.path.join(_data_dir, 'labels/{}.train.labels.tsv.gz'.format(_transcription_factor)), sep='\t')
-    val_regions_labeled = pd.read_csv(os.path.join(_data_dir, 'labels/{}.val.labels.tsv.gz'.format(_transcription_factor)), sep='\t')
+    train_regions_labeled = pd.read_csv(os.path.join(_data_dir, 'labels/{}.train.labels.tsv.gz'.format(tf_name)), sep='\t')
+    val_regions_labeled = pd.read_csv(os.path.join(_data_dir, 'labels/{}.val.labels.tsv.gz'.format(tf_name)), sep='\t')
     training_df = train_regions_labeled# [np.isin(train_regions_labeled['chr'], _train_chroms)]
     val_df = val_regions_labeled# [np.isin(val_regions_labeled['chr'], _test_chroms)]
     all_df = pd.concat([training_df, val_df])
 
-    print(time.time() - itime)
-
     # Get the y values, and remove labels by default.
     pd_list = []
-    for ct in _all_celltypes:
+    for ct in celltypes:
         tc_chr = all_df[['chr', 'start', 'stop', ct]]
         tc_chr.columns = ['chr', 'start', 'stop', 'y']
         tc_chr = tc_chr[tc_chr['y'] != 'U']
@@ -46,10 +40,10 @@ def write_label_bigwigs():
 
     print(time.time() - itime)
     _unsorted_dir = _data_dir + 'labels/{}/{}_posamb.bed'.format(
-            transcription_factor, transcription_factor)
+            tf_name, tf_name)
     _sorted_dir = _unsorted_dir.replace(
-        '{}_posamb'.format(transcription_factor), 
-        '{}_posamb.sorted'.format(transcription_factor)
+        '{}_posamb'.format(tf_name), 
+        '{}_posamb.sorted'.format(tf_name)
     )
     _metadata_df.to_csv(
         _unsorted_dir, sep='\t', header=False, index=False
@@ -65,9 +59,9 @@ def write_label_bigwigs():
     
     # Write the binned labels to bigwig files - genome-wide labels
     chromsizes_list = [(k, v) for k, v in chrom_sizes.items()]
-    for ct in _all_celltypes:
+    for ct in celltypes:
         ct_labels_bw_path = _data_dir + "labels/{}/{}_{}.bigwig".format(
-            transcription_factor, transcription_factor, ct)
+            tf_name, tf_name, ct)
         df = mdf_posamb[mdf_posamb['celltype'] == ct]
         bw = pyBigWig.open(ct_labels_bw_path, "w")
         bw.addHeader(chromsizes_list)
@@ -76,52 +70,65 @@ def write_label_bigwigs():
         bw.close()
 
 
-def write_():
-    stride = 6400
+def write_metadata_products(celltypes, stride=6400, posamb_only=False):
     itime = time.time()
-    mdf_posamb = pd.read_csv(
-        _sorted_dir, 
-        sep='\t', header=None, index_col=None, names=['chr', 'start', 'stop', 'y', 'celltype']
-    )
+    tf_name = 'MAX'
     celltype_mdta = []
     celltype_labels = []
-
-    for ct in _all_celltypes:
-        ct_labels_bw_path = _data_dir + "labels/MAX/MAX_{}.bigwig".format(ct)
-        df = mdf_posamb[mdf_posamb['celltype'] == ct]
-        df['window_start'] = stride*(df['start'] // stride)
-        uniq_windows = np.unique(["{}:{}".format(x[0], x[1]) for x in zip(df['chr'], df['window_start'])])
+    mdf_posamb = pd.read_csv(
+        _data_dir + 'labels/{}/{}_posamb.sorted.bed'.format(tf_name, tf_name), 
+        sep='\t', header=None, index_col=None, names=['chr', 'start', 'stop', 'y', 'celltype']
+    )
+    # Retrieve only the windows containing positively/ambiguously labeled bins (if posamb_only==True), or all windows (if posamb_only==False).
+    for ct in celltypes:
+        ct_labels_bw_path = _data_dir + "labels/{}/{}_{}.bigwig".format(tf_name, tf_name, ct)
         df_construction = []
         mdta_labels = []
-
         bw = pyBigWig.open(ct_labels_bw_path)
-        num_reps = 0
-        for u in uniq_windows:
-            u_chr = u.split(':')[0]
-            u_start = int(u.split(':')[1])
-            u_end = u_start + stride
-            x = np.nan_to_num(bw.values(u_chr, u_start, u_end, numpy=True))
-            df_construction.append((u_chr, u_start, u_end))
-            mdta_labels.append(x[np.arange(0, len(x), 50)])
-            num_reps = num_reps + 1
+        if posamb_only: # Retrieve only the windows containing positively/ambiguously labeled bins
+            df = mdf_posamb[mdf_posamb['celltype'] == ct]
+            df['window_start'] = stride*(df['start'] // stride)
+            uniq_windows = np.unique(["{}:{}".format(x[0], x[1]) for x in zip(df['chr'], df['window_start'])])
+            for u in uniq_windows:
+                u_chr = u.split(':')[0]
+                u_start = int(u.split(':')[1])
+                u_end = u_start + stride
+                x = np.nan_to_num(bw.values(u_chr, u_start, u_end, numpy=True))
+                df_construction.append((u_chr, u_start, u_end))
+                mdta_labels.append(x[np.arange(0, len(x), 50)])
+        else:  # Retrieve all windows genome-wide
+            for chrID in bw.chroms():
+                chromsize = bw.chroms()[chrID]
+                # Iterate over windows
+                for startc in np.arange(int(stride/2), chromsize-(2*stride), stride):
+                    u_end = startc + stride
+                    if u_end > chromsize:
+                        break
+                    x = np.nan_to_num(bw.values(chrID, startc, u_end, numpy=True))
+                    df_construction.append((chrID, startc, u_end))
+                    mdta_labels.append(x[np.arange(0, len(x), 50)])
+                print(ct, chrID, time.time() - itime)
         celltype_mdta_df = pd.DataFrame(df_construction, columns=['chr', 'start', 'stop'])
         celltype_mdta_df.insert(len(celltype_mdta_df.columns), 'celltype', ct)
         celltype_mdta.append(celltype_mdta_df)
         celltype_labels.append(np.stack(mdta_labels))
         print(ct, time.time() - itime)
         bw.close()
-        # break
     print(time.time() - itime)
-    # _metadata_df
-
-    pd.concat(celltype_mdta).to_csv(
-        _data_dir + 'labels/MAX/metadata_df.bed', 
+    
+    all_metadata_df = pd.concat(celltype_mdta)
+    all_metadata_df.to_csv(
+        _data_dir + 'labels/{}/metadata_df.bed'.format(tf_name), 
         sep='\t', header=False, index=False
     )
-    np.save(_data_dir + 'labels/MAX/metadata_y.npy', np.vstack(celltype_labels))
-    print(time.time() - itime)
+    np.save(_data_dir + 'labels/{}/metadata_y.npy'.format(tf_name), np.vstack(celltype_labels))
 
 
 if __name__ == '__main__':
-    write_label_bigwigs()
+    _train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
+    _val_celltype = ['A549']
+    _test_celltype = ['GM12878']
+    _all_celltypes = _train_celltypes + _val_celltype + _test_celltype
+    write_label_bigwigs(_all_celltypes)
+    write_metadata_products(_all_celltypes)
     
