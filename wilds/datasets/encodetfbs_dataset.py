@@ -186,7 +186,7 @@ class EncodeTFBSDataset(WILDSDataset):
         seq_this = self._seq_bp[this_metadata['chr']][interval_start:interval_end]
         dnase_bw = self._dnase_allcelltypes[this_metadata['celltype']]
         dnase_this = dnase_bw.values(chrom, interval_start, interval_end, numpy=True)
-
+        
         assert(np.isnan(seq_this).sum() == 0)
         assert(np.isnan(dnase_this).sum() == 0)
         return torch.tensor(np.column_stack(

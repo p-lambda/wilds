@@ -76,6 +76,52 @@ def write_label_bigwigs():
         bw.close()
 
 
+def write_():
+    stride = 6400
+    itime = time.time()
+    mdf_posamb = pd.read_csv(
+        _sorted_dir, 
+        sep='\t', header=None, index_col=None, names=['chr', 'start', 'stop', 'y', 'celltype']
+    )
+    celltype_mdta = []
+    celltype_labels = []
+
+    for ct in _all_celltypes:
+        ct_labels_bw_path = _data_dir + "labels/MAX/MAX_{}.bigwig".format(ct)
+        df = mdf_posamb[mdf_posamb['celltype'] == ct]
+        df['window_start'] = stride*(df['start'] // stride)
+        uniq_windows = np.unique(["{}:{}".format(x[0], x[1]) for x in zip(df['chr'], df['window_start'])])
+        df_construction = []
+        mdta_labels = []
+
+        bw = pyBigWig.open(ct_labels_bw_path)
+        num_reps = 0
+        for u in uniq_windows:
+            u_chr = u.split(':')[0]
+            u_start = int(u.split(':')[1])
+            u_end = u_start + stride
+            x = np.nan_to_num(bw.values(u_chr, u_start, u_end, numpy=True))
+            df_construction.append((u_chr, u_start, u_end))
+            mdta_labels.append(x[np.arange(0, len(x), 50)])
+            num_reps = num_reps + 1
+        celltype_mdta_df = pd.DataFrame(df_construction, columns=['chr', 'start', 'stop'])
+        celltype_mdta_df.insert(len(celltype_mdta_df.columns), 'celltype', ct)
+        celltype_mdta.append(celltype_mdta_df)
+        celltype_labels.append(np.stack(mdta_labels))
+        print(ct, time.time() - itime)
+        bw.close()
+        # break
+    print(time.time() - itime)
+    # _metadata_df
+
+    pd.concat(celltype_mdta).to_csv(
+        _data_dir + 'labels/MAX/metadata_df.bed', 
+        sep='\t', header=False, index=False
+    )
+    np.save(_data_dir + 'labels/MAX/metadata_y.npy', np.vstack(celltype_labels))
+    print(time.time() - itime)
+
+
 if __name__ == '__main__':
     write_label_bigwigs()
     
