@@ -128,7 +128,7 @@ class EncodeTFBSDataset(WILDSDataset):
 
         indices_to_keep = (self._split_array != -1)
         # Remove all-zero sequences from training.
-        train_msk = (self._split_array == full_dataset.split_dict['train'])
+        train_msk = (self._split_array == self._split_dict['train'])
         allzeroes_msk = (self._y_array.sum(axis=1) == 0).numpy()
         indices_to_keep = indices_to_keep & ~(train_msk & allzeroes_msk)
         
