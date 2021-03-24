@@ -189,7 +189,7 @@ class EncodeTFBSDataset(WILDSDataset):
             dnase_this = dnase_bw.values(chrom, interval_start, interval_end, numpy=True)
         except RuntimeError:
             print("error", chrom, interval_start, interval_end)
-        
+
         assert(np.isnan(seq_this).sum() == 0)
         assert(np.isnan(dnase_this).sum() == 0)
         return torch.tensor(np.column_stack(
