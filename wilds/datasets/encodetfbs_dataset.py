@@ -16,7 +16,7 @@ class EncodeTFBSDataset(WILDSDataset):
         12800-base-pair regions of sequence with a quantified chromatin accessibility readout.
 
     Label (y):
-        y is binary. It is 1 if the central 200bp region is bound by the transcription factor MAX, and 0 otherwise.
+        y is a 128-bit vector, with each element y_i indicating the binding status of a 200bp window. It is 1 if this 200bp region is bound by the transcription factor, and 0 otherwise. If the window x starts at coordinate sc, y_i is the label of the window starting at coordinate (sc+3200)+(50*i).
 
     Metadata:
         Each sequence is annotated with the celltype of origin (a string) and the chromosome of origin (a string).
@@ -28,7 +28,7 @@ class EncodeTFBSDataset(WILDSDataset):
     _dataset_name = 'encode-tfbs'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xf1fdad4a8af1449eb519bc89d4af8f0a/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x7efd626149d648f699d9e686d7aa81a9/contents/blob/',
             'compressed_size': None}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
@@ -54,9 +54,9 @@ class EncodeTFBSDataset(WILDSDataset):
         self.y_array[self.y_array == 0.5] = float('nan')
 
         # Construct splits
-        train_chroms = ['chr3']#, 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
-        val_chroms = ['chr2']#, 'chr9', 'chr11']
-        test_chroms = ['chr1']#, 'chr8', 'chr21']
+        train_chroms = ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
+        val_chroms = ['chr2', 'chr9', 'chr11']
+        test_chroms = ['chr1', 'chr8', 'chr21']
         train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
         val_celltype = ['A549']
         test_celltype = ['GM12878']
@@ -128,9 +128,24 @@ class EncodeTFBSDataset(WILDSDataset):
 
         indices_to_keep = (self._split_array != -1)
         # Remove all-zero sequences from training.
-        train_msk = (self._split_array == self._split_dict['train'])
-        allzeroes_msk = (self._y_array.sum(axis=1) == 0).numpy()
-        indices_to_keep = indices_to_keep & ~(train_msk & allzeroes_msk)
+        remove_allnegative = True
+        if remove_allnegative:
+            train_msk = (self._split_array == self._split_dict['train'])
+            allzeroes_msk = (self._y_array.sum(axis=1) == 0).numpy()
+            indices_to_keep = indices_to_keep & ~(train_msk & allzeroes_msk)
+        # Subsample the testing and validation indices
+        val_msk = (self._split_array == self._split_dict['val'])
+        test_msk = (self._split_array == self._split_dict['test'])
+        idval_msk = (self._split_array == self._split_dict['id_val'])
+        subsamp_factor_id = 15
+        subsamp_factor_ood = 3
+        
+        keep_mask_ood = np.random.binomial(1, 1.0/subsamp_factor_ood, size=len(indices_to_keep)).astype(bool)
+        indices_to_keep = indices_to_keep & ~(~keep_mask_ood & val_msk)
+        indices_to_keep = indices_to_keep & ~(~keep_mask_ood & test_msk)
+        
+        keep_mask_id = np.random.binomial(1, 1.0/subsamp_factor_id, size=len(indices_to_keep)).astype(bool)
+        indices_to_keep = indices_to_keep & ~(~keep_mask_id & idval_msk)
         
         self._metadata_df = self._metadata_df[indices_to_keep]
         self._split_array = self._split_array[indices_to_keep]
