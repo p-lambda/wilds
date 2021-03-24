@@ -127,6 +127,11 @@ class EncodeTFBSDataset(WILDSDataset):
             self._split_array[chrom_mask & celltype_mask] = self._split_dict[split]
 
         indices_to_keep = (self._split_array != -1)
+        # Remove all-zero sequences from training.
+        train_msk = (self._split_array == self._split_dict['train'])
+        allzeroes_msk = (self._y_array.sum(axis=1) == 0).numpy()
+        indices_to_keep = indices_to_keep & ~(train_msk & allzeroes_msk)
+        
         self._metadata_df = self._metadata_df[indices_to_keep]
         self._split_array = self._split_array[indices_to_keep]
         self._y_array = self._y_array[indices_to_keep]
