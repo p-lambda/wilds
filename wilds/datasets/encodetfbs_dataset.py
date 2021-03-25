@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import pyBigWig
 from wilds.datasets.wilds_dataset import WILDSDataset
+from wilds.common.utils import subsample_idxs
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import MultiTaskAveragePrecision
 
@@ -16,7 +17,7 @@ class EncodeTFBSDataset(WILDSDataset):
         12800-base-pair regions of sequence with a quantified chromatin accessibility readout.
 
     Label (y):
-        y is binary. It is 1 if the central 200bp region is bound by the transcription factor MAX, and 0 otherwise.
+        y is a 128-bit vector, with each element y_i indicating the binding status of a 200bp window. It is 1 if this 200bp region is bound by the transcription factor, and 0 otherwise. If the window x starts at coordinate sc, y_i is the label of the window starting at coordinate (sc+3200)+(50*i).
 
     Metadata:
         Each sequence is annotated with the celltype of origin (a string) and the chromosome of origin (a string).
@@ -28,7 +29,7 @@ class EncodeTFBSDataset(WILDSDataset):
     _dataset_name = 'encode-tfbs'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xf1fdad4a8af1449eb519bc89d4af8f0a/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x7efd626149d648f699d9e686d7aa81a9/contents/blob/',
             'compressed_size': None}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
@@ -54,9 +55,9 @@ class EncodeTFBSDataset(WILDSDataset):
         self.y_array[self.y_array == 0.5] = float('nan')
 
         # Construct splits
-        train_chroms = ['chr3']#, 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
-        val_chroms = ['chr2']#, 'chr9', 'chr11']
-        test_chroms = ['chr1']#, 'chr8', 'chr21']
+        train_chroms = ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
+        val_chroms = ['chr2', 'chr9', 'chr11']
+        test_chroms = ['chr1', 'chr8', 'chr21']
         train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
         val_celltype = ['A549']
         test_celltype = ['GM12878']
@@ -126,15 +127,32 @@ class EncodeTFBSDataset(WILDSDataset):
             celltype_mask = np.isin(self._metadata_df['celltype'], d['celltypes'])
             self._split_array[chrom_mask & celltype_mask] = self._split_dict[split]
 
-        indices_to_keep = (self._split_array != -1)
+        keep_mask = (self._split_array != -1)
         # Remove all-zero sequences from training.
-        train_msk = (self._split_array == self._split_dict['train'])
-        allzeroes_msk = (self._y_array.sum(axis=1) == 0).numpy()
-        indices_to_keep = indices_to_keep & ~(train_msk & allzeroes_msk)
+        remove_allnegative = True
+        if remove_allnegative:
+            train_mask = (self._split_array == self._split_dict['train'])
+            allzeroes_mask = (self._y_array.sum(axis=1) == 0).numpy()
+            keep_mask = keep_mask & ~(train_mask & allzeroes_mask)
 
-        self._metadata_df = self._metadata_df[indices_to_keep]
-        self._split_array = self._split_array[indices_to_keep]
-        self._y_array = self._y_array[indices_to_keep]
+        # Subsample the testing and validation indices
+        # For the OOD splits (val and test), we subsample by a factor of 3
+        # For the id_val split if it exists, we subsample by a factor of 15
+        for subsample_seed, (split, subsample_factor) in enumerate(
+            [('val', 3), ('test', 3), ('id_val', 15)]):
+            if split not in self._split_dict: continue
+            split_mask = (self._split_array == self._split_dict[split])
+            split_idxs = np.arange(len(self._split_array))[split_mask]
+            idxs_to_remove = subsample_idxs(
+                split_idxs,
+                num=len(split_idxs) // subsample_factor,
+                seed=subsample_seed,
+                take_rest=True)
+            keep_mask[idxs_to_remove] = False
+
+        self._metadata_df = self._metadata_df[keep_mask]
+        self._split_array = self._split_array[keep_mask]
+        self._y_array = self._y_array[keep_mask]
 
         self._all_chroms = sorted(list({chrom for _, d in splits.items() for chrom in d['chroms']}))
         self._all_celltypes = sorted(list({chrom for _, d in splits.items() for chrom in d['celltypes']}))
