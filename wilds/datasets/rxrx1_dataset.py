@@ -34,6 +34,7 @@ class RxRx1Dataset(WILDSDataset):
         https://www.rxrx.ai/rxrx1
         https://www.kaggle.com/c/recursion-cellular-image-classification
 
+    FIXME
     Original publication:
         @article{,
             title={},
@@ -71,12 +72,15 @@ class RxRx1Dataset(WILDSDataset):
         df = pd.read_csv(self._data_dir / 'metadata.csv')
 
         # Splits
-        split_dict = {'train': 0, 'test': 1}
+        # FIXME: Add validation
+        self._split_dict = {'train': 0, 'test': 1}
+        self._split_names = {'train': 'Train', 'test': 'Test'}
         self._split_array = df.dataset.apply(split_dict.get).values
 
         # Filenames
         def create_filepath(row):
-            filepath = os.path.join(row.experiment,
+            filepath = os.path.join('images',
+                                    row.experiment,
                                     f'Plate{row.plate}',
                                     f'{row.well}_s{row.site}.png')
             return filepath
@@ -88,17 +92,20 @@ class RxRx1Dataset(WILDSDataset):
         self._y_size = 1
         assert len(np.unique(df['sirna_id'])) == self._n_classes
 
-        # Location/group info
-        # FIXME need to enumerate experiments
-        # n_groups = max(df['location_remapped']) + 1
-        # self._n_groups = n_groups
-        # assert len(np.unique(df['location_remapped'])) == self._n_groups
+        # Convert experiment and well from strings to idxs
+        indexed_metadata = {}
+        self._metadata_map = {}
+        for key in ['experiment', 'well']:
+            all_values = list(df[key].unique())
+            value_to_idx_map = {value: idx for idx, value in enumerate(all_values)}
+            value_idxs = [value_to_idx_map[value] for value in df[key].tolist()]
+            self._metadata_map[key] = all_values
+            indexed_metadata[key] = value_idxs
 
-        # FIXME experiment and well are strings
         self._metadata_array = torch.tensor(
-            np.stack([df['experiment'].values,
+            np.stack([indexed_metadata['experiment'],
                       df['plate'].values,
-                      df['well'].values,
+                      indexed_metadata['well'],
                       df['site'].values,
                       self.y_array], axis=1)
         )
