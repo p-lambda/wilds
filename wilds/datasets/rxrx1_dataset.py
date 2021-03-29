@@ -75,7 +75,9 @@ class RxRx1Dataset(WILDSDataset):
         # FIXME: Add validation
         self._split_dict = {'train': 0, 'test': 1}
         self._split_names = {'train': 'Train', 'test': 'Test'}
-        self._split_array = df.dataset.apply(split_dict.get).values
+        self._split_array = df.dataset.apply(self._split_dict.get).values
+        # split_dict = {'train': 0, 'test': 1}
+        # self._split_array = df.dataset.apply(split_dict.get).values
 
         # Filenames
         def create_filepath(row):

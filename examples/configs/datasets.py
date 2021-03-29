@@ -290,7 +290,7 @@ dataset_defaults = {
         'eval_transform': 'image_base',
         'loss_function': 'cross_entropy',
         'groupby_fields': ['experiment'],
-        'val_metric': 'accuracy',
+        'val_metric': 'acc_avg',
         'val_metric_decreasing': False,
         'algo_log_metric': 'accuracy',
         'optimizer': 'Adam',
@@ -300,7 +300,7 @@ dataset_defaults = {
         'lr': 1e-3,
         'weight_decay': 1e-5,
         'n_epochs': 60,
-        'process_outputs_function': None,
+        'process_outputs_function': 'multiclass_logits_to_pred',
     },
 }
 
