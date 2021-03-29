@@ -282,6 +282,26 @@ dataset_defaults = {
         'n_epochs': 4,
         'process_outputs_function': None,
     },
+    'rxrx1': {
+        'split_scheme': 'official',
+        'model': 'resnet50',
+        'model_kwargs': {'pretrained': True},
+        'train_transform': None,
+        'eval_transform': None,
+        'loss_function': 'cross_entropy',
+        'groupby_fields': ['experiment'],  # TODO what is this?
+        'val_metric': 'accuracy',
+        'val_metric_decreasing': False,
+        'algo_log_metric': 'accuracy',
+        'optimizer': 'Adam',
+        'optimizer_kwargs': {},
+        'scheduler': None,  # TODO cosine with warmup from transformers
+        'batch_size': 1400,
+        'lr': 1e-3,
+        'weight_decay': 1e-5,
+        'n_epochs': 60,
+        'process_outputs_function': None,
+    },
 }
 
 ##########################################
