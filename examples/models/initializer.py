@@ -82,6 +82,11 @@ def initialize_model(config, d_out, is_featurizer=False):
             raise NotImplementedError('Featurizer not implemented for detection yet')
         else:
             model = initialize_detr_model(config, d_out)
+    elif config.model == 'fasterrcnn':
+        if is_featurizer: # TODO
+            raise NotImplementedError('Featurizer not implemented for detection yet')
+        else:
+            model = initialize_fasterrcnn_model(config, d_out)
 
     else:
         raise ValueError(f'Model: {config.model} not recognized.')
@@ -141,6 +146,20 @@ def initialize_torchvision_model(name, d_out, **kwargs):
         model.d_out = d_out
     setattr(model, last_layer_name, last_layer)
     return model
+
+
+def initialize_fasterrcnn_model(config, d_out):
+
+    from models.detection.fasterrcnn import fasterrcnn_resnet50_fpn
+
+    # load a model pre-trained pre-trained on COCO
+    model = fasterrcnn_resnet50_fpn(pretrained=config.model_kwargs["pretrained"],num_classes=d_out)
+
+    return model
+
+
+
+
 
 def initialize_detr_model(config, d_out):
 

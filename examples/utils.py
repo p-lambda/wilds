@@ -184,6 +184,8 @@ def save_pred(y_pred, path_prefix):
     # Dictionary
     elif isinstance(y_pred, dict):
         torch.save(y_pred, path_prefix + '.pth')
+    elif isinstance(y_pred, list):
+        torch.save(y_pred, path_prefix + '.pth')
     else:
         raise TypeError("Invalid type for save_pred")
 

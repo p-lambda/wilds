@@ -284,15 +284,13 @@ dataset_defaults = {
     },
     'gwhd': {
         'split_scheme': 'official',
-        'model': 'detr',
+        'model': 'fasterrcnn',
         'train_transform': 'image_base',
         'eval_transform': 'image_base',
         'model_kwargs': {
-            'aux_loss': True,
-            'n_queries': 200,
             'n_classes': 1,
             'pretrained': True},
-        'loss_function': 'detr_set_criterion',
+        'loss_function': 'faster_criterion',
         'groupby_fields': ['location'],
         'val_metric': 'detection_accuracy_avg', # TODO
         'val_metric_decreasing': False,
@@ -304,7 +302,6 @@ dataset_defaults = {
         'lr': 1e-5,
         'weight_decay': 1e-4,
         'n_epochs': 50,
-        'process_outputs_function': 'remove_detr_aux_outputs',
         'loader_kwargs': {
             'num_workers': 1,
             'pin_memory': True,

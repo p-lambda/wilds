@@ -16,9 +16,19 @@ def initialize_loss(config, d_out):
 
     elif config.loss_function == 'detr_set_criterion':
         return ElementwiseLoss(loss_fn=get_detr_set_criterion(config, d_out))        
+    elif config.loss_function == 'faster_criterion':
+        return ElementwiseLoss(loss_fn=get_faster_criterion(config))        
 
     else:
         raise ValueError(f'config.loss_function {config.loss_function} not recognized')
+
+
+def get_faster_criterion(config):
+    from examples.models.detection.fasterrcnn import FasterRCNNLoss
+
+    criterion = FasterRCNNLoss(config.device)
+    return criterion
+
 
 def get_detr_set_criterion(config, d_out):
     from examples.models.detr.matcher import HungarianMatcher

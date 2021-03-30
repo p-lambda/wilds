@@ -51,7 +51,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
         x = move_to(x, self.device)
         y_true = move_to(y_true, self.device)
         g = move_to(self.grouper.metadata_to_group(metadata), self.device)
-        outputs = self.model(x)
+        outputs = self.model(x, y_true)
 
         results = {
             'g': g,

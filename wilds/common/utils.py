@@ -81,6 +81,8 @@ def avg_over_groups(v, g, n_groups):
         group_avgs (Tensor): Vector of length num_groups
         group_counts (Tensor)
     """
+
+
     assert v.device==g.device
     assert v.numel()==g.numel()
     group_count = get_counts(g, n_groups)

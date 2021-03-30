@@ -181,13 +181,13 @@ class DetectionAccuracy(ElementwiseMetric):
     def _compute_element_wise(self, y_pred ,y_true ):
 
 
-
         batch_results = []
-        for src_boxes, target_boxes, target_logits in zip( y_true, y_pred['pred_boxes'], y_pred['pred_logits']):
-
+        for src_boxes, target in zip( y_true, y_pred):
+            target_boxes = target["boxes"]
+            target_scores = target["scores"]
             # Here should be prediction_fn ?
 
-            target_scores =  F.softmax(target_logits, dim=1)[..., 0]
+            #target_scores =  F.softmax(target_logits, dim=1)[..., 0]
             pred_boxes = target_boxes[target_scores > self.score_threshold]
 
             det_accuracy = self._accuracy(src_boxes["boxes"],pred_boxes,iou_threshold=self.iou_threshold)

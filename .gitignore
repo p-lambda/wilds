@@ -4,3 +4,4 @@ dist
 wilds.egg-info
 data
 logs
+test_faster

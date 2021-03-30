@@ -110,7 +110,7 @@ class GWHDDataset(WILDSDataset):
                     torch.tensor([int(i) for i in box.split(" ")])
                     for box in boxes.split(";")
                 ]),
-                "labels": torch.tensor([0]*len(list(boxes.split(";")))).long()
+                "labels": torch.tensor([1]*len(list(boxes.split(";")))).long()
             } if type(boxes) != float else {
                 "boxes": torch.empty(0,4),
                 # "labels": torch.empty(0,1,dtype=torch.long)
@@ -121,6 +121,7 @@ class GWHDDataset(WILDSDataset):
             # The above boxes are (x_min,y_min,x_max,y_max)
             # Convert labels into (center_x, center_y, w, h) normalized, which is what DETR expects
             # TODO: If it's not standard, we can probably put this in a transform somewhere
+            """
             for label in labels:
                 boxes = label['boxes']
                 center_x = (boxes[:, 0] + boxes[:, 2]) / 2 / self._original_resolution[0]
@@ -128,7 +129,7 @@ class GWHDDataset(WILDSDataset):
                 width = (boxes[:, 2] - boxes[:, 0]) / self._original_resolution[0]
                 height = (boxes[:, 3] - boxes[:, 1]) / self._original_resolution[1]
                 label['boxes'] = torch.stack((center_x, center_y, width, height), dim=1)
-
+            """
             # num_boxes = [len(example['boxes']) for example in labels]
             # print(f'Max num_boxes is {max(num_boxes)}')
 

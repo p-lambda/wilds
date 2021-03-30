@@ -66,5 +66,11 @@ model_defaults = {
             # 'eos_coef': 0.1,
             'eos_coef': 0.5,
         }
+    },
+    'fasterrcnn': {
+        'model_kwargs': {
+            # Backbone. Always uses sine position embedding.
+            'pretrained': True,
+    }
     }
 }
