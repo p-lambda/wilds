@@ -87,13 +87,16 @@ def initialize_model(config, d_out, is_featurizer=False):
             raise NotImplementedError('Featurizer not implemented for detection yet')
         else:
             model = initialize_fasterrcnn_model(config, d_out)
-
+        model.needs_y = True
     else:
         raise ValueError(f'Model: {config.model} not recognized.')
 
-    if config.model_kwargs.get('needs_y'):
-        model.needs_y = True
-    else:
+    # The `needs_y` attribute specifies whether the model's forward function
+    # needs to take in both (x, y).
+    # If False, Algorithm.process_batch will call model(x).
+    # If True, Algorithm.process_batch() will call model(x, y) during training,
+    # and model(x, None) during eval.
+    if not hasattr(model, 'needs_y'):
         model.needs_y = False
 
     return model

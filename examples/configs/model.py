@@ -71,7 +71,6 @@ model_defaults = {
         'model_kwargs': {
             # Backbone. Always uses sine position embedding.
             'pretrained': True,
-        },
-        'needs_y': True
+        }
     }
 }
