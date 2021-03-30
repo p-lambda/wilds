@@ -91,6 +91,11 @@ def initialize_model(config, d_out, is_featurizer=False):
     else:
         raise ValueError(f'Model: {config.model} not recognized.')
 
+    if config.model_kwargs.get('needs_y'):
+        model.needs_y = True
+    else:
+        model.needs_y = False
+
     return model
 
 
@@ -156,9 +161,6 @@ def initialize_fasterrcnn_model(config, d_out):
     model = fasterrcnn_resnet50_fpn(pretrained=config.model_kwargs["pretrained"],num_classes=d_out)
 
     return model
-
-
-
 
 
 def initialize_detr_model(config, d_out):

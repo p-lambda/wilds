@@ -51,7 +51,13 @@ class SingleModelAlgorithm(GroupAlgorithm):
         x = move_to(x, self.device)
         y_true = move_to(y_true, self.device)
         g = move_to(self.grouper.metadata_to_group(metadata), self.device)
-        outputs = self.model(x, y_true)
+        if self.model.needs_y:
+            if self.training:
+                outputs = self.model(x, y_true)
+            else:
+                outputs = self.model(x, None)
+        else:
+            outputs = self.model(x)
 
         results = {
             'g': g,
@@ -80,7 +86,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
         """
         assert not self.is_training
         results = self.process_batch(batch)
-        results['objective'] = self.objective(results).item()        
+        results['objective'] = self.objective(results).item()
         self.update_log(results)
         return self.sanitize_dict(results)
 
