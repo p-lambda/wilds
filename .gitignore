@@ -5,3 +5,4 @@ wilds.egg-info
 data
 logs
 test_faster
+.vscode
