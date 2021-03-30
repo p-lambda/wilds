@@ -26,10 +26,10 @@ from torchvision.models.detection.faster_rcnn import TwoMLPHead
 
 from torchvision.models.detection.rpn import RPNHead, RegionProposalNetwork, concat_box_prediction_layers,permute_and_flatten
 from torchvision.models.detection.roi_heads import RoIHeads
-from torchvision.models.detection.transform import GeneralizedRCNNTransform
 
 from torchvision.models.detection import _utils as det_utils
 from torch.nn import functional as F
+from torchvision.models.detection.transform import GeneralizedRCNNTransform
 
 
 model_urls = {
@@ -40,6 +40,7 @@ model_urls = {
     'fasterrcnn_mobilenet_v3_large_fpn_coco':
         'https://download.pytorch.org/models/fasterrcnn_mobilenet_v3_large_fpn-fb6a3cc7.pth'
 }
+
 
 def batch_concat_box_prediction_layers(box_cls, box_regression):
     # type: (List[Tensor], List[Tensor]) -> Tuple[Tensor, Tensor]
@@ -420,10 +421,9 @@ class FastWILDS(GeneralizedRCNN):
             bbox_reg_weights,
             box_score_thresh, box_nms_thresh, box_detections_per_img)
         
-        if image_mean is None:
-            image_mean = [0.485, 0.456, 0.406]
-        if image_std is None:
-            image_std = [0.229, 0.224, 0.225]
+
+        image_mean = [0., 0., 0.] # small trick because images are already normalized
+        image_std = [1., 1., 1.]
         transform = GeneralizedRCNNTransform(min_size, max_size, image_mean, image_std)
 
         super(FastWILDS, self).__init__(backbone, rpn, roi_heads, transform)
@@ -450,6 +450,7 @@ class FastWILDS(GeneralizedRCNN):
             assert len(val) == 2
             original_image_sizes.append((val[0], val[1]))
 
+   
         images, targets = self.transform(images, targets)
 
         # Check for degenerate boxes
