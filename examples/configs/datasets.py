@@ -120,7 +120,7 @@ dataset_defaults = {
         'scheduler': None,
         'batch_size': 128,
         'lr': 1e-4,
-        'weight_decay': 1e-4,
+        'weight_decay': 1e-2,
         'n_epochs': 1,
         'n_groups_per_batch': 2,
         'algo_log_metric': 'multitask_binary_accuracy',

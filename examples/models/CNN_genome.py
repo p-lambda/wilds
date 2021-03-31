@@ -25,10 +25,11 @@ def double_conv(in_channels, out_channels):
 
 
 class UNet(nn.Module):
-    # TODO: This is currently hard-coded to not use out_features
-    def __init__(self, out_features=16, n_channels_in=5):
+    def __init__(self, num_tasks=16, n_channels_in=5):
         super().__init__()
-
+        
+        self.d_out = num_tasks
+        
         self.dconv_down1 = double_conv(n_channels_in, 15)
         self.dconv_down2 = double_conv(15, 22)
         self.dconv_down3 = double_conv(22, 33)
@@ -58,7 +59,7 @@ class UNet(nn.Module):
 
     def forward(self, x):
         # input_size = 12800
-        # input_channels = 6
+        # input_channels = 5
         conv1 = self.dconv_down1(x)     # Out: (input_size) x 15
         x = self.maxpool(conv1)         # (input_size / 2) x 15
 
@@ -100,7 +101,10 @@ class UNet(nn.Module):
 
         x = self.dconv_up1(x)             # (input_size) x 15
 
-        # middle 128 bits
-        out = self.conv_last(x)[:, :, 64:192]
-
-        return torch.squeeze(out)
+        x = self.conv_last(x)
+        
+        if self.d_out is None:
+            return x.shape[-1]  # Default: 253 values
+        else:   # middle 128 values
+            out = x[:, :, 64:192]
+            return torch.squeeze(out)

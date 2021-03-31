@@ -25,7 +25,7 @@ def write_label_bigwigs(
     val_df = val_regions_labeled
     all_df = pd.concat([training_df, val_df])
 
-    # Get the y values, and remove labels by default.
+    # Get the y values, and remove negative labels by default.
     pd_list = []
     for ct in celltypes:
         tc_chr = all_df[['chr', 'start', 'stop', ct]]
@@ -50,8 +50,8 @@ def write_label_bigwigs(
     )
     print(time.time() - itime)
 
+    # Sort bigwigs (as bed files) in order to convert to bigwig.
     os.system('sort -k1,1 -k2,2n {} > {}'.format(_unsorted_dir, _sorted_dir))
-
     mdf_posamb = pd.read_csv(
         _sorted_dir, 
         sep='\t', header=None, index_col=None, names=['chr', 'start', 'stop', 'y', 'celltype']

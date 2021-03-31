@@ -17,13 +17,15 @@ class EncodeTFBSDataset(WILDSDataset):
         12800-base-pair regions of sequence with a quantified chromatin accessibility readout.
 
     Label (y):
-        y is a 128-bit vector, with each element y_i indicating the binding status of a 200bp window. It is 1 if this 200bp region is bound by the transcription factor, and 0 otherwise. If the window x starts at coordinate sc, y_i is the label of the window starting at coordinate (sc+3200)+(50*i).
+        y is a 128-bit vector, with each element y_i indicating the binding status of a 200bp window. It is 1 if this 200bp region is bound by the transcription factor, and 0 otherwise, for i = 0,1,...,127. 
+        
+        Suppose the input window x starts at coordinate sc, extending until coordinate (sc+12800). Then y_i is the label of the window starting at coordinate (sc+3200)+(50*i).
 
     Metadata:
         Each sequence is annotated with the celltype of origin (a string) and the chromosome of origin (a string).
 
     Website:
-        https://www.synapse.org/#!Synapse:syn6131484
+        https://www.synapse.org/#!Synapse:syn6131484 . This is the website for the challenge; the data can be downloaded from here into the meta
     """
 
     _dataset_name = 'encode-tfbs'
@@ -118,6 +120,7 @@ class EncodeTFBSDataset(WILDSDataset):
                 'val': 'Validation (OOD)',
                 'test': 'Test',
             }
+        # Add challenge splits, assuming 'liver' celltype is in the data.
         elif self._split_scheme == 'challenge':
             ch_train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878']
             ch_val_celltype = ['HepG2']
@@ -138,6 +141,72 @@ class EncodeTFBSDataset(WILDSDataset):
                 'test': {
                     'chroms': test_chroms,
                     'celltypes': ch_test_celltype
+                },
+            }
+            self._split_dict = {
+                'train': 0,
+                'val': 1,
+                'test': 2,
+                'id_val': 3,
+            }
+            self._split_names = {
+                'train': 'Train',
+                'val': 'Validation (OOD)',
+                'test': 'Test',
+                'id_val': 'Validation (ID)',
+            }
+        elif self._split_scheme == 'challenge_in-dist':
+            ch_train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878']
+            ch_val_celltype = ['HepG2']
+            ch_test_celltype = ['liver']
+            splits = {
+                'train': {
+                    'chroms': train_chroms,
+                    'celltypes': ch_test_celltype,
+                },
+                'val': {
+                    'chroms': val_chroms,
+                    'celltypes': ch_test_celltype
+                },
+                'test': {
+                    'chroms': test_chroms,
+                    'celltypes': ch_test_celltype
+                },
+            }
+            self._split_dict = {
+                'train': 0,
+                'val': 1,
+                'test': 2,
+            }
+            self._split_names = {
+                'train': 'Train',
+                'val': 'Validation (OOD)',
+                'test': 'Test',
+            }
+        # Add new split scheme specifying custom test and val celltypes in the format test.<test celltype>.val.<val celltype>. 
+        elif '.' in self._split_scheme:
+            all_celltypes = train_celltypes + val_celltype + test_celltype
+            in_val_ct = self._split_scheme.split('.')[1]
+            in_test_ct = self._split_scheme.split('.')[3]
+            train_celltypes = [ct for ct in all_celltypes if ((ct != in_val_ct) and (ct != in_test_ct))]
+            val_celltype = [in_val_ct]
+            test_celltype = [in_test_ct]
+            splits = {
+                'train': {
+                    'chroms': train_chroms,
+                    'celltypes': train_celltypes
+                },
+                'id_val': {
+                    'chroms': val_chroms,
+                    'celltypes': train_celltypes
+                },
+                'val': {
+                    'chroms': val_chroms,
+                    'celltypes': val_celltype
+                },
+                'test': {
+                    'chroms': test_chroms,
+                    'celltypes': test_celltype
                 },
             }
             self._split_dict = {
