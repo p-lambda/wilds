@@ -10,19 +10,19 @@ chrom_sizes = {'chr1': 249250621, 'chr10': 135534747, 'chr11': 135006516, 'chr12
 _data_dir = '../../examples/data/encode-tfbs_v1.0/'
 
 
-def write_label_bigwigs(celltypes):
+def write_label_bigwigs(
+    celltypes, 
+    train_suffix='train.labels.tsv.gz', 
+    val_suffix='val.labels.tsv.gz'
+):
     itime = time.time()
     tf_name = 'MAX'
-    _train_chroms = ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
-    _val_chroms = ['chr2', 'chr9', 'chr11']
-    _test_chroms = ['chr1', 'chr8', 'chr21']
-    _all_chroms = _train_chroms + _val_chroms + _test_chroms
 
     # Read in metadata dataframe from training+validation data
-    train_regions_labeled = pd.read_csv(os.path.join(_data_dir, 'labels/{}.train.labels.tsv.gz'.format(tf_name)), sep='\t')
-    val_regions_labeled = pd.read_csv(os.path.join(_data_dir, 'labels/{}.val.labels.tsv.gz'.format(tf_name)), sep='\t')
-    training_df = train_regions_labeled# [np.isin(train_regions_labeled['chr'], _train_chroms)]
-    val_df = val_regions_labeled# [np.isin(val_regions_labeled['chr'], _test_chroms)]
+    train_regions_labeled = pd.read_csv(os.path.join(_data_dir, 'labels/{}.{}'.format(tf_name, train_suffix)), sep='\t')
+    val_regions_labeled = pd.read_csv(os.path.join(_data_dir, 'labels/{}.{}'.format(tf_name, val_suffix)), sep='\t')
+    training_df = train_regions_labeled
+    val_df = val_regions_labeled
     all_df = pd.concat([training_df, val_df])
 
     # Get the y values, and remove labels by default.
@@ -70,15 +70,19 @@ def write_label_bigwigs(celltypes):
         bw.close()
 
 
-def write_metadata_products(celltypes, stride=6400, posamb_only=False):
+def write_metadata_products(
+    celltypes, bed_df_filename='metadata_df.bed', y_arr_filename='metadata_y.npy', 
+    stride=6400, posamb_only=False
+):
     itime = time.time()
     tf_name = 'MAX'
     celltype_mdta = []
     celltype_labels = []
-    mdf_posamb = pd.read_csv(
-        _data_dir + 'labels/{}/{}_posamb.sorted.bed'.format(tf_name, tf_name), 
-        sep='\t', header=None, index_col=None, names=['chr', 'start', 'stop', 'y', 'celltype']
-    )
+    if posamb_only:
+        mdf_posamb = pd.read_csv(
+            _data_dir + 'labels/{}/{}_posamb.sorted.bed'.format(tf_name, tf_name), 
+            sep='\t', header=None, index_col=None, names=['chr', 'start', 'stop', 'y', 'celltype']
+        )
     # Retrieve only the windows containing positively/ambiguously labeled bins (if posamb_only==True), or all windows (if posamb_only==False).
     for ct in celltypes:
         ct_labels_bw_path = _data_dir + "labels/{}/{}_{}.bigwig".format(tf_name, tf_name, ct)
@@ -118,17 +122,13 @@ def write_metadata_products(celltypes, stride=6400, posamb_only=False):
     
     all_metadata_df = pd.concat(celltype_mdta)
     all_metadata_df.to_csv(
-        _data_dir + 'labels/{}/metadata_df.bed'.format(tf_name), 
+        _data_dir + 'labels/{}/{}'.format(tf_name, bed_df_filename), 
         sep='\t', header=False, index=False
     )
-    np.save(_data_dir + 'labels/{}/metadata_y.npy'.format(tf_name), np.vstack(celltype_labels))
+    np.save(_data_dir + 'labels/{}/{}'.format(tf_name, y_arr_filename), np.vstack(celltype_labels))
 
 
 if __name__ == '__main__':
-    _train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
-    _val_celltype = ['A549']
-    _test_celltype = ['GM12878']
-    _all_celltypes = _train_celltypes + _val_celltype + _test_celltype
+    _all_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562', 'A549', 'GM12878']
     write_label_bigwigs(_all_celltypes)
     write_metadata_products(_all_celltypes)
-    

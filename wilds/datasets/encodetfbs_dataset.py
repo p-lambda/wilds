@@ -118,6 +118,40 @@ class EncodeTFBSDataset(WILDSDataset):
                 'val': 'Validation (OOD)',
                 'test': 'Test',
             }
+        elif self._split_scheme == 'challenge':
+            ch_train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878']
+            ch_val_celltype = ['HepG2']
+            ch_test_celltype = ['liver']
+            splits = {
+                'train': {
+                    'chroms': train_chroms,
+                    'celltypes': ch_train_celltypes
+                },
+                'id_val': {
+                    'chroms': val_chroms,
+                    'celltypes': ch_train_celltypes
+                },
+                'val': {
+                    'chroms': val_chroms,
+                    'celltypes': ch_val_celltype
+                },
+                'test': {
+                    'chroms': test_chroms,
+                    'celltypes': ch_test_celltype
+                },
+            }
+            self._split_dict = {
+                'train': 0,
+                'val': 1,
+                'test': 2,
+                'id_val': 3,
+            }
+            self._split_names = {
+                'train': 'Train',
+                'val': 'Validation (OOD)',
+                'test': 'Test',
+                'id_val': 'Validation (ID)',
+            }
         else:
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
 
