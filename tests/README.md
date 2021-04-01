@@ -25,5 +25,5 @@ by running `cl work 0xacd40b3e4991410b98643b9cc0b10347`.
 
     This command will output a results JSON file `results_<unique ID from step 3>.json`.
 5. Compare the results of `results_<unique ID from step 3>.json` to the previous results JSON. 
-6. If the new results look reasonable compared to the previous results, delete the old file. 
+6. If the new results look reasonable compared to the previous results, delete the old results JSON file. 
 Then, commit and push the new results file to the [GitHub repository](https://github.com/p-lambda/wilds). 
