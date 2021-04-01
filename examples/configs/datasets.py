@@ -298,7 +298,7 @@ dataset_defaults = {
         'optimizer': 'Adam',
         'optimizer_kwargs': {},
         'scheduler': None,
-        'batch_size': 8,
+        'batch_size': 4,
         'lr': 1e-5,
         'weight_decay': 1e-4,
         'n_epochs': 10,
