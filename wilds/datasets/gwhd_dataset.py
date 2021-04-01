@@ -27,9 +27,7 @@ class GWHDDataset(WILDSDataset):
         'official' for WILDS related tasks.
         To reproduce the baseline, several splits are needed:
         - to train a model on train domains and test against a all test split: 'train_in-dist'
-        - to train a model on a portion of a specific val or test domain and test it against the remaining portion:
-        "{domain}_in-dist" where domain is the id of a domain (usask_1, uq_1, utokyo_1, utokyo_2, nau_1)
-        no validation datasets are accessible for the baseline splits
+        - "benchmark_biased" ; "benchmark_in-dist"
     Input (x):
         1024x1024 RGB images of wheat field canopy between flowering and ripening.
     Output (y):
@@ -78,23 +76,19 @@ class GWHDDataset(WILDSDataset):
         # Get filenames
 
         if split_scheme =="official":
-            train_data_df = pd.read_csv(self.root / f'{split_scheme}_train.csv')
-            val_data_df = pd.read_csv(self.root / f'{split_scheme}_val.csv')
-            test_data_df = pd.read_csv(self.root / f'{split_scheme}_test.csv')
-
-        elif split_scheme == "train_in-dist":
             train_data_df = pd.read_csv(self.root / f'official_train.csv')
-            test_data_df = pd.read_csv(self.root / f'{split_scheme}_test.csv')
-            val_data_df = pd.DataFrame(columns=["image","labels","group"])
-        elif split_scheme in [f"{domain}_in-dist" for domain in ["nau_1", "utokyo_1", "utokyo_2", "usask_1" , "uq_1"]]:
-            train_data_df = pd.read_csv(self.root / f'{split_scheme}_train.csv')
-            test_data_df = pd.read_csv(self.root / f'{split_scheme}_test.csv')
-            val_data_df = pd.DataFrame(columns=["image","labels","group"])
+            val_data_df = pd.read_csv(self.root / f'official_val.csv')
+            test_data_df = pd.read_csv(self.root / f'official_test.csv')
 
-        elif split_scheme == "in-dist":
-            train_data_df = pd.read_csv(self.root / f'{split_scheme}_train.csv')
-            test_data_df = pd.read_csv(self.root / f'{split_scheme}_test.csv')
-            val_data_df = pd.DataFrame(columns=["image","labels","group"])
+        elif split_scheme == "benchmark_biased":
+            train_data_df = pd.read_csv(self.root / f'official_train.csv')
+            val_data_df = pd.read_csv(self.root / f'official_val.csv')
+            test_data_df = pd.read_csv(self.root / f'in-dist_test.csv')
+
+        elif split_scheme == "benchmark_in-dist":
+            train_data_df = pd.read_csv(self.root / f'in-dist_train.csv')
+            val_data_df = pd.read_csv(self.root / f'official_val.csv')
+            test_data_df = pd.read_csv(self.root / f'in-dist_test.csv')
 
 
         self._image_array = []

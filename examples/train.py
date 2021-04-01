@@ -62,6 +62,8 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
     epoch_y_pred = collate_list(epoch_y_pred)
     epoch_y_true = collate_list(epoch_y_true)
     epoch_metadata = collate_list(epoch_metadata)
+
+
     results, results_str = dataset['dataset'].eval(
         epoch_y_pred,
         epoch_y_true,

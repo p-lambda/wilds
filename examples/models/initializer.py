@@ -87,7 +87,7 @@ def initialize_model(config, d_out, is_featurizer=False):
             raise NotImplementedError('Featurizer not implemented for detection yet')
         else:
             model = initialize_fasterrcnn_model(config, d_out)
-
+        model.needs_y = True
     else:
         raise ValueError(f'Model: {config.model} not recognized.')
 

@@ -186,16 +186,18 @@ class RegionProposalNetworkWILDS(RegionProposalNetwork):
         boxes, scores = self.filter_proposals(proposals, objectness, images.image_sizes, num_anchors_per_level)
 
         losses = {}
-        assert targets is not None
-        labels, matched_gt_boxes = self.assign_targets_to_anchors(anchors, targets)
-        regression_targets = self.box_coder.encode(matched_gt_boxes, anchors)
-        loss_objectness, loss_rpn_box_reg = self.compute_loss(
-            raw_objectness, raw_pred_bbox_deltas, labels, regression_targets)
 
-        losses = {
-            "loss_objectness": loss_objectness,
-            "loss_rpn_box_reg": loss_rpn_box_reg,
-        }
+        if self.training:
+            assert targets is not None
+            labels, matched_gt_boxes = self.assign_targets_to_anchors(anchors, targets)
+            regression_targets = self.box_coder.encode(matched_gt_boxes, anchors)
+            loss_objectness, loss_rpn_box_reg = self.compute_loss(
+                raw_objectness, raw_pred_bbox_deltas, labels, regression_targets)
+
+            losses = {
+                "loss_objectness": loss_objectness,
+                "loss_rpn_box_reg": loss_rpn_box_reg,
+            }
         return boxes, losses
 
 def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
@@ -437,20 +439,22 @@ class FastWILDS(GeneralizedRCNN):
         super(FastWILDS, self).__init__(backbone, rpn, roi_heads, transform)
     # Set your own forward pass
     def forward(self, images, targets=None):
+        
 
-        if targets is None:
-            raise ValueError("In training mode, targets should be passed")
-        assert targets is not None
-        for target in targets:
-            boxes = target["boxes"]
-            if isinstance(boxes, torch.Tensor):
-                if len(boxes.shape) != 2 or boxes.shape[-1] != 4:
-                    raise ValueError("Expected target boxes to be a tensor"
-                                        "of shape [N, 4], got {:}.".format(
-                                            boxes.shape))
-            else:
-                raise ValueError("Expected target boxes to be of type "
-                                    "Tensor, got {:}.".format(type(boxes)))
+        if self.training:
+            if targets is None:
+                raise ValueError("In training mode, targets should be passed")
+            assert targets is not None
+            for target in targets:
+                boxes = target["boxes"]
+                if isinstance(boxes, torch.Tensor):
+                    if len(boxes.shape) != 2 or boxes.shape[-1] != 4:
+                        raise ValueError("Expected target boxes to be a tensor"
+                                            "of shape [N, 4], got {:}.".format(
+                                                boxes.shape))
+                else:
+                    raise ValueError("Expected target boxes to be of type "
+                                        "Tensor, got {:}.".format(type(boxes)))
 
         original_image_sizes: List[Tuple[int, int]] = []
         for img in images:
@@ -493,6 +497,8 @@ class FastWILDS(GeneralizedRCNN):
                 det["losses"][k] = v[idx]
             for k,v in detector_losses.items():
                 det["losses"][k] = v[idx]
+
+
         return detections
 
 
@@ -509,8 +515,10 @@ class FasterRCNNLoss(nn.Module):
 
 
         # loss values are  loss_classifier loss_box_reg loss_objectness": loss_objectness, loss_rpn_box_reg
-        
-        elementwise_loss = torch.stack([sum(v for v in item["losses"].values()) for item in outputs])
+        try:
+            elementwise_loss = torch.stack([sum(v for v in item["losses"].values()) for item in outputs])
+        except:
+            elementwise_loss = torch.ones(len(outputs)).to(self.device)
 
 
 
