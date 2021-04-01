@@ -66,18 +66,6 @@ def evaluate_benchmark(
         Metrics as a dictionary with metrics as the keys and metric values as the values
     """
 
-    def get_replicates(dataset_name: str) -> List[str]:
-        if dataset_name == "poverty":
-            return [f"fold:{fold}" for fold in ["A", "B", "C", "D", "E"]]
-        else:
-            if dataset_name == "camelyon17":
-                seeds = range(0, 10)
-            elif dataset_name == "civilcomments":
-                seeds = range(0, 5)
-            else:
-                seeds = range(0, 3)
-            return [f"seed:{seed}" for seed in seeds]
-
     def get_prediction_file(
         predictions_dir: str, dataset_name: str, split: str, replicate: str
     ) -> str:
@@ -88,26 +76,6 @@ def evaluate_benchmark(
         raise FileNotFoundError(
             f"Could not find CSV prediction file that starts with {run_id}."
         )
-
-    def get_metrics(dataset_name: str) -> List[str]:
-        if "amazon" == dataset_name:
-            return ["10th_percentile_acc", "acc_avg"]
-        elif "camelyon17" == dataset_name:
-            return ["acc_avg"]
-        elif "civilcomments" == dataset_name:
-            return ["acc_wg", "acc_avg"]
-        elif "fmow" == dataset_name:
-            return ["acc_worst_region", "acc_avg"]
-        elif "iwildcam" == dataset_name:
-            return ["F1-macro_all", "acc_avg"]
-        elif "ogb-molpcba" == dataset_name:
-            return ["ap"]
-        elif "poverty" == dataset_name:
-            return ["r_wg", "r_all"]
-        elif "py150" == dataset_name:
-            return ["acc", "Acc (Overall)"]
-        else:
-            raise ValueError(f"Invalid dataset: {dataset_name}")
 
     # Dataset will only be downloaded if it does not exist
     wilds_dataset: WILDSDataset = get_dataset(
@@ -165,6 +133,59 @@ def evaluate_benchmark(
     return aggregated_results
 
 
+def get_metrics(dataset_name: str) -> List[str]:
+    """
+    Returns a list of metrics for the given dataset. The first metric of the list
+    is used for early stopping.
+
+    Parameters:
+        dataset (str): Dataset name
+
+    Returns:
+        List of metrics to evaluate
+    """
+    if "amazon" == dataset_name:
+        return ["10th_percentile_acc", "acc_avg"]
+    elif "camelyon17" == dataset_name:
+        return ["acc_avg"]
+    elif "civilcomments" == dataset_name:
+        return ["acc_wg", "acc_avg"]
+    elif "fmow" == dataset_name:
+        return ["acc_worst_region", "acc_avg"]
+    elif "iwildcam" == dataset_name:
+        return ["F1-macro_all", "acc_avg"]
+    elif "ogb-molpcba" == dataset_name:
+        return ["ap"]
+    elif "poverty" == dataset_name:
+        return ["r_wg", "r_all"]
+    elif "py150" == dataset_name:
+        return ["acc", "Acc (Overall)"]
+    else:
+        raise ValueError(f"Invalid dataset: {dataset_name}")
+
+
+def get_replicates(dataset_name: str) -> List[str]:
+    """
+    Returns the list of replicates for a given dataset.
+
+    Parameters:
+        dataset (str): Dataset name
+
+    Returns:
+        List of replicates
+    """
+    if dataset_name == "poverty":
+        return [f"fold:{fold}" for fold in ["A", "B", "C", "D", "E"]]
+    else:
+        if dataset_name == "camelyon17":
+            seeds = range(0, 10)
+        elif dataset_name == "civilcomments":
+            seeds = range(0, 5)
+        else:
+            seeds = range(0, 3)
+        return [f"seed:{seed}" for seed in seeds]
+
+
 def evaluate_replicate(
     dataset: WILDSDataset, split: str, predicted_labels: torch.Tensor
 ) -> Dict[str, float]:
@@ -197,7 +218,7 @@ def get_predictions(path: str) -> List[Any]:
         path (str): Path to the file that has the predicted labels. Can be a URL.
 
     Return:
-        List of predictions.
+        List of predictions
     """
     if is_path_url(path):
         data = urllib.request.urlopen(path)
