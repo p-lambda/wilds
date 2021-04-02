@@ -184,6 +184,7 @@ def main():
             transform=transform)
 
         if split == 'train':
+
             datasets[split]['loader'] = get_train_loader(
                 loader=config.train_loader,
                 dataset=datasets[split]['dataset'],
@@ -193,6 +194,7 @@ def main():
                 distinct_groups=config.distinct_groups,
                 n_groups_per_batch=config.n_groups_per_batch,
                 **config.loader_kwargs)
+
         else:
             datasets[split]['loader'] = get_eval_loader(
                 loader=config.eval_loader,

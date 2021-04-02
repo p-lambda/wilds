@@ -5,6 +5,7 @@ wilds.egg-info
 data
 logs
 test_faster
-paper
+paper*
 .vscode
 *sh
+*ipynb

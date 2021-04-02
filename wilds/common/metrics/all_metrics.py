@@ -190,13 +190,13 @@ class DetectionAccuracy(ElementwiseMetric):
             #target_scores =  F.softmax(target_logits, dim=1)[..., 0]
             pred_boxes = target_boxes[target_scores > self.score_threshold]
 
-            det_accuracy = self._accuracy(src_boxes["boxes"],pred_boxes,iou_threshold=self.iou_threshold)
+            det_accuracy = torch.mean(torch.stack([ self._accuracy(src_boxes["boxes"],pred_boxes,iou_thr) for iou_thr in np.arange(0.5,0.76,0.05)]))
             batch_results.append(det_accuracy)
 
         return torch.tensor(batch_results)
 
 
-    def _accuracy(self, src_boxes,pred_boxes ,  iou_threshold = 1.):
+    def _accuracy(self, src_boxes,pred_boxes ,  iou_threshold):
         total_gt = len(src_boxes)
         total_pred = len(pred_boxes)
 
@@ -206,8 +206,8 @@ class DetectionAccuracy(ElementwiseMetric):
             # Define the matcher and distance matrix based on iou
             matcher = Matcher(iou_threshold,iou_threshold,allow_low_quality_matches=False)
 
-            src_boxes = box_convert(src_boxes , "cxcywh" ,"xyxy")
-            pred_boxes = box_convert(pred_boxes , "cxcywh" ,"xyxy")
+            #src_boxes = box_convert(src_boxes , "cxcywh" ,"xyxy")
+            #pred_boxes = box_convert(pred_boxes , "cxcywh" ,"xyxy")
 
 
             match_quality_matrix = box_iou(src_boxes,pred_boxes)
@@ -220,6 +220,8 @@ class DetectionAccuracy(ElementwiseMetric):
             #in Matcher, a pred element can be matched only twice
             false_positive = torch.count_nonzero(results == -1) + ( len(matched_elements) - len(matched_elements.unique()))
             false_negative = total_gt - true_positive
+            acc= true_positive / ( true_positive + false_positive + false_negative )
+
 
             return  true_positive / ( true_positive + false_positive + false_negative )            
 
