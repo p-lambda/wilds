@@ -90,7 +90,7 @@ def wrap_anchor(
         ends = np.concatenate(([starts[0]],ends))
         starts = np.concatenate(([0],starts))
         vals = np.concatenate(([0],vals))
-    if ends[-1] != chrom_sizes[the_chr]:
+    if ends[-1] != len_signal:
         starts = np.concatenate((starts,[ends[-1]]))
         ends = np.concatenate((ends,[len_signal]))
         vals = np.concatenate((vals,[0]))

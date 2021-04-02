@@ -8,6 +8,36 @@ from wilds.common.utils import subsample_idxs
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import MultiTaskAveragePrecision
 
+
+# quantile normalization via numpy inter/extra-polation
+def anchor(input_data, sample, ref): # input 1d array
+    sample.sort()
+    ref.sort()
+    # 0. create the mapping function
+    index = np.array(np.where(np.diff(sample) != 0)) + 1
+    index = index.flatten()
+    x = np.concatenate((np.zeros(1), sample[index])) # domain
+    y = np.zeros(len(x)) # codomain
+    for i in np.arange(0,len(index)-1, 1):
+        start = index[i]
+        end = index[i+1]
+        y[i+1] = np.mean(ref[start:end])
+    i += 1
+    start = index[i]
+    end = len(ref)
+    y[i+1] = np.mean(ref[start:end])
+    # 1. interpolate
+    output = np.interp(input_data, x, y)
+    # 2. extrapolate
+    degree = 1 # degree of the fitting polynomial
+    num = 10 # number of positions for extrapolate
+    f1 = np.poly1d(np.polyfit(sample[-num:],ref[-num:],degree))
+#    f2=np.poly1d(np.polyfit(sample[:num],ref[:num],degree))
+    output[input_data > sample[-1]] = f1(input_data[input_data > sample[-1]])
+#    output[input_data<sample[0]]=f2(input_data[input_data<sample[0]])
+    return output
+
+
 class EncodeTFBSDataset(WILDSDataset):
     """
     ENCODE-DREAM-wilds dataset of transcription factor binding sites.
@@ -242,7 +272,7 @@ class EncodeTFBSDataset(WILDSDataset):
         # For the OOD splits (val and test), we subsample by a factor of 3
         # For the id_val split if it exists, we subsample by a factor of 15
         for subsample_seed, (split, subsample_factor) in enumerate(
-            [('val', 3), ('test', 3), ('id_val', 3*)]):
+            [('val', 3), ('test', 3), ('id_val', 3*len(splits['train']['celltypes'])) ]):
             if split not in self._split_dict: continue
             split_mask = (self._split_array == self._split_dict[split])
             split_idxs = np.arange(len(self._split_array))[split_mask]
@@ -312,35 +342,8 @@ class EncodeTFBSDataset(WILDSDataset):
 
         super().__init__(root_dir, download, split_scheme)
 
-    # quantile normalization via numpy inter/extra-polation
-    def anchor(input_data, sample, ref): # input 1d array
-        sample.sort()
-        ref.sort()
-        # 0. create the mapping function
-        index = np.array(np.where(np.diff(sample) != 0)) + 1
-        index = index.flatten()
-        x = np.concatenate((np.zeros(1), sample[index])) # domain
-        y = np.zeros(len(x)) # codomain
-        for i in np.arange(0,len(index)-1, 1):
-            start = index[i]
-            end = index[i+1]
-            y[i+1] = np.mean(ref[start:end])
-        i += 1
-        start = index[i]
-        end = len(ref)
-        y[i+1] = np.mean(ref[start:end])
-        # 1. interpolate
-        output = np.interp(input_data, x, y)
-        # 2. extrapolate
-        degree = 1 # degree of the fitting polynomial
-        num = 10 # number of positions for extrapolate
-        f1 = np.poly1d(np.polyfit(sample[-num:],ref[-num:],degree))
-    #    f2=np.poly1d(np.polyfit(sample[:num],ref[:num],degree))
-        output[input_data > sample[-1]] = f1(input_data[input_data > sample[-1]])
-    #    output[input_data<sample[0]]=f2(input_data[input_data<sample[0]])
-        return output
-
     def norm_signal(
+        self, 
         signal, 
         sample_celltype
     ):
@@ -356,15 +359,18 @@ class EncodeTFBSDataset(WILDSDataset):
             ends = np.concatenate(([starts[0]],ends))
             starts = np.concatenate(([0],starts))
             vals = np.concatenate(([0],vals))
-        if ends[-1] != chrom_sizes[the_chr]:
+        if ends[-1] != len(signal):
             starts = np.concatenate((starts,[ends[-1]]))
             ends = np.concatenate((ends,[len(signal)]))
             vals = np.concatenate((vals,[0]))
 
         ## 2.then quantile normalization
-        vals_anchored = anchor(vals, self._dnase_qnorm_arrays[sample_celltype], self._norm_ref_distr) 
-        return vals_anchored, starts, ends
-
+        vals_anchored = anchor(vals, self._dnase_qnorm_arrays[sample_celltype], self._norm_ref_distr)
+        vals_arr = np.zeros(ends[-1])
+        for i in range(len(starts)):
+            vals_arr[starts[i]:ends[i]] = vals_anchored[i]
+        return vals_arr
+    
     def get_input(self, idx, window_size=12800):
         """
         Returns x for a given idx in metadata_array, which has been filtered to only take windows with the desired stride.
@@ -384,10 +390,10 @@ class EncodeTFBSDataset(WILDSDataset):
             dnase_this = np.nan_to_num(dnase_bw.values(chrom, interval_start, interval_end, numpy=True))
         except RuntimeError:
             print("error", chrom, interval_start, interval_end)
-
         assert(np.isnan(seq_this).sum() == 0)
         assert(np.isnan(dnase_this).sum() == 0)
-        dnase_this = norm_signal(dnase_this, this_metadata['celltype'])
+        dnase_this = self.norm_signal(dnase_this, this_metadata['celltype'])
+        # print('a', dnase_this.shape, starts, ends, starts.shape, ends.shape)
         return torch.tensor(np.column_stack(
             [seq_this,
              dnase_this]
