@@ -129,6 +129,6 @@ def write_metadata_products(
 
 
 if __name__ == '__main__':
-    _all_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562', 'A549', 'GM12878']
+    _all_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562', 'A549', 'GM12878', 'liver']
     write_label_bigwigs(_all_celltypes)
     write_metadata_products(_all_celltypes)

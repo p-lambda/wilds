@@ -60,7 +60,7 @@ class UNet(nn.Module):
     def forward(self, x):
         # input_size = 12800
         # input_channels = 5
-        conv1 = self.dconv_down1(x)     # Out: (input_size) x 15
+        conv1 = self.dconv_down1(x)     # Output size: (input_size) x 15
         x = self.maxpool(conv1)         # (input_size / 2) x 15
 
         conv2 = self.dconv_down2(x)     # (input_size / 2) x 22
@@ -101,10 +101,14 @@ class UNet(nn.Module):
 
         x = self.dconv_up1(x)             # (input_size) x 15
 
-        x = self.conv_last(x)
+        x = self.conv_last(x)             # (input_size/50 - 3) x 1
+        x = torch.squeeze(x)
         
+        # Default input_size == 12800: x has size N x 1 x 253 at this point.
         if self.d_out is None:
-            return x.shape[-1]  # Default: 253 values
+            self.d_out = x.shape[-1]
+            out = x
         else:   # middle 128 values
-            out = x[:, :, 64:192]
-            return torch.squeeze(out)
+            out = x[:, 64:192]
+        
+        return out

@@ -25,13 +25,13 @@ class EncodeTFBSDataset(WILDSDataset):
         Each sequence is annotated with the celltype of origin (a string) and the chromosome of origin (a string).
 
     Website:
-        https://www.synapse.org/#!Synapse:syn6131484 . This is the website for the challenge; the data can be downloaded from here into the meta
+        https://www.synapse.org/#!Synapse:syn6131484 . This is the website for the challenge; the data can be downloaded from here as per the instructions in data
     """
 
     _dataset_name = 'encode-tfbs'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x7efd626149d648f699d9e686d7aa81a9/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x6ba433262726430eb91449a1edb2fed0/contents/blob/',
             'compressed_size': None}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
@@ -183,7 +183,7 @@ class EncodeTFBSDataset(WILDSDataset):
                 'val': 'Validation (OOD)',
                 'test': 'Test',
             }
-        # Add new split scheme specifying custom test and val celltypes in the format test.<test celltype>.val.<val celltype>. 
+        # Add new split scheme specifying custom test and val celltypes in the format val.<val celltype>.test.<test celltype>, e.g. 'official' is 'val.A549.test.GM12878' 
         elif '.' in self._split_scheme:
             all_celltypes = train_celltypes + val_celltype + test_celltype
             in_val_ct = self._split_scheme.split('.')[1]
@@ -242,7 +242,7 @@ class EncodeTFBSDataset(WILDSDataset):
         # For the OOD splits (val and test), we subsample by a factor of 3
         # For the id_val split if it exists, we subsample by a factor of 15
         for subsample_seed, (split, subsample_factor) in enumerate(
-            [('val', 3), ('test', 3), ('id_val', 15)]):
+            [('val', 3), ('test', 3), ('id_val', 3*)]):
             if split not in self._split_dict: continue
             split_mask = (self._split_array == self._split_dict[split])
             split_idxs = np.arange(len(self._split_array))[split_mask]
@@ -272,8 +272,24 @@ class EncodeTFBSDataset(WILDSDataset):
         # Set up file handles for DNase features
         self._dnase_allcelltypes = {}
         for ct in self._all_celltypes:
-            dnase_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
+            """
+            if 'challenge' in self._split_scheme:
+                dnase_bw_path = os.path.join(self._data_dir, 'DNASE.{}.fc.signal.bigwig'.format(ct))
+            else:
+                dnase_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
+            """
+            dnase_bw_path = os.path.join(self._data_dir, 'DNASE.{}.fc.signal.bigwig'.format(ct))
             self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_bw_path)
+        
+        # Load subsampled DNase arrays for normalization purposes
+        self._dnase_qnorm_arrays = {}
+        for ct in self._all_celltypes:
+            qnorm_arr_path = os.path.join(self._data_dir, 'qn.{}.npy'.format(ct))
+            self._dnase_qnorm_arrays[ct] = np.load(qnorm_arr_path)
+        self._norm_ref_distr = np.zeros(len(self._dnase_qnorm_arrays[ct]))
+        train_cts = splits['train']['celltypes']
+        for ct in train_cts:
+            self._norm_ref_distr += (1.0/len(train_cts))*self._dnase_qnorm_arrays[ct]
 
         # Set up metadata fields, map, array
         self._metadata_fields = ['chr', 'celltype']
@@ -296,6 +312,59 @@ class EncodeTFBSDataset(WILDSDataset):
 
         super().__init__(root_dir, download, split_scheme)
 
+    # quantile normalization via numpy inter/extra-polation
+    def anchor(input_data, sample, ref): # input 1d array
+        sample.sort()
+        ref.sort()
+        # 0. create the mapping function
+        index = np.array(np.where(np.diff(sample) != 0)) + 1
+        index = index.flatten()
+        x = np.concatenate((np.zeros(1), sample[index])) # domain
+        y = np.zeros(len(x)) # codomain
+        for i in np.arange(0,len(index)-1, 1):
+            start = index[i]
+            end = index[i+1]
+            y[i+1] = np.mean(ref[start:end])
+        i += 1
+        start = index[i]
+        end = len(ref)
+        y[i+1] = np.mean(ref[start:end])
+        # 1. interpolate
+        output = np.interp(input_data, x, y)
+        # 2. extrapolate
+        degree = 1 # degree of the fitting polynomial
+        num = 10 # number of positions for extrapolate
+        f1 = np.poly1d(np.polyfit(sample[-num:],ref[-num:],degree))
+    #    f2=np.poly1d(np.polyfit(sample[:num],ref[:num],degree))
+        output[input_data > sample[-1]] = f1(input_data[input_data > sample[-1]])
+    #    output[input_data<sample[0]]=f2(input_data[input_data<sample[0]])
+        return output
+
+    def norm_signal(
+        signal, 
+        sample_celltype
+    ):
+        ## 1.format as bigwig first
+        x = signal
+        z = np.concatenate(([0],x,[0])) # pad two zeroes
+        # find boundary
+        starts = np.where(np.diff(z) != 0)[0]
+        ends = starts[1:]
+        starts = starts[:-1]
+        vals = x[starts]
+        if starts[0] != 0:
+            ends = np.concatenate(([starts[0]],ends))
+            starts = np.concatenate(([0],starts))
+            vals = np.concatenate(([0],vals))
+        if ends[-1] != chrom_sizes[the_chr]:
+            starts = np.concatenate((starts,[ends[-1]]))
+            ends = np.concatenate((ends,[len(signal)]))
+            vals = np.concatenate((vals,[0]))
+
+        ## 2.then quantile normalization
+        vals_anchored = anchor(vals, self._dnase_qnorm_arrays[sample_celltype], self._norm_ref_distr) 
+        return vals_anchored, starts, ends
+
     def get_input(self, idx, window_size=12800):
         """
         Returns x for a given idx in metadata_array, which has been filtered to only take windows with the desired stride.
@@ -312,12 +381,13 @@ class EncodeTFBSDataset(WILDSDataset):
         seq_this = self._seq_bp[this_metadata['chr']][interval_start:interval_end]
         dnase_bw = self._dnase_allcelltypes[this_metadata['celltype']]
         try:
-            dnase_this = dnase_bw.values(chrom, interval_start, interval_end, numpy=True)
+            dnase_this = np.nan_to_num(dnase_bw.values(chrom, interval_start, interval_end, numpy=True))
         except RuntimeError:
             print("error", chrom, interval_start, interval_end)
 
         assert(np.isnan(seq_this).sum() == 0)
         assert(np.isnan(dnase_this).sum() == 0)
+        dnase_this = norm_signal(dnase_this, this_metadata['celltype'])
         return torch.tensor(np.column_stack(
             [seq_this,
              dnase_this]
