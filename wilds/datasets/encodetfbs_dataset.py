@@ -49,7 +49,7 @@ class EncodeTFBSDataset(WILDSDataset):
     Label (y):
         y is a 128-bit vector, with each element y_i indicating the binding status of a 200bp window. It is 1 if this 200bp region is bound by the transcription factor, and 0 otherwise, for i = 0,1,...,127. 
         
-        Suppose the input window x starts at coordinate sc, extending until coordinate (sc+12800). Then y_i is the label of the window starting at coordinate (sc+3200)+(50*i).
+        Concretely, suppose the input window x starts at coordinate sc, extending until coordinate (sc+12800). Then y_i is the label of the window starting at coordinate (sc+3200)+(50*i).
 
     Metadata:
         Each sequence is annotated with the celltype of origin (a string) and the chromosome of origin (a string).
@@ -61,7 +61,8 @@ class EncodeTFBSDataset(WILDSDataset):
     _dataset_name = 'encode-tfbs'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x6ba433262726430eb91449a1edb2fed0/contents/blob/',
+            # 'download_url': 'https://worksheets.codalab.org/rest/bundles/0x6ba433262726430eb91449a1edb2fed0/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x94505beac8794afbb5b2dbae747ec29f/contents/blob/',
             'compressed_size': None}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
@@ -308,8 +309,8 @@ class EncodeTFBSDataset(WILDSDataset):
             else:
                 dnase_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
             """
-            dnase_bw_path = os.path.join(self._data_dir, 'DNASE.{}.fc.signal.bigwig'.format(ct))
-            # dnase_bw_path = os.path.join(self._data_dir, 'DNase.{}.norm.bigwig'.format(ct))
+            # dnase_bw_path = os.path.join(self._data_dir, 'DNASE.{}.fc.signal.bigwig'.format(ct))
+            dnase_bw_path = os.path.join(self._data_dir, 'DNase.{}.norm.bigwig'.format(ct))
             self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_bw_path)
         
         # Load subsampled DNase arrays for normalization purposes
