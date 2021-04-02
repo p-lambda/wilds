@@ -75,8 +75,8 @@ def anchor(input_data, sample, ref): # input 1d array
 
 def wrap_anchor(
     signal, 
-    sample, ref, 
-    len_signal
+    sample, 
+    ref
 ):
     ## 1.format as bigwig first
     x = signal
@@ -90,9 +90,9 @@ def wrap_anchor(
         ends = np.concatenate(([starts[0]],ends))
         starts = np.concatenate(([0],starts))
         vals = np.concatenate(([0],vals))
-    if ends[-1] != len_signal:
+    if ends[-1] != len(signal):
         starts = np.concatenate((starts,[ends[-1]]))
-        ends = np.concatenate((ends,[len_signal]))
+        ends = np.concatenate((ends,[len(signal)]))
         vals = np.concatenate((vals,[0]))
 
     ## 2.then quantile normalization
@@ -103,12 +103,14 @@ def wrap_anchor(
 def dnase_normalize(
     input_bw_celltype, 
     sample_celltype, 
-    ref_celltype, 
+    ref_celltypes, 
     data_pfx = '/users/abalsubr/wilds/examples/data/encode-tfbs_v1.0/'
 ):
     itime = time.time()
     sample = np.load(data_pfx + "qn.{}.npy".format(sample_celltype))
-    ref = np.load(data_pfx + "qn.{}.npy".format(ref_celltype))
+    ref = np.zeros(len(sample))
+    for ct in ref_celltypes:
+        ref += (1.0/len(ref_celltypes))*np.load(data_pfx + "qn.{}.npy".format(ct))
 
     chromsizes_list = [(k, v) for k, v in chrom_sizes.items()]
     bw_output = pyBigWig.open(data_pfx + 'DNase.{}.norm.bigwig'.format(input_bw_celltype), 'w')
@@ -120,7 +122,7 @@ def dnase_normalize(
         bw = pyBigWig.open(data_pfx + 'DNASE.{}.fc.signal.bigwig'.format(input_bw_celltype))
         signal += np.nan_to_num(np.array(bw.values(the_chr, 0, chrom_sizes[the_chr])))
         bw.close()
-        vals_anchored, starts, ends = wrap_anchor(signal, sample, ref, chrom_sizes[the_chr])
+        vals_anchored, starts, ends = wrap_anchor(signal, sample, ref)
         # write normalized dnase file.
         chroms = np.array([the_chr] * len(vals_anchored))
         bw_output.addEntries(chroms, starts, ends=ends, values=vals_anchored)
@@ -154,11 +156,18 @@ def generate_accessibility_archives(input_dir='dnase_bigwigs', output_dir='codal
 
 
 if __name__ == '__main__':
+    ch_train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878']
+    ch_val_celltype = ['HepG2']
+    ch_test_celltype = ['liver']
+    ref_celltypes = ch_train_celltypes + ch_val_celltype
+    all_celltypes = ref_celltypes + ch_test_celltype
+    for ct in all_celltypes:
+        qn_sample_to_array([ct])
+    for ct in all_celltypes:
+        dnase_normalize(ct, ct, ref_celltypes)
 #     parser = argparse.ArgumentParser()
 #     parser.add_argument('--input_dir', required=True)
 #     parser.add_argument('--output_dir', required=True)
 #     args = parser.parse_args()
 
-    generate_accessibility_archives(
-        input_dir=args.input_dir,
-        output_dir=args.output_dir)
+    # generate_accessibility_archives(input_dir=args.input_dir, output_dir=args.output_dir)

@@ -309,6 +309,7 @@ class EncodeTFBSDataset(WILDSDataset):
                 dnase_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
             """
             dnase_bw_path = os.path.join(self._data_dir, 'DNASE.{}.fc.signal.bigwig'.format(ct))
+            # dnase_bw_path = os.path.join(self._data_dir, 'DNase.{}.norm.bigwig'.format(ct))
             self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_bw_path)
         
         # Load subsampled DNase arrays for normalization purposes
@@ -317,9 +318,11 @@ class EncodeTFBSDataset(WILDSDataset):
             qnorm_arr_path = os.path.join(self._data_dir, 'qn.{}.npy'.format(ct))
             self._dnase_qnorm_arrays[ct] = np.load(qnorm_arr_path)
         self._norm_ref_distr = np.zeros(len(self._dnase_qnorm_arrays[ct]))
-        train_cts = splits['train']['celltypes']
-        for ct in train_cts:
-            self._norm_ref_distr += (1.0/len(train_cts))*self._dnase_qnorm_arrays[ct]
+        test_cts = splits['test']['celltypes']
+        num_to_avg = len(self._all_celltypes) - len(test_cts)
+        for ct in self._all_celltypes:
+            if ct not in test_cts:
+                self._norm_ref_distr += (1.0/num_to_avg)*self._dnase_qnorm_arrays[ct]
 
         # Set up metadata fields, map, array
         self._metadata_fields = ['chr', 'celltype']
@@ -369,7 +372,7 @@ class EncodeTFBSDataset(WILDSDataset):
         vals_arr = np.zeros(ends[-1])
         for i in range(len(starts)):
             vals_arr[starts[i]:ends[i]] = vals_anchored[i]
-        return vals_arr
+        return vals_arr.astype(float)
     
     def get_input(self, idx, window_size=12800):
         """
@@ -392,7 +395,11 @@ class EncodeTFBSDataset(WILDSDataset):
             print("error", chrom, interval_start, interval_end)
         assert(np.isnan(seq_this).sum() == 0)
         assert(np.isnan(dnase_this).sum() == 0)
-        dnase_this = self.norm_signal(dnase_this, this_metadata['celltype'])
+        # print(dnase_this.dtype)
+#         try:
+#             dnase_this = self.norm_signal(dnase_this, this_metadata['celltype'])
+#         except RuntimeError:
+#             print(dnase_this.dtype)
         # print('a', dnase_this.shape, starts, ends, starts.shape, ends.shape)
         return torch.tensor(np.column_stack(
             [seq_this,
