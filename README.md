@@ -113,6 +113,17 @@ While the `camelyon17` dataset is small and fast to train on, we advise against 
 
 The image datasets (`iwildcam`, `camelyon17`, `fmow`, and `poverty`) tend to have high disk I/O usage. If training time is much slower for you than the approximate times listed above, consider checking if I/O is a bottleneck (e.g., by moving to a local disk if you are using a network drive, or by increasing the number of data loader workers). To speed up training, you could also disable evaluation at each epoch or for all splits by toggling `--evaluate_all_splits` and related arguments.
 
+We also provide an evaluation script to evaluate prediction CSV files. In order to evaluate your predictions, run:
+
+```bash
+python examples/evaluate.py <predictions_dir> <output_dir> --root-dir <root_dir>
+```
+
+where `<predictions_dir>` is the path to your predictions directory, `<output_dir>` is where the results JSON will be
+outputted and `<root_dir>` is the dataset directory. The predictions directory should have a subdirectory for each dataset
+(e.g. `iwildcam`) containing prediction CSV files to evaluate. The evaluation script will skip over any datasets that has
+missing prediction files. Any dataset not in `<root_dir>` will be downloaded to `<root_dir>`.
+
 We have an [executable version](https://wilds.stanford.edu/codalab) of our paper on CodaLab that contains the exact commands, code, and data for the experiments reported in our paper, which rely on these scripts. Trained model weights for all datasets can also be found there.
 
 
