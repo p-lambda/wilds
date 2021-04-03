@@ -75,9 +75,11 @@ def initialize_model(config, d_out, is_featurizer=False):
         model = nn.Linear(out_features=d_out, **config.model_kwargs)
     elif config.model == 'unet-seq':
         if is_featurizer:
-            raise NotImplementedError("Featurizer not supported for UNet")
+            featurizer = UNet(num_tasks=None, **config.model_kwargs)
+            classifier = nn.Linear(featurizer.d_out, d_out)
+            model = (featurizer, classifier)
         else:
-            model = UNet(out_features=d_out, **config.model_kwargs)
+            model = UNet(num_tasks=d_out, **config.model_kwargs)
     else:
         raise ValueError(f'Model: {config.model} not recognized.')
     return model
