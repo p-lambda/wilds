@@ -131,8 +131,8 @@ class Metric:
             else:
                 group_metrics.append(
                     self._compute(
-                        get_subset_from_mask(y_pred, g == group_idx),
-                        get_subset_from_mask(y_true, g == group_idx)))
+                        y_pred[g == group_idx],
+                        y_true[g == group_idx]))
 
         group_metrics = torch.stack(group_metrics)
         worst_group_metric = self.worst(group_metrics[group_counts>0])
