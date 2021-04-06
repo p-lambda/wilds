@@ -288,6 +288,7 @@ dataset_defaults = {
         'model_kwargs': {'pretrained': True},
         'train_transform': 'image_base',
         'eval_transform': 'image_base',
+        'target_resolution': (256, 256),
         'loss_function': 'cross_entropy',
         'groupby_fields': ['experiment'],
         'val_metric': 'acc_avg',
