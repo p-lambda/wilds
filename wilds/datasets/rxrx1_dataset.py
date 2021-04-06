@@ -1,4 +1,3 @@
-from datetime import datetime
 import os
 from pathlib import Path
 
@@ -9,7 +8,7 @@ import torch
 
 from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
-from wilds.common.metrics.all_metrics import Accuracy, Recall, F1
+from wilds.common.metrics.all_metrics import Accuracy
 
 
 class RxRx1Dataset(WILDSDataset):
@@ -72,12 +71,9 @@ class RxRx1Dataset(WILDSDataset):
         df = pd.read_csv(self._data_dir / 'metadata.csv')
 
         # Splits
-        # FIXME: Add validation
-        self._split_dict = {'train': 0, 'test': 1}
-        self._split_names = {'train': 'Train', 'test': 'Test'}
+        self._split_dict = {'train': 0, 'val': 1, 'test': 2}
+        self._split_names = {'train': 'Train', 'val': 'Validation', 'test': 'Test'}
         self._split_array = df.dataset.apply(self._split_dict.get).values
-        # split_dict = {'train': 0, 'test': 1}
-        # self._split_array = df.dataset.apply(split_dict.get).values
 
         # Filenames
         def create_filepath(row):
@@ -97,7 +93,7 @@ class RxRx1Dataset(WILDSDataset):
         # Convert experiment and well from strings to idxs
         indexed_metadata = {}
         self._metadata_map = {}
-        for key in ['experiment', 'well']:
+        for key in ['cell_type', 'experiment', 'well']:
             all_values = list(df[key].unique())
             value_to_idx_map = {value: idx for idx, value in enumerate(all_values)}
             value_idxs = [value_to_idx_map[value] for value in df[key].tolist()]
@@ -105,18 +101,19 @@ class RxRx1Dataset(WILDSDataset):
             indexed_metadata[key] = value_idxs
 
         self._metadata_array = torch.tensor(
-            np.stack([indexed_metadata['experiment'],
+            np.stack([indexed_metadata['cell_type'],
+                      indexed_metadata['experiment'],
                       df['plate'].values,
                       indexed_metadata['well'],
                       df['site'].values,
                       self.y_array], axis=1)
         )
-        self._metadata_fields = ['experiment', 'plate', 'well', 'site', 'y']
+        self._metadata_fields = ['cell_type', 'experiment', 'plate', 'well', 'site', 'y']
 
         # eval grouper
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
-            groupby_fields=(['experiment'])
+            groupby_fields=(['cell_type', 'experiment'])
         )
 
         super().__init__(root_dir, download, split_scheme)
