@@ -52,7 +52,7 @@ class RxRx1Dataset(WILDSDataset):
     _dataset_name = 'rxrx1'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xc01e117bb4504f988700408eaeeb16a8/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x6b7a05a3056a434498f0bb1252eb8440/contents/blob/',
             'compressed_size': 7_413_123_845}
     }
 
