@@ -176,4 +176,4 @@ if __name__ == '__main__':
         dnase_normalize(ct, ct, ref_celltypes)
     # Create normalized bigwig for ID validation split.
     for ct in ch_test_celltype:
-        dnase_normalize(ct, ct, ch_test_celltype)
+        dnase_normalize(ct, ct, ch_test_celltype, out_fname = 'norm_id')

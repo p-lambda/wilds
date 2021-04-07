@@ -28,8 +28,6 @@ class UNet(nn.Module):
     def __init__(self, num_tasks=16, n_channels_in=5):
         super().__init__()
         
-        self.d_out = num_tasks
-        
         self.dconv_down1 = double_conv(n_channels_in, 15)
         self.dconv_down2 = double_conv(15, 22)
         self.dconv_down3 = double_conv(22, 33)
@@ -55,6 +53,7 @@ class UNet(nn.Module):
         self.upsamp_1 = nn.ConvTranspose1d(15, 15, 2, stride=2)
 
         self.conv_last = nn.Conv1d(15, 1, 200, stride=50, padding=0)
+        self.d_out = num_tasks if num_tasks is not None else 253
 
 
     def forward(self, x):
@@ -105,8 +104,7 @@ class UNet(nn.Module):
         x = torch.squeeze(x)
         
         # Default input_size == 12800: x has size N x 1 x 253 at this point.
-        if self.d_out is None:
-            self.d_out = x.shape[-1]
+        if self.d_out == 253:
             out = x
         else:   # middle 128 values
             out = x[:, 64:192]
