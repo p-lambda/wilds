@@ -213,18 +213,17 @@ def get_model_prefix(dataset, config):
         f"{dataset_name}_{replicate_str}_")
     return prefix
 
-# Adapted from https://discuss.pytorch.org/t/pytorch-tensor-to-device-for-a-list-of-dict/66283
 def move_to(obj, device):
-    if torch.is_tensor(obj):
-        return obj.to(device)
-    elif isinstance(obj, dict):
+    if isinstance(obj, dict):
         return {k: move_to(v, device) for k, v in obj.items()}
     elif isinstance(obj, list):
         return [move_to(v, device) for v in obj]
     elif isinstance(obj, float) or isinstance(obj, int):
         return obj
     else:
-        raise TypeError("Invalid type for move_to")
+        # Assume obj is a Tensor or other type
+        # (like Batch, for MolPCBA) that supports .to(device)
+        return obj.to(device)
 
 def detach_and_clone(obj):
     if torch.is_tensor(obj):
