@@ -106,13 +106,12 @@ def wrap_anchor(
 
 def dnase_normalize(
     input_bw_celltype, 
-    sample_celltype, 
     ref_celltypes, 
     out_fname = 'norm', 
     data_pfx = '/users/abalsubr/wilds/examples/data/encode-tfbs_v1.0/'
 ):
     itime = time.time()
-    sample = np.load(data_pfx + "qn.{}.npy".format(sample_celltype))
+    sample = np.load(data_pfx + "qn.{}.npy".format(input_bw_celltype))
     ref = np.zeros(len(sample))
     for ct in ref_celltypes:
         ref += (1.0/len(ref_celltypes))*np.load(data_pfx + "qn.{}.npy".format(ct))
@@ -173,7 +172,7 @@ if __name__ == '__main__':
     
     # Create normalized bigwigs for OOD validation split.
     for ct in all_celltypes:
-        dnase_normalize(ct, ct, ref_celltypes)
+        dnase_normalize(ct, ref_celltypes)
     # Create normalized bigwig for ID validation split.
     for ct in ch_test_celltype:
-        dnase_normalize(ct, ct, ch_test_celltype, out_fname = 'norm_id')
+        dnase_normalize(ct, ch_test_celltype, out_fname = 'norm_id')
