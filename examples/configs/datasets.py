@@ -297,7 +297,7 @@ dataset_defaults = {
         'optimizer': 'Adam',
         'optimizer_kwargs': {},
         'scheduler': None,  # TODO cosine with warmup from transformers
-        'batch_size': 32, #1400,
+        'batch_size': 64, #1400,
         'lr': 1e-3,
         'weight_decay': 1e-5,
         'n_epochs': 60,
