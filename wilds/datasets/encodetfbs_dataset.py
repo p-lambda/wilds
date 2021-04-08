@@ -61,7 +61,7 @@ class EncodeTFBSDataset(WILDSDataset):
     _dataset_name = 'encode-tfbs'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x370346dfdda44758b75041ca1a5921f4/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x3ae54c5d74524d9b8c45b7cc6c84091c/contents/blob/',
             'compressed_size': None}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
@@ -274,7 +274,7 @@ class EncodeTFBSDataset(WILDSDataset):
             allzeroes_mask = (self._y_array.sum(axis=1) == 0).numpy()
             keep_mask = keep_mask & ~(train_mask & allzeroes_mask)
 
-        # Subsample the testing and validation indices
+        # Subsample the testing and validation indices, to speed up evaluation. 
         # For the OOD splits (val and test), we subsample by a factor of 3
         # For the id_val split if it exists, we subsample by a factor of 15
         for subsample_seed, (split, subsample_factor) in enumerate(
