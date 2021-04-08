@@ -61,8 +61,7 @@ class EncodeTFBSDataset(WILDSDataset):
     _dataset_name = 'encode-tfbs'
     _versions_dict = {
         '1.0': {
-            # 'download_url': 'https://worksheets.codalab.org/rest/bundles/0x6ba433262726430eb91449a1edb2fed0/contents/blob/',
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x94505beac8794afbb5b2dbae747ec29f/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x370346dfdda44758b75041ca1a5921f4/contents/blob/',
             'compressed_size': None}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
@@ -86,7 +85,9 @@ class EncodeTFBSDataset(WILDSDataset):
         # This typically happens at the flanking regions of peaks.
         # For our purposes, we will ignore these ambiguous labels during training and eval.
         self.y_array[self.y_array == 0.5] = float('nan')
-
+        
+        dnase_norm_mode = 'norm'
+        
         # Construct splits
         train_chroms = ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
         val_chroms = ['chr2', 'chr9', 'chr11']
@@ -152,10 +153,15 @@ class EncodeTFBSDataset(WILDSDataset):
                 'test': 'Test',
             }
         # Add challenge splits, assuming 'liver' celltype is in the data.
-        elif self._split_scheme == 'challenge':
-            ch_train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878']
-            ch_val_celltype = ['HepG2']
-            ch_test_celltype = ['liver']
+        elif self._split_scheme in ['challenge', 'challenge_alt']:
+            if self._split_scheme == 'challenge':
+                ch_train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878']
+                ch_val_celltype = ['HepG2']
+                ch_test_celltype = ['liver']
+            elif self._split_scheme == 'challenge_alt':
+                ch_train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'A549', 'GM12878']
+                ch_val_celltype = ['K562']
+                ch_test_celltype = ['liver']
             splits = {
                 'train': {
                     'chroms': train_chroms,
@@ -187,8 +193,7 @@ class EncodeTFBSDataset(WILDSDataset):
                 'id_val': 'Validation (ID)',
             }
         elif self._split_scheme == 'challenge_in-dist':
-            ch_train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878']
-            ch_val_celltype = ['HepG2']
+            dnase_norm_mode = 'norm_id'
             ch_test_celltype = ['liver']
             splits = {
                 'train': {
@@ -309,8 +314,10 @@ class EncodeTFBSDataset(WILDSDataset):
             else:
                 dnase_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
             """
-            # dnase_bw_path = os.path.join(self._data_dir, 'DNASE.{}.fc.signal.bigwig'.format(ct))
-            dnase_bw_path = os.path.join(self._data_dir, 'DNase.{}.norm.bigwig'.format(ct))
+            dnase_bw_path = os.path.join(
+                self._data_dir, 
+                'DNase.{}.{}.bigwig'.format(ct, dnase_norm_mode)
+            )
             self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_bw_path)
         
         # Load subsampled DNase arrays for normalization purposes
@@ -351,10 +358,8 @@ class EncodeTFBSDataset(WILDSDataset):
         signal, 
         sample_celltype
     ):
-        ## 1.format as bigwig first
         x = signal
         z = np.concatenate(([0],x,[0])) # pad two zeroes
-        # find boundary
         starts = np.where(np.diff(z) != 0)[0]
         ends = starts[1:]
         starts = starts[:-1]
@@ -367,8 +372,7 @@ class EncodeTFBSDataset(WILDSDataset):
             starts = np.concatenate((starts,[ends[-1]]))
             ends = np.concatenate((ends,[len(signal)]))
             vals = np.concatenate((vals,[0]))
-
-        ## 2.then quantile normalization
+        
         vals_anchored = anchor(vals, self._dnase_qnorm_arrays[sample_celltype], self._norm_ref_distr)
         vals_arr = np.zeros(ends[-1])
         for i in range(len(starts)):
