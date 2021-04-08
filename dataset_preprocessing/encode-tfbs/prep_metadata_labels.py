@@ -4,15 +4,17 @@ from scipy import sparse
 import pyBigWig
 
 # Human chromosome names
-chr_IDs = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX']
+chr_IDs = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10',
+           'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19',
+           'chr20', 'chr21', 'chr22', 'chrX']
 chrom_sizes = {'chr1': 249250621, 'chr10': 135534747, 'chr11': 135006516, 'chr12': 133851895, 'chr13': 115169878, 'chr14': 107349540, 'chr15': 102531392, 'chr16': 90354753, 'chr17': 81195210, 'chr18': 78077248, 'chr19': 59128983, 'chr2': 243199373, 'chr20': 63025520, 'chr21': 48129895, 'chr22': 51304566, 'chr3': 198022430, 'chr4': 191154276, 'chr5': 180915260, 'chr6': 171115067, 'chr7': 159138663, 'chr8': 146364022, 'chr9': 141213431, 'chrX': 155270560}
 
 _data_dir = '../../examples/data/encode-tfbs_v1.0/'
 
 
 def write_label_bigwigs(
-    celltypes, 
-    train_suffix='train.labels.tsv.gz', 
+    celltypes,
+    train_suffix='train.labels.tsv.gz',
     val_suffix='val.labels.tsv.gz'
 ):
     itime = time.time()
@@ -42,7 +44,7 @@ def write_label_bigwigs(
     _unsorted_dir = _data_dir + 'labels/{}/{}_posamb.bed'.format(
             tf_name, tf_name)
     _sorted_dir = _unsorted_dir.replace(
-        '{}_posamb'.format(tf_name), 
+        '{}_posamb'.format(tf_name),
         '{}_posamb.sorted'.format(tf_name)
     )
     _metadata_df.to_csv(
@@ -53,10 +55,10 @@ def write_label_bigwigs(
     # Sort bigwigs (as bed files) in order to convert to bigwig.
     os.system('sort -k1,1 -k2,2n {} > {}'.format(_unsorted_dir, _sorted_dir))
     mdf_posamb = pd.read_csv(
-        _sorted_dir, 
+        _sorted_dir,
         sep='\t', header=None, index_col=None, names=['chr', 'start', 'stop', 'y', 'celltype']
     )
-    
+
     # Write the binned labels to bigwig files - genome-wide labels
     chromsizes_list = [(k, v) for k, v in chrom_sizes.items()]
     for ct in celltypes:
@@ -71,7 +73,7 @@ def write_label_bigwigs(
 
 
 def write_metadata_products(
-    celltypes, bed_df_filename='metadata_df.bed', y_arr_filename='metadata_y.npy', 
+    celltypes, bed_df_filename='metadata_df.bed', y_arr_filename='metadata_y.npy',
     stride=6400, posamb_only=False
 ):
     itime = time.time()
@@ -80,7 +82,7 @@ def write_metadata_products(
     celltype_labels = []
     if posamb_only:
         mdf_posamb = pd.read_csv(
-            _data_dir + 'labels/{}/{}_posamb.sorted.bed'.format(tf_name, tf_name), 
+            _data_dir + 'labels/{}/{}_posamb.sorted.bed'.format(tf_name, tf_name),
             sep='\t', header=None, index_col=None, names=['chr', 'start', 'stop', 'y', 'celltype']
         )
     # Retrieve only the windows containing positively/ambiguously labeled bins (if posamb_only==True), or all windows (if posamb_only==False).
@@ -119,10 +121,10 @@ def write_metadata_products(
         print(ct, time.time() - itime)
         bw.close()
     print(time.time() - itime)
-    
+
     all_metadata_df = pd.concat(celltype_mdta)
     all_metadata_df.to_csv(
-        _data_dir + 'labels/{}/{}'.format(tf_name, bed_df_filename), 
+        _data_dir + 'labels/{}/{}'.format(tf_name, bed_df_filename),
         sep='\t', header=False, index=False
     )
     np.save(_data_dir + 'labels/{}/{}'.format(tf_name, y_arr_filename), np.vstack(celltype_labels))

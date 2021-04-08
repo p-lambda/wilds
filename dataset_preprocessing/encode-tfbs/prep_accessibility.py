@@ -9,9 +9,9 @@ chrom_sizes = {'chr1': 249250621, 'chr10': 135534747, 'chr11': 135006516, 'chr12
 
 
 def qn_sample_to_array(
-    input_celltypes, 
-    input_chroms=None, 
-    subsampling_ratio=1000, 
+    input_celltypes,
+    input_chroms=None,
+    subsampling_ratio=1000,
     data_pfx = '/users/abalsubr/wilds/examples/data/encode-tfbs_v1.0/'
 ):
     itime = time.time()
@@ -78,8 +78,8 @@ def anchor(input_data, sample, ref): # input 1d array
 
 
 def wrap_anchor(
-    signal, 
-    sample, 
+    signal,
+    sample,
     ref
 ):
     ## 1.format as bigwig first
@@ -100,14 +100,14 @@ def wrap_anchor(
         vals = np.concatenate((vals,[0]))
 
     ## 2.then quantile normalization
-    vals_anchored = anchor(vals, sample, ref) 
+    vals_anchored = anchor(vals, sample, ref)
     return vals_anchored, starts, ends
 
 
 def dnase_normalize(
-    input_bw_celltype, 
-    ref_celltypes, 
-    out_fname = 'norm', 
+    input_bw_celltype,
+    ref_celltypes,
+    out_fname = 'norm',
     data_pfx = '/users/abalsubr/wilds/examples/data/encode-tfbs_v1.0/'
 ):
     itime = time.time()
@@ -121,7 +121,7 @@ def dnase_normalize(
         input_bw_celltype, out_fname), 'w')
     bw_output.addHeader(chromsizes_list)
     # bw_output.addHeader(list(zip(chr_all , num_bp)), maxZooms=0) # zip two turples
-    
+
     for the_chr in chrom_sizes:
         signal = np.zeros(chrom_sizes[the_chr])
         bw = pyBigWig.open(data_pfx + 'DNASE.{}.fc.signal.bigwig'.format(input_bw_celltype))
@@ -169,7 +169,7 @@ if __name__ == '__main__':
     all_celltypes = ch_train_celltypes + ch_val_celltype + ch_test_celltype
     for ct in all_celltypes:
         qn_sample_to_array([ct], input_chroms=train_chroms)
-    
+
     # Create normalized bigwigs for OOD validation split.
     for ct in all_celltypes:
         dnase_normalize(ct, ref_celltypes)
