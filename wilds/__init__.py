@@ -3,22 +3,23 @@ from .get_dataset import get_dataset
 
 benchmark_datasets = [
     'amazon',
+    'bdd100k-det',
     'camelyon17',
     'civilcomments',
+    'fmow',
+    'gwhd',
     'iwildcam',
     'ogb-molpcba',
     'poverty',
-    'fmow',
     'py150',
-    'gwhd',
 ]
 
 additional_datasets = [
+    'bdd100k-cls',
     'celebA',
+    'sqf',
     'waterbirds',
     'yelp',
-    'bdd100k',
-    'sqf',
 ]
 
 supported_datasets = benchmark_datasets + additional_datasets

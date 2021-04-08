@@ -66,9 +66,13 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
             from wilds.datasets.fmow_dataset import FMoWDataset
         return FMoWDataset(version=version, **dataset_kwargs)
 
-    elif dataset == 'bdd100k':
-        from wilds.datasets.bdd100k_dataset import BDD100KDataset
-        return BDD100KDataset(version=version, **dataset_kwargs)
+    elif dataset == 'bdd100k-cls':
+        from wilds.datasets.bdd100k_dataset import BDD100KClsDataset
+        return BDD100KClsDataset(version=version, **dataset_kwargs)
+
+    elif dataset == 'bdd100k-det':
+        from wilds.datasets.bdd100k_dataset import BDD100KDetDataset
+        return BDD100KDetDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'py150':
         from wilds.datasets.py150_dataset import Py150Dataset

@@ -1,4 +1,4 @@
-from transformers import get_linear_schedule_with_warmup
+# from transformers import get_linear_schedule_with_warmup
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 
 def initialize_scheduler(config, optimizer, n_train_steps):

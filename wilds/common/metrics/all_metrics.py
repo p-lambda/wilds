@@ -1,3 +1,4 @@
+import contextlib
 import torch
 import torch.nn as nn
 from torchvision.ops.boxes import box_iou
@@ -5,6 +6,7 @@ from torchvision.models.detection._utils import Matcher
 from torchvision.ops import nms, box_convert
 import numpy as np
 import torch.nn.functional as F
+from wilds.common.metrics.detection_utils import evaluate_det
 from wilds.common.metrics.metric import Metric, ElementwiseMetric, MultiTaskMetric
 from wilds.common.metrics.loss import ElementwiseLoss
 from wilds.common.utils import avg_over_groups, minimum, maximum, get_counts
@@ -234,6 +236,84 @@ class DetectionAccuracy(ElementwiseMetric):
             return torch.tensor(0.)
 
 
+
+    def worst(self, metrics):
+        return minimum(metrics)
+
+
+class MulticlassDetectionAccuracy(Metric):
+    def __init__(self, id_to_cat, name=None):
+        self.id_to_cat = id_to_cat
+        if name is None:
+            name = 'multiclass_detection_accuracy'
+        super(MulticlassDetectionAccuracy, self).__init__(name=name)
+
+    def _compute(self, y_pred, y_true, separate_classes=False):
+        labels, preds = [], []
+        pred_id = 1
+
+        for src_boxes, target in zip(y_true, y_pred):
+            name = src_boxes['name']
+            frame = {'name': name, 'labels': None, 'attributes': {}}
+
+            for label_id in range(len(src_boxes['boxes'])):
+                label = {'box2d': src_boxes['boxes'][label_id].tolist(),
+                         'category': self.id_to_cat[src_boxes['labels'][label_id].item()],
+                         'id': label_id,
+                         'attributes': {}}
+                label['box2d'] = {k: v for k, v in zip(['x1', 'y1', 'x2', 'y2'],
+                                                       label['box2d'])}
+                if frame['labels'] is None:
+                    frame['labels'] = []
+                frame['labels'].append(label)
+            labels.append(frame)
+
+            for pred_id in range(len(target['boxes'])):
+                preds.append({'category': self.id_to_cat[target['labels'][pred_id].item()],
+                              'name': name,
+                              'id': pred_id,
+                              'score': target['scores'][pred_id].item(),
+                              'bbox': target['boxes'][pred_id].tolist()})
+        with contextlib.redirect_stdout(None):
+            return torch.tensor(evaluate_det(labels, preds, separate_classes=separate_classes))
+
+    def _compute_group_wise(self, y_pred, y_true, g, n_groups, n_classes):
+        group_metrics = []
+        group_counts = get_counts(g, n_groups)
+        for group_idx in range(n_groups):
+            y_pred_group, y_true_group = [], []
+            if group_counts[group_idx]==0:
+                group_metrics.append(torch.zeros(n_classes, device=g.device))
+            else:
+                for i in range(len(g)):
+                    if g[i] == group_idx:
+                        y_pred_group.append(y_pred[i])
+                        y_true_group.append(y_true[i])
+                group_metrics.append(
+                    self._compute(y_pred_group, y_true_group, separate_classes=True)
+                )
+
+        group_metrics = torch.stack(group_metrics)
+        worst_group_metric = self.worst(group_metrics[group_counts>0])
+
+        return group_metrics, group_counts, worst_group_metric
+
+    def compute_group_wise(self, y_pred, y_true, g, n_groups, n_classes, return_dict=True):
+        group_metrics, group_counts, worst_group_metric = \
+                self._compute_group_wise(y_pred, y_true, g, n_groups, n_classes)
+        if return_dict:
+            results = {}
+            for group_idx in range(n_groups):
+                for cls in range(n_classes):
+                    results[self.group_metric_field(group_idx, cls)] = group_metrics[group_idx, cls].item()
+                results[self.group_count_field(group_idx)] = group_counts[group_idx].item()
+            results[self.worst_group_metric_field] = worst_group_metric.item()
+            return results
+        else:
+            return group_metrics, group_counts, worst_group_metric
+
+    def group_metric_field(self, group_idx, cls):
+        return f'{self.name}_group:{group_idx}_y:{cls}'
 
     def worst(self, metrics):
         return minimum(metrics)

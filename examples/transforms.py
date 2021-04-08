@@ -1,5 +1,5 @@
 import torchvision.transforms as transforms
-from transformers import BertTokenizerFast, DistilBertTokenizerFast
+# from transformers import BertTokenizerFast, DistilBertTokenizerFast
 import torch
 
 def initialize_transform(transform_name, config, dataset):
