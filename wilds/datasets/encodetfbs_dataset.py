@@ -9,34 +9,6 @@ from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import MultiTaskAveragePrecision
 
 
-# quantile normalization via numpy inter/extra-polation
-def anchor(input_data, sample, ref): # input 1d array
-    sample.sort()
-    ref.sort()
-    # 0. create the mapping function
-    index = np.array(np.where(np.diff(sample) != 0)) + 1
-    index = index.flatten()
-    x = np.concatenate((np.zeros(1), sample[index])) # domain
-    y = np.zeros(len(x)) # codomain
-    for i in np.arange(0,len(index)-1, 1):
-        start = index[i]
-        end = index[i+1]
-        y[i+1] = np.mean(ref[start:end])
-    i += 1
-    start = index[i]
-    end = len(ref)
-    y[i+1] = np.mean(ref[start:end])
-    # 1. interpolate
-    output = np.interp(input_data, x, y)
-    # 2. extrapolate
-    degree = 1 # degree of the fitting polynomial
-    num = 10 # number of positions for extrapolate
-    f1 = np.poly1d(np.polyfit(sample[-num:],ref[-num:],degree))
-#    f2=np.poly1d(np.polyfit(sample[:num],ref[:num],degree))
-    output[input_data > sample[-1]] = f1(input_data[input_data > sample[-1]])
-#    output[input_data<sample[0]]=f2(input_data[input_data<sample[0]])
-    return output
-
 
 class EncodeTFBSDataset(WILDSDataset):
     """
@@ -92,9 +64,9 @@ class EncodeTFBSDataset(WILDSDataset):
         train_chroms = ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
         val_chroms = ['chr2', 'chr9', 'chr11']
         test_chroms = ['chr1', 'chr8', 'chr21']
-        train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
-        val_celltype = ['A549']
-        test_celltype = ['GM12878']
+        train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878']
+        val_celltype = ['HepG2']
+        test_celltype = ['liver']
         self._split_scheme = split_scheme
         if self._split_scheme == 'official':
             splits = {
@@ -114,18 +86,24 @@ class EncodeTFBSDataset(WILDSDataset):
                     'chroms': test_chroms,
                     'celltypes': test_celltype
                 },
+                'id_test': {
+                    'chroms': test_chroms,
+                    'celltypes': train_celltypes
+                }
             }
             self._split_dict = {
                 'train': 0,
                 'val': 1,
                 'test': 2,
                 'id_val': 3,
+                'id_test': 4
             }
             self._split_names = {
                 'train': 'Train',
                 'val': 'Validation (OOD)',
                 'test': 'Test',
                 'id_val': 'Validation (ID)',
+                'id_test': 'Test (ID)',
             }
         elif self._split_scheme == 'in-dist':
             dnase_norm_mode = 'norm_id'
@@ -152,111 +130,6 @@ class EncodeTFBSDataset(WILDSDataset):
                 'train': 'Train',
                 'val': 'Validation (OOD)',
                 'test': 'Test',
-            }
-        # Add challenge splits, assuming 'liver' celltype is in the data.
-        elif self._split_scheme in ['challenge', 'challenge_alt']:
-            if self._split_scheme == 'challenge':
-                ch_train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878']
-                ch_val_celltype = ['HepG2']
-                ch_test_celltype = ['liver']
-            elif self._split_scheme == 'challenge_alt':
-                ch_train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'A549', 'GM12878']
-                ch_val_celltype = ['K562']
-                ch_test_celltype = ['liver']
-            splits = {
-                'train': {
-                    'chroms': train_chroms,
-                    'celltypes': ch_train_celltypes
-                },
-                'id_val': {
-                    'chroms': val_chroms,
-                    'celltypes': ch_train_celltypes
-                },
-                'val': {
-                    'chroms': val_chroms,
-                    'celltypes': ch_val_celltype
-                },
-                'test': {
-                    'chroms': test_chroms,
-                    'celltypes': ch_test_celltype
-                },
-            }
-            self._split_dict = {
-                'train': 0,
-                'val': 1,
-                'test': 2,
-                'id_val': 3,
-            }
-            self._split_names = {
-                'train': 'Train',
-                'val': 'Validation (OOD)',
-                'test': 'Test',
-                'id_val': 'Validation (ID)',
-            }
-        elif self._split_scheme == 'challenge_in-dist':
-            dnase_norm_mode = 'norm_id'
-            ch_test_celltype = ['liver']
-            splits = {
-                'train': {
-                    'chroms': train_chroms,
-                    'celltypes': ch_test_celltype,
-                },
-                'val': {
-                    'chroms': val_chroms,
-                    'celltypes': ch_test_celltype
-                },
-                'test': {
-                    'chroms': test_chroms,
-                    'celltypes': ch_test_celltype
-                },
-            }
-            self._split_dict = {
-                'train': 0,
-                'val': 1,
-                'test': 2,
-            }
-            self._split_names = {
-                'train': 'Train',
-                'val': 'Validation (OOD)',
-                'test': 'Test',
-            }
-        # Add new split scheme specifying custom test and val celltypes in the format val.<val celltype>.test.<test celltype>, e.g. 'official' is 'val.A549.test.GM12878'
-        elif '.' in self._split_scheme:
-            all_celltypes = train_celltypes + val_celltype + test_celltype
-            in_val_ct = self._split_scheme.split('.')[1]
-            in_test_ct = self._split_scheme.split('.')[3]
-            train_celltypes = [ct for ct in all_celltypes if ((ct != in_val_ct) and (ct != in_test_ct))]
-            val_celltype = [in_val_ct]
-            test_celltype = [in_test_ct]
-            splits = {
-                'train': {
-                    'chroms': train_chroms,
-                    'celltypes': train_celltypes
-                },
-                'id_val': {
-                    'chroms': val_chroms,
-                    'celltypes': train_celltypes
-                },
-                'val': {
-                    'chroms': val_chroms,
-                    'celltypes': val_celltype
-                },
-                'test': {
-                    'chroms': test_chroms,
-                    'celltypes': test_celltype
-                },
-            }
-            self._split_dict = {
-                'train': 0,
-                'val': 1,
-                'test': 2,
-                'id_val': 3,
-            }
-            self._split_names = {
-                'train': 'Train',
-                'val': 'Validation (OOD)',
-                'test': 'Test',
-                'id_val': 'Validation (ID)',
             }
         else:
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
@@ -354,32 +227,6 @@ class EncodeTFBSDataset(WILDSDataset):
 
         super().__init__(root_dir, download, split_scheme)
 
-    def norm_signal(
-        self,
-        signal,
-        sample_celltype
-    ):
-        x = signal
-        z = np.concatenate(([0],x,[0])) # pad two zeroes
-        starts = np.where(np.diff(z) != 0)[0]
-        ends = starts[1:]
-        starts = starts[:-1]
-        vals = x[starts]
-        if starts[0] != 0:
-            ends = np.concatenate(([starts[0]],ends))
-            starts = np.concatenate(([0],starts))
-            vals = np.concatenate(([0],vals))
-        if ends[-1] != len(signal):
-            starts = np.concatenate((starts,[ends[-1]]))
-            ends = np.concatenate((ends,[len(signal)]))
-            vals = np.concatenate((vals,[0]))
-
-        vals_anchored = anchor(vals, self._dnase_qnorm_arrays[sample_celltype], self._norm_ref_distr)
-        vals_arr = np.zeros(ends[-1])
-        for i in range(len(starts)):
-            vals_arr[starts[i]:ends[i]] = vals_anchored[i]
-        return vals_arr.astype(float)
-
     def get_input(self, idx, window_size=12800):
         """
         Returns x for a given idx in metadata_array, which has been filtered to only take windows with the desired stride.
@@ -395,18 +242,8 @@ class EncodeTFBSDataset(WILDSDataset):
         interval_end = interval_start + window_size
         seq_this = self._seq_bp[this_metadata['chr']][interval_start:interval_end]
         dnase_bw = self._dnase_allcelltypes[this_metadata['celltype']]
-        try:
-            dnase_this = np.nan_to_num(dnase_bw.values(chrom, interval_start, interval_end, numpy=True))
-        except RuntimeError:
-            print("error", chrom, interval_start, interval_end)
-        assert(np.isnan(seq_this).sum() == 0)
-        assert(np.isnan(dnase_this).sum() == 0)
-        # print(dnase_this.dtype)
-#         try:
-#             dnase_this = self.norm_signal(dnase_this, this_metadata['celltype'])
-#         except RuntimeError:
-#             print(dnase_this.dtype)
-        # print('a', dnase_this.shape, starts, ends, starts.shape, ends.shape)
+        dnase_this = np.nan_to_num(dnase_bw.values(chrom, interval_start, interval_end, numpy=True))
+
         return torch.tensor(np.column_stack(
             [seq_this,
              dnase_this]
