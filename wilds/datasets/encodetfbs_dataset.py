@@ -47,8 +47,8 @@ class EncodeTFBSDataset(WILDSDataset):
         12800-base-pair regions of sequence with a quantified chromatin accessibility readout.
 
     Label (y):
-        y is a 128-bit vector, with each element y_i indicating the binding status of a 200bp window. It is 1 if this 200bp region is bound by the transcription factor, and 0 otherwise, for i = 0,1,...,127. 
-        
+        y is a 128-bit vector, with each element y_i indicating the binding status of a 200bp window. It is 1 if this 200bp region is bound by the transcription factor, and 0 otherwise, for i = 0,1,...,127.
+
         Concretely, suppose the input window x starts at coordinate sc, extending until coordinate (sc+12800). Then y_i is the label of the window starting at coordinate (sc+3200)+(50*i).
 
     Metadata:
@@ -85,9 +85,9 @@ class EncodeTFBSDataset(WILDSDataset):
         # This typically happens at the flanking regions of peaks.
         # For our purposes, we will ignore these ambiguous labels during training and eval.
         self.y_array[self.y_array == 0.5] = float('nan')
-        
+
         dnase_norm_mode = 'norm'
-        
+
         # Construct splits
         train_chroms = ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
         val_chroms = ['chr2', 'chr9', 'chr11']
@@ -220,7 +220,7 @@ class EncodeTFBSDataset(WILDSDataset):
                 'val': 'Validation (OOD)',
                 'test': 'Test',
             }
-        # Add new split scheme specifying custom test and val celltypes in the format val.<val celltype>.test.<test celltype>, e.g. 'official' is 'val.A549.test.GM12878' 
+        # Add new split scheme specifying custom test and val celltypes in the format val.<val celltype>.test.<test celltype>, e.g. 'official' is 'val.A549.test.GM12878'
         elif '.' in self._split_scheme:
             all_celltypes = train_celltypes + val_celltype + test_celltype
             in_val_ct = self._split_scheme.split('.')[1]
@@ -275,7 +275,7 @@ class EncodeTFBSDataset(WILDSDataset):
             allzeroes_mask = (self._y_array.sum(axis=1) == 0).numpy()
             keep_mask = keep_mask & ~(train_mask & allzeroes_mask)
 
-        # Subsample the testing and validation indices, to speed up evaluation. 
+        # Subsample the testing and validation indices, to speed up evaluation.
         # For the OOD splits (val and test), we subsample by a factor of 3
         # For the id_val split if it exists, we subsample by a factor of 15
         for subsample_seed, (split, subsample_factor) in enumerate(
@@ -316,11 +316,11 @@ class EncodeTFBSDataset(WILDSDataset):
                 dnase_bw_path = os.path.join(self._data_dir, 'DNase/{}.bigwig'.format(ct))
             """
             dnase_bw_path = os.path.join(
-                self._data_dir, 
+                self._data_dir,
                 'DNase.{}.{}.bigwig'.format(ct, dnase_norm_mode)
             )
             self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_bw_path)
-        
+
         # Load subsampled DNase arrays for normalization purposes
         self._dnase_qnorm_arrays = {}
         for ct in self._all_celltypes:
@@ -355,8 +355,8 @@ class EncodeTFBSDataset(WILDSDataset):
         super().__init__(root_dir, download, split_scheme)
 
     def norm_signal(
-        self, 
-        signal, 
+        self,
+        signal,
         sample_celltype
     ):
         x = signal
@@ -373,13 +373,13 @@ class EncodeTFBSDataset(WILDSDataset):
             starts = np.concatenate((starts,[ends[-1]]))
             ends = np.concatenate((ends,[len(signal)]))
             vals = np.concatenate((vals,[0]))
-        
+
         vals_anchored = anchor(vals, self._dnase_qnorm_arrays[sample_celltype], self._norm_ref_distr)
         vals_arr = np.zeros(ends[-1])
         for i in range(len(starts)):
             vals_arr[starts[i]:ends[i]] = vals_anchored[i]
         return vals_arr.astype(float)
-    
+
     def get_input(self, idx, window_size=12800):
         """
         Returns x for a given idx in metadata_array, which has been filtered to only take windows with the desired stride.
