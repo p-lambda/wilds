@@ -86,18 +86,24 @@ class EncodeTFBSDataset(WILDSDataset):
                     'chroms': test_chroms,
                     'celltypes': test_celltype
                 },
+                'id_test': {
+                    'chroms': test_chroms,
+                    'celltypes': train_celltypes
+                }
             }
             self._split_dict = {
                 'train': 0,
                 'val': 1,
                 'test': 2,
                 'id_val': 3,
+                'id_test': 4
             }
             self._split_names = {
                 'train': 'Train',
                 'val': 'Validation (OOD)',
                 'test': 'Test',
                 'id_val': 'Validation (ID)',
+                'id_test': 'Test (ID)',
             }
         elif self._split_scheme == 'in-dist':
             dnase_norm_mode = 'norm_id'
