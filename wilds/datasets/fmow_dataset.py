@@ -63,7 +63,7 @@ class FMoWDataset(WILDSDataset):
             'compressed_size': 53_893_324_800}
     }
 
-    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official', oracle_training_set=False, seed=111, use_ood_val=False):
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official', oracle_training_set=False, seed=111, use_ood_val=True):
         self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
