@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler, SubsetRandomSampler
 from wilds.common.utils import get_counts, split_into_groups
@@ -30,7 +29,6 @@ def get_train_loader(loader, dataset, batch_size,
         if uniform_over_groups is None or not uniform_over_groups:
             return DataLoader(
                 dataset,
-                # shuffle=False, # Shuffle training dataset
                 shuffle=True, # Shuffle training dataset
                 sampler=None,
                 collate_fn=dataset.collate,
@@ -97,6 +95,20 @@ def get_eval_loader(loader, dataset, batch_size, grouper=None, **loader_kwargs):
             collate_fn=dataset.collate,
             batch_size=batch_size,
             **loader_kwargs)
+
+
+def get_unlabeled_loader(loader, dataset, batch_size, grouper=None, **loader_kwargs):
+    if loader == 'standard':
+        # TODO: Implement -Tony
+        return DataLoader(
+            dataset,
+            shuffle=False,
+            sampler=None,
+            collate_fn=dataset.collate,
+            batch_size=batch_size,
+            **loader_kwargs
+        )
+
 
 class GroupSampler:
     """

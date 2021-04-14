@@ -66,13 +66,19 @@ class WILDSDataset:
         """
         if split not in self.split_dict:
             raise ValueError(f"Split {split} not found in dataset's split_dict.")
+
         split_mask = self.split_array == self.split_dict[split]
         split_idx = np.where(split_mask)[0]
+
         if frac < 1.0:
+            # Randomly sample a fraction of the split
             num_to_retain = int(np.round(float(len(split_idx)) * frac))
             split_idx = np.sort(np.random.permutation(split_idx)[:num_to_retain])
-        subset = WILDSSubset(self, split_idx, transform)
-        return subset
+
+        return (
+            WILDSUnlabeledSubset(self, split_idx, transform) if "unlabeled" in split
+            else WILDSSubset(self, split_idx, transform)
+        )
 
     def check_init(self):
         """
@@ -463,3 +469,17 @@ class WILDSSubset(WILDSDataset):
 
     def eval(self, y_pred, y_true, metadata):
         return self.dataset.eval(y_pred, y_true, metadata)
+
+
+class WILDSUnlabeledSubset(WILDSSubset):
+    def __init__(self, dataset, indices, transform):
+        # TODO: add extra logic here -Tony?
+        super().__init__(dataset, indices, transform)
+
+    def __getitem__(self, idx):
+        x, _, metadata = self.dataset[self.indices[idx]]
+        if self.transform is not None:
+            x = self.transform(x)
+        # TODO: TypeError: default_collate: batch must contain tensors, numpy arrays, numbers,
+        #       dicts or lists; found <class 'NoneType'>
+        return x, metadata
