@@ -38,7 +38,7 @@ class UNet(nn.Module):
         self.maxpool = nn.MaxPool1d(2)
         # self.upsample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         self.upsample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
-        self.conv_middle = single_conv(109, 109)
+        # self.conv_middle = single_conv(109, 109)
         self.upsamp_6 = nn.ConvTranspose1d(109, 109, 2, stride=2)
 
         self.dconv_up5 = double_conv(73 + 109, 73)
