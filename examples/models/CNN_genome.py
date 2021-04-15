@@ -59,6 +59,7 @@ class UNet(nn.Module):
     def forward(self, x):
         # input_size = 12800
         # input_channels = 5
+        x = x.float()
         conv1 = self.dconv_down1(x)     # Output size: (input_size) x 15
         x = self.maxpool(conv1)         # (input_size / 2) x 15
 
