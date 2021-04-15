@@ -8,6 +8,8 @@ from wilds.common.utils import subsample_idxs
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import MultiTaskAveragePrecision
 
+# Human chromosomes in hg19
+chrom_sizes = {'chr1': 249250621, 'chr10': 135534747, 'chr11': 135006516, 'chr12': 133851895, 'chr13': 115169878, 'chr14': 107349540, 'chr15': 102531392, 'chr16': 90354753, 'chr17': 81195210, 'chr18': 78077248, 'chr19': 59128983, 'chr2': 243199373, 'chr20': 63025520, 'chr21': 48129895, 'chr22': 51304566, 'chr3': 198022430, 'chr4': 191154276, 'chr5': 180915260, 'chr6': 171115067, 'chr7': 159138663, 'chr8': 146364022, 'chr9': 141213431, 'chrX': 155270560}
 
 # quantile normalization via numpy inter/extra-polation
 def anchor(input_data, sample, ref): # input 1d array
@@ -36,6 +38,67 @@ def anchor(input_data, sample, ref): # input 1d array
     output[input_data > sample[-1]] = f1(input_data[input_data > sample[-1]])
 #    output[input_data<sample[0]]=f2(input_data[input_data<sample[0]])
     return output
+
+
+def wrap_anchor(
+    signal,
+    sample,
+    ref
+):
+    ## 1.format as bigwig first
+    x = signal
+    z = np.concatenate(([0],x,[0])) # pad two zeroes
+    # find boundary
+    starts = np.where(np.diff(z) != 0)[0]
+    ends = starts[1:]
+    starts = starts[:-1]
+    vals = x[starts]
+    if starts[0] != 0:
+        ends = np.concatenate(([starts[0]],ends))
+        starts = np.concatenate(([0],starts))
+        vals = np.concatenate(([0],vals))
+    if ends[-1] != len(signal):
+        starts = np.concatenate((starts,[ends[-1]]))
+        ends = np.concatenate((ends,[len(signal)]))
+        vals = np.concatenate((vals,[0]))
+
+    ## 2.then quantile normalization
+    vals_anchored = anchor(vals, sample, ref)
+    return vals_anchored, starts, ends
+
+
+def dnase_normalize(
+    input_bw_celltype,
+    ref_celltypes,
+    out_fname = 'norm',
+    data_pfx = '/users/abalsubr/wilds/examples/data/encode-tfbs_v1.0/'
+):
+    if not data_pfx.endswith('/'):
+        data_pfx = data_pfx + '/'
+    itime = time.time()
+    sample = np.load(data_pfx + "qn.{}.npy".format(input_bw_celltype))
+    ref = np.zeros(len(sample))
+    for ct in ref_celltypes:
+        ref += (1.0/len(ref_celltypes))*np.load(data_pfx + "qn.{}.npy".format(ct))
+
+    chromsizes_list = [(k, v) for k, v in chrom_sizes.items()]
+    out_fname = data_pfx + 'DNase.{}.{}.bigwig'.format(input_bw_celltype, out_fname)
+    bw_output = pyBigWig.open(out_fname, 'w')
+    bw_output.addHeader(chromsizes_list)
+    # bw_output.addHeader(list(zip(chr_all , num_bp)), maxZooms=0) # zip two turples
+
+    for the_chr in chrom_sizes:
+        signal = np.zeros(chrom_sizes[the_chr])
+        bw = pyBigWig.open(data_pfx + 'DNASE.{}.fc.signal.bigwig'.format(input_bw_celltype))
+        signal += np.nan_to_num(np.array(bw.values(the_chr, 0, chrom_sizes[the_chr])))
+        bw.close()
+        vals_anchored, starts, ends = wrap_anchor(signal, sample, ref)
+        # write normalized dnase file.
+        chroms = np.array([the_chr] * len(vals_anchored))
+        bw_output.addEntries(chroms, starts, ends=ends, values=vals_anchored)
+        print(input_bw_celltype, the_chr, time.time() - itime)
+
+    bw_output.close()
 
 
 class EncodeTFBSDataset(WILDSDataset):
@@ -271,12 +334,15 @@ class EncodeTFBSDataset(WILDSDataset):
             self._seq_bp[chrom] = seq_arr[chrom]
             print(chrom, time.time() - itime)
         del seq_arr
-
-        # Set up file handles for DNase features
+        
+        # Set up file handles for DNase features, writing normalized DNase tracks along the way.
         self._dnase_allcelltypes = {}
         for ct in self._all_celltypes:
-            dnase_bw_path = os.path.join(self._data_dir, 'DNASE.{}.fc.signal.bigwig'.format(ct))
-            # dnase_bw_path = os.path.join(self._data_dir, 'DNase.{}.{}.bigwig'.format(ct, dnase_norm_mode))
+            orig_dnase_bw_path = os.path.join(self._data_dir, 'DNASE.{}.fc.signal.bigwig'.format(ct))
+            dnase_bw_path = os.path.join(self._data_dir, 'DNase.{}.{}.bigwig'.format(ct, self._split_scheme))
+            if not os.path.exists(dnase_bw_path):
+                ref_celltypes = splits['train']['celltypes']
+                dnase_normalize(ct, ref_celltypes, out_fname=self._split_scheme, data_pfx=self._data_dir)
             self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_bw_path)
 
         # Load subsampled DNase arrays for normalization purposes
@@ -312,32 +378,6 @@ class EncodeTFBSDataset(WILDSDataset):
 
         super().__init__(root_dir, download, split_scheme)
     
-    def norm_signal(
-        self, 
-        signal, 
-        sample_celltype
-    ):
-        x = signal
-        z = np.concatenate(([0],x,[0])) # pad two zeroes
-        starts = np.where(np.diff(z) != 0)[0]
-        ends = starts[1:]
-        starts = starts[:-1]
-        vals = x[starts]
-        if starts[0] != 0:
-            ends = np.concatenate(([starts[0]],ends))
-            starts = np.concatenate(([0],starts))
-            vals = np.concatenate(([0],vals))
-        if ends[-1] != len(signal):
-            starts = np.concatenate((starts,[ends[-1]]))
-            ends = np.concatenate((ends,[len(signal)]))
-            vals = np.concatenate((vals,[0]))
-        
-        vals_anchored = anchor(vals, self._dnase_qnorm_arrays[sample_celltype], self._norm_ref_distr)
-        vals_arr = np.zeros(ends[-1])
-        for i in range(len(starts)):
-            vals_arr[starts[i]:ends[i]] = vals_anchored[i]
-        return vals_arr.astype(float)
-    
     def get_input(self, idx, window_size=12800):
         """
         Returns x for a given idx in metadata_array, which has been filtered to only take windows with the desired stride.
@@ -355,9 +395,9 @@ class EncodeTFBSDataset(WILDSDataset):
         dnase_bw = self._dnase_allcelltypes[this_metadata['celltype']]
         dnase_this = np.nan_to_num(dnase_bw.values(chrom, interval_start, interval_end, numpy=True))
         
-        assert(np.isnan(seq_this).sum() == 0)
-        assert(np.isnan(dnase_this).sum() == 0)
-        dnase_this = self.norm_signal(dnase_this, this_metadata['celltype'])
+#         assert(np.isnan(seq_this).sum() == 0)
+#         assert(np.isnan(dnase_this).sum() == 0)
+#         dnase_this = self.norm_signal(dnase_this, this_metadata['celltype'])
         return torch.tensor(np.column_stack(
             [seq_this,
              dnase_this]
