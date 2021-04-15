@@ -61,7 +61,7 @@ class EncodeTFBSDataset(WILDSDataset):
     _dataset_name = 'encode-tfbs'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x777a583b83c24e209d54e56c2dfdaa06/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xf0a83ce649c540b39149250dc8e3c66b/contents/blob/',
             'compressed_size': None}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
