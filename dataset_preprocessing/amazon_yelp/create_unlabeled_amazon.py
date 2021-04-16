@@ -17,8 +17,19 @@ Usage:
 """
 
 NOT_IN_DATASET = -1
-# Split: {'train': 0, 'val': 1, 'id_val': 2, 'test': 3, 'id_test': 4, 'ood_unlabeled': 5}
-TRAIN, OOD_VAL, ID_VAL, OOD_TEST, ID_TEST, OOD_UNLABELED = range(6)
+# Splits
+# 'train': 0, 'val': 1, 'id_val': 2, 'test': 3, 'id_test': 4,
+# 'ood_val_unlabeled': 5, 'ood_test_unlabeled': 6, 'extra_unlabeled': 7
+(
+    TRAIN,
+    OOD_VAL,
+    ID_VAL,
+    OOD_TEST,
+    ID_TEST,
+    OOD_VAL_UNLABELED,
+    OOD_TEST_UNLABELED,
+    EXTRA_UNLABELED,
+) = range(8)
 
 
 def main(dataset_path):
@@ -30,13 +41,40 @@ def main(dataset_path):
         print(f'Test size: {len(split_df[split_df["split"] == OOD_TEST])}')
         print(f'ID Test size: {len(split_df[split_df["split"] == ID_TEST])}')
         print(
-            f'OOD Unlabeled size: {len(split_df[split_df["split"] == OOD_UNLABELED])}'
+            f'OOD Val Unlabeled size: {len(split_df[split_df["split"] == OOD_VAL_UNLABELED])}'
+        )
+        print(
+            f'OOD Test Unlabeled size: {len(split_df[split_df["split"] == OOD_TEST_UNLABELED])}'
+        )
+        print(
+            f'Extra Unlabeled size: {len(split_df[split_df["split"] == EXTRA_UNLABELED])}'
         )
         print(
             f'Number of examples not included: {len(split_df[split_df["split"] == NOT_IN_DATASET])}'
         )
+        print(f'Number of unclean reviews: {len(split_df[~split_df["clean"]])}')
         print("-" * 50)
         print("\n")
+
+    def set_unlabeled_split(split, reviewers):
+        # Get unused reviews written by users from `reviewers`
+        split_df.loc[
+            (split_df["split"] == NOT_IN_DATASET)
+            & split_df["clean"]
+            & data_df["reviewerID"].isin(reviewers),
+            "split",
+        ] = split
+
+    def validate_split(split, expected_reviewers_count):
+        # Sanity check:
+        # Ensure the number of reviewers equals the number of reviewers in its unlabeled counterpart
+        # and each reviewer has at least 75 reviews.
+        actual_reviewers_counts = data_df[(split_df["split"] == split)]["reviewerID"].unique().size
+        assert actual_reviewers_counts == expected_reviewers_count, \
+            "The number of reviewers ({}) did not equal {}".format(actual_reviewers_counts, expected_reviewers_count)
+        min_reviewers_count = data_df[(split_df["split"] == split)]["reviewerID"].value_counts().min()
+        assert min_reviewers_count >= 75, \
+            "Each reviewer should have at least 75 reviews, but got a minimum of {} reviews.".format(min_reviewers_count)
 
     data_df = pd.read_csv(
         os.path.join(dataset_path, "reviews.csv"),
@@ -60,26 +98,41 @@ def main(dataset_path):
     assert split_df.shape[0] == data_df.shape[0]
     output_split_sizes()
 
-    # Get unused reviews written by users from the OOD test set:
-    ood_test_data_df = data_df[split_df["split"] == OOD_TEST]
-    ood_test_reviewers_ids = ood_test_data_df.reviewerID.unique()
+    # Train has 1252 reviewers = 626 reviewers in ID val + 626 reviewers in ID test
+    train_reviewers_ids = data_df[split_df["split"] == TRAIN].reviewerID.unique()
+    ood_val_reviewers_ids = data_df[split_df["split"] == OOD_VAL].reviewerID.unique()   # 1334 users
+    set_unlabeled_split(OOD_VAL_UNLABELED, ood_val_reviewers_ids)
+
+    ood_test_reviewers_ids = data_df[split_df["split"] == OOD_TEST].reviewerID.unique() # 1334 users
+    set_unlabeled_split(OOD_TEST_UNLABELED, ood_test_reviewers_ids)
+
+    # For EXTRA_UNLABELED, use any users not in original train, test or val
+    existing_reviewer_ids = np.concatenate(
+        [ood_test_reviewers_ids, ood_val_reviewers_ids, train_reviewers_ids]
+    )
+    # There are 151,736 extra reviewers
+    extra_reviewers_ids = data_df[
+        ~data_df.reviewerID.isin(existing_reviewer_ids)
+    ].reviewerID.unique()
+    set_unlabeled_split(EXTRA_UNLABELED, extra_reviewers_ids)
+
+    # Exclude reviewers with less than 75 reviews.
+    review_counts = data_df[(split_df["split"] == EXTRA_UNLABELED)]["reviewerID"].value_counts()
+    reviewers_to_filter_out = review_counts[review_counts < 75].keys()
     split_df.loc[
-        (split_df["split"] == NOT_IN_DATASET)
-        & split_df["clean"]
-        & data_df["reviewerID"].isin(ood_test_reviewers_ids),
-        "split",
-    ] = OOD_UNLABELED
+        (split_df["split"] == EXTRA_UNLABELED)
+        & data_df["reviewerID"].isin(reviewers_to_filter_out),
+        "split"
+    ] = NOT_IN_DATASET
+
+    # We are done splitting, output stats.
     output_split_sizes()
 
-    # Sanity check - Ensure there are 1334 reviewers and each reviewer should have at least 75 reviews
-    assert (
-        data_df[(split_df["split"] == OOD_UNLABELED)]["reviewerID"].unique().size
-        == ood_test_reviewers_ids.size
-    )
-    assert (
-        data_df[(split_df["split"] == OOD_UNLABELED)]["reviewerID"].value_counts().min()
-        == 75
-    )
+    # Sanity checks
+    validate_split(OOD_VAL_UNLABELED, ood_val_reviewers_ids.size)
+    validate_split(OOD_TEST_UNLABELED, ood_test_reviewers_ids.size)
+    # After filtering out unclean reviews and ensuring >= 75 reviews per reviewer, we are left with 21,694 reviewers.
+    validate_split(EXTRA_UNLABELED, 21694)
 
     # Write out the new unlabeled split to user.csv
     split_df.to_csv(user_csv_path, index=False)
@@ -95,6 +148,5 @@ if __name__ == "__main__":
         type=str,
         help="Path to the Amazon dataset",
     )
-
     args = parser.parse_args()
     main(args.path)

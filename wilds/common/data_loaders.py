@@ -96,20 +96,6 @@ def get_eval_loader(loader, dataset, batch_size, grouper=None, **loader_kwargs):
             batch_size=batch_size,
             **loader_kwargs)
 
-
-def get_unlabeled_loader(loader, dataset, batch_size, grouper=None, **loader_kwargs):
-    if loader == 'standard':
-        # TODO: Implement -Tony
-        return DataLoader(
-            dataset,
-            shuffle=False,
-            sampler=None,
-            collate_fn=dataset.collate,
-            batch_size=batch_size,
-            **loader_kwargs
-        )
-
-
 class GroupSampler:
     """
         Constructs batches by first sampling groups,

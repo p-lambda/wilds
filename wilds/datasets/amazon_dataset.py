@@ -12,9 +12,6 @@ from wilds.common.metrics.all_metrics import Accuracy
 from wilds.common.grouper import CombinatorialGrouper
 
 
-NOT_IN_DATASET = -1
-
-
 class AmazonDataset(WILDSDataset):
     """
     Amazon dataset with unlabeled data.
@@ -56,6 +53,8 @@ class AmazonDataset(WILDSDataset):
         None. However, the original authors request that the data be used for research purposes only.
     """
 
+    _NOT_IN_DATASET: int = -1
+
     _dataset_name: str = "amazon"
     _versions_dict: Dict[str, Dict[str, Union[str, int]]] = {
         "1.0": {
@@ -67,8 +66,8 @@ class AmazonDataset(WILDSDataset):
             "compressed_size": 1_987_523_759,
         },
         "2.1": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0xe9d3f02489c3457b8da9b383bef68af7/contents/blob/",
-            "compressed_size": 1_987_743_548,
+            "download_url": "https://worksheets.codalab.org/rest/bundles/0xc1ff715c9d864100972ae5a84d60484e/contents/blob/",
+            "compressed_size": 1_989_805_589,
         },
     }
 
@@ -85,7 +84,7 @@ class AmazonDataset(WILDSDataset):
         self._split_scheme: str = "user" if split_scheme == "official" else split_scheme
         self._y_type: str = "long"
         self._y_size: int = 1
-        self._n_classes: int = 5
+        self._n_classes: int = 5  # One for each star rating
         # Path of the dataset
         self._data_dir: str = self.initialize_data_dir(root_dir, download)
 
@@ -110,7 +109,7 @@ class AmazonDataset(WILDSDataset):
         split_df: pd.DataFrame = pd.read_csv(
             os.path.join(self.data_dir, "splits", f"{self.split_scheme}.csv")
         )
-        is_in_dataset: bool = split_df["split"] != NOT_IN_DATASET
+        is_in_dataset: bool = split_df["split"] != AmazonDataset._NOT_IN_DATASET
         split_df = split_df[is_in_dataset]
         data_df = data_df[is_in_dataset]
         # Get arrays
@@ -204,7 +203,6 @@ class AmazonDataset(WILDSDataset):
                 "id_val": 2,
                 "test": 3,
                 "id_test": 4,
-                "ood_unlabeled": 5,
             }
             self._split_names: Dict[str, str] = {
                 "train": "Train",
@@ -212,7 +210,6 @@ class AmazonDataset(WILDSDataset):
                 "id_val": "Validation (ID)",
                 "test": "Test (OOD)",
                 "id_test": "Test (ID)",
-                "ood_unlabeled": "Unlabeled (OOD)",
             }
         elif (
             self.split_scheme == "category_subpopulation"

@@ -75,10 +75,7 @@ class WILDSDataset:
             num_to_retain = int(np.round(float(len(split_idx)) * frac))
             split_idx = np.sort(np.random.permutation(split_idx)[:num_to_retain])
 
-        return (
-            WILDSUnlabeledSubset(self, split_idx, transform) if "unlabeled" in split
-            else WILDSSubset(self, split_idx, transform)
-        )
+        return WILDSSubset(self, split_idx, transform)
 
     def check_init(self):
         """
@@ -298,26 +295,83 @@ class WILDSDataset:
         Datasets for which we don't control the download, like Yelp,
         might not handle versions similarly.
         """
+        self.check_version()
+
+        os.makedirs(root_dir, exist_ok=True)
+        data_dir = os.path.join(root_dir, f'{self.dataset_name}_v{self.version}')
+        version_file = os.path.join(data_dir, f'RELEASE_v{self.version}.txt')
+
+        # If the dataset exists at root_dir, then don't download.
+        if self.dataset_exists_locally(data_dir, version_file):
+            return data_dir
+
+        # Proceed with downloading
+        self.download_dataset(data_dir, download)
+        return data_dir
+
+    def dataset_exists_locally(self, data_dir, version_file):
+        download_url = self.versions_dict[self.version]['download_url']
+        # There are two ways to download a dataset:
+        # 1. Automatically through the WILDS package
+        # 2. From a third party (e.g. OGB-MolPCBA is downloaded through the OGB package)
+        # Datasets downloaded from a third party do not have a download_url and RELEASE text file.
+        return (
+            os.path.exists(data_dir) and (
+                os.path.exists(version_file) or
+                (len(os.listdir(data_dir)) > 0 and download_url is None)
+            )
+        )
+
+    def download_dataset(self, data_dir, download_flag):
+        version_dict = self.versions_dict[self.version]
+        download_url = version_dict['download_url']
+        compressed_size = version_dict['compressed_size']
+
+        # Check that download_url exists.
+        if not download_url:
+            raise ValueError(f'{self.dataset_name} cannot be automatically downloaded. Please download it manually.')
+
+        # Check that the download_flag is set to true.
+        if not download_flag:
+            raise FileNotFoundError(
+                f'The {self.dataset_name} dataset could not be found in {data_dir}. Initialize the dataset with '
+                f'download=True to download the dataset. If you are using the example script, run with --download. '
+                f'This might take some time for large datasets.'
+            )
+
+        from wilds.datasets.download_utils import download_and_extract_archive
+        print(f'Downloading dataset to {data_dir}...')
+        print(f'You can also download the dataset manually at https://wilds.stanford.edu/downloads.')
+
+        try:
+            start_time = time.time()
+            download_and_extract_archive(
+                url=download_url,
+                download_root=data_dir,
+                filename='archive.tar.gz',
+                remove_finished=True,
+                size=compressed_size)
+            download_time_in_minutes = (time.time() - start_time) / 60
+            print(f"\nIt took {round(download_time_in_minutes, 2)} minutes to download and uncompress the dataset.\n")
+        except Exception as e:
+            print(f"\n{os.path.join(data_dir, 'archive.tar.gz')} may be corrupted. Please try deleting it and rerunning this command.\n")
+            print(f"Exception: ", e)
+
+    def check_version(self):
+        # Check that the version is valid.
         if self.version not in self.versions_dict:
             raise ValueError(f'Version {self.version} not supported. Must be in {self.versions_dict.keys()}.')
 
-        download_url = self.versions_dict[self.version]['download_url']
-        compressed_size = self.versions_dict[self.version]['compressed_size']
-
-        os.makedirs(root_dir, exist_ok=True)
-
-        data_dir = os.path.join(root_dir, f'{self.dataset_name}_v{self.version}')
-        version_file = os.path.join(data_dir, f'RELEASE_v{self.version}.txt')
+        # Check that the specified version is the latest version. Otherwise, warn.
         current_major_version, current_minor_version = tuple(map(int, self.version.split('.')))
-
-        # Check if we specified the latest version. Otherwise, print a warning.
         latest_major_version, latest_minor_version = tuple(map(int, self.latest_version.split('.')))
         if latest_major_version > current_major_version:
             print(
                 f'*****************************\n'
                 f'{self.dataset_name} has been updated to version {self.latest_version}.\n'
                 f'You are currently using version {self.version}.\n'
-                f'We highly recommend updating the dataset by not specifying the older version in the command-line argument or dataset constructor.\n'
+                f'We highly recommend updating the dataset by not specifying the older version in the '
+                f'command-line argument or dataset constructor.\n'
                 f'See https://wilds.stanford.edu/changelog for changes.\n'
                 f'*****************************\n')
         elif latest_minor_version > current_minor_version:
@@ -328,50 +382,6 @@ class WILDSDataset:
                 f'Please consider updating the dataset.\n'
                 f'See https://wilds.stanford.edu/changelog for changes.\n'
                 f'*****************************\n')
-
-        # If the data_dir exists and contains the right RELEASE file,
-        # we assume the dataset is correctly set up
-        if os.path.exists(data_dir) and os.path.exists(version_file):
-            return data_dir
-
-        # If the data_dir exists and does not contain the right RELEASE file, but it is not empty and the download_url is not set,
-        # we assume the dataset is correctly set up
-        if ((os.path.exists(data_dir)) and
-            (len(os.listdir(data_dir)) > 0) and
-            (download_url is None)):
-            return data_dir
-
-        # Otherwise, we assume the dataset needs to be downloaded.
-        # If download == False, then return an error.
-        if download == False:
-            if download_url is None:
-                raise FileNotFoundError(f'The {self.dataset_name} dataset could not be found in {data_dir}. {self.dataset_name} cannot be automatically downloaded. Please download it manually.')
-            else:
-                raise FileNotFoundError(f'The {self.dataset_name} dataset could not be found in {data_dir}. Initialize the dataset with download=True to download the dataset. If you are using the example script, run with --download. This might take some time for large datasets.')
-
-        # Otherwise, proceed with downloading.
-        if download_url is None:
-            raise ValueError(f'Sorry, {self.dataset_name} cannot be automatically downloaded. Please download it manually.')
-
-        from wilds.datasets.download_utils import download_and_extract_archive
-        print(f'Downloading dataset to {data_dir}...')
-        print(f'You can also download the dataset manually at https://wilds.stanford.edu/downloads.')
-        try:
-            start_time = time.time()
-            download_and_extract_archive(
-                url=download_url,
-                download_root=data_dir,
-                filename='archive.tar.gz',
-                remove_finished=True,
-                size=compressed_size)
-
-            download_time_in_minutes = (time.time() - start_time) / 60
-            print(f"It took {round(download_time_in_minutes, 2)} minutes to download and uncompress the dataset.")
-        except Exception as e:
-            print(f"\n{os.path.join(data_dir, 'archive.tar.gz')} may be corrupted. Please try deleting it and rerunning this command.\n")
-            print(f"Exception: ", e)
-
-        return data_dir
 
     @staticmethod
     def standard_eval(metric, y_pred, y_true):
@@ -469,17 +479,3 @@ class WILDSSubset(WILDSDataset):
 
     def eval(self, y_pred, y_true, metadata):
         return self.dataset.eval(y_pred, y_true, metadata)
-
-
-class WILDSUnlabeledSubset(WILDSSubset):
-    def __init__(self, dataset, indices, transform):
-        # TODO: add extra logic here -Tony?
-        super().__init__(dataset, indices, transform)
-
-    def __getitem__(self, idx):
-        x, _, metadata = self.dataset[self.indices[idx]]
-        if self.transform is not None:
-            x = self.transform(x)
-        # TODO: TypeError: default_collate: batch must contain tensors, numpy arrays, numbers,
-        #       dicts or lists; found <class 'NoneType'>
-        return x, metadata

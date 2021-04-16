@@ -9,7 +9,7 @@ import sys
 from collections import defaultdict
 
 import wilds
-from wilds.common.data_loaders import get_train_loader, get_eval_loader, get_unlabeled_loader
+from wilds.common.data_loaders import get_train_loader, get_eval_loader
 from wilds.common.grouper import CombinatorialGrouper
 
 from utils import set_seed, Logger, BatchLogger, log_config, ParseKwargs, load, initialize_wandb, log_group_data, parse_bool, get_model_prefix
@@ -177,7 +177,7 @@ def main():
             frac=config.frac,
             transform=transform)
 
-        if split == 'train':
+        if split == 'train' or "unlabeled" in split:
             datasets[split]['loader'] = get_train_loader(
                 loader=config.train_loader,
                 dataset=datasets[split]['dataset'],
@@ -186,13 +186,6 @@ def main():
                 grouper=train_grouper,
                 distinct_groups=config.distinct_groups,
                 n_groups_per_batch=config.n_groups_per_batch,
-                **config.loader_kwargs)
-        elif "unlabeled" in split:
-            datasets[split]['loader'] = get_unlabeled_loader(
-                loader=config.eval_loader,
-                dataset=datasets[split]['dataset'],
-                grouper=train_grouper,
-                batch_size=config.batch_size,
                 **config.loader_kwargs)
         else:
             datasets[split]['loader'] = get_eval_loader(

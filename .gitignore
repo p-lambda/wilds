@@ -1,8 +1,7 @@
 __pycache__
-build
-dist
-wilds.egg-info
-
-# Development
 .idea
+build
+data
+dist
 venv
+wilds.egg-info
