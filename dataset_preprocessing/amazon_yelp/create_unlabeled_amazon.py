@@ -10,7 +10,7 @@ import pandas as pd
 np.random.seed(0)
 
 """
-Create unlabeled split for the Amazon dataset.
+Create unlabeled splits for Amazon.
 
 Usage:
     python dataset_preprocessing/amazon_yelp/create_unlabeled_amazon.py <path>
@@ -141,7 +141,7 @@ def main(dataset_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Create unlabeled split for the Amazon dataset."
+        description="Create unlabeled splits for Amazon."
     )
     parser.add_argument(
         "path",
