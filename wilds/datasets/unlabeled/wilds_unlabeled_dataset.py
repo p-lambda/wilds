@@ -15,21 +15,22 @@ class WILDSUnlabeledDataset(WILDSDataset):
     """
 
     DEFAULT_SPLITS = {
-        "id_val_unlabeled": 0,
-        "id_test_unlabeled": 1,
-        "ood_val_unlabeled": 2,
-        "ood_test_unlabeled": 3,
-        "extra_unlabeled": 4,
+        "train_unlabeled": 10,
+        "val_unlabeled": 11,
+        "test_unlabeled": 12,
+        "extra_unlabeled": 13,
     }
     DEFAULT_SPLIT_NAMES = {
-        "id_val_unlabeled": "Unlabeled Validation (ID)",
-        "id_test_unlabeled": "Unlabeled Test (ID)",
-        "ood_val_unlabeled": "Unlabeled Validation (OOD)",
-        "ood_test_unlabeled": "Unlabeled Test (OOD)",
+        "train_unlabeled": "Unlabeled Train",
+        "val_unlabeled": "Unlabeled Validation",
+        "test_unlabeled": "Unlabeled Test",
         "extra_unlabeled": "Unlabeled Extra",
     }
 
     _UNSUPPORTED_FUNCTIONALITY_ERROR = "Not supported - no labels available."
+
+    def __len__(self):
+        return len(self.metadata_array)
 
     def __getitem__(self, idx):
         # Any transformations are handled by the WILDSSubset
@@ -114,9 +115,6 @@ class WILDSUnlabeledDataset(WILDSDataset):
                 root_dir, version_dict["equivalent_dataset"]
             )
             if os.path.exists(equivalent_dataset_dir):
-                print(
-                    f"Found an equivalent dataset at {equivalent_dataset_dir} for {dataset_name}."
-                )
                 return equivalent_dataset_dir
 
         # If the dataset exists at root_dir, then don't download.
@@ -126,9 +124,6 @@ class WILDSUnlabeledDataset(WILDSDataset):
         # Proceed with downloading.
         self.download_dataset(data_dir, download)
         return data_dir
-
-    def __len__(self):
-        raise AttributeError(WILDSUnlabeledDataset._UNSUPPORTED_FUNCTIONALITY_ERROR)
 
     def eval(self, y_pred, y_true, metadata):
         raise AttributeError(WILDSUnlabeledDataset._UNSUPPORTED_FUNCTIONALITY_ERROR)

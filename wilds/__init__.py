@@ -21,3 +21,13 @@ additional_datasets = [
 ]
 
 supported_datasets = benchmark_datasets + additional_datasets
+
+unlabeled_datasets = [
+    'amazon',
+    'camelyon17',
+    'civilcomments',
+    'iwildcam',
+    'ogb-molpcba',
+    'poverty',
+    'fmow',
+]

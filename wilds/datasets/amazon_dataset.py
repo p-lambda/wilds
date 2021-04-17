@@ -14,7 +14,8 @@ from wilds.common.grouper import CombinatorialGrouper
 
 class AmazonDataset(WILDSDataset):
     """
-    Amazon dataset with unlabeled data.
+    Amazon dataset.
+    This is a modified version of the 2018 Amazon Reviews dataset.
 
     Supported `split_scheme`:
         'official': official split, which is equivalent to 'user'
@@ -158,9 +159,7 @@ class AmazonDataset(WILDSDataset):
 
         if self.split_scheme == "user":
             # first compute groupwise accuracies
-            g: Union[
-                Tuple[torch.Tensor, Any], torch.Tensor
-            ] = self._eval_grouper.metadata_to_group(metadata)
+            g: torch.Tensor= self._eval_grouper.metadata_to_group(metadata)
             results: Dict[str, Any] = {
                 **metric.compute(y_pred, y_true),
                 **metric.compute_group_wise(

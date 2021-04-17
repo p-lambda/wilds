@@ -1,8 +1,8 @@
-from typing import Union
+from typing import Optional
 
 import wilds
 
-def get_dataset(dataset: str, version: Union[str, None] = None, unlabeled: bool = False, **dataset_kwargs):
+def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = False, **dataset_kwargs):
     """
     Returns the appropriate WILDS dataset class.
     Input:
@@ -20,15 +20,15 @@ def get_dataset(dataset: str, version: Union[str, None] = None, unlabeled: bool 
     if dataset not in wilds.supported_datasets:
         raise ValueError(f'The dataset {dataset} is not recognized. Must be one of {wilds.supported_datasets}.')
 
-    if unlabeled and dataset not in wilds.benchmark_datasets:
-        raise ValueError(f'Unlabeled data is not available for {dataset}. Must be one of {wilds.benchmark_datasets}.')
+    if unlabeled and dataset not in wilds.unlabeled_datasets:
+        raise ValueError(f'Unlabeled data is not available for {dataset}. Must be one of {wilds.unlabeled_datasets}.')
 
     if dataset == 'amazon':
-        from wilds.datasets.amazon_dataset import AmazonDataset
-        from wilds.datasets.unlabeled.amazon_unlabeled_dataset import AmazonUnlabeledDataset
         if unlabeled:
+            from wilds.datasets.unlabeled.amazon_unlabeled_dataset import AmazonUnlabeledDataset
             return AmazonUnlabeledDataset(version=version, **dataset_kwargs)
         else:
+            from wilds.datasets.amazon_dataset import AmazonDataset
             return AmazonDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'camelyon17':

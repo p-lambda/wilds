@@ -17,17 +17,18 @@ Usage:
 """
 
 NOT_IN_DATASET = -1
+
 # Splits
 # 'train': 0, 'val': 1, 'id_val': 2, 'test': 3, 'id_test': 4,
-# 'ood_val_unlabeled': 5, 'ood_test_unlabeled': 6, 'extra_unlabeled': 7
+# 'val_unlabeled': 5, 'test_unlabeled': 6, 'extra_unlabeled': 7
 (
     TRAIN,
     OOD_VAL,
     ID_VAL,
     OOD_TEST,
     ID_TEST,
-    OOD_VAL_UNLABELED,
-    OOD_TEST_UNLABELED,
+    VAL_UNLABELED,
+    TEST_UNLABELED,
     EXTRA_UNLABELED,
 ) = range(8)
 
@@ -41,10 +42,10 @@ def main(dataset_path):
         print(f'Test size: {len(split_df[split_df["split"] == OOD_TEST])}')
         print(f'ID Test size: {len(split_df[split_df["split"] == ID_TEST])}')
         print(
-            f'OOD Val Unlabeled size: {len(split_df[split_df["split"] == OOD_VAL_UNLABELED])}'
+            f'OOD Val Unlabeled size: {len(split_df[split_df["split"] == VAL_UNLABELED])}'
         )
         print(
-            f'OOD Test Unlabeled size: {len(split_df[split_df["split"] == OOD_TEST_UNLABELED])}'
+            f'OOD Test Unlabeled size: {len(split_df[split_df["split"] == TEST_UNLABELED])}'
         )
         print(
             f'Extra Unlabeled size: {len(split_df[split_df["split"] == EXTRA_UNLABELED])}'
@@ -101,10 +102,10 @@ def main(dataset_path):
     # Train has 1252 reviewers = 626 reviewers in ID val + 626 reviewers in ID test
     train_reviewers_ids = data_df[split_df["split"] == TRAIN].reviewerID.unique()
     ood_val_reviewers_ids = data_df[split_df["split"] == OOD_VAL].reviewerID.unique()   # 1334 users
-    set_unlabeled_split(OOD_VAL_UNLABELED, ood_val_reviewers_ids)
+    set_unlabeled_split(VAL_UNLABELED, ood_val_reviewers_ids)
 
     ood_test_reviewers_ids = data_df[split_df["split"] == OOD_TEST].reviewerID.unique() # 1334 users
-    set_unlabeled_split(OOD_TEST_UNLABELED, ood_test_reviewers_ids)
+    set_unlabeled_split(TEST_UNLABELED, ood_test_reviewers_ids)
 
     # For EXTRA_UNLABELED, use any users not in original train, test or val
     existing_reviewer_ids = np.concatenate(
@@ -129,8 +130,8 @@ def main(dataset_path):
     output_split_sizes()
 
     # Sanity checks
-    validate_split(OOD_VAL_UNLABELED, ood_val_reviewers_ids.size)
-    validate_split(OOD_TEST_UNLABELED, ood_test_reviewers_ids.size)
+    validate_split(VAL_UNLABELED, ood_val_reviewers_ids.size)
+    validate_split(TEST_UNLABELED, ood_test_reviewers_ids.size)
     # After filtering out unclean reviews and ensuring >= 75 reviews per reviewer, we are left with 21,694 reviewers.
     validate_split(EXTRA_UNLABELED, 21694)
 

@@ -177,7 +177,7 @@ def main():
             frac=config.frac,
             transform=transform)
 
-        if split == 'train' or "unlabeled" in split:
+        if split == 'train':
             datasets[split]['loader'] = get_train_loader(
                 loader=config.train_loader,
                 dataset=datasets[split]['dataset'],

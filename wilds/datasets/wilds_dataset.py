@@ -314,7 +314,7 @@ class WILDSDataset:
         # There are two ways to download a dataset:
         # 1. Automatically through the WILDS package
         # 2. From a third party (e.g. OGB-MolPCBA is downloaded through the OGB package)
-        # Datasets downloaded from a third party do not have a download_url and RELEASE text file.
+        # Datasets downloaded from a third party need not have a download_url and RELEASE text file.
         return (
             os.path.exists(data_dir) and (
                 os.path.exists(version_file) or
@@ -328,7 +328,7 @@ class WILDSDataset:
         compressed_size = version_dict['compressed_size']
 
         # Check that download_url exists.
-        if not download_url:
+        if download_url is None:
             raise ValueError(f'{self.dataset_name} cannot be automatically downloaded. Please download it manually.')
 
         # Check that the download_flag is set to true.

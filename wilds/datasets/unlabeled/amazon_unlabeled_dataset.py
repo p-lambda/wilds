@@ -13,6 +13,7 @@ from wilds.common.utils import map_to_id_array
 class AmazonUnlabeledDataset(WILDSUnlabeledDataset):
     """
     Unlabeled Amazon dataset.
+    This is a modified version of the 2018 Amazon Reviews dataset.
 
     Supported `split_scheme`:
         'official': official split, which is equivalent to 'user'
@@ -118,18 +119,16 @@ class AmazonUnlabeledDataset(WILDSUnlabeledDataset):
         return self._input_array[idx]
 
     def initialize_split_dicts(self):
-        if self.split_scheme in ["user", "time"] or self.split_scheme.endswith(
-            "_generalization"
-        ):
+        if self.split_scheme == "user":
             # category generalization
             self._split_dict = {
-                "ood_val_unlabeled": 5,
-                "ood_test_unlabeled": 6,
+                "val_unlabeled": 5,
+                "test_unlabeled": 6,
                 "extra_unlabeled": 7,
             }
             self._split_names = {
-                "ood_val_unlabeled": "Unlabeled Validation (OOD)",
-                "ood_test_unlabeled": "Unlabeled Test (OOD)",
+                "val_unlabeled": "Unlabeled Validation",
+                "test_unlabeled": "Unlabeled Test",
                 "extra_unlabeled": "Unlabeled Extra",
             }
         else:
