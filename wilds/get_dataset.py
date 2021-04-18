@@ -1,12 +1,15 @@
+from typing import Optional
+
 import wilds
 
-def get_dataset(dataset, version=None, **dataset_kwargs):
+def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = False, **dataset_kwargs):
     """
     Returns the appropriate WILDS dataset class.
     Input:
         dataset (str): Name of the dataset
-        version (str): Dataset version number, e.g., '1.0'.
-                       Defaults to the latest version.
+        version (Union[str, None]): Dataset version number, e.g., '1.0'.
+                                    Defaults to the latest version.
+        unlabeled (bool): If true, use the unlabeled version of the dataset.
         dataset_kwargs: Other keyword arguments to pass to the dataset constructors.
     Output:
         The specified WILDSDataset class.
@@ -17,9 +20,16 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
     if dataset not in wilds.supported_datasets:
         raise ValueError(f'The dataset {dataset} is not recognized. Must be one of {wilds.supported_datasets}.')
 
+    if unlabeled and dataset not in wilds.unlabeled_datasets:
+        raise ValueError(f'Unlabeled data is not available for {dataset}. Must be one of {wilds.unlabeled_datasets}.')
+
     if dataset == 'amazon':
-        from wilds.datasets.amazon_dataset import AmazonDataset
-        return AmazonDataset(version=version, **dataset_kwargs)
+        if unlabeled:
+            from wilds.datasets.unlabeled.amazon_unlabeled_dataset import AmazonUnlabeledDataset
+            return AmazonUnlabeledDataset(version=version, **dataset_kwargs)
+        else:
+            from wilds.datasets.amazon_dataset import AmazonDataset
+            return AmazonDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'camelyon17':
         from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
@@ -37,7 +47,7 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
         if version == '1.0':
             from wilds.datasets.archive.iwildcam_v1_0_dataset import IWildCamDataset
         else:
-            from wilds.datasets.iwildcam_dataset import IWildCamDataset
+            from wilds.datasets.iwildcam_dataset import IWildCamDataset # type:ignore
         return IWildCamDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'waterbirds':
@@ -56,14 +66,14 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
         if version == '1.0':
             from wilds.datasets.archive.poverty_v1_0_dataset import PovertyMapDataset
         else:            
-            from wilds.datasets.poverty_dataset import PovertyMapDataset
+            from wilds.datasets.poverty_dataset import PovertyMapDataset # type:ignore
         return PovertyMapDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'fmow':
         if version == '1.0':
             from wilds.datasets.archive.fmow_v1_0_dataset import FMoWDataset
         else:
-            from wilds.datasets.fmow_dataset import FMoWDataset
+            from wilds.datasets.fmow_dataset import FMoWDataset # type:ignore
         return FMoWDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'bdd100k':

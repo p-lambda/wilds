@@ -1,5 +1,7 @@
 __pycache__
+.idea
 build
+data
 dist
 venv
 wilds.egg-info
