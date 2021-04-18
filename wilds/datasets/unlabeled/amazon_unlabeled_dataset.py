@@ -54,7 +54,7 @@ class AmazonUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name: str = "amazon_unlabeled"
     _versions_dict: Dict[str, Dict[str, Union[str, int]]] = {
         "1.0": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0xc1ff715c9d864100972ae5a84d60484e/contents/blob/",
+            "download_url": "https://worksheets.codalab.org/rest/bundles/0xf03fb2e9e84e484bba6bdefbe972d15f/contents/blob/",
             "compressed_size": 1_989_805_589,
             "equivalent_dataset": "amazon_v2.1",
         },

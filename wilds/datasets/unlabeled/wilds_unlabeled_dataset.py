@@ -100,30 +100,21 @@ class WILDSUnlabeledDataset(WILDSDataset):
         assert len(self.metadata_fields) == self.metadata_array.shape[1]
 
     def initialize_data_dir(self, root_dir, download):
-        self.check_version()
+        if "equivalent_dataset" in self.versions_dict[self.version]:
+            self.check_version()
+            os.makedirs(root_dir, exist_ok=True)
 
-        os.makedirs(root_dir, exist_ok=True)
-        dataset_name = f"{self.dataset_name}_v{self.version}"
-        data_dir = os.path.join(root_dir, dataset_name)
-        version_file = os.path.join(data_dir, f"UNLABELED_RELEASE_v{self.version}.txt")
-
-        # If the dataset has an equivalent dataset, check if the equivalent dataset already exists
-        # at the root directory. If it does, don't download and return the equivalent dataset path.
-        version_dict = self.versions_dict[self.version]
-        if "equivalent_dataset" in version_dict:
-            equivalent_dataset_dir = os.path.join(
-                root_dir, version_dict["equivalent_dataset"]
+            # If the dataset has an equivalent dataset, check if the equivalent dataset already exists
+            # at the root directory. If it does, don't download and just return the equivalent dataset path.
+            data_dir = os.path.join(
+                root_dir, self.versions_dict[self.version]["equivalent_dataset"]
             )
-            if os.path.exists(equivalent_dataset_dir):
-                return equivalent_dataset_dir
-
-        # If the dataset exists at root_dir, then don't download.
-        if self.dataset_exists_locally(data_dir, version_file):
+            if not os.path.exists(data_dir):
+                # Proceed with downloading the equivalent dataset.
+                self.download_dataset(data_dir, download)
             return data_dir
-
-        # Proceed with downloading.
-        self.download_dataset(data_dir, download)
-        return data_dir
+        else:
+            super().initialize_data_dir(root_dir, download)
 
     def eval(self, y_pred, y_true, metadata):
         raise AttributeError(WILDSUnlabeledDataset._UNSUPPORTED_FUNCTIONALITY_ERROR)

@@ -302,11 +302,8 @@ class WILDSDataset:
         version_file = os.path.join(data_dir, f'RELEASE_v{self.version}.txt')
 
         # If the dataset exists at root_dir, then don't download.
-        if self.dataset_exists_locally(data_dir, version_file):
-            return data_dir
-
-        # Proceed with downloading
-        self.download_dataset(data_dir, download)
+        if not self.dataset_exists_locally(data_dir, version_file):
+            self.download_dataset(data_dir, download)
         return data_dir
 
     def dataset_exists_locally(self, data_dir, version_file):
