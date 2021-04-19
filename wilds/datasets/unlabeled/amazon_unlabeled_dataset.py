@@ -54,7 +54,7 @@ class AmazonUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name: str = "amazon_unlabeled"
     _versions_dict: Dict[str, Dict[str, Union[str, int]]] = {
         "1.0": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0xf03fb2e9e84e484bba6bdefbe972d15f/contents/blob/",
+            "download_url": "https://worksheets.codalab.org/rest/bundles/0xe3ed909786d34ee79d430d065582aa29/contents/blob/",
             "compressed_size": 1_989_805_589,
             "equivalent_dataset": "amazon_v2.1",
         },
@@ -120,11 +120,10 @@ class AmazonUnlabeledDataset(WILDSUnlabeledDataset):
 
     def initialize_split_dicts(self):
         if self.split_scheme == "user":
-            # category generalization
             self._split_dict = {
-                "val_unlabeled": 5,
-                "test_unlabeled": 6,
-                "extra_unlabeled": 7,
+                "val_unlabeled": 11,
+                "test_unlabeled": 12,
+                "extra_unlabeled": 13,
             }
             self._split_names = {
                 "val_unlabeled": "Unlabeled Validation",
