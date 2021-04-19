@@ -34,4 +34,4 @@ models = ['resnet18_ms', 'resnet50', 'resnet34', 'wideresnet50',
          'gin-virtual', 'logistic_regression', 'code-gpt-py']
 algorithms = ['ERM', 'groupDRO', 'deepCORAL', 'IRM']
 optimizers = ['SGD', 'Adam', 'AdamW']
-schedulers = ['linear_schedule_with_warmup', 'ReduceLROnPlateau', 'StepLR']
+schedulers = ['linear_schedule_with_warmup', 'cosine_schedule_with_warmup', 'ReduceLROnPlateau', 'StepLR']

@@ -18,6 +18,7 @@ additional_datasets = [
     'yelp',
     'bdd100k',
     'sqf',
+    'rxrx1',
 ]
 
 supported_datasets = benchmark_datasets + additional_datasets

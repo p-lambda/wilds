@@ -282,6 +282,28 @@ dataset_defaults = {
         'n_epochs': 4,
         'process_outputs_function': None,
     },
+    'rxrx1': {
+        'split_scheme': 'official',
+        'model': 'resnet50',
+        'model_kwargs': {'pretrained': True},
+        'train_transform': 'image_base',
+        'eval_transform': 'image_base',
+        'target_resolution': (256, 256),
+        'loss_function': 'cross_entropy',
+        'groupby_fields': ['experiment'],
+        'val_metric': 'acc_avg',
+        'val_metric_decreasing': False,
+        'algo_log_metric': 'accuracy',
+        'optimizer': 'Adam',
+        'optimizer_kwargs': {},
+        'scheduler': 'cosine_schedule_with_warmup',
+        'scheduler_kwargs': {'num_warmup_steps': 5415},
+        'batch_size': 75,
+        'lr': 1e-4,
+        'weight_decay': 1e-5,
+        'n_epochs': 90,
+        'process_outputs_function': 'multiclass_logits_to_pred',
+    },
 }
 
 ##########################################

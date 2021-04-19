@@ -1,4 +1,7 @@
+import random
+
 import torchvision.transforms as transforms
+import torchvision.transforms.functional as TF
 from transformers import BertTokenizerFast, DistilBertTokenizerFast
 import torch
 
@@ -13,6 +16,8 @@ def initialize_transform(transform_name, config, dataset):
         return initialize_image_resize_and_center_crop_transform(config, dataset)
     elif transform_name=='poverty_train':
         return initialize_poverty_train_transform()
+    elif transform_name=='rxrx1':
+        return initialize_rxrx1_transform(dataset)
     else:
         raise ValueError(f"{transform_name} not recognized")
 
@@ -100,4 +105,38 @@ def initialize_poverty_train_transform():
         img[:3] = rgb_transform(img[:3][[2,1,0]])[[2,1,0]]
         return img
     transform = transforms.Lambda(lambda x: transform_rgb(x))
+    return transform
+
+
+def initialize_rxrx1_transform(dataset: str):
+
+    def standardize(x: torch.Tensor) -> torch.Tensor:
+        mean = x.mean(dim=(1, 2))
+        std = x.std(dim=(1, 2))
+        std[std == 0.] = 1.
+        return TF.normalize(x, mean, std)
+    t_standardize = transforms.Lambda(lambda x: standardize(x))
+
+    def random_d8(x: torch.Tensor) -> torch.Tensor:
+        angle = random.choice([0, 90, 180, 270])
+        if angle > 0:
+            x = TF.rotate(x, angle)
+        if random.random() < 0.5:
+            x = TF.hflip(x)
+        return x
+    t_random_d8 = transforms.Lambda(lambda x: random_d8(x))
+
+    if dataset == 'train':
+        transforms_ls = [
+            t_random_d8,
+            transforms.ToTensor(),
+            t_standardize,
+        ]
+    elif dataset == 'test':
+        transforms_ls = [
+            transforms.ToTensor(),
+            t_standardize,
+        ]
+    transform = transforms.Compose(transforms_ls)
+
     return transform
