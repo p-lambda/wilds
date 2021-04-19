@@ -296,11 +296,12 @@ dataset_defaults = {
         'algo_log_metric': 'accuracy',
         'optimizer': 'Adam',
         'optimizer_kwargs': {},
-        'scheduler': None,  # TODO cosine with warmup from transformers
-        'batch_size': 64, #1400,
-        'lr': 1e-3,
+        'scheduler': 'cosine_schedule_with_warmup',
+        'scheduler_kwargs': {'num_warmup_steps': 5415},
+        'batch_size': 75,
+        'lr': 1e-4,
         'weight_decay': 1e-5,
-        'n_epochs': 60,
+        'n_epochs': 90,
         'process_outputs_function': 'multiclass_logits_to_pred',
     },
 }
