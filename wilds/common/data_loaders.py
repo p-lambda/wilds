@@ -4,24 +4,24 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler, SubsetRandomSampler
 from wilds.common.utils import get_counts, split_into_groups
 
-def get_train_loader(loader, dataset, batch_size, 
+def get_train_loader(loader, dataset, batch_size,
         uniform_over_groups=None, grouper=None, distinct_groups=True, n_groups_per_batch=None, **loader_kwargs):
     """
     Constructs and returns the data loader for training.
     Args:
         - loader (str): Loader type. 'standard' for standard loaders and 'group' for group loaders,
-                        which first samples groups and then samples a fixed number of examples belonging 
+                        which first samples groups and then samples a fixed number of examples belonging
                         to each group.
         - dataset (WILDSDataset or WILDSSubset): Data
         - batch_size (int): Batch size
-        - uniform_over_groups (None or bool): Whether to sample the groups uniformly or according to the 
-                                              natural data distribution.
-                                              Setting to None applies the defaults for each type of loaders. 
-                                              For standard loaders, the default is False. For group loaders, 
+        - uniform_over_groups (None or bool): Whether to sample the groups uniformly or according
+                                              to the natural data distribution.
+                                              Setting to None applies the defaults for each type of loaders.
+                                              For standard loaders, the default is False. For group loaders,
                                               the default is True.
         - grouper (Grouper): Grouper used for group loaders or for uniform_over_groups=True
         - distinct_groups (bool): Whether to sample distinct_groups within each minibatch for group loaders.
-        - n_groups_poer_batch (int): Number of groups to sample in each minibatch for group loaders.
+        - n_groups_per_batch (int): Number of groups to sample in each minibatch for group loaders.
         - loader_kwargs: kwargs passed into torch DataLoader initialization.
     Output:
         - data loader (DataLoader): Data loader.
@@ -30,7 +30,6 @@ def get_train_loader(loader, dataset, batch_size,
         if uniform_over_groups is None or not uniform_over_groups:
             return DataLoader(
                 dataset,
-                # shuffle=False, # Shuffle training dataset
                 shuffle=True, # Shuffle training dataset
                 sampler=None,
                 collate_fn=dataset.collate,
@@ -82,7 +81,7 @@ def get_eval_loader(loader, dataset, batch_size, grouper=None, **loader_kwargs):
     """
     Constructs and returns the data loader for evaluation.
     Args:
-        - loader (str): Loader type. 'standard' for standard loaders. 
+        - loader (str): Loader type. 'standard' for standard loaders.
         - dataset (WILDSDataset or WILDSSubset): Data
         - batch_size (int): Batch size
         - loader_kwargs: kwargs passed into torch DataLoader initialization.

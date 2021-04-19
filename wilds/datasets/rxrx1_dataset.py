@@ -56,7 +56,7 @@ class RxRx1Dataset(WILDSDataset):
             'compressed_size': 7_413_123_845}
     }
 
-    def __init__(self, version=None, root_dir='rxrx1-wilds', download=False,
+    def __init__(self, version=None, root_dir='data', download=False,
                  split_scheme='official'):
 
         self._version = version
