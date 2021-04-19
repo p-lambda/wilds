@@ -14,6 +14,9 @@ class WILDSUnlabeledDataset(WILDSDataset):
     - metadata is a vector of relevant information, e.g., domain.
     """
 
+    # The corresponding indices for the unlabeled splits should not overlap with
+    # the indices of their labeled counterparts (indices start from 0).
+    # So, for unlabeled splits, the indices should start from 10.
     DEFAULT_SPLITS = {
         "train_unlabeled": 10,
         "val_unlabeled": 11,
