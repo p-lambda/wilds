@@ -108,7 +108,7 @@ def main():
     parser.add_argument('--progress_bar', type=parse_bool, const=True, nargs='?', default=False)
     parser.add_argument('--resume', type=parse_bool, const=True, nargs='?', default=False)
 
-    config = parser.parse_args()
+    config = parser.parse_args()    
     config = populate_defaults(config)
 
     # set device
