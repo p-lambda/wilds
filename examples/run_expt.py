@@ -53,8 +53,7 @@ def main():
         help='keyword arguments for model initialization passed as key1=value1 key2=value2')
 
     # Transforms
-    parser.add_argument('--train_transform', choices=supported.transforms)
-    parser.add_argument('--eval_transform', choices=supported.transforms)
+    parser.add_argument('--transform', choices=supported.transforms)
     parser.add_argument('--target_resolution', nargs='+', type=int, help='The input resolution that images will be resized to before being passed into the model. For example, use --target_resolution 224 224 for a standard ResNet.')
     parser.add_argument('--resize_scale', type=float)
     parser.add_argument('--max_token_length', type=int)
@@ -148,13 +147,15 @@ def main():
     # To implement data augmentation (i.e., have different transforms
     # at training time vs. test time), modify these two lines:
     train_transform = initialize_transform(
-        transform_name=config.train_transform,
+        transform_name=config.transform,
         config=config,
-        dataset=full_dataset)
+        dataset=full_dataset,
+        is_training=True)
     eval_transform = initialize_transform(
-        transform_name=config.eval_transform,
+        transform_name=config.transform,
         config=config,
-        dataset=full_dataset)
+        dataset=full_dataset,
+        is_training=False)
 
     train_grouper = CombinatorialGrouper(
         dataset=full_dataset,

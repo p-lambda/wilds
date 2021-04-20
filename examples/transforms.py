@@ -5,7 +5,7 @@ import torchvision.transforms.functional as TF
 from transformers import BertTokenizerFast, DistilBertTokenizerFast
 import torch
 
-def initialize_transform(transform_name, config, dataset):
+def initialize_transform(transform_name, config, dataset, is_training):
     if transform_name is None:
         return None
     elif transform_name=='bert':
@@ -14,10 +14,10 @@ def initialize_transform(transform_name, config, dataset):
         return initialize_image_base_transform(config, dataset)
     elif transform_name=='image_resize_and_center_crop':
         return initialize_image_resize_and_center_crop_transform(config, dataset)
-    elif transform_name=='poverty_train':
-        return initialize_poverty_train_transform()
+    elif transform_name=='poverty':
+        return initialize_poverty_transform(is_training)
     elif transform_name=='rxrx1':
-        return initialize_rxrx1_transform(dataset)
+        return initialize_rxrx1_transform(is_training)    
     else:
         raise ValueError(f"{transform_name} not recognized")
 
@@ -91,25 +91,26 @@ def initialize_image_resize_and_center_crop_transform(config, dataset):
     ])
     return transform
 
-def initialize_poverty_train_transform():
-    transforms_ls = [
-        transforms.ToPILImage(),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomVerticalFlip(),
-        transforms.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.1),
-        transforms.ToTensor()]
-    rgb_transform = transforms.Compose(transforms_ls)
+def initialize_poverty_transform(is_training):
+    if is_training:
+        transforms_ls = [
+            transforms.ToPILImage(),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
+            transforms.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.1),
+            transforms.ToTensor()]
+        rgb_transform = transforms.Compose(transforms_ls)
 
-    def transform_rgb(img):
-        # bgr to rgb and back to bgr
-        img[:3] = rgb_transform(img[:3][[2,1,0]])[[2,1,0]]
-        return img
-    transform = transforms.Lambda(lambda x: transform_rgb(x))
-    return transform
+        def transform_rgb(img):
+            # bgr to rgb and back to bgr
+            img[:3] = rgb_transform(img[:3][[2,1,0]])[[2,1,0]]
+            return img
+        transform = transforms.Lambda(lambda x: transform_rgb(x))
+        return transform
+    else:
+        return None
 
-
-def initialize_rxrx1_transform(dataset: str):
-
+def initialize_rxrx1_transform(is_training):
     def standardize(x: torch.Tensor) -> torch.Tensor:
         mean = x.mean(dim=(1, 2))
         std = x.std(dim=(1, 2))
@@ -126,17 +127,16 @@ def initialize_rxrx1_transform(dataset: str):
         return x
     t_random_d8 = transforms.Lambda(lambda x: random_d8(x))
 
-    if dataset == 'train':
+    if is_training:
         transforms_ls = [
             t_random_d8,
             transforms.ToTensor(),
             t_standardize,
         ]
-    elif dataset == 'test':
+    else:
         transforms_ls = [
             transforms.ToTensor(),
             t_standardize,
         ]
     transform = transforms.Compose(transforms_ls)
-
     return transform
