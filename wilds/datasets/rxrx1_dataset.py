@@ -113,7 +113,7 @@ class RxRx1Dataset(WILDSDataset):
         # eval grouper
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
-            groupby_fields=(['cell_type', 'experiment'])
+            groupby_fields=(['cell_type'])
         )
 
         super().__init__(root_dir, download, split_scheme)
@@ -132,22 +132,11 @@ class RxRx1Dataset(WILDSDataset):
             - results (dictionary): Dictionary of evaluation metrics
             - results_str (str): String summarizing the evaluation metrics
         """
-        metrics = [
-            Accuracy(prediction_fn=prediction_fn),
-        ]
-
-        results = {}
-
-        for i in range(len(metrics)):
-            results.update({
-                **metrics[i].compute(y_pred, y_true),
-                        })
-
-        results_str = (
-            f"Average acc: {results[metrics[0].agg_metric_field]:.3f}\n"
-        )
-
-        return results, results_str
+        metric = Accuracy(prediction_fn=prediction_fn)
+        return self.standard_group_eval(
+            metric,
+            self._eval_grouper,
+            y_pred, y_true, metadata)
 
     def get_input(self, idx):
         """

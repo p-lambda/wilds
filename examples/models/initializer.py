@@ -23,7 +23,7 @@ def initialize_model(config, d_out, is_featurizer=False):
             If is_featurizer=False:
             - model: a model that is equivalent to nn.Sequential(featurizer, classifier)
     """
-    if config.model in ('resnet50', 'resnet34', 'wideresnet50', 'densenet121'):
+    if config.model in ('resnet50', 'resnet34', 'resnet18', 'wideresnet50', 'densenet121'):
         if is_featurizer:
             featurizer = initialize_torchvision_model(
                 name=config.model,
@@ -105,7 +105,7 @@ def initialize_torchvision_model(name, d_out, **kwargs):
     elif name == 'densenet121':
         constructor_name = name
         last_layer_name = 'classifier'
-    elif name in ('resnet50', 'resnet34'):
+    elif name in ('resnet50', 'resnet34', 'resnet18'):
         constructor_name = name
         last_layer_name = 'fc'
     else:
