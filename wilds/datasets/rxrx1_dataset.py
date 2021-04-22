@@ -76,10 +76,12 @@ class RxRx1Dataset(WILDSDataset):
             self._split_names = {'train': 'Train', 'val': 'Validation', 'test': 'Test'}
             self._split_array = df.dataset.apply(self._split_dict.get).values
         elif split_scheme == 'in-dist':
-            df = df.query('dataset == "train"')
-            self._split_dict = {'train': 1, 'test': 2}
-            self._split_names = {'train': 'Train', 'test': 'Test'}
-            self._split_array = df.site.values
+            self._split_dict = {'train': 0, 'val': 1, 'test': 2, 'id-test': 3}
+            self._split_names = {'train': 'Train', 'val': 'Validation', 'test': 'Test', 'id-test': 'In-Distribution Test'}
+            self._split_array = df.dataset.apply(self._split_dict.get).values
+            # id-test set
+            mask = ((df.dataset == "train") & (df.site == 2)).values
+            self._split_array = np.where(mask, 3, self._split_array)
 
         # Filenames
         def create_filepath(row):
