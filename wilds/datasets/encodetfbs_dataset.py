@@ -149,8 +149,6 @@ class EncodeTFBSDataset(WILDSDataset):
         # For our purposes, we will ignore these ambiguous labels during training and eval.
         self.y_array[self.y_array == 0.5] = float('nan')
 
-        dnase_norm_mode = 'norm'
-
         # Construct splits
         train_chroms = ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
         val_chroms = ['chr2', 'chr9', 'chr11']
@@ -197,7 +195,6 @@ class EncodeTFBSDataset(WILDSDataset):
                 'id_test': 'Test (ID)',
             }
         elif self._split_scheme == 'in-dist':
-            dnase_norm_mode = 'norm_id'
             splits = {
                 'train': {
                     'chroms': train_chroms,
@@ -224,7 +221,6 @@ class EncodeTFBSDataset(WILDSDataset):
             }
         elif 'id-' in self._split_scheme:
             test_celltype = [ self._split_scheme.split('id-')[1] ]
-            dnase_norm_mode = 'norm_id'
             splits = {
                 'train': {
                     'chroms': train_chroms,
@@ -274,18 +270,24 @@ class EncodeTFBSDataset(WILDSDataset):
                     'chroms': test_chroms,
                     'celltypes': test_celltype
                 },
+                'id_test': {
+                    'chroms': test_chroms,
+                    'celltypes': train_celltypes
+                }
             }
             self._split_dict = {
                 'train': 0,
                 'val': 1,
                 'test': 2,
                 'id_val': 3,
+                'id_test': 4
             }
             self._split_names = {
                 'train': 'Train',
                 'val': 'Validation (OOD)',
                 'test': 'Test',
                 'id_val': 'Validation (ID)',
+                'id_test': 'Test (ID)',
             }
         else:
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
