@@ -61,7 +61,7 @@ class RxRx1Dataset(WILDSDataset):
 
         self._version = version
         self._split_scheme = split_scheme
-        if self._split_scheme != 'official':
+        if self._split_scheme not in ['official', 'in-dist']:
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
 
         # path
@@ -71,9 +71,15 @@ class RxRx1Dataset(WILDSDataset):
         df = pd.read_csv(self._data_dir / 'metadata.csv')
 
         # Splits
-        self._split_dict = {'train': 0, 'val': 1, 'test': 2}
-        self._split_names = {'train': 'Train', 'val': 'Validation', 'test': 'Test'}
-        self._split_array = df.dataset.apply(self._split_dict.get).values
+        if split_scheme == 'official':
+            self._split_dict = {'train': 0, 'val': 1, 'test': 2}
+            self._split_names = {'train': 'Train', 'val': 'Validation', 'test': 'Test'}
+            self._split_array = df.dataset.apply(self._split_dict.get).values
+        elif split_scheme == 'in-dist':
+            df = df.query('dataset == "train"')
+            self._split_dict = {'train': 1, 'test': 2}
+            self._split_names = {'train': 'Train', 'test': 'Test'}
+            self._split_array = df.site.values
 
         # Filenames
         def create_filepath(row):
