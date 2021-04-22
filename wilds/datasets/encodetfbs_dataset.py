@@ -70,8 +70,8 @@ def wrap_anchor(
 def dnase_normalize(
     input_bw_celltype,
     ref_celltypes,
-    out_fname = 'norm',
-    data_pfx = '/users/abalsubr/wilds/examples/data/encode-tfbs_v1.0/'
+    out_fname,
+    data_pfx
 ):
     if not data_pfx.endswith('/'):
         data_pfx = data_pfx + '/'
@@ -245,7 +245,8 @@ class EncodeTFBSDataset(WILDSDataset):
                 'val': 'Validation (OOD)',
                 'test': 'Test',
             }
-        # Add new split scheme specifying custom test and val celltypes in the format val.<val celltype>.test.<test celltype>, e.g. 'official' is 'val.HepG2.test.liver' 
+
+        # Add new split scheme specifying custom test and val celltypes in the format val.<val celltype>.test.<test celltype>, e.g. 'official' is 'val.HepG2.test.liver'
         elif '.' in self._split_scheme:
             all_celltypes = train_celltypes + val_celltype + test_celltype
             in_val_ct = self._split_scheme.split('.')[1]
@@ -336,7 +337,7 @@ class EncodeTFBSDataset(WILDSDataset):
             self._seq_bp[chrom] = seq_arr[chrom]
             print(chrom, time.time() - itime)
         del seq_arr
-        
+
         # Set up file handles for DNase features, writing normalized DNase tracks along the way.
         self._dnase_allcelltypes = {}
         for ct in self._all_celltypes:
@@ -379,7 +380,7 @@ class EncodeTFBSDataset(WILDSDataset):
         self._metric = MultiTaskAveragePrecision()
 
         super().__init__(root_dir, download, split_scheme)
-    
+
     def get_input(self, idx, window_size=12800):
         """
         Returns x for a given idx in metadata_array, which has been filtered to only take windows with the desired stride.
@@ -396,7 +397,7 @@ class EncodeTFBSDataset(WILDSDataset):
         seq_this = self._seq_bp[this_metadata['chr']][interval_start:interval_end]
         dnase_bw = self._dnase_allcelltypes[this_metadata['celltype']]
         dnase_this = np.nan_to_num(dnase_bw.values(chrom, interval_start, interval_end, numpy=True))
-        
+
 #         assert(np.isnan(seq_this).sum() == 0)
 #         assert(np.isnan(dnase_this).sum() == 0)
 #         dnase_this = self.norm_signal(dnase_this, this_metadata['celltype'])
