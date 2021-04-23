@@ -1,3 +1,5 @@
+import pdb
+
 import numpy as np
 import torch
 from wilds.common.utils import get_counts
@@ -107,6 +109,8 @@ class CombinatorialGrouper(Grouper):
             self.factors_np = np.concatenate(([1], cumprod[:-1]))
             self.factors = torch.from_numpy(self.factors_np)
             self.metadata_map = dataset.metadata_map
+            # TODO: remove this later -Tony
+            pdb.set_trace()
 
     def metadata_to_group(self, metadata, return_counts=False):
         if self.groupby_fields is None:

@@ -8,6 +8,9 @@ import torchvision
 import sys
 from collections import defaultdict
 
+# TODO: delete later -Tony
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+
 import wilds
 from wilds.common.data_loaders import get_train_loader, get_eval_loader
 from wilds.common.grouper import CombinatorialGrouper
@@ -230,6 +233,10 @@ def main():
             unlabeled=True,
             **config.unlabeled_dataset_kwargs
         )
+        unlabeled_train_grouper = CombinatorialGrouper(
+            dataset=full_unlabeled_dataset,
+            groupby_fields=config.groupby_fields
+        )
         unlabeled_dataset = {
             'split': split,
             'name': full_unlabeled_dataset.split_names[split],
@@ -240,7 +247,7 @@ def main():
             dataset=unlabeled_dataset['dataset'],
             batch_size=config.unlabeled_batch_size,
             uniform_over_groups=config.uniform_over_groups,
-            grouper=train_grouper,
+            grouper=unlabeled_train_grouper,
             distinct_groups=config.distinct_groups,
             n_groups_per_batch=config.unlabeled_n_groups_per_batch,
             **config.loader_kwargs

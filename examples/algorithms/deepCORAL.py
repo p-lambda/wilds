@@ -1,3 +1,5 @@
+import pdb
+
 import torch
 from models.initializer import initialize_model
 from algorithms.single_model_algorithm import SingleModelAlgorithm
@@ -98,32 +100,28 @@ class DeepCORAL(SingleModelAlgorithm):
         return results
 
     def objective(self, results):
-        # extract features
-        labeled_features = results.pop('features')
-
         if self.is_training:
-            # split into groups
-            unique_groups, group_indices, _ = split_into_groups(results['g'])
-            n_groups_per_batch = unique_groups.numel()
-
+            # Extract features
+            labeled_features = results.pop('features')
             if 'unlabeled_features' in results:
                 unlabeled_features = results.pop('unlabeled_features')
-                unlabeled_unique_groups, unlabeled_group_indices, _ = split_into_groups(results['unlabeled_g'])
-                unlabeled_groups_per_batch = unlabeled_unique_groups.numel()
-                group_indices += unlabeled_group_indices
+                features = torch.cat((labeled_features, unlabeled_features))
+                groups = torch.cat((results['g'], results['unlabeled_g']))
             else:
-                unlabeled_groups_per_batch = 0
+                features = labeled_features
+                groups = results['g']
 
-            # compute penalty - perform pairwise comparisons between features of all the groups
+            # Split into groups
+            unique_groups, group_indices, _ = split_into_groups(groups)
+            n_groups_per_batch = unique_groups.numel()
+
+            # Compute penalty - perform pairwise comparisons between features of all the groups
             penalty = torch.zeros(1, device=self.device)
-            total_groups_per_batch = n_groups_per_batch + unlabeled_groups_per_batch
-            for i_group in range(total_groups_per_batch):
-                for j_group in range(i_group+1, total_groups_per_batch):
-                    i_features = labeled_features if i_group < n_groups_per_batch else unlabeled_features
-                    j_features = labeled_features if j_group < n_groups_per_batch else unlabeled_features
-                    penalty += self.coral_penalty(i_features[group_indices[i_group]], j_features[group_indices[j_group]])
-            if total_groups_per_batch > 1:
-                penalty /= (total_groups_per_batch * (total_groups_per_batch-1) / 2) # get the mean penalty
+            for i_group in range(n_groups_per_batch):
+                for j_group in range(i_group+1, n_groups_per_batch):
+                    penalty += self.coral_penalty(features[group_indices[i_group]], features[group_indices[j_group]])
+            if n_groups_per_batch > 1:
+                penalty /= (n_groups_per_batch * (n_groups_per_batch-1) / 2) # get the mean penalty
         else:
             penalty = 0.
 
