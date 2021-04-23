@@ -116,13 +116,14 @@ class DeepCORAL(SingleModelAlgorithm):
 
             # compute penalty - perform pairwise comparisons between features of all the groups
             penalty = torch.zeros(1, device=self.device)
-            for i_group in range(n_groups_per_batch + unlabeled_groups_per_batch):
-                for j_group in range(i_group+1, n_groups_per_batch + unlabeled_groups_per_batch):
+            total_groups_per_batch = n_groups_per_batch + unlabeled_groups_per_batch
+            for i_group in range(total_groups_per_batch):
+                for j_group in range(i_group+1, total_groups_per_batch):
                     i_features = labeled_features if i_group < n_groups_per_batch else unlabeled_features
                     j_features = labeled_features if j_group < n_groups_per_batch else unlabeled_features
                     penalty += self.coral_penalty(i_features[group_indices[i_group]], j_features[group_indices[j_group]])
-            if n_groups_per_batch > 1:
-                penalty /= (n_groups_per_batch * (n_groups_per_batch-1) / 2) # get the mean penalty
+            if total_groups_per_batch > 1:
+                penalty /= (total_groups_per_batch * (total_groups_per_batch-1) / 2) # get the mean penalty
         else:
             penalty = 0.
 
