@@ -33,10 +33,17 @@ def main():
     parser.add_argument('--split_scheme', help='Identifies how the train/val/test split is constructed. Choices are dataset-specific.')
     parser.add_argument('--dataset_kwargs', nargs='*', action=ParseKwargs, default={})
     parser.add_argument('--download', default=False, type=parse_bool, const=True, nargs='?',
-                        help='If true, tries to downloads the dataset if it does not exist in root_dir.')
+                        help='If true, tries to download the dataset if it does not exist in root_dir.')
     parser.add_argument('--frac', type=float, default=1.0,
                         help='Convenience parameter that scales all dataset splits down to the specified fraction, for development purposes. Note that this also scales the test set down, so the reported numbers are not comparable with the full test set.')
     parser.add_argument('--version', default=None, type=str)
+
+    # Unlabeled Dataset
+    parser.add_argument('--unlabeled_split', default=None, type=str, help='Unlabeled split to use')
+    parser.add_argument('--unlabeled_dataset_kwargs', nargs='*', action=ParseKwargs, default={})
+    parser.add_argument('--unlabeled_download', default=False, type=parse_bool, const=True, nargs='?',
+                        help='If true, tries to download the unlabeled dataset if it does not exist in root_dir.')
+    parser.add_argument('--unlabeled_version', default=None, type=str)
 
     # Loaders
     parser.add_argument('--loader_kwargs', nargs='*', action=ParseKwargs, default={})
@@ -44,7 +51,9 @@ def main():
     parser.add_argument('--uniform_over_groups', type=parse_bool, const=True, nargs='?')
     parser.add_argument('--distinct_groups', type=parse_bool, const=True, nargs='?')
     parser.add_argument('--n_groups_per_batch', type=int)
+    parser.add_argument('--unlabeled_n_groups_per_batch', type=int)
     parser.add_argument('--batch_size', type=int)
+    parser.add_argument('--unlabeled_batch_size', type=int)
     parser.add_argument('--eval_loader', choices=['standard'], default='standard')
 
     # Model
@@ -209,6 +218,34 @@ def main():
         if config.use_wandb:
             initialize_wandb(config)
 
+    # Unlabeled data
+    unlabeled_dataset = None
+    if config.unlabeled_split is not None:
+        split = config.unlabeled_split
+        full_unlabeled_dataset = wilds.get_dataset(
+            dataset=config.dataset,
+            version=config.unlabeled_version,
+            root_dir=config.root_dir,
+            download=config.unlabeled_download,
+            unlabeled=True,
+            **config.unlabeled_dataset_kwargs
+        )
+        unlabeled_dataset = {
+            'split': split,
+            'name': full_unlabeled_dataset.split_names[split],
+            'dataset': full_unlabeled_dataset.get_subset(split, transform=train_transform)
+        }
+        unlabeled_dataset['loader'] = get_train_loader(
+            loader=config.train_loader,
+            dataset=unlabeled_dataset['dataset'],
+            batch_size=config.unlabeled_batch_size,
+            uniform_over_groups=config.uniform_over_groups,
+            grouper=train_grouper,
+            distinct_groups=config.distinct_groups,
+            n_groups_per_batch=config.unlabeled_n_groups_per_batch,
+            **config.loader_kwargs
+        )
+
     # Logging dataset info
     # Show class breakdown if feasible
     if config.no_group_logging and full_dataset.is_classification and full_dataset.y_size==1 and full_dataset.n_classes <= 10:
@@ -258,7 +295,9 @@ def main():
             general_logger=logger,
             config=config,
             epoch_offset=epoch_offset,
-            best_val_metric=best_val_metric)
+            best_val_metric=best_val_metric,
+            unlabeled_dataset=unlabeled_dataset,
+        )
     else:
         if config.eval_epoch is None:
             eval_model_path = model_prefix + 'epoch:best_model.pth'

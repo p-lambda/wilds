@@ -1,4 +1,3 @@
-import torch
 from algorithms.group_algorithm import GroupAlgorithm
 from scheduler import initialize_scheduler
 from optimizer import initialize_optimizer
@@ -33,11 +32,12 @@ class SingleModelAlgorithm(GroupAlgorithm):
         )
         self.model = model
 
-    def process_batch(self, batch):
+    def process_batch(self, batch, unlabeled_batch=None):
         """
         A helper function for update() and evaluate() that processes the batch
         Args:
             - batch (tuple of Tensors): a batch of data yielded by data loaders
+            - unlabeled_batch (tuple of Tensors or None): a batch of data yielded by unlabeled data loader
         Output:
             - results (dictionary): information about the batch
                 - y_true (Tensor)
@@ -57,7 +57,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
             'y_true': y_true,
             'y_pred': outputs,
             'metadata': metadata,
-            }
+        }
         return results
 
     def objective(self, results):
@@ -83,11 +83,12 @@ class SingleModelAlgorithm(GroupAlgorithm):
         self.update_log(results)
         return self.sanitize_dict(results)
 
-    def update(self, batch):
+    def update(self, batch, unlabeled_batch=None):
         """
         Process the batch, update the log, and update the model
         Args:
             - batch (tuple of Tensors): a batch of data yielded by data loaders
+            - unlabeled_batch (tuple of Tensors or None): a batch of data yielded by unlabeled data loader
         Output:
             - results (dictionary): information about the batch, such as:
                 - g (Tensor)
@@ -99,7 +100,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
         """
         assert self.is_training
         # process batch
-        results = self.process_batch(batch)
+        results = self.process_batch(batch, unlabeled_batch)
         self._update(results)
         # log results
         self.update_log(results)
