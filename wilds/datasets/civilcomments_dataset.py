@@ -121,7 +121,7 @@ class CivilCommentsDataset(WILDSDataset):
 
         self._eval_groupers = [
             CombinatorialGrouper(
-                dataset=self,
+                dataset_or_datasets=self,
                 groupby_fields=[identity_var, 'y'])
             for identity_var in self._identity_vars]
 

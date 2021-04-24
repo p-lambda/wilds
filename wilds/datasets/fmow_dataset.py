@@ -165,8 +165,8 @@ class FMoWDataset(WILDSDataset):
         self._metadata_array = torch.from_numpy(self.metadata[self._metadata_fields].astype(int).to_numpy()).long()[~seq_mask]
 
         self._eval_groupers = {
-            'year': CombinatorialGrouper(dataset=self, groupby_fields=['year']),
-            'region': CombinatorialGrouper(dataset=self, groupby_fields=['region']),
+            'year': CombinatorialGrouper(dataset_or_datasets=self, groupby_fields=['year']),
+            'region': CombinatorialGrouper(dataset_or_datasets=self, groupby_fields=['region']),
         }
 
         super().__init__(root_dir, download, split_scheme)

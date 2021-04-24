@@ -160,11 +160,11 @@ class YelpDataset(WILDSDataset):
     def initialize_eval_grouper(self):
         if self.split_scheme=='user':
             self._eval_grouper = CombinatorialGrouper(
-                dataset=self,
+                dataset_or_datasets=self,
                 groupby_fields=['user'])
         elif self.split_scheme in ('time', 'time_baseline'):
             self._eval_grouper = CombinatorialGrouper(
-                dataset=self,
+                dataset_or_datasets=self,
                 groupby_fields=['year'])
         else:
             raise ValueError(f'Split scheme {self.split_scheme} not recognized')

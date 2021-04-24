@@ -55,7 +55,7 @@ class Grouper:
         raise NotImplementedError
 
 class CombinatorialGrouper(Grouper):
-    def __init__(self, dataset, groupby_fields):
+    def __init__(self, dataset_or_datasets, groupby_fields):
         """
         CombinatorialGroupers form groups by taking all possible combinations of the metadata
         fields specified in groupby_fields, in lexicographical order.
@@ -74,43 +74,55 @@ class CombinatorialGrouper(Grouper):
         If groupby_fields is None, then all data points are assigned to group 0.
 
         Args:
-            - dataset (WILDSDataset)
+            - dataset_or_datasets (WILDSDataset or list of WILDSDataset)
             - groupby_fields (list of str)
         """
-        if isinstance(dataset, WILDSSubset):
-            raise ValueError("Grouper should be defined for the full dataset, not a subset")
+        if isinstance(dataset_or_datasets, list):
+            if len(dataset_or_datasets) == 0:
+                raise ValueError("At least one dataset must be defined for Grouper.")
+            datasets = dataset_or_datasets
+        else:
+            datasets = [dataset_or_datasets]
+
+        for dataset in datasets:
+            if isinstance(dataset, WILDSSubset):
+                raise ValueError("Grouper should be defined with full dataset(s) and not subset(s).")
+
         self.groupby_fields = groupby_fields
 
         if groupby_fields is None:
             self._n_groups = 1
         else:
-            # We assume that the metadata fields are integers,
-            # so we can measure the cardinality of each field by taking its max + 1.
-            # Note that this might result in some empty groups.
-            self.groupby_field_indices = [i for (i, field) in enumerate(dataset.metadata_fields) if field in groupby_fields]
+            # Assume that the metadata_fields are the same for all the datasets passed into the grouper
+            metadata_fields = datasets[0].metadata_fields
+            self.groupby_field_indices = [i for (i, field) in enumerate(metadata_fields) if field in groupby_fields]
             if len(self.groupby_field_indices) != len(self.groupby_fields):
                 raise ValueError('At least one group field not found in dataset.metadata_fields')
-            grouped_metadata = dataset.metadata_array[:, self.groupby_field_indices]
+
+            metadata_array = torch.cat([dataset.metadata_array for dataset in datasets])
+            grouped_metadata = metadata_array[:, self.groupby_field_indices]
             if not isinstance(grouped_metadata, torch.LongTensor):
                 grouped_metadata_long = grouped_metadata.long()
                 if not torch.all(grouped_metadata == grouped_metadata_long):
                     warnings.warn(f'CombinatorialGrouper: converting metadata with fields [{", ".join(groupby_fields)}] into long')
                 grouped_metadata = grouped_metadata_long
+
             for idx, field in enumerate(self.groupby_fields):
                 min_value = grouped_metadata[:,idx].min()
                 if min_value < 0:
                     raise ValueError(f"Metadata for CombinatorialGrouper cannot have values less than 0: {field}, {min_value}")
                 if min_value > 0:
                     warnings.warn(f"Minimum metadata value for CombinatorialGrouper is not 0 ({field}, {min_value}). This will result in empty groups")
-            self.cardinality = 1 + torch.max(
-                grouped_metadata, dim=0)[0]
+
+            # We assume that the metadata fields are integers,
+            # so we can measure the cardinality of each field by taking its max + 1.
+            # Note that this might result in some empty groups.
+            self.cardinality = 1 + torch.max(grouped_metadata, dim=0)[0]
             cumprod = torch.cumprod(self.cardinality, dim=0)
             self._n_groups = cumprod[-1].item()
             self.factors_np = np.concatenate(([1], cumprod[:-1]))
             self.factors = torch.from_numpy(self.factors_np)
-            self.metadata_map = dataset.metadata_map
-            # TODO: remove this later -Tony
-            pdb.set_trace()
+            self.metadata_map = datasets[0].metadata_map
 
     def metadata_to_group(self, metadata, return_counts=False):
         if self.groupby_fields is None:

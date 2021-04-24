@@ -243,22 +243,22 @@ class AmazonDataset(WILDSDataset):
     def initialize_eval_grouper(self):
         if self.split_scheme == "user":
             self._eval_grouper = CombinatorialGrouper(
-                dataset=self, groupby_fields=["user"]
+                dataset_or_datasets=self, groupby_fields=["user"]
             )
         elif (
             self.split_scheme.endswith("generalization")
             or self.split_scheme == "category_subpopulation"
         ):
             self._eval_grouper = CombinatorialGrouper(
-                dataset=self, groupby_fields=["category"]
+                dataset_or_datasets=self, groupby_fields=["category"]
             )
         elif self.split_scheme in ("time", "time_baseline"):
             self._eval_grouper = CombinatorialGrouper(
-                dataset=self, groupby_fields=["year"]
+                dataset_or_datasets=self, groupby_fields=["year"]
             )
         elif self.split_scheme.endswith("_baseline"):  # user baselines
             self._eval_grouper = CombinatorialGrouper(
-                dataset=self, groupby_fields=["user"]
+                dataset_or_datasets=self, groupby_fields=["user"]
             )
         else:
             raise ValueError(f"Split scheme {self.split_scheme} not recognized.")
