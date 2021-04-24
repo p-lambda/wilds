@@ -8,7 +8,7 @@ import torchvision
 import sys
 from collections import defaultdict
 
-# TODO: delete later -Tony
+# TODO: This is needed to test the WILDS package locally. Remove later -Tony
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 import wilds
