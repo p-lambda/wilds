@@ -59,7 +59,13 @@ class CivilCommentsDataset(WILDSDataset):
     _versions_dict = {
         '1.0': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8cd3de0634154aeaad2ee6eb96723c6e/contents/blob/',
-            'compressed_size': 90_644_480}}
+            'compressed_size': 90_644_480
+        },
+        '2.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8cd3de0634154aeaad2ee6eb96723c6e/contents/blob/',
+            'compressed_size': 90_644_480
+        }
+    }
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
         self._version = version

@@ -40,8 +40,12 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
         return CelebADataset(version=version, **dataset_kwargs)
 
     elif dataset == 'civilcomments':
-        from wilds.datasets.civilcomments_dataset import CivilCommentsDataset
-        return CivilCommentsDataset(version=version, **dataset_kwargs)
+        if unlabeled:
+            from wilds.datasets.unlabeled.civilcomments_unlabeled_dataset import CivilCommentsUnlabeledDataset
+            return CivilCommentsUnlabeledDataset(version=version, **dataset_kwargs)
+        else:
+            from wilds.datasets.civilcomments_dataset import CivilCommentsDataset
+            return CivilCommentsDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'iwildcam':
         if version == '1.0':
