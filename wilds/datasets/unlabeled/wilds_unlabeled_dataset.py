@@ -89,7 +89,7 @@ class WILDSUnlabeledDataset(WILDSDataset):
 
         # Check splits
         assert self.split_dict.keys() == self.split_names.keys()
-
+        
         # Check that required arrays are Tensors
         assert isinstance(
             self.metadata_array, torch.Tensor

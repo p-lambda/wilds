@@ -67,6 +67,7 @@ def main(args):
     
     # Write out the new unlabeled split to user.csv
     joint.to_csv(f'{args.root}/all_data_with_identities_and_unlabeled.csv', index=True)
+    joint[joint['split'] == UNLABELED].to_csv(f'{args.root}/unlabeled_data_with_identities.csv', index=True)
     print("Done.")
 
 
