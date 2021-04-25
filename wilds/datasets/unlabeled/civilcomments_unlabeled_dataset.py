@@ -44,7 +44,7 @@ class CivilCommentsUnlabeledDataset(WILDSUnlabeledDataset):
     _versions_dict: Dict[str, Dict[str, Union[str, int]]] = {
         "1.0": {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0xde2797ca1e324b6586e19250d6df2f84/contents/blob/',
-            'compressed_size': 90_644_480,
+            'compressed_size': 344_323_395,
             "equivalent_dataset": "civilcomments_v2.0",
         },
     }
