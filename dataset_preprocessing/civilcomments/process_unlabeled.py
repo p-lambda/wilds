@@ -76,7 +76,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--root",
         type=str,
-        help="Path to the Amazon dataset",
+        help="Path to the dir containing the CivilComments processed labeled csv and full csv.",
     )
     args = parser.parse_args()
     main(args)
