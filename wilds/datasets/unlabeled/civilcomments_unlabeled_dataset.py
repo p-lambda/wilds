@@ -43,9 +43,8 @@ class CivilCommentsUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name: str = "civilcomments_unlabeled"
     _versions_dict: Dict[str, Dict[str, Union[str, int]]] = {
         "1.0": {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xde2797ca1e324b6586e19250d6df2f84/contents/blob/',
-            'compressed_size': 344_323_395,
-            "equivalent_dataset": "civilcomments_v2.0",
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x84d185add4134775b0b4d3ce7614dd20/contents/blob/',
+            'compressed_size': 254_142_009
         },
     }
 
@@ -67,15 +66,15 @@ class CivilCommentsUnlabeledDataset(WILDSUnlabeledDataset):
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
 
         # metadata_df contains split names in strings, so convert them to ints
-        self._split_dict = { "test_unlabeled": 12 }
-        self._split_names = { "test_unlabeled": "Unlabeled Test" }
-        self._metadata_df['split'] = self.split_dict["test_unlabeled"]
+        self._split_dict = { "extra_unlabeled": 13 }
+        self._split_names = { "extra_unlabeled": "Unlabeled Extra" }
+        self._metadata_df['split'] = self.split_dict["extra_unlabeled"]
         self._split_array = self._metadata_df['split'].values
 
         # Metadata (Not Available)
         self._metadata_fields = []
         self._metadata_array = torch.empty(len(self._metadata_df), 0)
-        self._metdata_map = {}
+        self._metadata_map = {}
 
         super().__init__(root_dir, download, split_scheme)
 
