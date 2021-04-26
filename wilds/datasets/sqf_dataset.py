@@ -292,12 +292,12 @@ class SQFDataset(WILDSDataset):
     def initialize_eval_grouper(self):
         if 'black' in self.split_scheme or 'race' in self.split_scheme :
             eval_grouper = CombinatorialGrouper(
-                dataset_or_datasets=self,
+                dataset=self,
                 groupby_fields = ['suspect race']
             )
         elif 'bronx' in self.split_scheme or 'all_borough' == self.split_scheme:
             eval_grouper = CombinatorialGrouper(
-                dataset_or_datasets=self,
+                dataset=self,
                 groupby_fields = ['borough'])
         else:
             raise ValueError(f'Split scheme {self.split_scheme} not recognized')

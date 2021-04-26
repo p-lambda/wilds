@@ -120,7 +120,7 @@ class Camelyon17Dataset(WILDSDataset):
         self._metadata_fields = ['hospital', 'slide', 'y']
 
         self._eval_grouper = CombinatorialGrouper(
-            dataset_or_datasets=self,
+            dataset=self,
             groupby_fields=['slide'])
 
         super().__init__(root_dir, download, split_scheme)

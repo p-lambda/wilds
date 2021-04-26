@@ -229,7 +229,7 @@ class PovertyMapDataset(WILDSDataset):
         self._metadata_fields = ['urban', 'y', 'country']
 
         self._eval_grouper = CombinatorialGrouper(
-            dataset_or_datasets=self,
+            dataset=self,
             groupby_fields=['urban'])
 
         super().__init__(root_dir, download, split_scheme)

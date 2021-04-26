@@ -101,7 +101,7 @@ class CelebADataset(WILDSDataset):
         }
 
         self._eval_grouper = CombinatorialGrouper(
-            dataset_or_datasets=self,
+            dataset=self,
             groupby_fields=(confounder_names + ['y']))
 
         # Extract splits

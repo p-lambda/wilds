@@ -102,7 +102,7 @@ class IWildCamDataset(WILDSDataset):
 
         # eval grouper
         self._eval_grouper = CombinatorialGrouper(
-            dataset_or_datasets=self,
+            dataset=self,
             groupby_fields=(['location']))
 
         super().__init__(root_dir, download, split_scheme)

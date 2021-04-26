@@ -179,7 +179,7 @@ def main():
             **config.unlabeled_dataset_kwargs
         )
         train_grouper = CombinatorialGrouper(
-            dataset_or_datasets=[full_dataset, full_unlabeled_dataset],
+            dataset=[full_dataset, full_unlabeled_dataset],
             groupby_fields=config.groupby_fields
         )
         unlabeled_dataset = {
@@ -199,7 +199,7 @@ def main():
         )
     else:
         train_grouper = CombinatorialGrouper(
-            dataset_or_datasets=full_dataset,
+            dataset=full_dataset,
             groupby_fields=config.groupby_fields
         )
 
@@ -256,7 +256,7 @@ def main():
     # Show class breakdown if feasible
     if config.no_group_logging and full_dataset.is_classification and full_dataset.y_size==1 and full_dataset.n_classes <= 10:
         log_grouper = CombinatorialGrouper(
-            dataset_or_datasets=full_dataset,
+            dataset=full_dataset,
             groupby_fields=['y'])
     elif config.no_group_logging:
         log_grouper = None

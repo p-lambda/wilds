@@ -55,7 +55,7 @@ class Grouper:
         raise NotImplementedError
 
 class CombinatorialGrouper(Grouper):
-    def __init__(self, dataset_or_datasets, groupby_fields):
+    def __init__(self, dataset, groupby_fields):
         """
         CombinatorialGroupers form groups by taking all possible combinations of the metadata
         fields specified in groupby_fields, in lexicographical order.
@@ -74,15 +74,15 @@ class CombinatorialGrouper(Grouper):
         If groupby_fields is None, then all data points are assigned to group 0.
 
         Args:
-            - dataset_or_datasets (WILDSDataset or list of WILDSDataset)
+            - dataset (WILDSDataset or list of WILDSDataset)
             - groupby_fields (list of str)
         """
-        if isinstance(dataset_or_datasets, list):
-            if len(dataset_or_datasets) == 0:
+        if isinstance(dataset, list):
+            if len(dataset) == 0:
                 raise ValueError("At least one dataset must be defined for Grouper.")
-            datasets = dataset_or_datasets
+            datasets = dataset
         else:
-            datasets = [dataset_or_datasets]
+            datasets = [dataset]
 
         for dataset in datasets:
             if isinstance(dataset, WILDSSubset):
