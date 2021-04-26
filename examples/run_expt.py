@@ -44,8 +44,6 @@ def main():
     # Unlabeled Dataset
     parser.add_argument('--unlabeled_split', default=None, type=str, help='Unlabeled split to use')
     parser.add_argument('--unlabeled_dataset_kwargs', nargs='*', action=ParseKwargs, default={})
-    parser.add_argument('--unlabeled_download', default=False, type=parse_bool, const=True, nargs='?',
-                        help='If true, tries to download the unlabeled dataset if it does not exist in root_dir.')
     parser.add_argument('--unlabeled_version', default=None, type=str)
 
     # Loaders
@@ -168,9 +166,42 @@ def main():
         config=config,
         dataset=full_dataset)
 
-    train_grouper = CombinatorialGrouper(
-        dataset_or_datasets=full_dataset,
-        groupby_fields=config.groupby_fields)
+    unlabeled_dataset = None
+    if config.unlabeled_split is not None:
+        # Unlabeled data
+        split = config.unlabeled_split
+        full_unlabeled_dataset = wilds.get_dataset(
+            dataset=config.dataset,
+            version=config.unlabeled_version,
+            root_dir=config.root_dir,
+            download=config.download,
+            unlabeled=True,
+            **config.unlabeled_dataset_kwargs
+        )
+        train_grouper = CombinatorialGrouper(
+            dataset_or_datasets=[full_dataset, full_unlabeled_dataset],
+            groupby_fields=config.groupby_fields
+        )
+        unlabeled_dataset = {
+            'split': split,
+            'name': full_unlabeled_dataset.split_names[split],
+            'dataset': full_unlabeled_dataset.get_subset(split, transform=train_transform)
+        }
+        unlabeled_dataset['loader'] = get_train_loader(
+            loader=config.train_loader,
+            dataset=unlabeled_dataset['dataset'],
+            batch_size=config.unlabeled_batch_size,
+            uniform_over_groups=config.uniform_over_groups,
+            grouper=train_grouper,
+            distinct_groups=config.distinct_groups,
+            n_groups_per_batch=config.unlabeled_n_groups_per_batch,
+            **config.loader_kwargs
+        )
+    else:
+        train_grouper = CombinatorialGrouper(
+            dataset_or_datasets=full_dataset,
+            groupby_fields=config.groupby_fields
+        )
 
     datasets = defaultdict(dict)
     for split in full_dataset.split_dict.keys():
@@ -220,38 +251,6 @@ def main():
 
         if config.use_wandb:
             initialize_wandb(config)
-
-    # Unlabeled data
-    unlabeled_dataset = None
-    if config.unlabeled_split is not None:
-        split = config.unlabeled_split
-        full_unlabeled_dataset = wilds.get_dataset(
-            dataset=config.dataset,
-            version=config.unlabeled_version,
-            root_dir=config.root_dir,
-            download=config.unlabeled_download,
-            unlabeled=True,
-            **config.unlabeled_dataset_kwargs
-        )
-        train_grouper = CombinatorialGrouper(
-            dataset_or_datasets=[full_dataset, full_unlabeled_dataset],
-            groupby_fields=config.groupby_fields
-        )
-        unlabeled_dataset = {
-            'split': split,
-            'name': full_unlabeled_dataset.split_names[split],
-            'dataset': full_unlabeled_dataset.get_subset(split, transform=train_transform)
-        }
-        unlabeled_dataset['loader'] = get_train_loader(
-            loader=config.train_loader,
-            dataset=unlabeled_dataset['dataset'],
-            batch_size=config.unlabeled_batch_size,
-            uniform_over_groups=config.uniform_over_groups,
-            grouper=train_grouper,
-            distinct_groups=config.distinct_groups,
-            n_groups_per_batch=config.unlabeled_n_groups_per_batch,
-            **config.loader_kwargs
-        )
 
     # Logging dataset info
     # Show class breakdown if feasible

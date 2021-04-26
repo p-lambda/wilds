@@ -20,9 +20,13 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
     epoch_y_pred = []
     epoch_metadata = []
 
-    with_unlabeled_data = unlabeled_dataset is not None and 'loader' in unlabeled_dataset
+    # Assert that data loaders are defined for the datasets
+    assert 'loader' in dataset, "A data loader must be defined for the dataset."
+    if unlabeled_dataset:
+        assert 'loader' in unlabeled_dataset, "A data loader must be defined for the dataset."
+
     batches = (
-        zip(dataset['loader'], unlabeled_dataset['loader']) if with_unlabeled_data
+        zip(dataset['loader'], unlabeled_dataset['loader']) if unlabeled_dataset
         else dataset['loader']
     )
     if config.progress_bar:
@@ -34,7 +38,7 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
 
     for batch in batches:
         if train:
-            if with_unlabeled_data:
+            if unlabeled_dataset:
                 labeled_batch, unlabeled_batch = batch
                 batch_results = algorithm.update(labeled_batch, unlabeled_batch)
             else:

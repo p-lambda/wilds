@@ -19,9 +19,9 @@ class DeepCORAL(SingleModelAlgorithm):
         }
 
     The original CORAL loss is the distance between second-order statistics (covariances)
-    of the source and target feature (course-grained).
+    of the source and target features.
 
-    The CORAL penalty function below is adapted from DomainBed's implementation (fine-grained):
+    The CORAL penalty function below is adapted from DomainBed's implementation:
     https://github.com/facebookresearch/DomainBed/blob/1a61f7ff44b02776619803a1dd12f952528ca531/domainbed/algorithms.py#L539
     """
     def __init__(self, config, d_out, grouper, loss, metric, n_train_steps):
@@ -93,6 +93,7 @@ class DeepCORAL(SingleModelAlgorithm):
         if unlabeled_batch is not None:
             x, metadata = unlabeled_batch
             x = x.to(self.device)
+            results['unlabeled_metadata'] = metadata
             results['unlabeled_features'] = self.featurizer(x)
             results['unlabeled_g'] = self.grouper.metadata_to_group(metadata).to(self.device)
         return results
