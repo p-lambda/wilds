@@ -10,7 +10,8 @@ import pandas as pd
 np.random.seed(0)
 
 """
-Process unlabeled data in CivilComments
+Process unlabeled data in CivilComments.
+Script is intended to be run after process_labeled.py
 """
 
 TRAIN, VAL, TEST, UNLABELED = ('train', 'val', 'test', 'test_unlabeled')
