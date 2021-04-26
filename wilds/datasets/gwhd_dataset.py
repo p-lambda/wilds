@@ -56,7 +56,7 @@ class GWHDDataset(WILDSDataset):
 
     _dataset_name = 'gwhd'
     _versions_dict = {
-        '1.0': {
+        '2.0': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x42fa9775eacc453489a428abd59a437d/contents/blob/',
             'compressed_size': None}}
 
@@ -101,7 +101,7 @@ class GWHDDataset(WILDSDataset):
 
             labels = [{
                 "boxes": torch.stack([
-                    torch.tensor([int(i) for i in box.split(" ")])
+                    torch.tensor([int(float(i)) for i in box.split(" ")])
                     for box in boxes.split(";")
                 ]),
                 "labels": torch.tensor([1]*len(list(boxes.split(";")))).long()

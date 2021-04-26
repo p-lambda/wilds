@@ -144,6 +144,7 @@ class RegionProposalNetworkWILDS(RegionProposalNetwork):
             ))
 
         return torch.stack(objectness_loss), torch.stack(box_loss)
+        
     def forward(self,
                 images,       # type: ImageList
                 features,     # type: Dict[str, Tensor]
@@ -183,8 +184,8 @@ class RegionProposalNetworkWILDS(RegionProposalNetwork):
         # the proposals
         proposals = self.box_coder.decode(pred_bbox_deltas.detach(), anchors)
         proposals = proposals.view(num_images, -1, 4)
-        boxes, scores = self.filter_proposals(proposals, objectness, images.image_sizes, num_anchors_per_level)
 
+        boxes, scores = self.filter_proposals(proposals, objectness, images.image_sizes, num_anchors_per_level)
         losses = {}
 
         if self.training:
@@ -214,7 +215,6 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
         box_loss (Tensor)
     """
 
-
     class_logits = torch.split(class_logits, 512,dim=0)
     box_regression = torch.split(box_regression, 512,dim=0)
 
@@ -222,7 +222,6 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     box_loss = []
 
     for class_logits_, box_regression_, labels_, regression_targets_ in zip(class_logits, box_regression, labels, regression_targets):
-
         classification_loss.append(F.cross_entropy(class_logits_, labels_))
         # get indices that correspond to the regression targets for
         # the corresponding ground truth labels, to be used with
@@ -287,16 +286,19 @@ class RoIHeadsWILDS(RoIHeads):
             regression_targets = None
             matched_idxs = None
 
+
+
         box_features = self.box_roi_pool(features, proposals, image_shapes)
+
         box_features = self.box_head(box_features)
 
         class_logits, box_regression = self.box_predictor(box_features)
-
         result = torch.jit.annotate(List[Dict[str, torch.Tensor]], [])
         losses = {}
 
         if self.training:
             assert labels is not None and regression_targets is not None
+
             loss_classifier, loss_box_reg = fastrcnn_loss(
                 class_logits, box_regression, labels, regression_targets)
             losses = {
