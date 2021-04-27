@@ -19,7 +19,7 @@ Specifically, 92% (1427849 out of 1551516) unlabeled comments are from
 articles that also have comments in the labeled set.
 """
 
-TRAIN, VAL, TEST, UNLABELED = ('train', 'val', 'test', 'test_unlabeled')
+TRAIN, VAL, TEST, UNLABELED = ('train', 'val', 'test', 'extra_unlabeled')
 
 def load_unlabeled_df(root):
     """
