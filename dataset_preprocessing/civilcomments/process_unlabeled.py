@@ -12,6 +12,11 @@ np.random.seed(0)
 """
 Process unlabeled data in CivilComments.
 Script is intended to be run after process_labeled.py
+
+Note that there is substantial overlap between the articles that unlabeled
+comments are from and the articles that the labeled comments are from. 
+Specifically, 92% (1427849 out of 1551516) unlabeled comments are from
+articles that also have comments in the labeled set.
 """
 
 TRAIN, VAL, TEST, UNLABELED = ('train', 'val', 'test', 'test_unlabeled')
