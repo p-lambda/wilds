@@ -3,7 +3,7 @@
 #### Requirements
 - pyBigWig
 
-#### Instructions
+#### Instructions to create Codalab bundle
 
 1. Download the human genome sequence (hg19 assembly) in FASTA format from http://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.fa.gz and extract it into `SEQUENCE_PATH`.
 
@@ -11,10 +11,16 @@
 
 3. Download the DNase accessibility data. This consists of whole-genome DNase files in bigwig format from https://guanfiles.dcmb.med.umich.edu/Leopard/dnase_bigwig/. These are saved with filename `DNASE.<celltype>.fc.signal.bigwig`.
 
-4. Download the labels from the challenge into a label directory `labels/` created for this purpose:
+4. Run `prep_accessibility.py`.
+
+5. Download the labels from the challenge into a label directory `labels/` created for this purpose:
   - The training chromosome labels for the challenge's training cell types from https://www.synapse.org/#!Synapse:syn7413983 for the relevant transcription factor ( https://www.synapse.org/#!Synapse:syn7415202 for the TF MAX, , downloaded as MAX.train.labels.tsv.gz ).
   - The training chromosome labels for the challenge's evaluation cell type (liver) from https://www.synapse.org/#!Synapse:syn8077511 for the relevant transcription factor ( https://www.synapse.org/#!Synapse:syn8077648 for the TF MAX, downloaded as MAX.train_wc.labels.tsv.gz ).
   - The validation chromosome labels for the challenge's training cell types from https://www.synapse.org/#!Synapse:syn8441154 for the relevant transcription factor ( https://www.synapse.org/#!Synapse:syn8442103 for the TF MAX, downloaded as MAX.val.labels.tsv.gz ). 
   - The validation chromosome labels for the challenge's evaluation cell type (liver) from https://www.synapse.org/#!Synapse:syn8442975 for the relevant transcription factor ( https://www.synapse.org/#!Synapse:syn8443021 for the TF MAX, downloaded as MAX.test.labels.tsv.gz ).
 
-5. Run `prep_metadata_labels.py`.
+6. Run `prep_metadata_labels.py`.
+
+
+#### Instructions to run on Codalab bundle
+7. 

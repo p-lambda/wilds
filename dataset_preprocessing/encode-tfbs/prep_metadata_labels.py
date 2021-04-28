@@ -15,10 +15,10 @@ _data_dir = '../../examples/data/encode-tfbs_v1.0/'
 def write_label_bigwigs(
     celltypes,
     train_suffix='train.labels.tsv.gz',
-    val_suffix='val.labels.tsv.gz'
+    val_suffix='val.labels.tsv.gz', 
+    tf_name='MAX'
 ):
     itime = time.time()
-    tf_name = 'MAX'
 
     # Read in metadata dataframe from training+validation data
     train_regions_labeled = pd.read_csv(os.path.join(_data_dir, 'labels/{}.{}'.format(tf_name, train_suffix)), sep='\t')
@@ -73,11 +73,14 @@ def write_label_bigwigs(
 
 
 def write_metadata_products(
-    celltypes, bed_df_filename='metadata_df.bed', y_arr_filename='metadata_y.npy',
-    stride=6400, posamb_only=False
+    celltypes, 
+    bed_df_filename='metadata_df.bed', 
+    y_arr_filename='metadata_y.npy',
+    stride=6400, 
+    tf_name='MAX', 
+    posamb_only=False
 ):
     itime = time.time()
-    tf_name = 'MAX'
     celltype_mdta = []
     celltype_labels = []
     if posamb_only:
@@ -131,6 +134,13 @@ def write_metadata_products(
 
 
 if __name__ == '__main__':
-    _all_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562', 'A549', 'GM12878', 'liver']
-    write_label_bigwigs(_all_celltypes)
-    write_metadata_products(_all_celltypes)
+    tf_name = 'JUND'
+    tfs_to_celltypes = {
+        'MAX': ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562', 'A549', 'GM12878', 'liver'], 
+        'REST': ['H1-hESC', 'HeLa-S3', 'HepG2', 'MCF-7', 'Panc1', 'liver'], 
+        'JUND': ['HCT116', 'HeLa-S3', 'HepG2', 'K562', 'MCF-7', 'liver']
+    }
+    all_celltypes = tfs_to_celltypes[tf_name]
+    write_label_bigwigs([x for x in all_celltypes if x != 'liver'], tf_name=tf_name)
+    write_label_bigwigs(['liver'], train_suffix='train_wc.labels.tsv.gz', val_suffix='test.labels.tsv.gz', tf_name=tf_name)
+    write_metadata_products(all_celltypes, tf_name=tf_name)

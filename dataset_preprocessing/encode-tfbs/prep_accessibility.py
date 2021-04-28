@@ -169,10 +169,12 @@ if __name__ == '__main__':
     all_celltypes = ch_train_celltypes + ch_val_celltype + ch_test_celltype
     for ct in all_celltypes:
         qn_sample_to_array([ct], input_chroms=train_chroms)
-
+    
+    """
     # Create normalized bigwigs for OOD validation split.
     for ct in all_celltypes:
         dnase_normalize(ct, ref_celltypes)
     # Create normalized bigwig for ID validation split.
     for ct in ch_test_celltype:
         dnase_normalize(ct, ch_test_celltype, out_fname = 'norm_id')
+    """

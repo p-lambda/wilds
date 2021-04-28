@@ -5,20 +5,21 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-
-def single_conv(in_channels, out_channels):
+def single_conv(in_channels, out_channels, kernel_size=7):
+    padding_size = int((kernel_size-1)/2)
     return nn.Sequential(
-        nn.Conv1d(in_channels, out_channels, 7, padding=3),
+        nn.Conv1d(in_channels, out_channels, kernel_size, padding=padding_size),
         nn.BatchNorm1d(out_channels),
         nn.ReLU(inplace=True)
     )
 
-def double_conv(in_channels, out_channels):
+def double_conv(in_channels, out_channels, kernel_size=7):
+    padding_size = int((kernel_size-1)/2)
     return nn.Sequential(
-        nn.Conv1d(in_channels, out_channels, 7, padding=3),
+        nn.Conv1d(in_channels, out_channels, kernel_size, padding=padding_size),
         nn.BatchNorm1d(out_channels),
         nn.ReLU(inplace=True),
-        nn.Conv1d(out_channels, out_channels, 7, padding=3),
+        nn.Conv1d(out_channels, out_channels, kernel_size, padding=padding_size),
         nn.BatchNorm1d(out_channels),
         nn.ReLU(inplace=True)
     )
@@ -54,6 +55,8 @@ class UNet(nn.Module):
 
         self.conv_last = nn.Conv1d(15, 1, 200, stride=50, padding=0)
         self.d_out = num_tasks if num_tasks is not None else 253
+        
+        self.fc_last = nn.Linear(253, 128)
 
 
     def forward(self, x):
@@ -107,7 +110,8 @@ class UNet(nn.Module):
         # Default input_size == 12800: x has size N x 1 x 253 at this point.
         if self.d_out == 253:
             out = x
-        else:   # middle 128 values
-            out = x[:, 64:192]
+        else:
+            out = self.fc_last(x)
+            # out = x[:, 64:192]    # middle 128 values
         
         return out
