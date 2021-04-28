@@ -12,15 +12,9 @@ import datetime
 import pytz
 from PIL import Image
 from tqdm import tqdm
-from wilds.common.utils import subsample_idxs
-from wilds.common.metrics.all_metrics import Accuracy
-from wilds.common.grouper import CombinatorialGrouper
 from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSUnlabeledDataset
 
 Image.MAX_IMAGE_PIXELS = 10000000000
-
-
-categories = ["airport", "airport_hangar", "airport_terminal", "amusement_park", "aquaculture", "archaeological_site", "barn", "border_checkpoint", "burial_site", "car_dealership", "construction_site", "crop_field", "dam", "debris_or_rubble", "educational_institution", "electric_substation", "factory_or_powerplant", "fire_station", "flooded_road", "fountain", "gas_station", "golf_course", "ground_transportation_station", "helipad", "hospital", "impoverished_settlement", "interchange", "lake_or_pond", "lighthouse", "military_facility", "multi-unit_residential", "nuclear_powerplant", "office_building", "oil_or_gas_facility", "park", "parking_lot_or_garage", "place_of_worship", "police_station", "port", "prison", "race_track", "railway_bridge", "recreational_facility", "road_bridge", "runway", "shipyard", "shopping_mall", "single-unit_residential", "smokestack", "solar_farm", "space_facility", "stadium", "storage_tank", "surface_mine", "swimming_pool", "toll_booth", "tower", "tunnel_opening", "waste_disposal", "water_treatment_facility", "wind_farm", "zoo"]
 
 
 class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
@@ -56,11 +50,12 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
         https://github.com/fMoW/dataset/blob/master/LICENSE
 
     """
-    _dataset_name = 'fmow'
+    _dataset_name = 'fmow_unlabeled'
     _versions_dict = {
         '1.0': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0xaec91eb7c9d548ebb15e1b5e60f966ab/contents/blob/',
-            'compressed_size': 53_893_324_800}
+            'compressed_size': 53_893_324_800,
+            "equivalent_dataset": "fmow_v1.1",}
     }
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official', oracle_training_set=False, seed=111, use_ood_val=True):
@@ -75,8 +70,6 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
         self.root = Path(self._data_dir)
         self.seed = int(seed)
         self._original_resolution = (224, 224)
-
-        self.category_to_idx = {cat: i for i, cat in enumerate(categories)}
 
         self.metadata = pd.read_csv(self.root / 'rgb_metadata.csv')
         country_codes_df = pd.read_csv(self.root / 'country_code_mapping.csv')
@@ -99,8 +92,7 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
         else:
             raise ValueError(f"Not supported: self._split_scheme = {self._split_scheme}")
 
-
-        if self.split_scheme == 'time_after':
+        if self.split_scheme.startswith('time_after'):
             self._split_dict = {
                     "train_unlabeled": 10,
                     "val_unlabeled": 11,
@@ -135,12 +127,7 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
             self._split_array[idxs] = self._split_dict[split]
         unlabeled_mask = (self._split_array != -1)
         self.full_idxs = np.arange(len(self.metadata))[unlabeled_mask]
-
-        self._y_array = np.asarray([self.category_to_idx[y] for y in list(self.metadata['category'])])
-        self.metadata['y'] = self._y_array
-        self._y_array = torch.from_numpy(self._y_array).long()[unlabeled_mask]
-        self._y_size = 1
-        self._n_classes = 62
+        self._split_array = self._split_array[unlabeled_mask]
 
         # convert region to idxs
         all_regions = list(self.metadata['region'].unique())
@@ -159,13 +146,8 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
         self.metadata['year'] = year_array
         self._metadata_map['year'] = list(range(2002, 2018))
 
-        self._metadata_fields = ['region', 'year', 'y']
+        self._metadata_fields = ['region', 'year']
         self._metadata_array = torch.from_numpy(self.metadata[self._metadata_fields].astype(int).to_numpy()).long()[unlabeled_mask]
-
-        self._eval_groupers = {
-            'year': CombinatorialGrouper(dataset=self, groupby_fields=['year']),
-            'region': CombinatorialGrouper(dataset=self, groupby_fields=['region']),
-        }
 
         super().__init__(root_dir, download, split_scheme)
 
@@ -176,51 +158,3 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
         idx = self.full_idxs[idx]
         img = Image.open(self.root / 'images' / f'rgb_img_{idx}.png').convert('RGB')
         return img
-
-    def eval(self, y_pred, y_true, metadata, prediction_fn=None):
-        """
-        Computes all evaluation metrics.
-        Args:
-            - y_pred (Tensor): Predictions from a model. By default, they are predicted labels (LongTensor).
-                               But they can also be other model outputs such that prediction_fn(y_pred)
-                               are predicted labels.
-            - y_true (LongTensor): Ground-truth labels
-            - metadata (Tensor): Metadata
-            - prediction_fn (function): A function that turns y_pred into predicted labels
-        Output:
-            - results (dictionary): Dictionary of evaluation metrics
-            - results_str (str): String summarizing the evaluation metrics
-        """
-        metric = Accuracy(prediction_fn=prediction_fn)
-        # Overall evaluation + evaluate by year
-        all_results, all_results_str = self.standard_group_eval(
-            metric,
-            self._eval_groupers['year'],
-            y_pred, y_true, metadata)
-        # Evaluate by region and ignore the "Other" region
-        region_grouper = self._eval_groupers['region']
-        region_results = metric.compute_group_wise(
-            y_pred,
-            y_true,
-            region_grouper.metadata_to_group(metadata),
-            region_grouper.n_groups)
-        all_results[f'{metric.name}_worst_year'] = all_results.pop(metric.worst_group_metric_field)
-        region_metric_list = []
-        for group_idx in range(region_grouper.n_groups):
-            group_str = region_grouper.group_field_str(group_idx)
-            group_metric = region_results[metric.group_metric_field(group_idx)]
-            group_counts = region_results[metric.group_count_field(group_idx)]
-            all_results[f'{metric.name}_{group_str}'] = group_metric
-            all_results[f'count_{group_str}'] = group_counts
-            if region_results[metric.group_count_field(group_idx)] == 0 or "Other" in group_str:
-                continue
-            all_results_str += (
-                f'  {region_grouper.group_str(group_idx)}  '
-                f"[n = {region_results[metric.group_count_field(group_idx)]:6.0f}]:\t"
-                f"{metric.name} = {region_results[metric.group_metric_field(group_idx)]:5.3f}\n")
-            region_metric_list.append(region_results[metric.group_metric_field(group_idx)])
-        all_results[f'{metric.name}_worst_region'] = metric.worst(region_metric_list)
-        all_results_str += f"Worst-group {metric.name}: {all_results[f'{metric.name}_worst_region']:.3f}\n"
-
-        return all_results, all_results_str
-
