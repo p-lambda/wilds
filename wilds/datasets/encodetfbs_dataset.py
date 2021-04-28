@@ -132,31 +132,35 @@ class EncodeTFBSDataset(WILDSDataset):
         self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
         self._y_size = 128
-        self._transcription_factor = 'MAX'
-
-        # Read in metadata and labels
-        self._metadata_df = pd.read_csv(
-            self._data_dir + '/labels/{}/metadata_df.bed'.format(self._transcription_factor),
-            sep='\t', header=None,
-            index_col=None, names=['chr', 'start', 'stop', 'celltype']
-        )
-        self._y_array = torch.tensor(np.load(
-            self._data_dir + '/labels/{}/metadata_y.npy'.format(self._transcription_factor)))
-
-        # ~10% of the dataset has ambiguous labels
-        # i.e., we can't tell if there is a binding event or not.
-        # This typically happens at the flanking regions of peaks.
-        # For our purposes, we will ignore these ambiguous labels during training and eval.
-        self.y_array[self.y_array == 0.5] = float('nan')
 
         # Construct splits
         train_chroms = ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
         val_chroms = ['chr2', 'chr9', 'chr11']
         test_chroms = ['chr1', 'chr8', 'chr21']
-        train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878']
-        val_celltype = ['HepG2']
-        test_celltype = ['liver']
+        official_train_cts = {
+            'MAX': ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878'], 
+            'REST': ['H1-hESC', 'HeLa-S3', 'MCF-7', 'Panc1'], 
+            'JUND': ['HCT116', 'HeLa-S3', 'K562', 'MCF-7']
+        }
+        official_val_cts = {
+            'MAX': ['HepG2'], 'REST': ['HepG2'], 'JUND': ['HepG2']
+        }
+        official_test_cts = {
+            'MAX': ['liver'], 'REST': ['liver'], 'JUND': ['liver']
+        }
+        
+        # Set the TF in split_scheme by prefacing it with 'tf.<TF name>.'
+        self._transcription_factor = 'MAX'
+        if 'tf.' in split_scheme:
+            tkns = split_scheme.split('.')
+            self._transcription_factor = tkns[1]
+            split_scheme = '.'.join(tkns[2:])
         self._split_scheme = split_scheme
+        
+        train_celltypes = official_train_cts[self._transcription_factor]
+        val_celltype = official_val_cts[self._transcription_factor]
+        test_celltype = official_test_cts[self._transcription_factor]
+        
         if self._split_scheme == 'official':
             splits = {
                 'train': {
@@ -246,7 +250,7 @@ class EncodeTFBSDataset(WILDSDataset):
                 'test': 'Test',
             }
 
-        # Add new split scheme specifying custom test and val celltypes in the format val.<val celltype>.test.<test celltype>, e.g. 'official' is 'val.HepG2.test.liver'
+        # Add new split scheme specifying custom test and val celltypes in the format val.<val celltype>.test.<test celltype>, e.g. 'official' is 'tf.MAX.val.HepG2.test.liver'
         elif '.' in self._split_scheme:
             all_celltypes = train_celltypes + val_celltype + test_celltype
             in_val_ct = self._split_scheme.split('.')[1]
@@ -293,6 +297,21 @@ class EncodeTFBSDataset(WILDSDataset):
         else:
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
 
+        # Read in metadata and labels
+        self._metadata_df = pd.read_csv(
+            self._data_dir + '/labels/{}/metadata_df.bed'.format(self._transcription_factor),
+            sep='\t', header=None,
+            index_col=None, names=['chr', 'start', 'stop', 'celltype']
+        )
+        self._y_array = torch.tensor(np.load(
+            self._data_dir + '/labels/{}/metadata_y.npy'.format(self._transcription_factor)))
+
+        # ~10% of the dataset has ambiguous labels
+        # i.e., we can't tell if there is a binding event or not.
+        # This typically happens at the flanking regions of peaks.
+        # For our purposes, we will ignore these ambiguous labels during training and eval.
+        self.y_array[self.y_array == 0.5] = float('nan')
+
         self._split_array = -1 * np.ones(self._metadata_df.shape[0]).astype(int)
         for split, d in splits.items():
             chrom_mask = np.isin(self._metadata_df['chr'], d['chroms'])
@@ -309,7 +328,7 @@ class EncodeTFBSDataset(WILDSDataset):
 
         # Subsample the testing and validation indices, to speed up evaluation.
         # For the OOD splits (val and test), we subsample by a factor of 3
-        # For the id_val split if it exists, we subsample by a factor of 15
+        # For the id_val split if it exists, we subsample by a factor of 3*(# of training celltypes)
         for subsample_seed, (split, subsample_factor) in enumerate(
             [('val', 3), ('test', 3), ('id_val', 3*len(splits['train']['celltypes'])) ]):
             if split not in self._split_dict: continue
@@ -397,7 +416,6 @@ class EncodeTFBSDataset(WILDSDataset):
         seq_this = self._seq_bp[this_metadata['chr']][interval_start:interval_end]
         dnase_bw = self._dnase_allcelltypes[this_metadata['celltype']]
         dnase_this = np.nan_to_num(dnase_bw.values(chrom, interval_start, interval_end, numpy=True))
-
 #         assert(np.isnan(seq_this).sum() == 0)
 #         assert(np.isnan(dnase_this).sum() == 0)
 #         dnase_this = self.norm_signal(dnase_this, this_metadata['celltype'])
