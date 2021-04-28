@@ -1,3 +1,4 @@
+import copy
 import pdb
 
 import numpy as np
@@ -84,17 +85,36 @@ class CombinatorialGrouper(Grouper):
         else:
             datasets = [dataset]
 
-        for dataset in datasets:
+        metadata_fields = datasets[0].metadata_fields
+        # Build the largest metadata_map to see to check if all the metadata_maps are subsets of each other
+        largest_metadata_map = copy.deepcopy(datasets[0].metadata_map)
+        for i, dataset in enumerate(datasets):
             if isinstance(dataset, WILDSSubset):
                 raise ValueError("Grouper should be defined with full dataset(s) and not subset(s).")
 
-        self.groupby_fields = groupby_fields
+            # The first dataset was used to get the metadata_fields and initial metadata_map
+            if i == 0:
+                continue
 
+            if dataset.metadata_fields != metadata_fields:
+                raise ValueError(
+                    f"The datasets passed in have different metadata_fields: {dataset.metadata_fields}. "
+                    f"Expected: {metadata_fields}"
+                )
+
+            for field, values in dataset.metadata_map.items():
+                if len(values) > len(largest_metadata_map[field]):
+                    if not set(largest_metadata_map[field]).issubset(values):
+                        raise ValueError("The metadata_maps of the datasets need to be subsets of each other.")
+                    largest_metadata_map[field] = values
+                else:
+                    if not set(values).issubset(largest_metadata_map[field]):
+                        raise ValueError("The metadata_maps of the datasets need to be subsets of each other.")
+
+        self.groupby_fields = groupby_fields
         if groupby_fields is None:
             self._n_groups = 1
         else:
-            # Assume that the metadata_fields are the same for all the datasets passed into the grouper
-            metadata_fields = datasets[0].metadata_fields
             self.groupby_field_indices = [i for (i, field) in enumerate(metadata_fields) if field in groupby_fields]
             if len(self.groupby_field_indices) != len(self.groupby_fields):
                 raise ValueError('At least one group field not found in dataset.metadata_fields')
@@ -117,6 +137,7 @@ class CombinatorialGrouper(Grouper):
             # We assume that the metadata fields are integers,
             # so we can measure the cardinality of each field by taking its max + 1.
             # Note that this might result in some empty groups.
+            assert grouped_metadata.min() >= 0, "Group numbers cannot be negative."
             self.cardinality = 1 + torch.max(grouped_metadata, dim=0)[0]
             cumprod = torch.cumprod(self.cardinality, dim=0)
             self._n_groups = cumprod[-1].item()
