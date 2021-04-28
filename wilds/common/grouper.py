@@ -103,13 +103,12 @@ class CombinatorialGrouper(Grouper):
                 )
 
             for field, values in dataset.metadata_map.items():
+                n_overlap = min(len(values), len(largest_metadata_map[field]))
+                if not (values[:n_overlap] == largest_metadata_map[field][:n_overlap]).all():
+                    raise ValueError("The metadata_maps of the datasets need to be ordered subsets of each other.")
+
                 if len(values) > len(largest_metadata_map[field]):
-                    if not set(largest_metadata_map[field]).issubset(values):
-                        raise ValueError("The metadata_maps of the datasets need to be subsets of each other.")
                     largest_metadata_map[field] = values
-                else:
-                    if not set(values).issubset(largest_metadata_map[field]):
-                        raise ValueError("The metadata_maps of the datasets need to be subsets of each other.")
 
         self.groupby_fields = groupby_fields
         if groupby_fields is None:
