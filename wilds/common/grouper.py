@@ -142,7 +142,7 @@ class CombinatorialGrouper(Grouper):
             self._n_groups = cumprod[-1].item()
             self.factors_np = np.concatenate(([1], cumprod[:-1]))
             self.factors = torch.from_numpy(self.factors_np)
-            self.metadata_map = datasets[0].metadata_map
+            self.metadata_map = largest_metadata_map.metadata_map
 
     def metadata_to_group(self, metadata, return_counts=False):
         if self.groupby_fields is None:
