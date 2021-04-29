@@ -4,7 +4,7 @@ import numpy as np
 import torch.nn.functional as F
 from wilds.common.metrics.metric import Metric, ElementwiseMetric, MultiTaskMetric
 from wilds.common.metrics.loss import ElementwiseLoss
-from wilds.common.utils import avg_over_groups, minimum, maximum
+from wilds.common.utils import avg_over_groups, minimum, maximum, get_counts
 import sklearn.metrics
 from scipy.stats import pearsonr
 
@@ -19,7 +19,7 @@ def binary_logits_to_score(logits):
 
 def multiclass_logits_to_pred(logits):
     """
-    Takes multi-class logits of size (batch_size, ..., n_classes) and returns predictions 
+    Takes multi-class logits of size (batch_size, ..., n_classes) and returns predictions
     by taking an argmax at the last dimension
     """
     assert logits.dim() > 1
@@ -58,6 +58,86 @@ class MultiTaskAccuracy(MultiTaskMetric):
     def worst(self, metrics):
         return minimum(metrics)
 
+class MultiTaskAveragePrecision(MultiTaskMetric):
+    def __init__(self, prediction_fn=None, name=None, average='macro'):
+        self.prediction_fn = prediction_fn
+        if name is None:
+            name = f'avgprec'
+            if average is not None:
+                name+=f'-{average}'
+        self.average = average
+        super().__init__(name=name)
+
+    def _compute_flattened(self, flattened_y_pred, flattened_y_true):
+        if self.prediction_fn is not None:
+            flattened_y_pred = self.prediction_fn(flattened_y_pred)
+        ytr = np.array(flattened_y_true.squeeze().detach().cpu().numpy() > 0)
+        ypr = flattened_y_pred.squeeze().detach().cpu().numpy()
+        score = sklearn.metrics.average_precision_score(
+            ytr,
+            ypr,
+            average=self.average
+        )
+        to_ret = torch.tensor(score).to(flattened_y_pred.device)
+        return to_ret
+
+    def _compute_group_wise(self, y_pred, y_true, g, n_groups):
+        group_metrics = []
+        group_counts = get_counts(g, n_groups)
+        for group_idx in range(n_groups):
+            if group_counts[group_idx]==0:
+                group_metrics.append(torch.tensor(0., device=g.device))
+            else:
+                flattened_metrics, _ = self.compute_flattened(
+                    y_pred[g == group_idx],
+                    y_true[g == group_idx],
+                    return_dict=False)
+                group_metrics.append(flattened_metrics)
+        group_metrics = torch.stack(group_metrics)
+        worst_group_metric = self.worst(group_metrics[group_counts>0])
+
+        return group_metrics, group_counts, worst_group_metric
+
+    # def _compute(self, y_pred, y_true):
+    #     return self._compute_flattened(y_pred, y_true)
+
+    def worst(self, metrics):
+        return minimum(metrics)
+
+# Break-even point of precision and recall. This is approx equal to average precision, and added due to currently open numerical issues with having zero true positives in a batch (see https://github.com/scikit-learn/scikit-learn/issues/8245 ).
+def calc_PREven(y_true, y_score):
+    numpos = np.sum(y_true == 1)
+    top_ndces = np.argsort(y_score)[::-1]
+    ytr_ord = y_true[top_ndces]
+    m = {x: np.sum(ytr_ord[:numpos] == x) for x in np.unique(ytr_ord[:numpos])}
+    p = m[1] if 1 in m else 0
+    if (len(m) == 0) or (0 not in m):
+        return None
+    else:
+        return 1.0*p/(m[0]+p)    
+
+class MultiTaskPREven(MultiTaskMetric):
+    def __init__(self, prediction_fn=None, name=None):
+        self.prediction_fn = prediction_fn
+        if name is None:
+            name = f'preven'
+        super().__init__(name=name)
+
+    def _compute_flattened(self, flattened_y_pred, flattened_y_true):
+        if self.prediction_fn is not None:
+            flattened_y_pred = self.prediction_fn(flattened_y_pred)
+        ytr = np.array(flattened_y_true.squeeze().detach().cpu().numpy() > 0)
+        ypr = flattened_y_pred.squeeze().detach().cpu().numpy()
+        score = calc_PREven(ytr, ypr)
+        to_ret = torch.tensor(score).to(flattened_y_pred.device)
+        return to_ret
+    
+    def _compute(self, y_pred, y_true):
+        return self._compute_flattened(y_pred, y_true)
+
+    def worst(self, metrics):
+        return minimum(metrics)
+
 class Recall(Metric):
     def __init__(self, prediction_fn=None, name=None, average='binary'):
         self.prediction_fn = prediction_fn
@@ -73,6 +153,29 @@ class Recall(Metric):
             y_pred = self.prediction_fn(y_pred)
         recall = sklearn.metrics.recall_score(y_true, y_pred, average=self.average, labels=torch.unique(y_true))
         return torch.tensor(recall)
+
+    def worst(self, metrics):
+        return minimum(metrics)
+
+class AveragePrecision(Metric):
+    def __init__(self, prediction_fn=None, name=None, average='macro'):
+        self.prediction_fn = prediction_fn
+        if name is None:
+            name = f'avgprec'
+            if average is not None:
+                name+=f'-{average}'
+        self.average = average
+        super().__init__(name=name)
+
+    def _compute(self, y_pred, y_true):
+        if self.prediction_fn is not None:
+            y_pred = self.prediction_fn(y_pred)
+        score = sklearn.metrics.average_precision_score(
+            np.array(y_true.squeeze().detach().cpu().numpy() > 0),
+            y_pred.squeeze().detach().cpu().numpy(),
+            average=self.average
+        )
+        return torch.tensor(score)
 
     def worst(self, metrics):
         return minimum(metrics)

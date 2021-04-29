@@ -55,7 +55,7 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
     elif dataset == 'poverty':
         if version == '1.0':
             from wilds.datasets.archive.poverty_v1_0_dataset import PovertyMapDataset
-        else:            
+        else:
             from wilds.datasets.poverty_dataset import PovertyMapDataset
         return PovertyMapDataset(version=version, **dataset_kwargs)
 
@@ -77,3 +77,7 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
     elif dataset == 'sqf':
         from wilds.datasets.sqf_dataset import SQFDataset
         return SQFDataset(version=version, **dataset_kwargs)
+
+    elif dataset == 'encode-tfbs':
+        from wilds.datasets.encodetfbs_dataset import EncodeTFBSDataset
+        return EncodeTFBSDataset(version=version, **dataset_kwargs)

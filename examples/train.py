@@ -11,8 +11,10 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
 
     if train:
         algorithm.train()
+        torch.set_grad_enabled(True)
     else:
         algorithm.eval()
+        torch.set_grad_enabled(False)
 
     # Not preallocating memory is slower
     # but makes it easier to handle different types of data loaders
@@ -114,6 +116,7 @@ def train(algorithm, datasets, general_logger, config, epoch_offset, best_val_me
 
 def evaluate(algorithm, datasets, epoch, general_logger, config):
     algorithm.eval()
+    torch.set_grad_enabled(False)
     for split, dataset in datasets.items():
         if (not config.evaluate_all_splits) and (split not in config.eval_splits):
             continue
