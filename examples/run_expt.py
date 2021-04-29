@@ -22,7 +22,6 @@ import configs.supported as supported
 import torch.multiprocessing
 
 def main():
-    torch.multiprocessing.set_sharing_strategy('file_system')
 
     ''' to see default hyperparams for each dataset/model, look at configs/ '''
     parser = argparse.ArgumentParser()
@@ -118,10 +117,15 @@ def main():
     config = parser.parse_args()
     config = populate_defaults(config)
 
-    # set device
+    # For the GWHD dataset, we need to change the multiprocessing strategy or there will be
+    # too many open file descriptors
+    if config.dataset == 'gwhd':
+        torch.multiprocessing.set_sharing_strategy('file_system')
+
+    # Set device
     config.device = torch.device("cuda:" + str(config.device)) if torch.cuda.is_available() else torch.device("cpu")
 
-    ## Initialize logs
+    # Initialize logs
     if os.path.exists(config.log_dir) and config.resume:
         resume=True
         mode='a'
