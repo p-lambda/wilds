@@ -290,7 +290,7 @@ dataset_defaults = {
         'model_kwargs': {
             'n_classes': 1,
             'pretrained': True},
-        'loss_function': 'faster_criterion',
+        'loss_function': 'fasterrcnn_criterion',
         'groupby_fields': ['location'],
         'val_metric': 'detection_accuracy_avg', # TODO
         'val_metric_decreasing': False,

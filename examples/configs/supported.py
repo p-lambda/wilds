@@ -1,6 +1,5 @@
 # metrics
 from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE, multiclass_logits_to_pred, binary_logits_to_pred
-from utils import remove_key
 
 algo_log_metrics = {
     'accuracy': Accuracy(prediction_fn=multiclass_logits_to_pred),
@@ -13,7 +12,6 @@ algo_log_metrics = {
 process_outputs_functions = {
     'binary_logits_to_pred': binary_logits_to_pred,
     'multiclass_logits_to_pred': multiclass_logits_to_pred,
-    'remove_detr_aux_outputs': remove_key('aux_outputs'),
     None: None,
 }
 
@@ -21,7 +19,7 @@ process_outputs_functions = {
 models = ['resnet18_ms', 'resnet50', 'resnet34', 'wideresnet50',
          'densenet121', 'bert-base-uncased', 'distilbert-base-uncased',
          'gin-virtual', 'logistic_regression', 'code-gpt-py',
-         'detr']
+         'fasterrcnn']
 
 # See algorithms/initializer.py
 algorithms = ['ERM', 'groupDRO', 'deepCORAL', 'IRM']
@@ -36,4 +34,4 @@ schedulers = ['linear_schedule_with_warmup', 'ReduceLROnPlateau', 'StepLR']
 transforms = ['bert', 'image_base', 'image_resize_and_center_crop', 'poverty_train']
 
 # See losses.py
-losses = ['cross_entropy', 'lm_cross_entropy', 'MSE', 'multitask_bce', 'detr_set_criterion']
+losses = ['cross_entropy', 'lm_cross_entropy', 'MSE', 'multitask_bce', 'fasterrcnn_criterion']

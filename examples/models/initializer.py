@@ -77,17 +77,13 @@ def initialize_model(config, d_out, is_featurizer=False):
         assert not is_featurizer, "Featurizer not supported for logistic regression"
         model = nn.Linear(out_features=d_out, **config.model_kwargs)
 
-    elif config.model == 'detr':
-        if is_featurizer: # TODO
-            raise NotImplementedError('Featurizer not implemented for detection yet')
-        else:
-            model = initialize_detr_model(config, d_out)
     elif config.model == 'fasterrcnn':
         if is_featurizer: # TODO
             raise NotImplementedError('Featurizer not implemented for detection yet')
         else:
             model = initialize_fasterrcnn_model(config, d_out)
         model.needs_y = True
+
     else:
         raise ValueError(f'Model: {config.model} not recognized.')
 
@@ -162,60 +158,5 @@ def initialize_fasterrcnn_model(config, d_out):
 
     # load a model pre-trained pre-trained on COCO
     model = fasterrcnn_resnet50_fpn(pretrained=config.model_kwargs["pretrained"],num_classes=d_out)
-
-    return model
-
-
-def initialize_detr_model(config, d_out):
-
-    from models.detr.backbone import Backbone, Joiner
-    from models.detr.position_encoding import PositionEmbeddingSine
-    from models.detr.transformer import Transformer
-    from models.detr.detr import DETR
-
-    position_embedding = PositionEmbeddingSine(
-        config.model_kwargs['hidden_dim'] // 2,
-        normalize=True)
-
-    backbone = Backbone(
-        name=config.model_kwargs['backbone'],
-        train_backbone=config.model_kwargs['train_backbone'],
-        return_interm_layers=False, # No segmentation
-        dilation=config.model_kwargs['dilation'])
-    num_channels = backbone.num_channels
-    backbone = Joiner(backbone, position_embedding)
-    backbone.num_channels = num_channels
-
-    transformer = Transformer(
-        d_model=config.model_kwargs['hidden_dim'],
-        dropout=config.model_kwargs['dropout'],
-        nhead=config.model_kwargs['nheads'],
-        dim_feedforward=config.model_kwargs['dim_feedforward'],
-        num_encoder_layers=config.model_kwargs['enc_layers'],
-        num_decoder_layers=config.model_kwargs['dec_layers'],
-        normalize_before=config.model_kwargs['pre_norm'],
-        return_intermediate_dec=True,
-    )
-
-    model = DETR(
-        backbone,
-        transformer,
-        num_classes=d_out,
-        num_queries=config.model_kwargs['n_queries'],
-        aux_loss=config.model_kwargs['aux_loss'],
-    )
-
-    if config.model_kwargs['pretrained']:
-        # Calling torch.hub.load('facebookresearch/detr', 'detr_resnet50', pretrained=True, num_classes=d_out) does not work
-        # due to a ModuleNotFoundError. Perhaps some configuration error there.
-        # So we have to do it manually.
-        checkpoint = torch.hub.load_state_dict_from_url(
-                    url='https://dl.fbaipublicfiles.com/detr/detr-r50-e632da11.pth',
-                    map_location='cpu',
-                    check_hash=True)
-        del checkpoint["model"]["query_embed.weight"]
-        del checkpoint["model"]["class_embed.weight"]
-        del checkpoint["model"]["class_embed.bias"]
-        model.load_state_dict(checkpoint["model"], strict=False)
 
     return model
