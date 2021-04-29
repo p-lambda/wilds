@@ -1,11 +1,10 @@
-import os
-from tqdm import tqdm
 import torch
-from utils import save_model, save_pred, get_pred_prefix, get_model_prefix
-import torch.autograd.profiler as profiler
-from configs.supported import process_outputs_functions
+from tqdm import tqdm
 
-def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
+from configs.supported import process_outputs_functions
+from utils import save_model, save_pred, get_pred_prefix, get_model_prefix
+
+def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabeled_dataset=None):
     if dataset['verbose']:
         general_logger.write(f"\n{dataset['name']}:\n")
 
@@ -21,14 +20,29 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
     epoch_y_pred = []
     epoch_metadata = []
 
+    # Assert that data loaders are defined for the datasets
+    assert 'loader' in dataset, "A data loader must be defined for the dataset."
+    if unlabeled_dataset:
+        assert 'loader' in unlabeled_dataset, "A data loader must be defined for the dataset."
+
+    batches = (
+        zip(dataset['loader'], unlabeled_dataset['loader']) if unlabeled_dataset
+        else dataset['loader']
+    )
+    if config.progress_bar:
+        batches = tqdm(batches)
+
     # Using enumerate(iterator) can sometimes leak memory in some environments (!)
     # so we manually increment batch_idx
     batch_idx = 0
-    iterator = tqdm(dataset['loader']) if config.progress_bar else dataset['loader']
 
-    for batch in iterator:
+    for batch in batches:
         if train:
-            batch_results = algorithm.update(batch)
+            if unlabeled_dataset:
+                labeled_batch, unlabeled_batch = batch
+                batch_results = algorithm.update(labeled_batch, unlabeled_batch)
+            else:
+                batch_results = algorithm.update(batch)
         else:
             batch_results = algorithm.evaluate(batch)
 
@@ -74,12 +88,12 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
     return results, epoch_y_pred
 
 
-def train(algorithm, datasets, general_logger, config, epoch_offset, best_val_metric):
+def train(algorithm, datasets, general_logger, config, epoch_offset, best_val_metric, unlabeled_dataset=None):
     for epoch in range(epoch_offset, config.n_epochs):
         general_logger.write('\nEpoch [%d]:\n' % epoch)
 
         # First run training
-        run_epoch(algorithm, datasets['train'], general_logger, epoch, config, train=True)
+        run_epoch(algorithm, datasets['train'], general_logger, epoch, config, train=True, unlabeled_dataset=unlabeled_dataset)
 
         # Then run val
         val_results, y_pred = run_epoch(algorithm, datasets['val'], general_logger, epoch, config, train=False)
