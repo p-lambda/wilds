@@ -85,7 +85,7 @@ def batch_concat_box_prediction_layers(box_cls, box_regression):
 
 
     return new_box_cls, new_box_regression
-    
+
 class RegionProposalNetworkWILDS(RegionProposalNetwork):
     def __init__(self,
                  anchor_generator,
@@ -113,10 +113,6 @@ class RegionProposalNetworkWILDS(RegionProposalNetwork):
             objectness_loss (Tensor)
             box_loss (Tensor)
         """
-
-
-
-
         objectness, pred_bbox_deltas = batch_concat_box_prediction_layers(objectness, pred_bbox_deltas)
 
         objectness_loss = []
@@ -129,7 +125,6 @@ class RegionProposalNetworkWILDS(RegionProposalNetwork):
             sampled_pos_inds = torch.where(torch.cat(sampled_pos_inds, dim=0))[0]
             sampled_neg_inds = torch.where(torch.cat(sampled_neg_inds, dim=0))[0]
             sampled_inds = torch.cat([sampled_pos_inds, sampled_neg_inds], dim=0)
-
 
             box_loss.append(det_utils.smooth_l1_loss(
                 pred_bbox_deltas_[sampled_pos_inds],
@@ -144,7 +139,7 @@ class RegionProposalNetworkWILDS(RegionProposalNetwork):
             ))
 
         return torch.stack(objectness_loss), torch.stack(box_loss)
-        
+
     def forward(self,
                 images,       # type: ImageList
                 features,     # type: Dict[str, Tensor]
@@ -231,7 +226,6 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
         labels_pos = labels_[sampled_pos_inds_subset]
         N, num_classes = class_logits_.shape
 
-
         box_regression_ = box_regression_.reshape(N, -1, 4)
 
         box_loss_ = det_utils.smooth_l1_loss(
@@ -246,7 +240,6 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
 
 class RoIHeadsWILDS(RoIHeads):
     def __init__(self, box_roi_pool, box_head, box_predictor, box_fg_iou_thresh, box_bg_iou_thresh,box_batch_size_per_image,box_positive_fraction,bbox_reg_weights,box_score_thresh,box_nms_thresh,box_detections_per_img):
-
 
         super().__init__(box_roi_pool, box_head, box_predictor,
             box_fg_iou_thresh, box_bg_iou_thresh,
@@ -277,7 +270,6 @@ class RoIHeadsWILDS(RoIHeads):
                 if self.has_keypoint():
                     assert t["keypoints"].dtype == torch.float32, 'target keypoints must of float type'
 
-
         # here batch is maintained
         if self.training:
             proposals, matched_idxs, labels, regression_targets = self.select_training_samples(proposals, targets)
@@ -285,8 +277,6 @@ class RoIHeadsWILDS(RoIHeads):
             labels = None
             regression_targets = None
             matched_idxs = None
-
-
 
         box_features = self.box_roi_pool(features, proposals, image_shapes)
 
@@ -306,7 +296,6 @@ class RoIHeadsWILDS(RoIHeads):
                 "loss_box_reg": loss_box_reg
             }
 
-
         boxes, scores, labels = self.postprocess_detections(class_logits, box_regression, proposals, image_shapes)
         num_images = len(boxes)
         for i in range(num_images):
@@ -318,9 +307,8 @@ class RoIHeadsWILDS(RoIHeads):
                 }
             )
 
-
         return result, losses
-    
+
 def fasterrcnn_resnet50_fpn(pretrained=False, progress=True,
                             num_classes=91, pretrained_backbone=True, trainable_backbone_layers=3, **kwargs):
 
@@ -338,16 +326,12 @@ def fasterrcnn_resnet50_fpn(pretrained=False, progress=True,
                                               progress=progress)
         model.load_state_dict(state_dict)
 
-    
     # get number of input features for the classifier
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     # replace the pre-trained head with a new one
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes+1)
 
-
     return model
-
-
 
 class FastWILDS(GeneralizedRCNN):
     def __init__(self, backbone, num_classes=None,
@@ -425,14 +409,14 @@ class FastWILDS(GeneralizedRCNN):
             box_predictor = FastRCNNPredictor(
                 representation_size,
                 num_classes)
-        
+
         roi_heads = RoIHeadsWILDS(
             box_roi_pool, box_head, box_predictor,
             box_fg_iou_thresh, box_bg_iou_thresh,
             box_batch_size_per_image, box_positive_fraction,
             bbox_reg_weights,
             box_score_thresh, box_nms_thresh, box_detections_per_img)
-        
+
 
         image_mean = [0., 0., 0.] # small trick because images are already normalized
         image_std = [1., 1., 1.]
@@ -441,7 +425,7 @@ class FastWILDS(GeneralizedRCNN):
         super(FastWILDS, self).__init__(backbone, rpn, roi_heads, transform)
     # Set your own forward pass
     def forward(self, images, targets=None):
-        
+
 
         if self.training:
             if targets is None:
@@ -464,7 +448,7 @@ class FastWILDS(GeneralizedRCNN):
             assert len(val) == 2
             original_image_sizes.append((val[0], val[1]))
 
-   
+
         images, targets = self.transform(images, targets)
 
         # Check for degenerate boxes
@@ -525,5 +509,3 @@ class FasterRCNNLoss(nn.Module):
 
 
         return elementwise_loss
-
-

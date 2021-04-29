@@ -2,7 +2,6 @@ import os
 from tqdm import tqdm
 import torch
 from utils import save_model, save_pred, get_pred_prefix, get_model_prefix, detach_and_clone, collate_list
-import torch.autograd.profiler as profiler
 from configs.supported import process_outputs_functions
 
 def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
@@ -26,9 +25,6 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
     batch_idx = 0
     iterator = tqdm(dataset['loader']) if config.progress_bar else dataset['loader']
 
-    # import psutil
-    # process = psutil.Process(os.getpid())
-
     for batch in iterator:
         if train:
             batch_results = algorithm.update(batch)
@@ -48,21 +44,12 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
 
         if train and (batch_idx+1) % config.log_every==0:
             log_results(algorithm, dataset, general_logger, epoch, batch_idx)
-            # t = torch.cuda.get_device_properties(0).total_memory
-            # r = torch.cuda.memory_reserved(0)
-            # a = torch.cuda.memory_allocated(0)
-            # f = r-a  # free inside reserved
-            # print(f'Total: {f:10}   Reserved: {r:10}   Allocated: {a:10}   Free: {f:10}')
-            #
-            # mem = process.memory_info().rss
-            # print(f'Mem: {mem / 1024 / 1024:6.1f}M')
 
         batch_idx += 1
 
     epoch_y_pred = collate_list(epoch_y_pred)
     epoch_y_true = collate_list(epoch_y_true)
     epoch_metadata = collate_list(epoch_metadata)
-
 
     results, results_str = dataset['dataset'].eval(
         epoch_y_pred,
