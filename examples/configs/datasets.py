@@ -292,7 +292,7 @@ dataset_defaults = {
             'pretrained': True},
         'loss_function': 'fasterrcnn_criterion',
         'groupby_fields': ['location'],
-        'val_metric': 'detection_accuracy_avg', # TODO
+        'val_metric': 'detection_acc_avg', # TODO
         'val_metric_decreasing': False,
         'algo_log_metric': None, # TODO
         'optimizer': 'Adam',
@@ -306,6 +306,7 @@ dataset_defaults = {
             'num_workers': 1,
             'pin_memory': True,
         },
+        'process_outputs_function': None, 
     }
 }
 

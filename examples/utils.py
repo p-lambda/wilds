@@ -182,9 +182,7 @@ def save_pred(y_pred, path_prefix):
         df = pd.DataFrame(y_pred.numpy())
         df.to_csv(path_prefix + '.csv', index=False, header=False)
     # Dictionary
-    elif isinstance(y_pred, dict):
-        torch.save(y_pred, path_prefix + '.pth')
-    elif isinstance(y_pred, list):
+    elif isinstance(y_pred, dict) or isinstance(y_pred, list):
         torch.save(y_pred, path_prefix + '.pth')
     else:
         raise TypeError("Invalid type for save_pred")
@@ -241,9 +239,11 @@ def collate_list(vec):
     """
     If vec is a list of Tensors, it concatenates them all along the first dimension.
 
-    If vec is a list of lists, it joins these lists together, but does not attempt to recursively collate. This allows each element of the list to be, e.g., its own dict.
+    If vec is a list of lists, it joins these lists together, but does not attempt to
+    recursively collate. This allows each element of the list to be, e.g., its own dict.
 
-    If vec is a list of dicts (with the same keys in each dict), it returns a single dict with the same keys. For each key, it recursively collates all entries in the list.
+    If vec is a list of dicts (with the same keys in each dict), it returns a single dict
+    with the same keys. For each key, it recursively collates all entries in the list.
     """
     if not isinstance(vec, list):
         raise TypeError("collate_list must take in a list")

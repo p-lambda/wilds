@@ -4,20 +4,20 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler, SubsetRandomSampler
 from wilds.common.utils import get_counts, split_into_groups
 
-def get_train_loader(loader, dataset, batch_size, 
+def get_train_loader(loader, dataset, batch_size,
         uniform_over_groups=None, grouper=None, distinct_groups=True, n_groups_per_batch=None, **loader_kwargs):
     """
     Constructs and returns the data loader for training.
     Args:
         - loader (str): Loader type. 'standard' for standard loaders and 'group' for group loaders,
-                        which first samples groups and then samples a fixed number of examples belonging 
+                        which first samples groups and then samples a fixed number of examples belonging
                         to each group.
         - dataset (WILDSDataset or WILDSSubset): Data
         - batch_size (int): Batch size
-        - uniform_over_groups (None or bool): Whether to sample the groups uniformly or according to the 
+        - uniform_over_groups (None or bool): Whether to sample the groups uniformly or according to the
                                               natural data distribution.
-                                              Setting to None applies the defaults for each type of loaders. 
-                                              For standard loaders, the default is False. For group loaders, 
+                                              Setting to None applies the defaults for each type of loaders.
+                                              For standard loaders, the default is False. For group loaders,
                                               the default is True.
         - grouper (Grouper): Grouper used for group loaders or for uniform_over_groups=True
         - distinct_groups (bool): Whether to sample distinct_groups within each minibatch for group loaders.
@@ -63,14 +63,12 @@ def get_train_loader(loader, dataset, batch_size,
             raise ValueError(f'n_groups_per_batch was set to {n_groups_per_batch} but there are only {grouper.n_groups} groups specified.')
 
         group_ids = grouper.metadata_to_group(dataset.metadata_array)
-
         batch_sampler = GroupSampler(
             group_ids=group_ids,
             batch_size=batch_size,
             n_groups_per_batch=n_groups_per_batch,
             uniform_over_groups=uniform_over_groups,
             distinct_groups=distinct_groups)
-
 
         return DataLoader(dataset,
               shuffle=None,
@@ -84,7 +82,7 @@ def get_eval_loader(loader, dataset, batch_size, grouper=None, **loader_kwargs):
     """
     Constructs and returns the data loader for evaluation.
     Args:
-        - loader (str): Loader type. 'standard' for standard loaders. 
+        - loader (str): Loader type. 'standard' for standard loaders.
         - dataset (WILDSDataset or WILDSSubset): Data
         - batch_size (int): Batch size
         - loader_kwargs: kwargs passed into torch DataLoader initialization.
@@ -106,7 +104,6 @@ class GroupSampler:
         then sampling data from those groups.
         It drops the last batch if it's incomplete.
     """
-
     def __init__(self, group_ids, batch_size, n_groups_per_batch,
                  uniform_over_groups, distinct_groups):
 
@@ -131,16 +128,13 @@ class GroupSampler:
             self.group_prob = unique_counts.numpy() / unique_counts.numpy().sum()
 
     def __iter__(self):
-
         for batch_id in range(self.num_batches):
-
             # Note that we are selecting group indices rather than groups
             groups_for_batch = np.random.choice(
                 len(self.unique_groups),
                 size=self.n_groups_per_batch,
                 replace=(not self.distinct_groups),
                 p=self.group_prob)
-
             sampled_ids = [
                 np.random.choice(
                     self.group_indices[group],
@@ -151,7 +145,6 @@ class GroupSampler:
 
             # Flatten
             sampled_ids = np.concatenate(sampled_ids)
-
             yield sampled_ids
 
     def __len__(self):
