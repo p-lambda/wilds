@@ -11,10 +11,13 @@ from wilds.common.metrics.all_metrics import DetectionAccuracy
 def _collate_fn(batch):
     """
     Stack x (batch[0]) and metadata (batch[2]), but not y.
+    originally, batch = (item1, item2, item3, item4)
+    after zip, batch = [(item1[0], item2[0], ..), ..]
     """
     batch = list(zip(*batch))
     batch[0] = torch.stack(batch[0])
-    batch[2] = torch.stack(batch[2])
+    batch[1] = list(batch[1])
+    batch[2] = torch.stack(batch[2])    
     return tuple(batch)
 
 class GWHDDataset(WILDSDataset):

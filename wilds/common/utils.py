@@ -134,18 +134,3 @@ def numel(obj):
         return len(obj)
     else:
         raise TypeError("Invalid type for numel")
-
-# def get_subset_from_mask(seq, mask):
-#     """
-#     Mask should be a binary vector with the same length as seq.
-#     """
-#     if torch.is_tensor(seq) or isinstance(seq, list):
-#         if len(mask) != len(seq):
-#             print(len(mask))
-#             print(len(seq))
-#             raise ValueError('Mask must have same length as the input.')
-#         return seq[mask]
-#     elif isinstance(seq, dict):
-#         return {k: get_subset_from_mask(v, mask) for k, v in seq.items()}
-#     else:
-#         raise TypeError('Input must be a Tensor, list, or dict.')
