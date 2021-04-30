@@ -117,7 +117,7 @@ class WILDSUnlabeledDataset(WILDSDataset):
                 self.download_dataset(data_dir, download)
             return data_dir
         else:
-            super().initialize_data_dir(root_dir, download)
+            return super().initialize_data_dir(root_dir, download)
 
     def eval(self, y_pred, y_true, metadata):
         raise AttributeError(WILDSUnlabeledDataset._UNSUPPORTED_FUNCTIONALITY_ERROR)
