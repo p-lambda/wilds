@@ -2,6 +2,8 @@ __pycache__
 .idea
 build
 data
+logs
 dist
+reproducibility
 venv
 wilds.egg-info

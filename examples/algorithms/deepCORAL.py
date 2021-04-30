@@ -18,6 +18,9 @@ class DeepCORAL(SingleModelAlgorithm):
           organization={Springer}
         }
 
+    The original CORAL loss is the distance between second-order statistics (covariances)
+    of the source and target features.
+
     The CORAL penalty function below is adapted from DomainBed's implementation:
     https://github.com/facebookresearch/DomainBed/blob/1a61f7ff44b02776619803a1dd12f952528ca531/domainbed/algorithms.py#L539
     """
@@ -49,7 +52,7 @@ class DeepCORAL(SingleModelAlgorithm):
         self.classifier = classifier
 
     def coral_penalty(self, x, y):
-        if x.dim() > 2: 
+        if x.dim() > 2:
             # featurizers output Tensors of size (batch_size, ..., feature dimensionality).
             # we flatten to Tensors of size (*, feature dimensionality)
             x = x.view(-1, x.size(-1))
@@ -67,7 +70,7 @@ class DeepCORAL(SingleModelAlgorithm):
 
         return mean_diff+cova_diff
 
-    def process_batch(self, batch):
+    def process_batch(self, batch, unlabeled_batch=None):
         """
         Override
         """
@@ -86,34 +89,46 @@ class DeepCORAL(SingleModelAlgorithm):
             'y_pred': outputs,
             'metadata': metadata,
             'features': features,
-            }
+        }
+        if unlabeled_batch is not None:
+            x, metadata = unlabeled_batch
+            x = x.to(self.device)
+            results['unlabeled_metadata'] = metadata
+            results['unlabeled_features'] = self.featurizer(x)
+            results['unlabeled_g'] = self.grouper.metadata_to_group(metadata).to(self.device)
         return results
 
     def objective(self, results):
-        # extract features
-        features = results.pop('features')
-
         if self.is_training:
-            # split into groups
-            unique_groups, group_indices, _ = split_into_groups(results['g'])
-            # compute penalty
+            # Extract features
+            labeled_features = results.pop('features')
+            if 'unlabeled_features' in results:
+                unlabeled_features = results.pop('unlabeled_features')
+                features = torch.cat((labeled_features, unlabeled_features))
+                groups = torch.cat((results['g'], results['unlabeled_g']))
+            else:
+                features = labeled_features
+                groups = results['g']
+
+            # Split into groups
+            unique_groups, group_indices, _ = split_into_groups(groups)
             n_groups_per_batch = unique_groups.numel()
+
+            # Compute penalty - perform pairwise comparisons between features of all the groups
             penalty = torch.zeros(1, device=self.device)
             for i_group in range(n_groups_per_batch):
                 for j_group in range(i_group+1, n_groups_per_batch):
                     penalty += self.coral_penalty(features[group_indices[i_group]], features[group_indices[j_group]])
             if n_groups_per_batch > 1:
                 penalty /= (n_groups_per_batch * (n_groups_per_batch-1) / 2) # get the mean penalty
-            # save penalty
         else:
             penalty = 0.
 
+        # save penalty
         if isinstance(penalty, torch.Tensor):
             results['penalty'] = penalty.item()
         else:
             results['penalty'] = penalty
 
-
         avg_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
-
         return avg_loss + penalty * self.penalty_weight
