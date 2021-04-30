@@ -358,11 +358,11 @@ class EncodeTFBSDataset(WILDSDataset):
             print(chrom, time.time() - itime)
         del seq_arr
 
-        # Set up file handles for DNase features, writing normalized DNase tracks along the way.
+        # Set up file handles for DNase features, writing normalized DNase tracks along the way if they aren't already written.
         self._dnase_allcelltypes = {}
         for ct in self._all_celltypes:
             orig_dnase_bw_path = os.path.join(self._data_dir, 'DNASE.{}.fc.signal.bigwig'.format(ct))
-            dnase_bw_path = os.path.join(self._data_dir, 'DNase.{}.{}.bigwig'.format(ct, self._split_scheme))
+            dnase_bw_path = os.path.join(self._data_dir, 'DNase.{}.{}.{}.bigwig'.format(self._transcription_factor, ct, self._split_scheme))
             if not os.path.exists(dnase_bw_path):
                 ref_celltypes = splits['train']['celltypes']
                 dnase_normalize(ct, ref_celltypes, out_fname=self._split_scheme, data_pfx=self._data_dir)
