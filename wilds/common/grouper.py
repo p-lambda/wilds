@@ -88,7 +88,7 @@ class CombinatorialGrouper(Grouper):
 
         metadata_fields: List[str] = datasets[0].metadata_fields
         # Build the largest metadata_map to see to check if all the metadata_maps are subsets of each other
-        largest_metadata_map: Dict[str, Union[List, np.ndarray]]  = copy.deepcopy(datasets[0].metadata_map)
+        largest_metadata_map: Dict[str, Union[List, np.ndarray]] = copy.deepcopy(datasets[0].metadata_map)
         for i, dataset in enumerate(datasets):
             if isinstance(dataset, WILDSSubset):
                 raise ValueError("Grouper should be defined with full dataset(s) and not subset(s).")
@@ -105,11 +105,7 @@ class CombinatorialGrouper(Grouper):
 
             for field, values in dataset.metadata_map.items():
                 n_overlap = min(len(values), len(largest_metadata_map[field]))
-                is_subset: Union[bool, np.ndarray] = values[:n_overlap] == largest_metadata_map[field][:n_overlap]
-                if not (
-                    (type(is_subset) == np.ndarray and is_subset.all())
-                    or (type(is_subset) == bool and is_subset)
-                ):
+                if not (np.asarray(values[:n_overlap]) == np.asarray(largest_metadata_map[field][:n_overlap])).all():
                     raise ValueError("The metadata_maps of the datasets need to be ordered subsets of each other.")
 
                 if len(values) > len(largest_metadata_map[field]):
