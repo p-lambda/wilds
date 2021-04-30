@@ -1,10 +1,11 @@
 import copy
 import pdb
+from typing import Dict, List, Union
 
 import numpy as np
 import torch
 from wilds.common.utils import get_counts
-from wilds.datasets.wilds_dataset import WILDSSubset
+from wilds.datasets.wilds_dataset import WILDSDataset, WILDSSubset
 import warnings
 
 class Grouper:
@@ -81,13 +82,13 @@ class CombinatorialGrouper(Grouper):
         if isinstance(dataset, list):
             if len(dataset) == 0:
                 raise ValueError("At least one dataset must be defined for Grouper.")
-            datasets = dataset
+            datasets: List[WILDSDataset] = dataset
         else:
-            datasets = [dataset]
+            datasets: List[WILDSDataset] = [dataset]
 
-        metadata_fields = datasets[0].metadata_fields
+        metadata_fields: List[str] = datasets[0].metadata_fields
         # Build the largest metadata_map to see to check if all the metadata_maps are subsets of each other
-        largest_metadata_map = copy.deepcopy(datasets[0].metadata_map)
+        largest_metadata_map: Dict[str, Union[List, np.ndarray]] = copy.deepcopy(datasets[0].metadata_map)
         for i, dataset in enumerate(datasets):
             if isinstance(dataset, WILDSSubset):
                 raise ValueError("Grouper should be defined with full dataset(s) and not subset(s).")
@@ -104,7 +105,7 @@ class CombinatorialGrouper(Grouper):
 
             for field, values in dataset.metadata_map.items():
                 n_overlap = min(len(values), len(largest_metadata_map[field]))
-                if not (values[:n_overlap] == largest_metadata_map[field][:n_overlap]).all():
+                if not (np.asarray(values[:n_overlap]) == np.asarray(largest_metadata_map[field][:n_overlap])).all():
                     raise ValueError("The metadata_maps of the datasets need to be ordered subsets of each other.")
 
                 if len(values) > len(largest_metadata_map[field]):
