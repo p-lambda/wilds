@@ -72,9 +72,34 @@ class CivilCommentsUnlabeledDataset(WILDSUnlabeledDataset):
         self._split_array = self._metadata_df['split'].values
 
         # Metadata (Not Available)
-        self._metadata_fields = []
-        self._metadata_array = torch.empty(len(self._metadata_df), 0)
-        self._metadata_map = {}
+        # We want grouper to assign all values to their own group, so fill
+        # all metadata fields with '2'. The normal dataset has binary metadata,
+        # so this will not overlap.
+        self._identity_vars = [
+            'male',
+            'female',
+            'LGBTQ',
+            'christian',
+            'muslim',
+            'other_religions',
+            'black',
+            'white'
+        ]
+        self._auxiliary_vars = [
+            'identity_any',
+            'severe_toxicity',
+            'obscene',
+            'threat',
+            'insult',
+            'identity_attack',
+            'sexual_explicit'
+        ]
+
+        self._metadata_array = torch.ones(
+            len(self._metadata_df),
+            len(self._identity_vars) + len(self._auxiliary_vars) + 1
+        ) * 2
+        self._metadata_fields = self._identity_vars + self._auxiliary_vars + ['y']
 
         super().__init__(root_dir, download, split_scheme)
 
