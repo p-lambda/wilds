@@ -8,7 +8,7 @@ def initialize_loss(config, d_out):
     elif config.loss_function == 'lm_cross_entropy':
         return MultiTaskLoss(loss_fn=nn.CrossEntropyLoss(reduction='none'))
 
-    elif config.loss_function == 'MSE':
+    elif config.loss_function == 'mse':
         return MSE(name='loss')
 
     elif config.loss_function == 'multitask_bce':
