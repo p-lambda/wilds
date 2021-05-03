@@ -103,6 +103,7 @@ class CombinatorialGrouper(Grouper):
                     f"Expected: {metadata_fields}"
                 )
 
+            if dataset.metadata_map is None: continue
             for field, values in dataset.metadata_map.items():
                 n_overlap = min(len(values), len(largest_metadata_map[field]))
                 if not (np.asarray(values[:n_overlap]) == np.asarray(largest_metadata_map[field][:n_overlap])).all():
