@@ -93,7 +93,12 @@ def initialize_model(config, d_out, is_featurizer=False):
     # If True, Algorithm.process_batch() will call model(x, y) during training,
     # and model(x, None) during eval.
     if not hasattr(model, 'needs_y'):
-        model.needs_y = False
+        # Sometimes model is a tuple of (featurizer, classifier)
+        if isinstance(model, tuple):
+            for submodel in model:
+                submodel.needs_y = False
+        else:
+            model.needs_y = False
 
     return model
 

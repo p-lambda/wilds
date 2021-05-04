@@ -1,5 +1,6 @@
 import torch.nn as nn
 from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
+from wilds.common.metrics.all_metrics import MSE
 
 def initialize_loss(config, d_out):
     if config.loss_function == 'cross_entropy':
