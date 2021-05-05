@@ -78,9 +78,6 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
         self.metadata['region'] = regions
         all_countries = self.metadata['country_code']
 
-        self.num_chunks = 101
-        self.chunk_size = len(self.metadata) // (self.num_chunks - 1)
-
         if self._split_scheme.startswith('time_after'):
             year = int(self._split_scheme.split('_')[2])
             year_dt = datetime.datetime(year, 1, 1, tzinfo=pytz.UTC)
@@ -117,7 +114,7 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
                 idxs = np.arange(len(self.metadata))[test_unlabeled_mask]
 
             elif split == 'val_unlabeled':
-                val_unlabeled_mask = self.val_ood_mask & ~self.test_ood_mask & ~test_mask & ~val_mask
+                val_unlabeled_mask = self.val_ood_mask & & ~test_mask & ~val_mask
                 idxs = np.arange(len(self.metadata))[val_unlabeled_mask]
 
             elif split == 'train_unlabeled':
