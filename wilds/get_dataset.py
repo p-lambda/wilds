@@ -74,11 +74,15 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
         return PovertyMapDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'fmow':
-        if version == '1.0':
-            from wilds.datasets.archive.fmow_v1_0_dataset import FMoWDataset
+        if unlabeled:
+            from wilds.datasets.unlabeled.fmow_unlabeled_dataset import FMoWUnlabeledDataset
+            return FMoWUnlabeledDataset(version=version, **dataset_kwargs)
         else:
-            from wilds.datasets.fmow_dataset import FMoWDataset # type:ignore
-        return FMoWDataset(version=version, **dataset_kwargs)
+            if version == '1.0':
+                from wilds.datasets.archive.fmow_v1_0_dataset import FMoWDataset
+            else:
+                from wilds.datasets.fmow_dataset import FMoWDataset # type:ignore
+            return FMoWDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'bdd100k':
         from wilds.datasets.bdd100k_dataset import BDD100KDataset
