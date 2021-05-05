@@ -114,7 +114,7 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
                 idxs = np.arange(len(self.metadata))[test_unlabeled_mask]
 
             elif split == 'val_unlabeled':
-                val_unlabeled_mask = self.val_ood_mask & & ~test_mask & ~val_mask
+                val_unlabeled_mask = self.val_ood_mask & ~test_mask & ~val_mask
                 idxs = np.arange(len(self.metadata))[val_unlabeled_mask]
 
             elif split == 'train_unlabeled':
