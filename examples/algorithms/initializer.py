@@ -1,5 +1,6 @@
 from wilds.common.utils import get_counts
 from algorithms.ERM import ERM
+from algorithms.DANN import DANN
 from algorithms.groupDRO import GroupDRO
 from algorithms.deepCORAL import DeepCORAL
 from algorithms.IRM import IRM
@@ -65,6 +66,15 @@ def initialize_algorithm(config, datasets, train_grouper):
             loss=loss,
             metric=metric,
             n_train_steps=n_train_steps)
+    elif config.algorithm=='DANN':
+        algorithm = DANN(
+            config=config,
+            d_out=d_out,
+            grouper=train_grouper,
+            loss=loss,
+            metric=metric,
+            n_train_steps=n_train_steps
+        )
     else:
         raise ValueError(f"Algorithm {config.algorithm} not recognized")
 

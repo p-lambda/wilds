@@ -36,13 +36,21 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
     # so we manually increment batch_idx
     batch_idx = 0
 
+    # Construct and pass in additional information about the batch
+    batch_info = {
+        'n_epochs': config.n_epochs,
+        'epoch': epoch,
+        'n_batches': len(dataset['loader']),
+    }
+
     for batch in batches:
+        batch_info['batch'] = batch_idx
         if train:
             if unlabeled_dataset:
                 labeled_batch, unlabeled_batch = batch
-                batch_results = algorithm.update(labeled_batch, unlabeled_batch)
+                batch_results = algorithm.update(labeled_batch, unlabeled_batch, batch_info)
             else:
-                batch_results = algorithm.update(batch)
+                batch_results = algorithm.update(batch, batch_info=batch_info)
         else:
             batch_results = algorithm.evaluate(batch)
 

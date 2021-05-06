@@ -38,7 +38,7 @@ class GroupDRO(SingleModelAlgorithm):
         self.group_weights = self.group_weights/self.group_weights.sum()
         self.group_weights = self.group_weights.to(self.device)
 
-    def process_batch(self, batch):
+    def process_batch(self, batch, unlabeled_batch=None, batch_info=None):
         """
         A helper function for update() and evaluate() that processes the batch
         Args:

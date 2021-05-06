@@ -25,5 +25,11 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'irm_lambda': 100.,
         'irm_penalty_anneal_iters': 500,
-    }
+    },
+    'DANN': {
+        'train_loader': 'standard',
+        'uniform_over_groups': False,
+        'eval_loader': 'standard',
+        'dann_gamma': 10.,
+    },
 }
