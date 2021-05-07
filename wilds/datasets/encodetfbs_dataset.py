@@ -82,7 +82,6 @@ def dnase_normalize(
         ref += (1.0/len(ref_celltypes))*np.load(data_pfx + "qn.{}.npy".format(ct))
 
     chromsizes_list = [(k, v) for k, v in chrom_sizes.items()]
-    out_fname = data_pfx + 'DNase.{}.{}.bigwig'.format(input_bw_celltype, out_fname)
     bw_output = pyBigWig.open(out_fname, 'w')
     bw_output.addHeader(chromsizes_list)
     # bw_output.addHeader(list(zip(chr_all , num_bp)), maxZooms=0) # zip two turples
@@ -251,7 +250,7 @@ class EncodeTFBSDataset(WILDSDataset):
                 'test': 'Test',
             }
 
-        # Add new split scheme specifying custom test and val celltypes in the format val.<val celltype>.test.<test celltype>, e.g. 'official' is 'tf.MAX.val.HepG2.test.liver'
+        # Add new split scheme specifying custom test and val celltypes in the format val.<val celltype>.test.<test celltype>, e.g. self._split_scheme == 'official' is equivalent to self._split_scheme == 'val.HepG2.test.liver'
         elif '.' in self._split_scheme:
             all_celltypes = train_celltypes + val_celltype + test_celltype
             in_val_ct = self._split_scheme.split('.')[1]
@@ -365,7 +364,7 @@ class EncodeTFBSDataset(WILDSDataset):
             dnase_bw_path = os.path.join(self._data_dir, 'DNase.{}.{}.{}.bigwig'.format(self._transcription_factor, ct, self._split_scheme))
             if not os.path.exists(dnase_bw_path):
                 ref_celltypes = splits['train']['celltypes']
-                dnase_normalize(ct, ref_celltypes, out_fname=self._split_scheme, data_pfx=self._data_dir)
+                dnase_normalize(ct, ref_celltypes, out_fname=dnase_bw_path, data_pfx=self._data_dir)
             self._dnase_allcelltypes[ct] = pyBigWig.open(dnase_bw_path)
 
         # Load subsampled DNase arrays for normalization purposes
