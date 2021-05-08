@@ -19,7 +19,7 @@ class DANN(SingleModelAlgorithm):
     """
 
     def __init__(self, config, d_out, grouper, loss, metric, n_train_steps):
-        # Initialize model - standard feed forward architecture
+        # Initialize model
         featurizer, classifier = initialize_model(
             config, d_out=d_out, is_featurizer=True
         )
@@ -38,8 +38,6 @@ class DANN(SingleModelAlgorithm):
             metric=metric,
             n_train_steps=n_train_steps,
         )
-        # The authors used binomial cross-entropy loss to calculate the domain loss
-        self.domain_loss = torch.nn.functional.binary_cross_entropy
 
         # Algorithm hyperparameters
         self.gamma = config.dann_gamma
