@@ -1,7 +1,8 @@
 import os
 from tqdm import tqdm
 import torch
-from utils import save_model, save_pred, get_pred_prefix, get_model_prefix, detach_and_clone, collate_list
+from utils import save_model, save_pred, get_pred_prefix, get_model_prefix
+import torch.autograd.profiler as profiler
 from configs.supported import process_outputs_functions
 
 def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
@@ -33,24 +34,23 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
 
         # These tensors are already detached, but we need to clone them again
         # Otherwise they don't get garbage collected properly in some versions
-        # The extra detach is just for safety
+        # The subsequent detach is just for safety
         # (they should already be detached in batch_results)
-        epoch_y_true.append(detach_and_clone(batch_results['y_true']))
-        y_pred = detach_and_clone(batch_results['y_pred'])
+        epoch_y_true.append(batch_results['y_true'].clone().detach())
+        y_pred = batch_results['y_pred'].clone().detach()
         if config.process_outputs_function is not None:
             y_pred = process_outputs_functions[config.process_outputs_function](y_pred)
         epoch_y_pred.append(y_pred)
-        epoch_metadata.append(detach_and_clone(batch_results['metadata']))
+        epoch_metadata.append(batch_results['metadata'].clone().detach())
 
         if train and (batch_idx+1) % config.log_every==0:
             log_results(algorithm, dataset, general_logger, epoch, batch_idx)
 
         batch_idx += 1
 
-    epoch_y_pred = collate_list(epoch_y_pred)
-    epoch_y_true = collate_list(epoch_y_true)
-    epoch_metadata = collate_list(epoch_metadata)
-
+    epoch_y_pred = torch.cat(epoch_y_pred)
+    epoch_y_true = torch.cat(epoch_y_true)
+    epoch_metadata = torch.cat(epoch_metadata)
     results, results_str = dataset['dataset'].eval(
         epoch_y_pred,
         epoch_y_true,
@@ -112,7 +112,7 @@ def train(algorithm, datasets, general_logger, config, epoch_offset, best_val_me
         general_logger.write('\n')
 
 
-def evaluate(algorithm, datasets, epoch, general_logger, config, is_best):
+def evaluate(algorithm, datasets, epoch, general_logger, config):
     algorithm.eval()
     for split, dataset in datasets.items():
         if (not config.evaluate_all_splits) and (split not in config.eval_splits):
@@ -123,20 +123,17 @@ def evaluate(algorithm, datasets, epoch, general_logger, config, is_best):
         iterator = tqdm(dataset['loader']) if config.progress_bar else dataset['loader']
         for batch in iterator:
             batch_results = algorithm.evaluate(batch)
-            epoch_y_true.append(detach_and_clone(batch_results['y_true']))
-            y_pred = detach_and_clone(batch_results['y_pred'])
+            epoch_y_true.append(batch_results['y_true'].clone().detach())
+            y_pred = batch_results['y_pred'].clone().detach()
             if config.process_outputs_function is not None:
                 y_pred = process_outputs_functions[config.process_outputs_function](y_pred)
             epoch_y_pred.append(y_pred)
-            epoch_metadata.append(detach_and_clone(batch_results['metadata']))
+            epoch_metadata.append(batch_results['metadata'].clone().detach())
 
-        epoch_y_pred = collate_list(epoch_y_pred)
-        epoch_y_true = collate_list(epoch_y_true)
-        epoch_metadata = collate_list(epoch_metadata)
         results, results_str = dataset['dataset'].eval(
-            epoch_y_pred,
-            epoch_y_true,
-            epoch_metadata)
+            torch.cat(epoch_y_pred),
+            torch.cat(epoch_y_true),
+            torch.cat(epoch_metadata))
 
         results['epoch'] = epoch
         dataset['eval_logger'].log(results)
@@ -145,7 +142,7 @@ def evaluate(algorithm, datasets, epoch, general_logger, config, is_best):
 
         # Skip saving train preds, since the train loader generally shuffles the data
         if split != 'train':
-            save_pred_if_needed(epoch_y_pred, dataset, epoch, config, is_best, force_save=True)
+            save_pred_if_needed(y_pred, dataset, epoch, config, is_best=False, force_save=True)
 
 
 def log_results(algorithm, dataset, general_logger, epoch, batch_idx):
@@ -163,11 +160,11 @@ def save_pred_if_needed(y_pred, dataset, epoch, config, is_best, force_save=Fals
     if config.save_pred:
         prefix = get_pred_prefix(dataset, config)
         if force_save or (config.save_step is not None and (epoch + 1) % config.save_step == 0):
-            save_pred(y_pred, prefix + f'epoch:{epoch}_pred')
-        if (not force_save) and config.save_last:
-            save_pred(y_pred, prefix + f'epoch:last_pred')
+            save_pred(y_pred, prefix + f'epoch:{epoch}_pred.csv')
+        if config.save_last:
+            save_pred(y_pred, prefix + f'epoch:last_pred.csv')
         if config.save_best and is_best:
-            save_pred(y_pred, prefix + f'epoch:best_pred')
+            save_pred(y_pred, prefix + f'epoch:best_pred.csv')
 
 
 def save_model_if_needed(algorithm, dataset, epoch, config, is_best, best_val_metric):

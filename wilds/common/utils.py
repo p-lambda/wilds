@@ -81,9 +81,8 @@ def avg_over_groups(v, g, n_groups):
         group_avgs (Tensor): Vector of length num_groups
         group_counts (Tensor)
     """
-
-
     assert v.device==g.device
+    device = v.device
     assert v.numel()==g.numel()
     group_count = get_counts(g, n_groups)
     group_avgs = torch_scatter.scatter(src=v, index=g, dim_size=n_groups, reduce='mean')
@@ -114,6 +113,7 @@ def subsample_idxs(idxs, num=5000, take_rest=False, seed=None):
         idxs = idxs[:num]
     return idxs
 
+
 def shuffle_arr(arr, seed=None):
     seed = (seed + 548207) if seed is not None else None
     rng = np.random.default_rng(seed)
@@ -126,11 +126,3 @@ def threshold_at_recall(y_pred, y_true, global_recall=60):
     """ Calculate the model threshold to use to achieve a desired global_recall level. Assumes that
     y_true is a vector of the true binary labels."""
     return np.percentile(y_pred[y_true == 1], 100-global_recall)
-
-def numel(obj):
-    if torch.is_tensor(obj):
-        return obj.numel()
-    elif isinstance(obj, list):
-        return len(obj)
-    else:
-        raise TypeError("Invalid type for numel")
