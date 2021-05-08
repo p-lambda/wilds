@@ -1,13 +1,13 @@
 import numpy as np
 import torch
 
-from models.initializer import initialize_model, initialize_domain_adversarial_network
 from algorithms.single_model_algorithm import SingleModelAlgorithm
+from models.initializer import initialize_model, initialize_domain_adversarial_network
 
 
 class DANN(SingleModelAlgorithm):
     """
-    Domain-adversarial neural network.
+    Domain-adversarial training of neural networks.
 
     Original paper:
         @inproceedings{dann,
@@ -25,9 +25,9 @@ class DANN(SingleModelAlgorithm):
         )
         featurizer = featurizer.to(config.device)
         classifier = classifier.to(config.device)
-        model = initialize_domain_adversarial_network(featurizer, classifier).to(
-            config.device
-        )
+        model = initialize_domain_adversarial_network(
+            featurizer, classifier, grouper.n_groups
+        ).to(config.device)
 
         # Initialize module
         super().__init__(
@@ -41,8 +41,9 @@ class DANN(SingleModelAlgorithm):
         # The authors used binomial cross-entropy loss to calculate the domain loss
         self.domain_loss = torch.nn.functional.binary_cross_entropy
 
-        # The authors set this value to 10. for their experiments in the paper
+        # Algorithm hyperparameters
         self.gamma = config.dann_gamma
+        self.domain_loss_weight = config.dann_domain_loss_weight
 
         # Additional logging
         self.logged_fields.append("grl_lambda")
@@ -60,17 +61,16 @@ class DANN(SingleModelAlgorithm):
             p = float(
                 batch_info["epoch"] * batch_info["n_batches"] + batch_info["batch"]
             ) / (batch_info["n_epochs"] * batch_info["n_batches"])
-            # Authors set gamma to 10 for all their experiments
             # Calculate lambda for the gradient reverse layer
             grl_lambda = (2 / (1 + np.exp(-self.gamma * p))) - 1
         else:
-            grl_lambda = 0.0
+            grl_lambda = 0.
 
         # Forward pass
         x, y_true, metadata = batch
         x = x.to(self.device)
         y_true = y_true.to(self.device)
-        domains_true = torch.zeros(len(x), 1).to(self.device)
+        domains_true = self.grouper.metadata_to_group(metadata).to(self.device)
         y_pred, domains_pred = self.model(x, grl_lambda)
 
         results = {
@@ -83,13 +83,15 @@ class DANN(SingleModelAlgorithm):
         }
 
         if unlabeled_batch is not None:
-            unlabeled_x, _ = unlabeled_batch
+            unlabeled_x, unlabeled_metadata = unlabeled_batch
             unlabeled_x = unlabeled_x.to(self.device)
-            unlabeled_domains_true = torch.ones(len(unlabeled_x), 1).to(self.device)
+            unlabeled_domains_true = self.grouper.metadata_to_group(
+                unlabeled_metadata
+            ).to(self.device)
             _, unlabeled_domains_pred = self.model(unlabeled_x, grl_lambda)
+            results["unlabeled_metadata"] = unlabeled_metadata
             results["unlabeled_domains_true"] = unlabeled_domains_true
             results["unlabeled_domains_pred"] = unlabeled_domains_pred
-
         return results
 
     def objective(self, results):
@@ -104,19 +106,24 @@ class DANN(SingleModelAlgorithm):
         )
 
         if self.is_training:
-            domain_classification_loss = self.domain_loss(
+            domain_classification_loss = self.loss.compute(
                 results.pop("domains_pred"),
                 results.pop("domains_true"),
+                return_dict=False,
             )
-            domain_classification_loss += self.domain_loss(
-                results.pop("unlabeled_domains_pred"),
-                results.pop("unlabeled_domains_true"),
-            )
+            if "unlabeled_domains_pred" in results and "unlabeled_domains_true" in results:
+                domain_classification_loss += self.loss.compute(
+                    results.pop("unlabeled_domains_pred"),
+                    results.pop("unlabeled_domains_true"),
+                    return_dict=False,
+                )
         else:
-            domain_classification_loss = 0.0
+            domain_classification_loss = 0.
 
         # Add to results for additional logging
         log_metric("classification_loss", classification_loss)
         log_metric("domain_classification_loss", domain_classification_loss)
 
-        return classification_loss + domain_classification_loss
+        return (
+            classification_loss + domain_classification_loss * self.domain_loss_weight
+        )

@@ -77,8 +77,8 @@ def initialize_model(config, d_out, is_featurizer=False):
         raise ValueError(f'Model: {config.model} not recognized.')
     return model
 
-def initialize_domain_adversarial_network(featurizer, classifier):
-    return DomainAdversarialNetwork(featurizer, classifier)
+def initialize_domain_adversarial_network(featurizer, classifier, n_domains):
+    return DomainAdversarialNetwork(featurizer, classifier, n_domains)
 
 def initialize_bert_based_model(config, d_out, is_featurizer=False):
     if config.model == 'bert-base-uncased':

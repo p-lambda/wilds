@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -7,14 +7,19 @@ from torch.autograd import Function
 
 class DomainDiscriminator(nn.Sequential):
     """
-    Credit: https://github.com/thuml/Transfer-Learning-Library
+    Adapted from https://github.com/thuml/Transfer-Learning-Library
 
     Domain discriminator model from
     `"Domain-Adversarial Training of Neural Networks" <https://arxiv.org/abs/1505.07818>`_
-    Distinguish whether the input features come from the source domain or the target domain.
-    The source domain label is 0 and the target domain label is 1.
+    In the original paper and implementation, we distinguish whether the input features come
+    from the source domain or the target domain.
+
+    We extended this to work with multiple domains, which is controlled by the n_domains
+    argument.
+
     Args:
         in_feature (int): dimension of the input feature
+        n_domains (int): number of domains to discriminate
         hidden_size (int): dimension of the hidden features
         batch_norm (bool): whether use :class:`~torch.nn.BatchNorm1d`.
             Use :class:`~torch.nn.Dropout` if ``batch_norm`` is False. Default: True.
@@ -23,7 +28,9 @@ class DomainDiscriminator(nn.Sequential):
         - Outputs: :math:`(minibatch, 1)`
     """
 
-    def __init__(self, in_feature: int, hidden_size: int, batch_norm=True):
+    def __init__(
+        self, in_feature: int, n_domains, hidden_size: int = 1024, batch_norm=True
+    ):
         if batch_norm:
             super(DomainDiscriminator, self).__init__(
                 nn.Linear(in_feature, hidden_size),
@@ -32,7 +39,7 @@ class DomainDiscriminator(nn.Sequential):
                 nn.Linear(hidden_size, hidden_size),
                 nn.BatchNorm1d(hidden_size),
                 nn.ReLU(),
-                nn.Linear(hidden_size, 1),
+                nn.Linear(hidden_size, n_domains),
                 nn.Sigmoid(),
             )
         else:
@@ -43,12 +50,9 @@ class DomainDiscriminator(nn.Sequential):
                 nn.Linear(hidden_size, hidden_size),
                 nn.ReLU(inplace=True),
                 nn.Dropout(0.5),
-                nn.Linear(hidden_size, 1),
+                nn.Linear(hidden_size, n_domains),
                 nn.Sigmoid(),
             )
-
-    def get_parameters(self) -> List[Dict]:
-        return [{"params": self.parameters(), "lr": 1.0}]
 
 
 class GradientReverseFunction(Function):
@@ -84,11 +88,11 @@ class GradientReverseLayer(nn.Module):
 
 
 class DomainAdversarialNetwork(nn.Module):
-    def __init__(self, featurizer, classifier):
+    def __init__(self, featurizer, classifier, n_domains):
         super().__init__()
         self.featurizer = featurizer
         self.classifier = classifier
-        self.domain_classifier = DomainDiscriminator(featurizer.d_out, hidden_size=1024)
+        self.domain_classifier = DomainDiscriminator(featurizer.d_out, n_domains)
         self.gradient_reverse_layer = GradientReverseLayer()
 
     def forward(self, input, grl_lambda=1.0):

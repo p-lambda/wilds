@@ -263,7 +263,8 @@ def main():
     else:
         log_grouper = train_grouper
     log_group_data(datasets, log_grouper, logger)
-    log_group_data({"unlabeled": unlabeled_dataset}, log_grouper, logger)
+    if unlabeled_dataset is not None:
+        log_group_data({"unlabeled": unlabeled_dataset}, log_grouper, logger)
 
     ## Initialize algorithm
     algorithm = initialize_algorithm(
