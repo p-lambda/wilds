@@ -1,3 +1,15 @@
+"""
+This module contains all the necessary modifications to adapt "Faster-RCNN" of the torchvision library 
+in order to be able to calculate the loss per image
+
+It has been developped from torchvision=0.8.2 and did not has been tested on other versions
+
+All credits :
+https://github.com/pytorch/vision/blob/master/LICENSE
+https://github.com/pytorch/vision/tree/master/torchvision/models/detection
+
+"""
+
 import torch
 import torch.nn as nn
 import torchvision

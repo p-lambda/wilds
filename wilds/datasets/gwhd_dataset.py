@@ -7,7 +7,21 @@ from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import DetectionAccuracy
 
-
+def decode_string(BoxesString):
+    """
+    Small method to decode the BoxesString
+    """
+    if BoxesString == "no_box":
+        return np.zeros((0,4))
+    else:
+        try:
+            boxes =  np.array([np.array([int(i) for i in box.split(" ")])
+                        for box in BoxesString.split(";")])
+            return boxes
+        except:
+            print(BoxesString)
+            print("Submission is not well formatted. empty boxes will be returned")
+            return np.zeros((0,4))
 def _collate_fn(batch):
     """
     Stack x (batch[0]) and metadata (batch[2]), but not y.
@@ -23,20 +37,18 @@ def _collate_fn(batch):
 class GWHDDataset(WILDSDataset):
     """
     The GWHD-wilds wheat head localization dataset.
-    This is a modified version of the original Global Wheat Head Dataset.
+    This is a modified version of the original Global Wheat Head Dataset 2021.
     This dataset is not part of the official WILDS benchmark.
     We provide it for convenience and to reproduce observations discussed in the WILDS paper.
     Supported `split_scheme`:
-        'official' for WILDS related tasks.
-        To reproduce the baseline, several splits are needed:
-        - to train a model on train domains and test against a all test split: 'train_in-dist'
-        - "benchmark_biased" ; "benchmark_in-dist"
+        - 'official' for WILDS related tasks.
+        - 'in-dist' and 'ood_with_subsampled_test' to reproduce the baseline described in the paper. WARNING: these splits are not accessible before v1.0
     Input (x):
-        1024x1024 RGB images of wheat field canopy between flowering and ripening.
+        1024x1024 RGB images of wheat field canopy starting from anthesis (flowering) to ripening.
     Output (y):
-        y is a nx4-dimensional vector where each line represents a box coordinate (x_min,y_min,x_max,y_max)
+        y is a nx4-dimensional vector where each line represents a box coordinate (x_min, y_min, x_max, y_max)
     Metadata:
-        Each image is annotated with the ID of the domain it came from (integer from 0 to 10).
+        Each image is annotated with the ID of the domain (location_date_sensor) it came from (integer from 0 to 46).
     Website:
         http://www.global-wheat.com/
     Original publication:
@@ -54,13 +66,15 @@ class GWHDDataset(WILDSDataset):
         }
     License:
         This dataset is distributed under the MIT license.
-        https://github.com/snap-stanford/ogb/blob/master/LICENSE
     """
 
     _dataset_name = 'gwhd'
+    
+    # Version 0.9 corresponds to the final dataset, but without the test label. It can be used to train 
+    # a model but no validation nor test metrics are available before 5th July 2021
     _versions_dict = {
-        '2.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x42fa9775eacc453489a428abd59a437d/contents/blob/',
+        '0.9': {
+            'download_url': '',
             'compressed_size': None}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
@@ -83,13 +97,19 @@ class GWHDDataset(WILDSDataset):
             val_data_df = pd.read_csv(self.root / f'official_val.csv')
             test_data_df = pd.read_csv(self.root / f'official_test.csv')
 
-        elif split_scheme == "benchmark_biased":
-            train_data_df = pd.read_csv(self.root / f'official_train.csv')
-            val_data_df = pd.read_csv(self.root / f'official_val.csv')
-            test_data_df = pd.read_csv(self.root / f'in-dist_test.csv')
+        elif split_scheme == "ood_with_subsampled_test":
+            if version == "0.9":
+                print("Warning: ood_with_subsampled_test is not available in 0.9")
+            else:
+                train_data_df = pd.read_csv(self.root / f'official_train.csv')
+                val_data_df = pd.read_csv(self.root / f'official_val.csv')
+                test_data_df = pd.read_csv(self.root / f'in-dist_test.csv')
 
-        elif split_scheme == "benchmark_in-dist":
-            train_data_df = pd.read_csv(self.root / f'in-dist_train.csv')
+        elif split_scheme == "in-dist":
+            if version == "0.9":
+                print("Warning: ood_with_subsampled_test is not available in 0.9")
+            else:
+                train_data_df = pd.read_csv(self.root / f'in-dist_train.csv')
             val_data_df = pd.read_csv(self.root / f'official_val.csv')
             test_data_df = pd.read_csv(self.root / f'in-dist_test.csv')
 
@@ -99,19 +119,21 @@ class GWHDDataset(WILDSDataset):
 
         for i, df in enumerate([train_data_df, val_data_df, test_data_df]):
             self._image_array.extend(list(df['image'].values))
-            labels = list(df['labels'].values)
-            self._split_array.extend([i] * len(labels))
-
+            boxes_string = list(df['BoxesString'].values)
+            all_boxes = [decode_string(box_string) for box_string in boxes_string]
+            
+            self._split_array.extend([i] * len(all_boxes))
+            
             labels = [{
                 "boxes": torch.stack([
-                    torch.tensor([int(float(i)) for i in box.split(" ")])
-                    for box in boxes.split(";")
+                    torch.tensor(box)
+                    for box in boxes
                 ]),
                 "labels": torch.tensor([1]*len(list(boxes.split(";")))).long()
-            } if type(boxes) != float else {
+            } if len(boxes) > 0 else {
                 "boxes": torch.empty(0,4),
                 "labels": torch.empty(0,dtype=torch.long)
-            } for boxes in labels]
+            } for boxes in all_boxes]
 
             self._y_array.extend(labels)
             self._metadata_array.extend(list(df['group'].values))
@@ -120,13 +142,13 @@ class GWHDDataset(WILDSDataset):
 
         self._metadata_array = torch.tensor(self._metadata_array,
                                             dtype=torch.long).unsqueeze(1)
-        self._metadata_fields = ['location']
+        self._metadata_fields = ['domain']
 
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
-            groupby_fields=['location'])
+            groupby_fields=['domain'])
 
-        self._metric = DetectionAccuracy() # TODO
+        self._metric = DetectionAccuracy() 
         self._collate = _collate_fn
 
         super().__init__(root_dir, download, split_scheme)
