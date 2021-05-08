@@ -95,8 +95,8 @@ class WILDSDataset:
         assert 'train' in self.split_dict
         assert 'val' in self.split_dict
 
-        # Check the form of the required arrays
-        assert (isinstance(self.y_array, torch.Tensor) or isinstance(self.y_array, list))
+        # Check that required arrays are Tensors
+        assert isinstance(self.y_array, torch.Tensor), 'y_array must be a torch.Tensor'
         assert isinstance(self.metadata_array, torch.Tensor), 'metadata_array must be a torch.Tensor'
 
         # Check that dimensions match
@@ -106,10 +106,6 @@ class WILDSDataset:
         # Check metadata
         assert len(self.metadata_array.shape) == 2
         assert len(self.metadata_fields) == self.metadata_array.shape[1]
-
-        # Check that it is not both classification and detection
-        assert not (self.is_classification and self.is_detection)
-
         # For convenience, include y in metadata_fields if y_size == 1
         if self.y_size == 1:
             assert 'y' in self.metadata_fields
@@ -246,15 +242,9 @@ class WILDSDataset:
     def is_classification(self):
         """
         Boolean. True if the task is classification, and false otherwise.
+        Used for logging purposes.
         """
-        return getattr(self, '_is_classification', (self.n_classes is not None))
-
-    @property
-    def is_detection(self):
-        """
-        Boolean. True if the task is detection, and false otherwise.
-        """
-        return getattr(self, '_is_detection', False)
+        return (self.n_classes is not None)
 
     @property
     def metadata_fields(self):
@@ -453,7 +443,7 @@ class WILDSSubset(WILDSDataset):
     def __getitem__(self, idx):
         x, y, metadata = self.dataset[self.indices[idx]]
         if self.transform is not None:
-            x, y = self.transform(x, y)
+            x = self.transform(x)
         return x, y, metadata
 
     def __len__(self):
