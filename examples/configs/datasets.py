@@ -291,7 +291,7 @@ dataset_defaults = {
             'n_classes': 1,
             'pretrained': True},
         'loss_function': 'fasterrcnn_criterion',
-        'groupby_fields': ['location'],
+        'groupby_fields': ['location_date_sensor'],
         'val_metric': 'detection_acc_avg', # TODO
         'val_metric_decreasing': False,
         'algo_log_metric': None, # TODO

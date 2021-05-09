@@ -74,7 +74,7 @@ class GWHDDataset(WILDSDataset):
     # a model but no validation nor test metrics are available before 5th July 2021
     _versions_dict = {
         '0.9': {
-            'download_url': '',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8ba9122a41454997afdfb78762d390cf/contents/blob/',
             'compressed_size': None}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
@@ -110,17 +110,18 @@ class GWHDDataset(WILDSDataset):
                 print("Warning: ood_with_subsampled_test is not available in 0.9")
             else:
                 train_data_df = pd.read_csv(self.root / f'in-dist_train.csv')
-            val_data_df = pd.read_csv(self.root / f'official_val.csv')
-            test_data_df = pd.read_csv(self.root / f'in-dist_test.csv')
+                val_data_df = pd.read_csv(self.root / f'official_val.csv')
+                test_data_df = pd.read_csv(self.root / f'in-dist_test.csv')
 
 
         self._image_array = []
         self._split_array, self._y_array, self._metadata_array = [], [], []
 
         for i, df in enumerate([train_data_df, val_data_df, test_data_df]):
-            self._image_array.extend(list(df['image'].values))
+            self._image_array.extend(list(df['image_name'].values))
             boxes_string = list(df['BoxesString'].values)
             all_boxes = [decode_string(box_string) for box_string in boxes_string]
+
             
             self._split_array.extend([i] * len(all_boxes))
             
@@ -129,24 +130,24 @@ class GWHDDataset(WILDSDataset):
                     torch.tensor(box)
                     for box in boxes
                 ]),
-                "labels": torch.tensor([1]*len(list(boxes.split(";")))).long()
+                "labels": torch.tensor([1]*len(boxes)).long()
             } if len(boxes) > 0 else {
                 "boxes": torch.empty(0,4),
                 "labels": torch.empty(0,dtype=torch.long)
             } for boxes in all_boxes]
 
             self._y_array.extend(labels)
-            self._metadata_array.extend(list(df['group'].values))
+            self._metadata_array.extend(list(df['domain'].values))
 
         self._split_array = np.array(self._split_array)
 
         self._metadata_array = torch.tensor(self._metadata_array,
                                             dtype=torch.long).unsqueeze(1)
-        self._metadata_fields = ['domain']
+        self._metadata_fields = ['location_date_sensor']
 
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
-            groupby_fields=['domain'])
+            groupby_fields=['location_date_sensor'])
 
         self._metric = DetectionAccuracy() 
         self._collate = _collate_fn
