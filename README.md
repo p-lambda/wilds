@@ -50,7 +50,7 @@ pip install -e .
 - torch>=1.7.0
 - torch-scatter>=2.0.5
 - torch-geometric>=1.6.1
-- tqdm>=4.53.0 
+- tqdm>=4.53.0
 
 Running `pip install wilds` or `pip install -e .` will automatically check for and install all of these requirements
 except for the `torch-scatter` and `torch-geometric` packages, which require a [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
@@ -83,6 +83,7 @@ python examples/run_expt.py --dataset civilcomments --algorithm groupDRO --root_
 
 The scripts are set up to facilitate general-purpose algorithm development: new algorithms can be added to `examples/algorithms` and then run on all of the WILDS datasets using the default models.
 
+### Downloading and training on the WILDS datasets
 The first time you run these scripts, you might need to download the datasets. You can do so with the `--download` argument, for example:
 ```
 python examples/run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data --download
@@ -113,16 +114,20 @@ While the `camelyon17` dataset is small and fast to train on, we advise against 
 
 The image datasets (`iwildcam`, `camelyon17`, `fmow`, and `poverty`) tend to have high disk I/O usage. If training time is much slower for you than the approximate times listed above, consider checking if I/O is a bottleneck (e.g., by moving to a local disk if you are using a network drive, or by increasing the number of data loader workers). To speed up training, you could also disable evaluation at each epoch or for all splits by toggling `--evaluate_all_splits` and related arguments.
 
+### Evaluating trained models
 We also provide an evaluation script that aggregates prediction CSV files for different replicates and reports on their combined evaluation. To use this, run:
 
 ```bash
 python examples/evaluate.py <predictions_dir> <output_dir> --root-dir <root_dir>
 ```
 
-where `<predictions_dir>` is the path to your predictions directory, `<output_dir>` is where the results JSON will be
-outputted and `<root_dir>` is the dataset directory. The predictions directory should have a subdirectory for each dataset
-(e.g. `iwildcam`) containing prediction CSV files to evaluate; see our [submission guidelines](https://wilds.stanford.edu/submit/) for the format. The evaluation script will skip over any datasets that has missing prediction files. Any dataset not in `<root_dir>` will be downloaded to `<root_dir>`.
+where `<predictions_dir>` is the path to your predictions directory, `<output_dir>` is where the results JSON will be writte, and `<root_dir>` is the dataset root directory.
+The predictions directory should have a subdirectory for each dataset
+(e.g. `iwildcam`) containing prediction CSV files to evaluate; see our [submission guidelines](https://wilds.stanford.edu/submit/) for the format.
+The evaluation script will skip over any datasets that has missing prediction files.
+Any dataset not in `<root_dir>` will be downloaded to `<root_dir>`.
 
+### Reproducibility
 We have an [executable version](https://wilds.stanford.edu/codalab) of our paper on CodaLab that contains the exact commands, code, and data for the experiments reported in our paper, which rely on these scripts. Trained model weights for all datasets can also be found there.
 
 

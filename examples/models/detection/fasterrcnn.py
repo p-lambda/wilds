@@ -1,13 +1,12 @@
 """
-This module contains all the necessary modifications to adapt "Faster-RCNN" of the torchvision library 
-in order to be able to calculate the loss per image
+This module adapts Faster-RCNN from the torchvision library to compute per-image losses,
+instead of the default per-batch losses.
+It is based on the version from torchvision==0.8.2,
+and has not been tested on other versions.
 
-It has been developped from torchvision=0.8.2 and did not has been tested on other versions
-
-All credits :
+The torchvision library is distributed under the BSD 3-Clause License:
 https://github.com/pytorch/vision/blob/master/LICENSE
 https://github.com/pytorch/vision/tree/master/torchvision/models/detection
-
 """
 
 import torch
@@ -20,29 +19,21 @@ import warnings
 from typing import Tuple, List, Dict, Optional, Union
 
 from torch import nn
-
+from torch.nn import functional as F
 
 import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor, FasterRCNN
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.utils import load_state_dict_from_url
-
-
 from torchvision.ops import misc as misc_nn_ops
 from torchvision.ops import MultiScaleRoIAlign
-
-
+from torchvision.models.detection import _utils as det_utils
 from torchvision.models.detection.anchor_utils import AnchorGenerator
 from torchvision.models.detection.generalized_rcnn import GeneralizedRCNN
 from torchvision.models.detection.faster_rcnn import TwoMLPHead
-
 from torchvision.models.detection.rpn import RPNHead, RegionProposalNetwork, concat_box_prediction_layers,permute_and_flatten
 from torchvision.models.detection.roi_heads import RoIHeads
-
-from torchvision.models.detection import _utils as det_utils
-from torch.nn import functional as F
 from torchvision.models.detection.transform import GeneralizedRCNNTransform
-
 
 model_urls = {
     'fasterrcnn_resnet50_fpn_coco':
@@ -52,7 +43,6 @@ model_urls = {
     'fasterrcnn_mobilenet_v3_large_fpn_coco':
         'https://download.pytorch.org/models/fasterrcnn_mobilenet_v3_large_fpn-fb6a3cc7.pth'
 }
-
 
 def batch_concat_box_prediction_layers(box_cls, box_regression):
     # type: (List[Tensor], List[Tensor]) -> Tuple[Tensor, Tensor]
@@ -133,7 +123,6 @@ class RegionProposalNetworkWILDS(RegionProposalNetwork):
         for objectness_, regression_targets_,labels_,objectness_,pred_bbox_deltas_ in zip(objectness,regression_targets,labels,objectness,pred_bbox_deltas):
 
             sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(torch.unsqueeze(labels_,dim=0))
-
             sampled_pos_inds = torch.where(torch.cat(sampled_pos_inds, dim=0))[0]
             sampled_neg_inds = torch.where(torch.cat(sampled_neg_inds, dim=0))[0]
             sampled_inds = torch.cat([sampled_pos_inds, sampled_neg_inds], dim=0)
@@ -144,7 +133,6 @@ class RegionProposalNetworkWILDS(RegionProposalNetwork):
                 beta=1 / 9,
                 size_average=False,
             ) / (sampled_inds.numel()))
-
 
             objectness_loss.append(F.binary_cross_entropy_with_logits(
                 objectness_[sampled_inds].flatten(), labels_[sampled_inds]
@@ -221,10 +209,8 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
         classification_loss (Tensor)
         box_loss (Tensor)
     """
-
     class_logits = torch.split(class_logits, 512,dim=0)
     box_regression = torch.split(box_regression, 512,dim=0)
-
     classification_loss = []
     box_loss = []
 
@@ -291,13 +277,11 @@ class RoIHeadsWILDS(RoIHeads):
             matched_idxs = None
 
         box_features = self.box_roi_pool(features, proposals, image_shapes)
-
         box_features = self.box_head(box_features)
 
         class_logits, box_regression = self.box_predictor(box_features)
         result = torch.jit.annotate(List[Dict[str, torch.Tensor]], [])
         losses = {}
-
         if self.training:
             assert labels is not None and regression_targets is not None
 
@@ -435,10 +419,9 @@ class FastWILDS(GeneralizedRCNN):
         transform = GeneralizedRCNNTransform(min_size, max_size, image_mean, image_std)
 
         super(FastWILDS, self).__init__(backbone, rpn, roi_heads, transform)
+
     # Set your own forward pass
     def forward(self, images, targets=None):
-
-
         if self.training:
             if targets is None:
                 raise ValueError("In training mode, targets should be passed")
@@ -459,7 +442,6 @@ class FastWILDS(GeneralizedRCNN):
             val = img.shape[-2:]
             assert len(val) == 2
             original_image_sizes.append((val[0], val[1]))
-
 
         images, targets = self.transform(images, targets)
 
@@ -482,11 +464,7 @@ class FastWILDS(GeneralizedRCNN):
             features = OrderedDict([('0', features)])
 
         proposals, proposal_losses = self.rpn(images, features, targets)
-
-
         detections, detector_losses = self.roi_heads(features, proposals, images.image_sizes, targets)
-
-
         detections = self.transform.postprocess(detections, images.image_sizes, original_image_sizes)
 
         for idx, det in enumerate(detections):
@@ -496,13 +474,7 @@ class FastWILDS(GeneralizedRCNN):
             for k,v in detector_losses.items():
                 det["losses"][k] = v[idx]
 
-
         return detections
-
-
-
-
-
 
 class FasterRCNNLoss(nn.Module):
     def __init__(self,device):
@@ -510,14 +482,10 @@ class FasterRCNNLoss(nn.Module):
         super().__init__()
 
     def forward(self, outputs, targets):
-
-
         # loss values are  loss_classifier loss_box_reg loss_objectness": loss_objectness, loss_rpn_box_reg
         try:
             elementwise_loss = torch.stack([sum(v for v in item["losses"].values()) for item in outputs])
         except:
             elementwise_loss = torch.ones(len(outputs)).to(self.device)
-
-
 
         return elementwise_loss
