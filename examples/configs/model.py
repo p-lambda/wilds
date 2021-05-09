@@ -39,7 +39,8 @@ model_defaults = {
     'logistic_regression': {},
     'fasterrcnn': {
         'model_kwargs': {
-            'pretrained': True,
+            'pretrained_model': True,
+            'pretrained_backbone': True,
         }
     }
 }
