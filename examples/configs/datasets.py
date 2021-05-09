@@ -282,6 +282,32 @@ dataset_defaults = {
         'n_epochs': 4,
         'process_outputs_function': None,
     },
+    'gwhd': {
+        'split_scheme': 'official',
+        'model': 'fasterrcnn',
+        'train_transform': 'image_base',
+        'eval_transform': 'image_base',
+        'model_kwargs': {
+            'n_classes': 1,
+            'pretrained': True},
+        'loss_function': 'fasterrcnn_criterion',
+        'groupby_fields': ['location_date_sensor'],
+        'val_metric': 'detection_acc_avg', # TODO
+        'val_metric_decreasing': False,
+        'algo_log_metric': None, # TODO
+        'optimizer': 'Adam',
+        'optimizer_kwargs': {},
+        'scheduler': None,
+        'batch_size': 4,
+        'lr': 1e-5,
+        'weight_decay': 1e-4,
+        'n_epochs': 10,
+        'loader_kwargs': {
+            'num_workers': 1,
+            'pin_memory': True,
+        },
+        'process_outputs_function': None, 
+    }
 }
 
 ##########################################
