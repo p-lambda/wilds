@@ -8,6 +8,7 @@ import torchvision
 import sys
 from collections import defaultdict
 
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import wilds
 from wilds.common.data_loaders import get_train_loader, get_eval_loader
 from wilds.common.grouper import CombinatorialGrouper
@@ -19,8 +20,11 @@ from transforms import initialize_transform
 from configs.utils import populate_defaults
 import configs.supported as supported
 
+import torch.multiprocessing
+
 def main():
-    ''' set default hyperparams in default_hyperparams.py '''
+
+    ''' to see default hyperparams for each dataset/model, look at configs/ '''
     parser = argparse.ArgumentParser()
 
     # Required arguments
@@ -61,6 +65,8 @@ def main():
 
     # Objective
     parser.add_argument('--loss_function', choices = supported.losses)
+    parser.add_argument('--loss_kwargs', nargs='*', action=ParseKwargs, default={},
+        help='keyword arguments for loss initialization passed as key1=value1 key2=value2')
 
     # Algorithm
     parser.add_argument('--groupby_fields', nargs='+')
@@ -112,10 +118,15 @@ def main():
     config = parser.parse_args()
     config = populate_defaults(config)
 
-    # set device
+    # For the GWHD dataset, we need to change the multiprocessing strategy or there will be
+    # too many open file descriptors
+    if config.dataset == 'gwhd':
+        torch.multiprocessing.set_sharing_strategy('file_system')
+
+    # Set device
     config.device = torch.device("cuda:" + str(config.device)) if torch.cuda.is_available() else torch.device("cpu")
 
-    ## Initialize logs
+    # Initialize logs
     if os.path.exists(config.log_dir) and config.resume:
         resume=True
         mode='a'
@@ -269,12 +280,15 @@ def main():
             epoch = best_epoch
         else:
             epoch = config.eval_epoch
+        if epoch == best_epoch:
+            is_best = True
         evaluate(
             algorithm=algorithm,
             datasets=datasets,
             epoch=epoch,
             general_logger=logger,
-            config=config)
+            config=config,
+            is_best=is_best)
 
     logger.close()
     for split in datasets:

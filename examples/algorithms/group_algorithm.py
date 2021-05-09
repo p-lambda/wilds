@@ -3,7 +3,7 @@ import numpy as np
 from algorithms.algorithm import Algorithm
 from utils import update_average
 from scheduler import step_scheduler
-from wilds.common.utils import get_counts
+from wilds.common.utils import get_counts, numel
 
 class GroupAlgorithm(Algorithm):
     """
@@ -57,7 +57,7 @@ class GroupAlgorithm(Algorithm):
                     results['y_pred'],
                     results['y_true'],
                     return_dict=False).item()
-            count = results['y_true'].numel()
+            count = numel(results['y_true'])
 
         # transfer other statistics in the results dictionary
         for field in self.logged_fields:
