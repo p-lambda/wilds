@@ -57,7 +57,7 @@ class GWHDDataset(WILDSDataset):
     _versions_dict = {
         '0.9': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8ba9122a41454997afdfb78762d390cf/contents/blob/',
-            'compressed_size': None}}
+            'compressed_size': 10_280_247_296}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
 
@@ -148,15 +148,15 @@ class GWHDDataset(WILDSDataset):
         """
         Helper method to decode each box_string in the BoxesString field of the data CSVs
         """
-        if boxes_string == "no_box":
+        if box_string == "no_box":
             return np.zeros((0,4))
         else:
             try:
                 boxes =  np.array([np.array([int(i) for i in box.split(" ")])
-                            for box in boxes_string.split(";")])
+                            for box in box_string.split(";")])
                 return boxes
             except:
-                print(boxes_string)
+                print(box_string)
                 print("Submission is not well formatted. empty boxes will be returned")
                 return np.zeros((0,4))
 
