@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from collections import defaultdict
 
 from PIL import Image
 import pandas as pd
@@ -72,16 +73,52 @@ class RxRx1Dataset(WILDSDataset):
 
         # Splits
         if split_scheme == 'official':
-            self._split_dict = {'train': 0, 'val': 1, 'test': 2}
-            self._split_names = {'train': 'Train', 'val': 'Validation', 'test': 'Test'}
-            self._split_array = df.dataset.apply(self._split_dict.get).values
-        elif split_scheme == 'in-dist':
+            # Training:   33 experiments, 1 site per experiment (site 1)
+            # Validation: 4 experiments, 2 sites per experiment
+            # Test:       14 experiments, 2 sites per experiment
             self._split_dict = {'train': 0, 'val': 1, 'test': 2, 'id-test': 3}
             self._split_names = {'train': 'Train', 'val': 'Validation', 'test': 'Test', 'id-test': 'In-Distribution Test'}
             self._split_array = df.dataset.apply(self._split_dict.get).values
             # id-test set
-            mask = ((df.dataset == "train") & (df.site == 2)).values
+            mask = ((df.dataset == 'train') & (df.site == 2)).values
             self._split_array = np.where(mask, 3, self._split_array)
+            # TODO: Split in-dist test and val?
+        elif split_scheme == 'in-dist':
+            # Training:   33 experiments total, 1 site per experiment (site 1)
+            #             = 19 experiments from the original training set (site 1)
+            #             + 14 experiments from the original test set (site 1)
+            # Validation: same
+            # Test:       14 experiments from the original test set, 1 site per experiment (site 2)
+            self._split_dict = {'train': 0, 'val': 1, 'test': 2}
+            self._split_names = {'train': 'Train', 'val': 'Validation', 'test': 'Test'}
+            self._split_array = df.dataset.apply(self._split_dict.get).values
+            # Use half of the training set (site 1) and discard site 2
+            mask_to_discard = ((df.dataset == 'train') & (df.site == 2)).values
+            self._split_array[mask_to_discard] = -1
+            # Take all site 1 in the test set and move it to train
+            mask_to_move = ((df.dataset == 'test') & (df.site == 1)).values
+            self._split_array[mask_to_move] = self._split_dict['train']
+            # For each of the test experiments, remove a train experiment of the same cell type
+            test_cell_type_counts = defaultdict(int)
+            test_experiments = df.loc[(df['dataset'] == 'test'), 'experiment'].unique()
+            for test_experiment in test_experiments:
+                test_cell_type = test_experiment.split('-')[0]
+                test_cell_type_counts[test_cell_type] += 1
+            # Training experiments are numbered starting from 1 and left-padded with 0s
+            experiments_to_discard = [
+                f'{cell_type}-{num:02}'
+                for cell_type, count in test_cell_type_counts.items()
+                for num in range(1, count+1)]
+            # Sanity check
+            train_experiments = df.loc[(df['dataset'] == 'train'), 'experiment'].unique()
+            for experiment in experiments_to_discard:
+                assert experiment in train_experiments
+                mask_to_discard = (df.experiment == experiment).values
+                self._split_array[mask_to_discard] = -1
+            # import IPython
+            # IPython.embed()
+        else:
+            raise ValueError(f'Split scheme {self._split_scheme} not recognized')
 
         # Filenames
         def create_filepath(row):
