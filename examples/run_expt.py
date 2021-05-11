@@ -270,7 +270,9 @@ def main():
     algorithm = initialize_algorithm(
         config=config,
         datasets=datasets,
-        train_grouper=train_grouper)
+        train_grouper=train_grouper,
+        unlabeled_dataset=unlabeled_dataset,
+    )
 
     model_prefix = get_model_prefix(datasets['train'], config)
     if not config.eval_only:

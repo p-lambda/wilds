@@ -2,7 +2,6 @@ import torch.nn as nn
 import torchvision
 from models.bert.bert import BertClassifier, BertFeaturizer
 from models.bert.distilbert import DistilBertClassifier, DistilBertFeaturizer
-from models.domain_adversarial_network import DomainAdversarialNetwork
 from models.resnet_multispectral import ResNet18
 from models.layers import Identity
 from models.gnn import GINVirtual
@@ -76,9 +75,6 @@ def initialize_model(config, d_out, is_featurizer=False):
     else:
         raise ValueError(f'Model: {config.model} not recognized.')
     return model
-
-def initialize_domain_adversarial_network(featurizer, classifier, n_domains):
-    return DomainAdversarialNetwork(featurizer, classifier, n_domains)
 
 def initialize_bert_based_model(config, d_out, is_featurizer=False):
     if config.model == 'bert-base-uncased':

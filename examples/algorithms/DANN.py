@@ -2,7 +2,8 @@ import numpy as np
 import torch
 
 from algorithms.single_model_algorithm import SingleModelAlgorithm
-from models.initializer import initialize_model, initialize_domain_adversarial_network
+from models.domain_adversarial_network import DomainAdversarialNetwork
+from models.initializer import initialize_model
 
 
 class DANN(SingleModelAlgorithm):
@@ -18,16 +19,14 @@ class DANN(SingleModelAlgorithm):
         }
     """
 
-    def __init__(self, config, d_out, grouper, loss, metric, n_train_steps):
+    def __init__(self, config, d_out, grouper, loss, metric, n_train_steps, n_domains):
         # Initialize model
         featurizer, classifier = initialize_model(
             config, d_out=d_out, is_featurizer=True
         )
-        featurizer = featurizer.to(config.device)
-        classifier = classifier.to(config.device)
-        model = initialize_domain_adversarial_network(
-            featurizer, classifier, grouper.n_groups
-        ).to(config.device)
+        model = DomainAdversarialNetwork(featurizer, classifier, n_domains).to(
+            config.device
+        )
 
         # Initialize module
         super().__init__(
@@ -62,7 +61,7 @@ class DANN(SingleModelAlgorithm):
             # Calculate lambda for the gradient reverse layer
             grl_lambda = (2 / (1 + np.exp(-self.gamma * p))) - 1
         else:
-            grl_lambda = 0.
+            grl_lambda = 0.0
 
         # Forward pass
         x, y_true, metadata = batch
@@ -109,14 +108,17 @@ class DANN(SingleModelAlgorithm):
                 results.pop("domains_true"),
                 return_dict=False,
             )
-            if "unlabeled_domains_pred" in results and "unlabeled_domains_true" in results:
+            if (
+                "unlabeled_domains_pred" in results
+                and "unlabeled_domains_true" in results
+            ):
                 domain_classification_loss += self.loss.compute(
                     results.pop("unlabeled_domains_pred"),
                     results.pop("unlabeled_domains_true"),
                     return_dict=False,
                 )
         else:
-            domain_classification_loss = 0.
+            domain_classification_loss = 0.0
 
         # Add to results for additional logging
         log_metric("classification_loss", classification_loss)

@@ -1,3 +1,5 @@
+import torch
+
 from wilds.common.utils import get_counts
 from algorithms.ERM import ERM
 from algorithms.DANN import DANN
@@ -6,7 +8,7 @@ from algorithms.deepCORAL import DeepCORAL
 from algorithms.IRM import IRM
 from configs.supported import algo_log_metrics, losses
 
-def initialize_algorithm(config, datasets, train_grouper):
+def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None):
     train_dataset = datasets['train']['dataset']
     train_loader = datasets['train']['loader']
 
@@ -67,13 +69,24 @@ def initialize_algorithm(config, datasets, train_grouper):
             metric=metric,
             n_train_steps=n_train_steps)
     elif config.algorithm=='DANN':
+        if unlabeled_dataset is not None:
+            unlabeled_dataset = unlabeled_dataset['dataset']
+            metadata_array = torch.cat(
+                [train_dataset.metadata_array, unlabeled_dataset.metadata_array]
+            )
+        else:
+            metadata_array = train_dataset.metadata_array
+
+        groups = train_grouper.metadata_to_group(metadata_array)
+        n_domains = (get_counts(groups, train_grouper.n_groups) > 0).sum()
         algorithm = DANN(
             config=config,
             d_out=d_out,
             grouper=train_grouper,
             loss=loss,
             metric=metric,
-            n_train_steps=n_train_steps
+            n_train_steps=n_train_steps,
+            n_domains=n_domains.item(),
         )
     else:
         raise ValueError(f"Algorithm {config.algorithm} not recognized")

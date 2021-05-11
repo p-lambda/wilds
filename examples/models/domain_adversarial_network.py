@@ -59,7 +59,7 @@ class GradientReverseFunction(Function):
     """
     Credit: https://github.com/thuml/Transfer-Learning-Library
 
-    coeff is the same as lambda in the original paper
+    coeff is the same as lambda (domain adaptation parameter) in the original paper
     """
 
     @staticmethod
