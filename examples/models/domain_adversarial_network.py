@@ -25,7 +25,7 @@ class DomainDiscriminator(nn.Sequential):
             Use :class:`~torch.nn.Dropout` if ``batch_norm`` is False. Default: True.
     Shape:
         - Inputs: (minibatch, `in_feature`)
-        - Outputs: :math:`(minibatch, 1)`
+        - Outputs: :math:`(minibatch, n_domains)`
     """
 
     def __init__(

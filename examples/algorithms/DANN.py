@@ -19,7 +19,7 @@ class DANN(SingleModelAlgorithm):
         }
     """
 
-    def __init__(self, config, d_out, grouper, loss, metric, n_train_steps, n_domains):
+    def __init__(self, config, d_out, grouper, loss, metric, n_train_steps, n_domains, group_ids_to_domains):
         # Initialize model
         featurizer, classifier = initialize_model(
             config, d_out=d_out, is_featurizer=True
@@ -37,10 +37,11 @@ class DANN(SingleModelAlgorithm):
             metric=metric,
             n_train_steps=n_train_steps,
         )
+        self.group_ids_to_domains = group_ids_to_domains
 
         # Algorithm hyperparameters
         self.gamma = config.dann_gamma
-        self.domain_loss_weight = config.dann_domain_loss_weight
+        self.penalty_weight = config.dann_penalty_weight
 
         # Additional logging
         self.logged_fields.append("grl_lambda")
@@ -67,7 +68,9 @@ class DANN(SingleModelAlgorithm):
         x, y_true, metadata = batch
         x = x.to(self.device)
         y_true = y_true.to(self.device)
-        domains_true = self.grouper.metadata_to_group(metadata).to(self.device)
+        domains_true = self.group_ids_to_domains[
+            self.grouper.metadata_to_group(metadata)
+        ].to(self.device)
         y_pred, domains_pred = self.model(x, grl_lambda)
 
         results = {
@@ -82,9 +85,10 @@ class DANN(SingleModelAlgorithm):
         if unlabeled_batch is not None:
             unlabeled_x, unlabeled_metadata = unlabeled_batch
             unlabeled_x = unlabeled_x.to(self.device)
-            unlabeled_domains_true = self.grouper.metadata_to_group(
-                unlabeled_metadata
-            ).to(self.device)
+            unlabeled_domains_true = self.group_ids_to_domains[
+                self.grouper.metadata_to_group(unlabeled_metadata)
+            ].to(self.device)
+
             _, unlabeled_domains_pred = self.model(unlabeled_x, grl_lambda)
             results["unlabeled_metadata"] = unlabeled_metadata
             results["unlabeled_domains_true"] = unlabeled_domains_true
@@ -92,12 +96,6 @@ class DANN(SingleModelAlgorithm):
         return results
 
     def objective(self, results):
-        def log_metric(metric, value):
-            if isinstance(value, torch.Tensor):
-                results[metric] = value.item()
-            else:
-                results[metric] = value
-
         classification_loss = self.loss.compute(
             results["y_pred"], results["y_true"], return_dict=False
         )
@@ -121,9 +119,9 @@ class DANN(SingleModelAlgorithm):
             domain_classification_loss = 0.0
 
         # Add to results for additional logging
-        log_metric("classification_loss", classification_loss)
-        log_metric("domain_classification_loss", domain_classification_loss)
+        self.save_metric_for_logging(results, "classification_loss", classification_loss)
+        self.save_metric_for_logging(results, "domain_classification_loss", domain_classification_loss)
 
         return (
-            classification_loss + domain_classification_loss * self.domain_loss_weight
+            classification_loss + domain_classification_loss * self.penalty_weight
         )

@@ -1,3 +1,5 @@
+import torch
+
 from algorithms.group_algorithm import GroupAlgorithm
 from scheduler import initialize_scheduler
 from optimizer import initialize_optimizer
@@ -133,3 +135,14 @@ class SingleModelAlgorithm(GroupAlgorithm):
             is_epoch=False,
             metrics=results,
             log_access=False)
+
+    def save_metric_for_logging(self, results, metric, value):
+        if isinstance(value, torch.Tensor):
+            if value.numel() == 1:
+                results[metric] = value.item()
+            else:
+                raise ValueError(
+                    f"Metric value can only be a number or single-element tensor. value={value}"
+                )
+        else:
+            results[metric] = value

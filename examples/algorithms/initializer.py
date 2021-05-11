@@ -78,7 +78,16 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
             metadata_array = train_dataset.metadata_array
 
         groups = train_grouper.metadata_to_group(metadata_array)
-        n_domains = (get_counts(groups, train_grouper.n_groups) > 0).sum()
+        group_counts = get_counts(groups, train_grouper.n_groups)
+        group_ids_to_domains = group_counts.tolist()
+        domain_idx = 0
+        for i, count in enumerate(group_ids_to_domains):
+            if count > 0:
+                group_ids_to_domains[i] = domain_idx
+                domain_idx += 1
+        group_ids_to_domains = torch.tensor(group_ids_to_domains, dtype=torch.long)
+        import pdb
+        pdb.set_trace()
         algorithm = DANN(
             config=config,
             d_out=d_out,
@@ -86,7 +95,8 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
             loss=loss,
             metric=metric,
             n_train_steps=n_train_steps,
-            n_domains=n_domains.item(),
+            n_domains = domain_idx + 1,
+            group_ids_to_domains=group_ids_to_domains,
         )
     else:
         raise ValueError(f"Algorithm {config.algorithm} not recognized")
