@@ -86,8 +86,6 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
                 group_ids_to_domains[i] = domain_idx
                 domain_idx += 1
         group_ids_to_domains = torch.tensor(group_ids_to_domains, dtype=torch.long)
-        import pdb
-        pdb.set_trace()
         algorithm = DANN(
             config=config,
             d_out=d_out,

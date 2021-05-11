@@ -19,7 +19,17 @@ class DANN(SingleModelAlgorithm):
         }
     """
 
-    def __init__(self, config, d_out, grouper, loss, metric, n_train_steps, n_domains, group_ids_to_domains):
+    def __init__(
+        self,
+        config,
+        d_out,
+        grouper,
+        loss,
+        metric,
+        n_train_steps,
+        n_domains,
+        group_ids_to_domains,
+    ):
         # Initialize model
         featurizer, classifier = initialize_model(
             config, d_out=d_out, is_featurizer=True
@@ -53,6 +63,8 @@ class DANN(SingleModelAlgorithm):
         Override
         """
         if batch_info is not None:
+            # TODO: test the impact of the domain adaptation parameter lambda.
+            #       If it improves performance, use scheduler instead.
             # p is the training progress linearly changing from 0 to 1, so to normalize
             # make the numerator be the total number of batches trained so far
             # and the denominator be the total number of batches.
@@ -66,14 +78,29 @@ class DANN(SingleModelAlgorithm):
 
         # Forward pass
         x, y_true, metadata = batch
-        x = x.to(self.device)
-        y_true = y_true.to(self.device)
         domains_true = self.group_ids_to_domains[
             self.grouper.metadata_to_group(metadata)
-        ].to(self.device)
+        ]
+
+        if unlabeled_batch is not None:
+            unlabeled_x, unlabeled_metadata = unlabeled_batch
+            unlabeled_domains_true = self.group_ids_to_domains[
+                self.grouper.metadata_to_group(unlabeled_metadata)
+            ]
+
+            # Concatenate examples and true domains
+            x = torch.cat([x, unlabeled_x])
+            domains_true = torch.cat([domains_true, unlabeled_domains_true])
+
+        x = x.to(self.device)
+        y_true = y_true.to(self.device)
+        domains_true = domains_true.to(self.device)
         y_pred, domains_pred = self.model(x, grl_lambda)
 
-        results = {
+        # Ignore the predicted labels for the unlabeled data
+        y_pred = y_pred[: len(y_true)]
+
+        return {
             "metadata": metadata,
             "y_true": y_true,
             "y_pred": y_pred,
@@ -81,19 +108,6 @@ class DANN(SingleModelAlgorithm):
             "domains_pred": domains_pred,
             "grl_lambda": grl_lambda,
         }
-
-        if unlabeled_batch is not None:
-            unlabeled_x, unlabeled_metadata = unlabeled_batch
-            unlabeled_x = unlabeled_x.to(self.device)
-            unlabeled_domains_true = self.group_ids_to_domains[
-                self.grouper.metadata_to_group(unlabeled_metadata)
-            ].to(self.device)
-
-            _, unlabeled_domains_pred = self.model(unlabeled_x, grl_lambda)
-            results["unlabeled_metadata"] = unlabeled_metadata
-            results["unlabeled_domains_true"] = unlabeled_domains_true
-            results["unlabeled_domains_pred"] = unlabeled_domains_pred
-        return results
 
     def objective(self, results):
         classification_loss = self.loss.compute(
@@ -106,22 +120,15 @@ class DANN(SingleModelAlgorithm):
                 results.pop("domains_true"),
                 return_dict=False,
             )
-            if (
-                "unlabeled_domains_pred" in results
-                and "unlabeled_domains_true" in results
-            ):
-                domain_classification_loss += self.loss.compute(
-                    results.pop("unlabeled_domains_pred"),
-                    results.pop("unlabeled_domains_true"),
-                    return_dict=False,
-                )
         else:
             domain_classification_loss = 0.0
 
         # Add to results for additional logging
-        self.save_metric_for_logging(results, "classification_loss", classification_loss)
-        self.save_metric_for_logging(results, "domain_classification_loss", domain_classification_loss)
-
-        return (
-            classification_loss + domain_classification_loss * self.penalty_weight
+        self.save_metric_for_logging(
+            results, "classification_loss", classification_loss
         )
+        self.save_metric_for_logging(
+            results, "domain_classification_loss", domain_classification_loss
+        )
+
+        return classification_loss + domain_classification_loss * self.penalty_weight
