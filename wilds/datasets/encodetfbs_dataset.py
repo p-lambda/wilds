@@ -138,8 +138,8 @@ class EncodeTFBSDataset(WILDSDataset):
         val_chroms = ['chr2', 'chr9', 'chr11']
         test_chroms = ['chr1', 'chr8', 'chr21']
         official_train_cts = {
-            'MAX': ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878'], 
-            'REST': ['H1-hESC', 'HeLa-S3', 'MCF-7', 'Panc1'], 
+            'MAX': ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878'],
+            'REST': ['H1-hESC', 'HeLa-S3', 'MCF-7', 'Panc1'],
             'JUND': ['HCT116', 'HeLa-S3', 'K562', 'MCF-7']
         }
         official_val_cts = {
@@ -148,7 +148,7 @@ class EncodeTFBSDataset(WILDSDataset):
         official_test_cts = {
             'MAX': ['liver'], 'REST': ['liver'], 'JUND': ['liver']
         }
-        
+
         # Set the TF in split_scheme by prefacing it with 'tf.<TF name>.'
         self._transcription_factor = 'MAX'
         if 'tf.' in split_scheme:
@@ -156,11 +156,11 @@ class EncodeTFBSDataset(WILDSDataset):
             self._transcription_factor = tkns[1]
             split_scheme = '.'.join(tkns[2:])
         self._split_scheme = split_scheme
-        
+
         train_celltypes = official_train_cts[self._transcription_factor]
         val_celltype = official_val_cts[self._transcription_factor]
         test_celltype = official_test_cts[self._transcription_factor]
-        
+
         if self._split_scheme == 'official':
             splits = {
                 'train': {
@@ -319,12 +319,10 @@ class EncodeTFBSDataset(WILDSDataset):
             self._split_array[chrom_mask & celltype_mask] = self._split_dict[split]
 
         keep_mask = (self._split_array != -1)
-        # Remove all-zero sequences from training.
-        remove_allnegative = True
-        if remove_allnegative:
-            train_mask = (self._split_array == self._split_dict['train'])
-            allzeroes_mask = (self._y_array.sum(axis=1) == 0).numpy()
-            keep_mask = keep_mask & ~(train_mask & allzeroes_mask)
+        # Remove all-zero sequences from training.        
+        train_mask = (self._split_array == self._split_dict['train'])
+        allzeroes_mask = (self._y_array.nansum(axis=1) == 0).numpy()
+        keep_mask = keep_mask & ~(train_mask & allzeroes_mask)
 
         # Subsample the testing and validation indices, to speed up evaluation.
         # For the OOD splits (val and test), we subsample by a factor of 3
