@@ -78,9 +78,8 @@ class DANN(SingleModelAlgorithm):
 
         # Forward pass
         x, y_true, metadata = batch
-        domains_true = self.group_ids_to_domains[
-            self.grouper.metadata_to_group(metadata)
-        ]
+        g = self.grouper.metadata_to_group(metadata).to(self.device)
+        domains_true = self.group_ids_to_domains[g]
 
         if unlabeled_batch is not None:
             unlabeled_x, unlabeled_metadata = unlabeled_batch
@@ -101,6 +100,7 @@ class DANN(SingleModelAlgorithm):
         y_pred = y_pred[: len(y_true)]
 
         return {
+            "g": g,
             "metadata": metadata,
             "y_true": y_true,
             "y_pred": y_pred,
