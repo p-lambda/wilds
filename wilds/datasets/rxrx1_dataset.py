@@ -47,8 +47,7 @@ class RxRx1Dataset(WILDSDataset):
         This work is licensed under a Creative Commons
         Attribution-NonCommercial-ShareAlike 4.0 International License. To view
         a copy of this license, visit
-        http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to
-        Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+        http://creativecommons.org/licenses/by-nc-sa/4.0/.
     """
     _dataset_name = 'rxrx1'
     _versions_dict = {
@@ -75,22 +74,43 @@ class RxRx1Dataset(WILDSDataset):
         if split_scheme == 'official':
             # Training:   33 experiments, 1 site per experiment (site 1)
             # Validation: 4 experiments, 2 sites per experiment
-            # Test:       14 experiments, 2 sites per experiment
-            self._split_dict = {'train': 0, 'val': 1, 'test': 2, 'id-test': 3}
-            self._split_names = {'train': 'Train', 'val': 'Validation', 'test': 'Test', 'id-test': 'In-Distribution Test'}
+            # Test OOD:   14 experiments, 2 sites per experiment
+            # Test ID:    Same 33 experiments from training set
+            #             1 site per experiment (site 2)
+            self._split_dict = {
+                'train': 0,
+                'val': 1,
+                'test': 2,
+                'id_test': 3
+            }
+            self._split_names = {
+                'train': 'Train',
+                'val': 'Validation (OOD)',
+                'test': 'Test (OOD)',
+                'id-test': 'Test (ID)'
+            }
             self._split_array = df.dataset.apply(self._split_dict.get).values
-            # id-test set
+            # id_test set
             mask = ((df.dataset == 'train') & (df.site == 2)).values
-            self._split_array = np.where(mask, 3, self._split_array)
-            # TODO: Split in-dist test and val?
+            self._split_array[mask] = self.split_dict['id_test']
+
         elif split_scheme == 'in-dist':
             # Training:   33 experiments total, 1 site per experiment (site 1)
-            #             = 19 experiments from the original training set (site 1)
-            #             + 14 experiments from the original test set (site 1)
-            # Validation: same
-            # Test:       14 experiments from the original test set, 1 site per experiment (site 2)
-            self._split_dict = {'train': 0, 'val': 1, 'test': 2}
-            self._split_names = {'train': 'Train', 'val': 'Validation', 'test': 'Test'}
+            #             = 19 experiments from the orig training set (site 1)
+            #             + 14 experiments from the orig test set (site 1)
+            # Validation: same as official split
+            # Test:       14 experiments from the orig test set,
+            #             1 site per experiment (site 2)
+            self._split_dict = {
+                'train': 0,
+                'val': 1,
+                'test': 2
+            }
+            self._split_names = {
+                'train': 'Train',
+                'val': 'Validation',
+                'test': 'Test'
+            }
             self._split_array = df.dataset.apply(self._split_dict.get).values
             # Use half of the training set (site 1) and discard site 2
             mask_to_discard = ((df.dataset == 'train') & (df.site == 2)).values
@@ -115,8 +135,6 @@ class RxRx1Dataset(WILDSDataset):
                 assert experiment in train_experiments
                 mask_to_discard = (df.experiment == experiment).values
                 self._split_array[mask_to_discard] = -1
-            # import IPython
-            # IPython.embed()
         else:
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
 
