@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def single_conv(in_channels, out_channels, kernel_size=7):
+def single_conv(in_channels, out_channels, kernel_size=25):
     padding_size = int((kernel_size-1)/2)
     return nn.Sequential(
         nn.Conv1d(in_channels, out_channels, kernel_size, padding=padding_size),
@@ -13,7 +13,7 @@ def single_conv(in_channels, out_channels, kernel_size=7):
         nn.ReLU(inplace=True)
     )
 
-def double_conv(in_channels, out_channels, kernel_size=7):
+def double_conv(in_channels, out_channels, kernel_size=25):
     padding_size = int((kernel_size-1)/2)
     return nn.Sequential(
         nn.Conv1d(in_channels, out_channels, kernel_size, padding=padding_size),
