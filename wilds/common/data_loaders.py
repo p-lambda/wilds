@@ -103,7 +103,6 @@ class GroupSampler:
         then sampling data from those groups.
         It drops the last batch if it's incomplete.
     """
-
     def __init__(self, group_ids, batch_size, n_groups_per_batch,
                  uniform_over_groups, distinct_groups):
 
@@ -128,16 +127,13 @@ class GroupSampler:
             self.group_prob = unique_counts.numpy() / unique_counts.numpy().sum()
 
     def __iter__(self):
-
         for batch_id in range(self.num_batches):
-
             # Note that we are selecting group indices rather than groups
             groups_for_batch = np.random.choice(
                 len(self.unique_groups),
                 size=self.n_groups_per_batch,
                 replace=(not self.distinct_groups),
                 p=self.group_prob)
-
             sampled_ids = [
                 np.random.choice(
                     self.group_indices[group],
@@ -148,7 +144,6 @@ class GroupSampler:
 
             # Flatten
             sampled_ids = np.concatenate(sampled_ids)
-
             yield sampled_ids
 
     def __len__(self):

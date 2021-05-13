@@ -15,13 +15,13 @@ model_defaults = {
         'scheduler': 'linear_schedule_with_warmup',
     },
     'densenet121': {
-        'model_kwargs':{
+        'model_kwargs': {
             'pretrained':True,
         },
         'target_resolution': (224, 224),
     },
     'wideresnet50': {
-        'model_kwargs':{
+        'model_kwargs': {
             'pretrained':True,
         },
         'target_resolution': (224, 224),
@@ -39,7 +39,7 @@ model_defaults = {
         'target_resolution': (224, 224),
     },
     'resnet50': {
-        'model_kwargs':{
+        'model_kwargs': {
             'pretrained':True,
         },
         'target_resolution': (224, 224),
@@ -49,4 +49,10 @@ model_defaults = {
         'target_resolution': (224, 224),
     },
     'logistic_regression': {},
+    'fasterrcnn': {
+        'model_kwargs': {
+            'pretrained_model': True,
+            'pretrained_backbone': True,
+        }
+    }
 }

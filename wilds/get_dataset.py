@@ -55,7 +55,7 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
     elif dataset == 'poverty':
         if version == '1.0':
             from wilds.datasets.archive.poverty_v1_0_dataset import PovertyMapDataset
-        else:            
+        else:
             from wilds.datasets.poverty_dataset import PovertyMapDataset
         return PovertyMapDataset(version=version, **dataset_kwargs)
 
@@ -81,3 +81,7 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
     elif dataset == 'rxrx1':
         from wilds.datasets.rxrx1_dataset import RxRx1Dataset
         return RxRx1Dataset(version=version, **dataset_kwargs)
+
+    elif dataset == 'gwhd':
+        from wilds.datasets.gwhd_dataset import GWHDDataset
+        return GWHDDataset(version=version, **dataset_kwargs)

@@ -10,6 +10,7 @@ benchmark_datasets = [
     'poverty',
     'fmow',
     'py150',
+    'rxrx1',
 ]
 
 additional_datasets = [
@@ -18,7 +19,7 @@ additional_datasets = [
     'yelp',
     'bdd100k',
     'sqf',
-    'rxrx1',
+    'gwhd',
 ]
 
 supported_datasets = benchmark_datasets + additional_datasets
