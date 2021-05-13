@@ -14,8 +14,11 @@ from wilds.common.metrics.all_metrics import Accuracy
 
 class RxRx1Dataset(WILDSDataset):
     """
-    The RxRx1 Dataset.
+    The RxRx1-WILDS dataset.
     This is a modified version of the original RxRx1 dataset.
+
+    Supported `split_scheme`:
+        'official' or 'in-dist'
 
     Input (x):
         3-channel fluorescent microscopy images of cells
@@ -208,9 +211,7 @@ class RxRx1Dataset(WILDSDataset):
         Output:
             - x (Tensor): Input features of the idx-th data point
         """
-
         # All images are in the train folder
         img_path = self.data_dir / self._input_array[idx]
         img = Image.open(img_path)
-
         return img
