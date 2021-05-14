@@ -148,4 +148,4 @@ def initialize_rxrx1_transform(is_training):
             t_standardize,
         ]
     transform = transforms.Compose(transforms_ls)
-    return transform
+    return transform_input_only(transform)
