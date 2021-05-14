@@ -319,7 +319,7 @@ class EncodeTFBSDataset(WILDSDataset):
             self._split_array[chrom_mask & celltype_mask] = self._split_dict[split]
 
         keep_mask = (self._split_array != -1)
-        
+
         # Remove all-zero sequences from training.
         train_mask = (self._split_array == self._split_dict['train'])
         allzeroes_mask = (self._y_array.nansum(axis=1) == 0).numpy()
@@ -327,9 +327,12 @@ class EncodeTFBSDataset(WILDSDataset):
 
         # Subsample the testing and validation indices, to speed up evaluation.
         # For the OOD splits (val and test), we subsample by a factor of 3
-        # For the id_val split if it exists, we subsample by a factor of 3*(# of training celltypes)
-        for subsample_seed, (split, subsample_factor) in enumerate(
-            [('val', 3), ('test', 3), ('id_val', 3*len(splits['train']['celltypes'])) ]):
+        # For the id_val and id_test splits, we subsample by a factor of 3*(# of training celltypes)
+        for subsample_seed, (split, subsample_factor) in enumerate([
+            ('val', 3),
+            ('test', 3),
+            ('id_val', 3*len(splits['train']['celltypes'])),
+            ('id_test', 3*len(splits['train']['celltypes']))]):
             if split not in self._split_dict: continue
             split_mask = (self._split_array == self._split_dict[split])
             split_idxs = np.arange(len(self._split_array))[split_mask]
@@ -342,7 +345,7 @@ class EncodeTFBSDataset(WILDSDataset):
 
         self._metadata_df = self._metadata_df[keep_mask]
         self._split_array = self._split_array[keep_mask]
-        self._y_array = self._y_array[keep_mask]
+        self._y_array = self._y_array[keep_mask]        
 
         self._all_chroms = sorted(list({chrom for _, d in splits.items() for chrom in d['chroms']}))
         self._all_celltypes = sorted(list({chrom for _, d in splits.items() for chrom in d['celltypes']}))
