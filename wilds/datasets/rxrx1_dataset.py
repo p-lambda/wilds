@@ -90,7 +90,7 @@ class RxRx1Dataset(WILDSDataset):
                 'train': 'Train',
                 'val': 'Validation (OOD)',
                 'test': 'Test (OOD)',
-                'id-test': 'Test (ID)'
+                'id_test': 'Test (ID)'
             }
             self._split_array = df.dataset.apply(self._split_dict.get).values
             # id_test set
