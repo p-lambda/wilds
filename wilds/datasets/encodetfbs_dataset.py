@@ -319,7 +319,8 @@ class EncodeTFBSDataset(WILDSDataset):
             self._split_array[chrom_mask & celltype_mask] = self._split_dict[split]
 
         keep_mask = (self._split_array != -1)
-        # Remove all-zero sequences from training.        
+        
+        # Remove all-zero sequences from training.
         train_mask = (self._split_array == self._split_dict['train'])
         allzeroes_mask = (self._y_array.nansum(axis=1) == 0).numpy()
         keep_mask = keep_mask & ~(train_mask & allzeroes_mask)
