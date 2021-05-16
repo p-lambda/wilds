@@ -70,7 +70,7 @@ class DeepCORAL(SingleModelAlgorithm):
 
         return mean_diff+cova_diff
 
-    def process_batch(self, batch, unlabeled_batch=None, batch_info=None):
+    def process_batch(self, batch, unlabeled_batch=None):
         """
         Override
         """

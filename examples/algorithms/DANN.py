@@ -54,28 +54,13 @@ class DANN(SingleModelAlgorithm):
         self.penalty_weight = config.dann_penalty_weight
 
         # Additional logging
-        self.logged_fields.append("grl_lambda")
         self.logged_fields.append("classification_loss")
         self.logged_fields.append("domain_classification_loss")
 
-    def process_batch(self, batch, unlabeled_batch=None, batch_info=None):
+    def process_batch(self, batch, unlabeled_batch=None):
         """
         Override
         """
-        if batch_info is not None:
-            # TODO: test the impact of the domain adaptation parameter lambda.
-            #       If it improves performance, use scheduler instead.
-            # p is the training progress linearly changing from 0 to 1, so to normalize
-            # make the numerator be the total number of batches trained so far
-            # and the denominator be the total number of batches.
-            p = float(
-                batch_info["epoch"] * batch_info["n_batches"] + batch_info["batch"]
-            ) / (batch_info["n_epochs"] * batch_info["n_batches"])
-            # Calculate lambda for the gradient reverse layer
-            grl_lambda = (2 / (1 + np.exp(-self.gamma * p))) - 1
-        else:
-            grl_lambda = 0.0
-
         # Forward pass
         x, y_true, metadata = batch
         g = self.grouper.metadata_to_group(metadata).to(self.device)
@@ -94,7 +79,7 @@ class DANN(SingleModelAlgorithm):
         x = x.to(self.device)
         y_true = y_true.to(self.device)
         domains_true = domains_true.to(self.device)
-        y_pred, domains_pred = self.model(x, grl_lambda)
+        y_pred, domains_pred = self.model(x, 1.0 if self.is_training else 0.0)
 
         # Ignore the predicted labels for the unlabeled data
         y_pred = y_pred[: len(y_true)]
@@ -106,7 +91,6 @@ class DANN(SingleModelAlgorithm):
             "y_pred": y_pred,
             "domains_true": domains_true,
             "domains_pred": domains_pred,
-            "grl_lambda": grl_lambda,
         }
 
     def objective(self, results):

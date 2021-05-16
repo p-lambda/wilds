@@ -34,13 +34,12 @@ class SingleModelAlgorithm(GroupAlgorithm):
         )
         self.model = model
 
-    def process_batch(self, batch, unlabeled_batch=None, batch_info=None):
+    def process_batch(self, batch, unlabeled_batch=None):
         """
         A helper function for update() and evaluate() that processes the batch
         Args:
             - batch (tuple of Tensors): a batch of data yielded by data loaders
             - unlabeled_batch (tuple of Tensors or None): a batch of data yielded by unlabeled data loader
-            - batch_info (Dict or None): contains additional information about the batch
         Output:
             - results (dictionary): information about the batch
                 - y_true (Tensor)
@@ -92,13 +91,12 @@ class SingleModelAlgorithm(GroupAlgorithm):
         self.update_log(results)
         return self.sanitize_dict(results)
 
-    def update(self, batch, unlabeled_batch=None, batch_info=None):
+    def update(self, batch, unlabeled_batch=None):
         """
         Process the batch, update the log, and update the model
         Args:
             - batch (tuple of Tensors): a batch of data yielded by data loaders
             - unlabeled_batch (tuple of Tensors or None): a batch of data yielded by unlabeled data loader
-            - batch_info (Dict or None): contains additional information about the batch
         Output:
             - results (dictionary): information about the batch, such as:
                 - g (Tensor)
@@ -110,7 +108,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
         """
         assert self.is_training
         # process batch
-        results = self.process_batch(batch, unlabeled_batch, batch_info)
+        results = self.process_batch(batch, unlabeled_batch)
         self._update(results)
         # log results
         self.update_log(results)
