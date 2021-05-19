@@ -9,6 +9,24 @@ def populate_defaults(config):
     of other hyperparameters."""
     assert config.dataset is not None, 'dataset must be specified'
     assert config.algorithm is not None, 'algorithm must be specified'
+
+    if config.groupby_fields == ['from_source_domain']:
+        if config.n_groups_per_batch is None:
+            config.n_groups_per_batch = 1
+        elif config.n_groups_per_batch != 1:
+            raise ValueError(
+                f"from_source_domain was specified for groupby_fields, but n_groups_per_batch "
+                f"was {config.n_groups_per_batch}, when it should be 1."
+            )
+
+        if config.unlabeled_n_groups_per_batch is None:
+            config.unlabeled_n_groups_per_batch = 1
+        elif config.unlabeled_n_groups_per_batch != 1:
+            raise ValueError(
+                f"from_source_domain was specified for groupby_fields, but unlabeled_n_groups_per_batch "
+                f"was {config.unlabeled_n_groups_per_batch}, when it should be 1."
+            )
+
     # implied defaults from choice of dataset
     config = populate_config(
         config, 
