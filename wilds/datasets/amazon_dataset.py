@@ -210,6 +210,7 @@ class AmazonDataset(WILDSDataset):
                 "test": "Test (OOD)",
                 "id_test": "Test (ID)",
             }
+            self._source_domain_splits = [0, 2, 4]
         elif (
             self.split_scheme == "category_subpopulation"
             or self.split_scheme.endswith("_baseline")

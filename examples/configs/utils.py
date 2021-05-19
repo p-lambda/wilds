@@ -50,6 +50,10 @@ def populate_defaults(config):
         config.no_group_logging = True
     config.no_group_logging = bool(config.no_group_logging)
 
+    if config.groupby_fields == ['from_source_domain']:
+        config.n_groups_per_batch = 1
+        config.unlabeled_n_groups_per_batch = 1
+
     # basic checks
     required_fields = [
         'split_scheme', 'train_loader', 'uniform_over_groups', 'batch_size', 'eval_loader', 'model', 'loss_function', 
