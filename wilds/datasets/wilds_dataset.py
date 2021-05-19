@@ -82,14 +82,11 @@ class WILDSDataset:
     def _add_coarse_domain_metadata(self):
         """
         Update metadata fields, map and values with coarse-grained domain information.
-        Args:
-            - from_source (boolean): True, if the dataset is from the source domain.
-                                     False, otherwise.
         """
         self._metadata_fields.append('from_source_domain')
-        self._metadata_map['from_source_domain'] = [True, False]
+        self._metadata_map['from_source_domain'] = [False, True]
         from_source_domain = torch.as_tensor(
-            [0 if split in self.source_domain_splits else 1 for split in self.split_array],
+            [1 if split in self.source_domain_splits else 0 for split in self.split_array],
             dtype=torch.int64
         ).unsqueeze(dim=1)
         self._metadata_array = torch.cat(
