@@ -37,13 +37,14 @@ class RxRx1Dataset(WILDSDataset):
         https://www.rxrx.ai/rxrx1
         https://www.kaggle.com/c/recursion-cellular-image-classification
 
-    FIXME
     Original publication:
-        @article{,
-            title={},
-            author={},
-            journal={},
-            year={}
+        @inproceedings{taylor2019rxrx1,
+            author = {Taylor, J. and Earnshaw, B. and Mabey, B. and Victors, M. and  Yosinski, J.},
+            title = {RxRx1: An Image Set for Cellular Morphological Variation Across Many Experimental Batches.},
+            year = {2019},
+            booktitle = {International Conference on Learning Representations (ICLR)},
+            booksubtitle = {AI for Social Good Workshop},
+            url = {https://aiforsocialgood.github.io/iclr2019/accepted/track1/pdfs/30_aisg_iclr2019.pdf},
         }
 
     License:
