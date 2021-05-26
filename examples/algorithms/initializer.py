@@ -26,6 +26,8 @@ def initialize_algorithm(config, datasets, train_grouper):
     elif train_dataset.is_detection:
         # For detection, d_out is the number of classes
         d_out = train_dataset.n_classes
+        if config.algorithm in ['deepCORAL', 'IRM']:
+            raise ValueError(f'{config.algorithm} is not currently supported for detection datasets.')
     else:
         # For regression, we have one output per target dimension
         d_out = train_dataset.y_size
@@ -35,7 +37,7 @@ def initialize_algorithm(config, datasets, train_grouper):
     loss = initialize_loss(config, d_out)
     metric = algo_log_metrics[config.algo_log_metric]
 
-    if config.algorithm=='ERM':
+    if config.algorithm == 'ERM':
         algorithm = ERM(
             config=config,
             d_out=d_out,
@@ -54,7 +56,7 @@ def initialize_algorithm(config, datasets, train_grouper):
             metric=metric,
             n_train_steps=n_train_steps,
             is_group_in_train=is_group_in_train)
-    elif config.algorithm=='deepCORAL':
+    elif config.algorithm == 'deepCORAL':
         algorithm = DeepCORAL(
             config=config,
             d_out=d_out,
@@ -62,7 +64,7 @@ def initialize_algorithm(config, datasets, train_grouper):
             loss=loss,
             metric=metric,
             n_train_steps=n_train_steps)
-    elif config.algorithm=='IRM':
+    elif config.algorithm == 'IRM':
         algorithm = IRM(
             config=config,
             d_out=d_out,

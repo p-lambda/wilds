@@ -119,7 +119,7 @@ def main():
 
     # For the GlobalWheat detection dataset,
     # we need to change the multiprocessing strategy or there will be
-    # too many open file descriptors
+    # too many open file descriptors.    
     if config.dataset == 'globalwheat':
         torch.multiprocessing.set_sharing_strategy('file_system')
 
