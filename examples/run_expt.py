@@ -117,9 +117,10 @@ def main():
     config = parser.parse_args()
     config = populate_defaults(config)
 
-    # For the GWHD dataset, we need to change the multiprocessing strategy or there will be
+    # For the GlobalWheat detection dataset,
+    # we need to change the multiprocessing strategy or there will be
     # too many open file descriptors
-    if config.dataset == 'gwhd':
+    if config.dataset == 'globalwheat':
         torch.multiprocessing.set_sharing_strategy('file_system')
 
     # Set device
