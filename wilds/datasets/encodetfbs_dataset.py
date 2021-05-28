@@ -322,7 +322,7 @@ class EncodeTFBSDataset(WILDSDataset):
 
         # Remove all-zero sequences from training.
         train_mask = (self._split_array == self._split_dict['train'])
-        allzeroes_mask = (self._y_array.nansum(axis=1) == 0).numpy()
+        allzeroes_mask = (self._y_array.sum(axis=1) == 0).numpy()
         keep_mask = keep_mask & ~(train_mask & allzeroes_mask)
 
         # Subsample the testing and validation indices, to speed up evaluation.
