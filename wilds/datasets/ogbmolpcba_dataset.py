@@ -5,6 +5,7 @@ from wilds.datasets.wilds_dataset import WILDSDataset
 from ogb.graphproppred import PygGraphPropPredDataset, Evaluator
 from ogb.utils.url import download_url
 from torch_geometric.data.dataloader import Collater as PyGCollater
+import torch_geometric
 
 class OGBPCBADataset(WILDSDataset):
     """
@@ -87,7 +88,11 @@ class OGBPCBADataset(WILDSDataset):
         if not os.path.exists(metadata_file_path):
             download_url('https://snap.stanford.edu/ogb/data/misc/ogbg_molpcba/scaffold_group.npy', os.path.join(self.ogb_dataset.root, 'raw'))
         self._metadata_array = torch.from_numpy(np.load(metadata_file_path)).reshape(-1,1).long()
-        self._collate = PyGCollater(follow_batch=[])
+
+        if torch_geometric.__version__ >= '1.7.0':
+            self._collate = PyGCollater(follow_batch=[], exclude_keys=[])
+        else:
+            self._collate = PyGCollater(follow_batch=[])
 
         self._metric = Evaluator('ogbg-molpcba')
 

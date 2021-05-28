@@ -1,4 +1,4 @@
-import torch, torch_scatter
+import torch
 import numpy as np
 from torch.utils.data import Subset
 from pandas.api.types import CategoricalDtype
@@ -81,6 +81,7 @@ def avg_over_groups(v, g, n_groups):
         group_avgs (Tensor): Vector of length num_groups
         group_counts (Tensor)
     """
+    import torch_scatter
     assert v.device==g.device
     device = v.device
     assert v.numel()==g.numel()
