@@ -50,7 +50,6 @@ class DANN(SingleModelAlgorithm):
         self.group_ids_to_domains = group_ids_to_domains
 
         # Algorithm hyperparameters
-        self.gamma = config.dann_gamma
         self.penalty_weight = config.dann_penalty_weight
 
         # Additional logging

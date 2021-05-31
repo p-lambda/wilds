@@ -14,6 +14,7 @@ benchmark_datasets = [
 
 additional_datasets = [
     'celebA',
+    'domainnet',
     'waterbirds',
     'yelp',
     'bdd100k',
@@ -25,6 +26,7 @@ supported_datasets = benchmark_datasets + additional_datasets
 unlabeled_datasets = [
     'amazon',
     'camelyon17',
+    'domainnet',
     'civilcomments',
     'iwildcam',
     'ogb-molpcba',
