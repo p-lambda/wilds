@@ -19,7 +19,7 @@ additional_datasets = [
     'yelp',
     'bdd100k',
     'sqf',
-    'gwhd',
+    'globalwheat',
 ]
 
 supported_datasets = benchmark_datasets + additional_datasets

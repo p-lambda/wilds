@@ -295,16 +295,17 @@ dataset_defaults = {
         'n_epochs': 90,
         'process_outputs_function': 'multiclass_logits_to_pred',
     },
-    'gwhd': {
+    'globalwheat': {
         'split_scheme': 'official',
         'model': 'fasterrcnn',
-        'transform': 'image_base',        
+        'transform': 'image_base',
         'model_kwargs': {
             'n_classes': 1,
-            'pretrained': True},
+            'pretrained': True
+        },
         'loss_function': 'fasterrcnn_criterion',
         'groupby_fields': ['location_date_sensor'],
-        'val_metric': 'detection_acc_avg', # TODO
+        'val_metric': 'detection_acc_avg_dom',
         'val_metric_decreasing': False,
         'algo_log_metric': None, # TODO
         'optimizer': 'Adam',
