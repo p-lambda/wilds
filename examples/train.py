@@ -5,6 +5,7 @@ from utils import save_model, save_pred, get_pred_prefix, get_model_prefix, deta
 from configs.supported import process_outputs_functions
 
 def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
+
     if dataset['verbose']:
         general_logger.write(f"\n{dataset['name']}:\n")
 

@@ -78,6 +78,6 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
         from wilds.datasets.sqf_dataset import SQFDataset
         return SQFDataset(version=version, **dataset_kwargs)
 
-    elif dataset == 'gwhd':
-        from wilds.datasets.gwhd_dataset import GWHDDataset
-        return GWHDDataset(version=version, **dataset_kwargs)
+    elif dataset == 'globalwheat':
+        from wilds.datasets.globalwheat_dataset import GlobalWheatDataset
+        return GlobalWheatDataset(version=version, **dataset_kwargs)

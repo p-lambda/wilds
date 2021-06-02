@@ -7,9 +7,9 @@ from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import DetectionAccuracy
 
-class GWHDDataset(WILDSDataset):
+class GlobalWheatDataset(WILDSDataset):
     """
-    The GWHD-WILDS wheat head localization dataset.
+    The GlobalWheat-WILDS wheat head localization dataset.
     This is a modified version of the original Global Wheat Head Dataset 2021.
 
     The current version does not contain test or validation labels, as it is being used in a
@@ -45,7 +45,7 @@ class GWHDDataset(WILDSDataset):
         This dataset is distributed under the MIT license.
     """
 
-    _dataset_name = 'gwhd'
+    _dataset_name = 'globalwheat'
 
     # Version 0.9 corresponds to the final dataset, but without the validation and test labels,
     # since it is being used in a currently-running competition (http://www.global-wheat.com/).
@@ -100,7 +100,7 @@ class GWHDDataset(WILDSDataset):
         for i, df in enumerate([train_data_df, val_data_df, test_data_df]):
             self._image_array.extend(list(df['image_name'].values))
             boxes_string = list(df['BoxesString'].values)
-            all_boxes = [GWHDDataset._decode_string(box_string) for box_string in boxes_string]
+            all_boxes = [GlobalWheatDataset._decode_string(box_string) for box_string in boxes_string]
             self._split_array.extend([i] * len(all_boxes))
 
             labels = [{
@@ -125,7 +125,7 @@ class GWHDDataset(WILDSDataset):
             dataset=self,
             groupby_fields=['location_date_sensor'])
         self._metric = DetectionAccuracy()
-        self._collate = GWHDDataset._collate_fn
+        self._collate = GlobalWheatDataset._collate_fn
 
         super().__init__(root_dir, download, split_scheme)
 
@@ -138,10 +138,27 @@ class GWHDDataset(WILDSDataset):
        return x
 
     def eval(self, y_pred, y_true, metadata):
-        return self.standard_group_eval(
+        """
+        The main evaluation metric, detection_acc_avg_dom,
+        measures the simple average of the detection accuracies
+        of each domain.
+        """
+        results, results_str = self.standard_group_eval(
             self._metric,
             self._eval_grouper,
             y_pred, y_true, metadata)
+
+        detection_accs = []
+        for k, v in results.items():
+            if k.startswith('detection_acc_location_date_sensor:'):
+                d = k.split(':')[1]
+                count = results[f'count_location_date_sensor:{d}']
+                if count > 0:
+                    detection_accs.append(v)
+        detection_acc_avg_dom = np.array(detection_accs).mean()
+        results['detection_acc_avg_dom'] = detection_acc_avg_dom
+        results_str = f'Average detection_acc across domains: {detection_acc_avg_dom:.3f}\n' + results_str
+        return results, results_str
 
     @staticmethod
     def _decode_string(box_string):
