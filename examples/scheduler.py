@@ -1,5 +1,5 @@
 from transformers import get_linear_schedule_with_warmup
-from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
+from torch.optim.lr_scheduler import LambdaLR, ReduceLROnPlateau, StepLR
 
 def initialize_scheduler(config, optimizer, n_train_steps):
     # construct schedulers
@@ -22,6 +22,13 @@ def initialize_scheduler(config, optimizer, n_train_steps):
     elif config.scheduler == 'StepLR':
         scheduler = StepLR(optimizer, **config.scheduler_kwargs)
         step_every_batch = False
+        use_metric = False
+    elif config.scheduler == 'DANNLR':
+        scheduler = LambdaLR(
+            optimizer,
+            lambda x:  config.lr * (1. + config.scheduler_kwargs['lr_gamma'] * float(x)) ** (-config.scheduler_kwargs['lr_decay'])
+        )
+        step_every_batch = True
         use_metric = False
     else:
         raise ValueError(f'Scheduler: {config.scheduler} not supported.')

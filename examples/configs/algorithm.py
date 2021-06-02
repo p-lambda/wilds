@@ -31,5 +31,6 @@ algorithm_defaults = {
         'uniform_over_groups': True,
         'distinct_groups': True,
         'eval_loader': 'standard',
+        'scheduler': 'DANNLR',
     },
 }
