@@ -127,18 +127,18 @@ def initialize_rxrx1_transform(is_training):
         return TF.normalize(x, mean, std)
     t_standardize = transforms.Lambda(lambda x: standardize(x))
 
-    def random_d8(x: torch.Tensor) -> torch.Tensor:
-        angle = random.choice([0, 90, 180, 270])
+    angles = [0, 90, 180, 270]
+    def random_rotation(x: torch.Tensor) -> torch.Tensor:
+        angle = angles[torch.randint(low=0, high=len(angles), size=(1,))]
         if angle > 0:
             x = TF.rotate(x, angle)
-        if random.random() < 0.5:
-            x = TF.hflip(x)
         return x
-    t_random_d8 = transforms.Lambda(lambda x: random_d8(x))
+    t_random_rotation = transforms.Lambda(lambda x: random_rotation(x))
 
     if is_training:
         transforms_ls = [
-            t_random_d8,
+            t_random_rotation,
+            transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             t_standardize,
         ]
