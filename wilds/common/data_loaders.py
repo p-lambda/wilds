@@ -14,14 +14,14 @@ def get_train_loader(loader, dataset, batch_size,
                         to each group.
         - dataset (WILDSDataset or WILDSSubset): Data
         - batch_size (int): Batch size
-        - uniform_over_groups (None or bool): Whether to sample the groups uniformly or according to the
-                                              natural data distribution.
+        - uniform_over_groups (None or bool): Whether to sample the groups uniformly or according
+                                              to the natural data distribution.
                                               Setting to None applies the defaults for each type of loaders.
                                               For standard loaders, the default is False. For group loaders,
                                               the default is True.
         - grouper (Grouper): Grouper used for group loaders or for uniform_over_groups=True
         - distinct_groups (bool): Whether to sample distinct_groups within each minibatch for group loaders.
-        - n_groups_poer_batch (int): Number of groups to sample in each minibatch for group loaders.
+        - n_groups_per_batch (int): Number of groups to sample in each minibatch for group loaders.
         - loader_kwargs: kwargs passed into torch DataLoader initialization.
     Output:
         - data loader (DataLoader): Data loader.
@@ -30,7 +30,6 @@ def get_train_loader(loader, dataset, batch_size,
         if uniform_over_groups is None or not uniform_over_groups:
             return DataLoader(
                 dataset,
-                # shuffle=False, # Shuffle training dataset
                 shuffle=True, # Shuffle training dataset
                 sampler=None,
                 collate_fn=dataset.collate,

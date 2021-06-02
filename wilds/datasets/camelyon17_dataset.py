@@ -9,7 +9,7 @@ from wilds.common.metrics.all_metrics import Accuracy
 
 class Camelyon17Dataset(WILDSDataset):
     """
-    The CAMELYON17-wilds histopathology dataset.
+    The CAMELYON17-WILDS histopathology dataset.
     This is a modified version of the original CAMELYON17 dataset.
 
     Supported `split_scheme`:
@@ -144,7 +144,7 @@ class Camelyon17Dataset(WILDSDataset):
                                are predicted labels.
             - y_true (LongTensor): Ground-truth labels
             - metadata (Tensor): Metadata
-            - prediction_fn (function): A function that turns y_pred into predicted labels 
+            - prediction_fn (function): A function that turns y_pred into predicted labels
         Output:
             - results (dictionary): Dictionary of evaluation metrics
             - results_str (str): String summarizing the evaluation metrics
