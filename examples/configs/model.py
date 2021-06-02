@@ -53,6 +53,8 @@ model_defaults = {
         'model_kwargs': {
             'pretrained_model': True,
             'pretrained_backbone': True,
+            'min_size' :1024,
+            'max_size' :1024
         }
     }
 }

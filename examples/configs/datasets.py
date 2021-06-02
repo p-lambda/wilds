@@ -298,8 +298,7 @@ dataset_defaults = {
     'gwhd': {
         'split_scheme': 'official',
         'model': 'fasterrcnn',
-        'train_transform': 'image_base',
-        'eval_transform': 'image_base',
+        'transform': 'image_base',        
         'model_kwargs': {
             'n_classes': 1,
             'pretrained': True},
