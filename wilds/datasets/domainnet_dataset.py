@@ -405,7 +405,7 @@ class DomainNetDataset(WILDSDataset):
     _dataset_name: str = "domainnet"
     _versions_dict: Dict[str, Dict[str, Union[str, int]]] = {
         "1.0": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0x5332717932f047f4b42a937339af0539/contents/blob/",
+            "download_url": "https://worksheets.codalab.org/rest/bundles/0x174472c9b54243dba40850eb3e247797/contents/blob/",
             "compressed_size": 17_438_390_000,
         },
     }
@@ -422,6 +422,7 @@ class DomainNetDataset(WILDSDataset):
         # Dataset information
         self._version: Optional[str] = version
         self._split_scheme: str = split_scheme
+        self._original_resolution = (224, 224)
         self._y_type: str = "long"
         self._y_size: int = 1
         # The dataset contains 345 categories
@@ -503,18 +504,16 @@ class DomainNetDataset(WILDSDataset):
             self._split_dict: Dict[str, int] = {
                 "train": 0,
                 "val": 1,
-                "id_val": 2,
-                "test": 3,
-                "id_test": 4,
+                "test": 2,
+                "id_test": 3,
             }
             self._split_names: Dict[str, str] = {
                 "train": "Train",
                 "val": "Validation (OOD)",
-                "id_val": "Validation (ID)",
                 "test": "Test (OOD)",
                 "id_test": "Test (ID)",
             }
-            self._source_domain_splits = [0, 2, 4]
+            self._source_domain_splits = [0, 3]
         else:
             raise ValueError(f"Split scheme {self.split_scheme} is not recognized.")
 
@@ -523,17 +522,13 @@ class DomainNetDataset(WILDSDataset):
             if row["domain"] == source_domain:
                 if row["split"] == "train":
                     return 0
-                elif row["split"] == "val":
-                    return 2
-                elif row["split"] == "test":
-                    return 4
-            elif row["domain"] == target_domain:
-                if row["split"] == "train":
-                    return -1
-                elif row["split"] == "val":
-                    return 1
                 elif row["split"] == "test":
                     return 3
+            elif row["domain"] == target_domain:
+                if row["split"] == "train":
+                    return 1
+                elif row["split"] == "test":
+                    return 2
             else:
                 raise ValueError(
                     f"Domain should be one of {source_domain}, {target_domain}"

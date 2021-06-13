@@ -41,7 +41,7 @@ METADATA_COLUMNS = ["image_path", "domain", "split", "category", "y"]
 NUM_OF_CATEGORIES = 345
 
 
-def main(dataset_path):
+def main(dataset_path, split_val=False):
     print("Generating metadata.csv for DomainNet...")
 
     # Build mapping of image to split ("train", "val" or "test) and label
@@ -75,15 +75,17 @@ def main(dataset_path):
             f"and {test_count} ({test_percentage}%) test examples with a total of {total_count} examples."
         )
 
-        # Go from 70-30 train-test split to 70-15-15 train-val-test split
         val_count = 0
-        for category_images in bucketed_test_set:
-            new_val_images = np.random.choice(
-                category_images, len(category_images) // 2, replace=False
-            )
-            for image_path in new_val_images:
-                image_info[image_path][0] = "val"
-                val_count += 1
+        if split_val:
+            # Go from 70-30 train-test split to 70-15-15 train-val-test split
+            print("Creating a validation set from the existing test set...")
+            for category_images in bucketed_test_set:
+                new_val_images = np.random.choice(
+                    category_images, len(category_images) // 2, replace=False
+                )
+                for image_path in new_val_images:
+                    image_info[image_path][0] = "val"
+                    val_count += 1
 
         val_percentage = np.round(float(val_count) / total_count * 100.0, 2)
         test_count -= val_count
@@ -136,6 +138,12 @@ if __name__ == "__main__":
         type=str,
         help="Path to the DomainNet dataset downloaded from http://ai.bu.edu/M3SDA",
     )
+    parser.add_argument(
+        "--split-val",
+        action="store_true",
+        help="Whether to create a separate validation by splitting the existing test split "
+        "in half (defaults to false).",
+    )
 
     args = parser.parse_args()
-    main(args.path)
+    main(args.path, args.split_val)

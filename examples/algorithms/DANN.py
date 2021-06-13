@@ -78,7 +78,7 @@ class DANN(SingleModelAlgorithm):
         x = x.to(self.device)
         y_true = y_true.to(self.device)
         domains_true = domains_true.to(self.device)
-        y_pred, domains_pred = self.model(x, 1.0 if self.is_training else 0.0)
+        y_pred, domains_pred = self.model(x)
 
         # Ignore the predicted labels for the unlabeled data
         y_pred = y_pred[: len(y_true)]

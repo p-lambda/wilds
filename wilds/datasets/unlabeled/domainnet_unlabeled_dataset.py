@@ -53,7 +53,7 @@ class DomainNetUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name: str = "domainnet_unlabeled"
     _versions_dict: Dict[str, Dict[str, Union[str, int]]] = {
         "1.0": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0x5332717932f047f4b42a937339af0539/contents/blob/",
+            "download_url": "https://worksheets.codalab.org/rest/bundles/0x174472c9b54243dba40850eb3e247797/contents/blob/",
             "compressed_size": 17_438_390_000,
             "equivalent_dataset": "domainnet_v1.0",
         },
@@ -65,12 +65,14 @@ class DomainNetUnlabeledDataset(WILDSUnlabeledDataset):
         root_dir: str = "data",
         download: bool = False,
         split_scheme: str = "official",
+        source_domain: str = "sketch",
         target_domain: str = "real",
         extra_domain: str = "clipart",
     ):
         # Dataset information
         self._version: Optional[str] = version
         self._split_scheme: str = split_scheme
+        self._original_resolution = (224, 224)
         self._y_type: str = "long"
         self._y_size: int = 1
         # The dataset contains 345 categories

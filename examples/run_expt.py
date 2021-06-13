@@ -43,7 +43,6 @@ def main():
 
     # Unlabeled Dataset
     parser.add_argument('--unlabeled_split', default=None, type=str, help='Unlabeled split to use')
-    parser.add_argument('--unlabeled_dataset_kwargs', nargs='*', action=ParseKwargs, default={})
     parser.add_argument('--unlabeled_version', default=None, type=str)
 
     # Loaders
@@ -76,6 +75,7 @@ def main():
     parser.add_argument('--groupby_fields', nargs='+')
     parser.add_argument('--group_dro_step_size', type=float)
     parser.add_argument('--coral_penalty_weight', type=float)
+    parser.add_argument('--dann_penalty_weight', type=float)
     parser.add_argument('--irm_lambda', type=float)
     parser.add_argument('--irm_penalty_anneal_iters', type=int)
     parser.add_argument('--algo_log_metric')
@@ -176,7 +176,7 @@ def main():
             root_dir=config.root_dir,
             download=config.download,
             unlabeled=True,
-            **config.unlabeled_dataset_kwargs
+            **config.dataset_kwargs
         )
         train_grouper = CombinatorialGrouper(
             dataset=[full_dataset, full_unlabeled_dataset],
