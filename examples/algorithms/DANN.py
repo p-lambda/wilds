@@ -4,6 +4,8 @@ import torch
 from algorithms.single_model_algorithm import SingleModelAlgorithm
 from models.domain_adversarial_network import DomainAdversarialNetwork
 from models.initializer import initialize_model
+from models.resnet import resnet101
+from optimizer import initialize_optimizer
 
 
 class DANN(SingleModelAlgorithm):
@@ -31,11 +33,16 @@ class DANN(SingleModelAlgorithm):
         group_ids_to_domains,
     ):
         # Initialize model
-        featurizer, classifier = initialize_model(
-            config, d_out=d_out, is_featurizer=True
-        )
-        model = DomainAdversarialNetwork(featurizer, classifier, n_domains).to(
+        # TODO: change this back later -Tony
+        classifier = resnet101(pretrained=True)
+        model = DomainAdversarialNetwork(classifier, d_out, n_domains).to(
             config.device
+        )
+
+        # TODO: handle this later -Tony
+        self.optimizer = initialize_optimizer(
+            config,
+            model.classifier.get_parameters() + model.domain_classifier.get_parameters(),
         )
 
         # Initialize module

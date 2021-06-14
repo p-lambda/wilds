@@ -19,7 +19,8 @@ class SingleModelAlgorithm(GroupAlgorithm):
         else:
             self.metric = None
         # initialize models, optimizers, and schedulers
-        self.optimizer = initialize_optimizer(config, model)
+        if self.optimizer is None:
+            self.optimizer = initialize_optimizer(config, model)
         self.max_grad_norm = config.max_grad_norm
         scheduler = initialize_scheduler(config, self.optimizer, n_train_steps)
         # initialize the module

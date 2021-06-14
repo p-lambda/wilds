@@ -135,7 +135,7 @@ dataset_defaults = {
             'momentum': 0.9,
             'nesterov': True,
         },
-        'lr': 0.1,
+        'lr': 0.01,
         'weight_decay': 1e-3,
         'n_epochs': 30,
         'n_groups_per_batch': 4,

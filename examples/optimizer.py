@@ -3,7 +3,15 @@ from transformers import AdamW
 
 def initialize_optimizer(config, model):
     # initialize optimizers
-    if config.optimizer=='SGD':
+    # TODO: get rid of the first if -Tony
+    if config.algorithm == 'DANN' and config.optimizer=='SGD' and config.dataset == 'domainnet':
+        optimizer = SGD(
+            model,
+            lr=config.lr,
+            weight_decay=config.weight_decay,
+            **config.optimizer_kwargs
+        )
+    elif config.optimizer=='SGD':
         params = filter(lambda p: p.requires_grad, model.parameters())
         optimizer = SGD(
             params,
