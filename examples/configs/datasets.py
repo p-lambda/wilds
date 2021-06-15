@@ -16,7 +16,7 @@ dataset_defaults = {
         'unlabeled_n_groups_per_batch': 2,
         'irm_lambda': 1.0,
         'coral_penalty_weight': 1.0,
-        'dann_penalty_weight': 0.1,
+        'dann_penalty_weight': 1.0,
         'loader_kwargs': {
             'num_workers': 1,
             'pin_memory': True,
@@ -105,7 +105,7 @@ dataset_defaults = {
         'max_token_length': 300,
         'irm_lambda': 1.0,
         'coral_penalty_weight': 10.0,
-        'dann_penalty_weight': 0.1,
+        'dann_penalty_weight': 1.0,
         'loader_kwargs': {
             'num_workers': 1,
             'pin_memory': True,
@@ -177,7 +177,7 @@ dataset_defaults = {
         'unlabeled_n_groups_per_batch': 2,
         'irm_lambda': 1.0,
         'coral_penalty_weight': 0.1,
-        'dann_penalty_weight': 0.1,
+        'dann_penalty_weight': 1.0,
         'algo_log_metric': 'accuracy',
         'process_outputs_function': 'multiclass_logits_to_pred',
     },

@@ -3,15 +3,7 @@ from transformers import AdamW
 
 def initialize_optimizer(config, model):
     # initialize optimizers
-    # TODO: get rid of the first if -Tony
-    if config.algorithm == 'DANN' and config.optimizer=='SGD' and config.dataset == 'domainnet':
-        optimizer = SGD(
-            model,
-            lr=config.lr,
-            weight_decay=config.weight_decay,
-            **config.optimizer_kwargs
-        )
-    elif config.optimizer=='SGD':
+    if config.optimizer=='SGD':
         params = filter(lambda p: p.requires_grad, model.parameters())
         optimizer = SGD(
             params,
@@ -41,5 +33,31 @@ def initialize_optimizer(config, model):
             **config.optimizer_kwargs)
     else:
         raise ValueError(f'Optimizer {config.optimizer} not recognized.')
+
+    return optimizer
+
+def initialize_optimizer_with_model_params(config, params):
+    if config.optimizer=='SGD':
+        optimizer = SGD(
+            params,
+            lr=config.lr,
+            weight_decay=config.weight_decay,
+            **config.optimizer_kwargs
+        )
+    elif config.optimizer=='AdamW':
+        optimizer = AdamW(
+            params,
+            lr=config.lr,
+            **config.optimizer_kwargs
+        )
+    elif config.optimizer == 'Adam':
+        optimizer = Adam(
+            params,
+            lr=config.lr,
+            weight_decay=config.weight_decay,
+            **config.optimizer_kwargs
+        )
+    else:
+        raise ValueError(f'Optimizer {config.optimizer} not supported.')
 
     return optimizer
