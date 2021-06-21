@@ -87,12 +87,7 @@ class IRM(SingleModelAlgorithm):
         else:
             penalty_weight = 1.0
 
-        # Package the results
-        if isinstance(penalty, torch.Tensor):
-            results['penalty'] = penalty.item()
-        else:
-            results['penalty'] = penalty
-
+        self.save_metric_for_logging(results, 'penalty', penalty)
         return avg_loss + penalty * penalty_weight
 
     def _update(self, results):

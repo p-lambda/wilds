@@ -15,10 +15,12 @@ class WILDSDataset:
     """
     DEFAULT_SPLITS = {'train': 0, 'val': 1, 'test': 2}
     DEFAULT_SPLIT_NAMES = {'train': 'Train', 'val': 'Validation', 'test': 'Test'}
+    DEFAULT_SOURCE_DOMAIN_SPLITS = [0]
 
     def __init__(self, root_dir, download, split_scheme):
         if len(self._metadata_array.shape) == 1:
             self._metadata_array = self._metadata_array.unsqueeze(1)
+        self._add_coarse_domain_metadata()
         self.check_init()
 
     def __len__(self):
@@ -76,6 +78,21 @@ class WILDSDataset:
             split_idx = np.sort(np.random.permutation(split_idx)[:num_to_retain])
 
         return WILDSSubset(self, split_idx, transform)
+
+    def _add_coarse_domain_metadata(self):
+        """
+        Update metadata fields, map and values with coarse-grained domain information.
+        """
+        self._metadata_fields.append('from_source_domain')
+        self._metadata_map['from_source_domain'] = [False, True]
+        from_source_domain = torch.as_tensor(
+            [1 if split in self.source_domain_splits else 0 for split in self.split_array],
+            dtype=torch.int64
+        ).unsqueeze(dim=1)
+        self._metadata_array = torch.cat(
+            [self._metadata_array, from_source_domain],
+            dim=1
+        )
 
     def check_init(self):
         """
@@ -203,6 +220,13 @@ class WILDSDataset:
         Keys should match up with split_dict.
         """
         return getattr(self, '_split_names', WILDSDataset.DEFAULT_SPLIT_NAMES)
+
+    @property
+    def source_domain_splits(self):
+        """
+        List of split IDs that are from the source domain.
+        """
+        return getattr(self, '_source_domain_splits', WILDSDataset.DEFAULT_SOURCE_DOMAIN_SPLITS)
 
     @property
     def split_array(self):

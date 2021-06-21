@@ -24,7 +24,8 @@ def initialize_scheduler(config, optimizer, n_train_steps):
         step_every_batch = False
         use_metric = False
     else:
-        raise ValueError('Scheduler not recognized.')
+        raise ValueError(f'Scheduler: {config.scheduler} not supported.')
+
     # add an step_every_batch field
     scheduler.step_every_batch = step_every_batch
     scheduler.use_metric = use_metric

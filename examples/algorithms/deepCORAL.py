@@ -124,11 +124,6 @@ class DeepCORAL(SingleModelAlgorithm):
         else:
             penalty = 0.
 
-        # save penalty
-        if isinstance(penalty, torch.Tensor):
-            results['penalty'] = penalty.item()
-        else:
-            results['penalty'] = penalty
-
+        self.save_metric_for_logging(results, 'penalty', penalty)
         avg_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
         return avg_loss + penalty * self.penalty_weight

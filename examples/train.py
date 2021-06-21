@@ -35,7 +35,6 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
     # Using enumerate(iterator) can sometimes leak memory in some environments (!)
     # so we manually increment batch_idx
     batch_idx = 0
-
     for batch in batches:
         if train:
             if unlabeled_dataset:

@@ -25,5 +25,12 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'irm_lambda': 100.,
         'irm_penalty_anneal_iters': 500,
-    }
+    },
+    'DANN': {
+        'train_loader': 'group',
+        'uniform_over_groups': True,
+        'distinct_groups': True,
+        'eval_loader': 'standard',
+        'dann_gamma': 10.,  # Ganin et al. set this value to 10 for all their experiments
+    },
 }

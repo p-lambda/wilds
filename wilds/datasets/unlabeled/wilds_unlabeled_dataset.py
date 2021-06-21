@@ -29,6 +29,7 @@ class WILDSUnlabeledDataset(WILDSDataset):
         "test_unlabeled": "Unlabeled Test",
         "extra_unlabeled": "Unlabeled Extra",
     }
+    DEFAULT_SOURCE_DOMAIN_SPLITS = [10]
 
     _UNSUPPORTED_FUNCTIONALITY_ERROR = "Not supported - no labels available."
 
@@ -89,7 +90,7 @@ class WILDSUnlabeledDataset(WILDSDataset):
 
         # Check splits
         assert self.split_dict.keys() == self.split_names.keys()
-        
+
         # Check that required arrays are Tensors
         assert isinstance(
             self.metadata_array, torch.Tensor
@@ -129,6 +130,33 @@ class WILDSUnlabeledDataset(WILDSDataset):
     @property
     def y_size(self):
         raise AttributeError(WILDSUnlabeledDataset._UNSUPPORTED_FUNCTIONALITY_ERROR)
+
+    @property
+    def split_dict(self):
+        """
+        A dictionary mapping splits to integer identifiers (used in split_array),
+        Keys should match up with split_names.
+        """
+        return getattr(self, "_split_dict", WILDSUnlabeledDataset.DEFAULT_SPLITS)
+
+    @property
+    def split_names(self):
+        """
+        A dictionary mapping splits to their pretty names,
+        Keys should match up with split_dict.
+        """
+        return getattr(self, "_split_names", WILDSUnlabeledDataset.DEFAULT_SPLIT_NAMES)
+
+    @property
+    def source_domain_splits(self):
+        """
+        List of split IDs that are from the source domain.
+        """
+        return getattr(
+            self,
+            "_source_domain_splits",
+            WILDSUnlabeledDataset.DEFAULT_SOURCE_DOMAIN_SPLITS,
+        )
 
 
 class WILDSUnlabeledSubset(WILDSUnlabeledDataset):
