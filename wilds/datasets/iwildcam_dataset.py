@@ -99,6 +99,7 @@ class IWildCamDataset(WILDSDataset):
                             df['hour'].values, df['minute'].values, df['second'].values,
                             self.y_array], axis=1))
         self._metadata_fields = ['location', 'sequence', 'year', 'month', 'day', 'hour', 'minute', 'second', 'y']
+        self._metadata_map = {}
 
         # eval grouper
         self._eval_grouper = CombinatorialGrouper(
