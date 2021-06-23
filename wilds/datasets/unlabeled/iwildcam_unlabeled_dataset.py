@@ -25,9 +25,10 @@ class IWildCamUnlabeledDataset(WILDSUnlabeledDataset):
             http://lila.science/datasets/wcscameratraps
             https://library.wcs.org/ScienceData/Camera-Trap-Data-Summary.aspx
         Original publication:
-            Wildlife Conservation Society Camera Traps
-            Dataset. http://lila.science/datasets/
-            wcscameratraps
+            @misc{wcsdataset,
+              title = {Wildlife Conservation Society Camera Traps Dataset},
+              howpublished = {\url{http://lila.science/datasets/wcscameratraps}},
+            }
         License:
             This dataset is distributed under Community Data License Agreement – Permissive – Version 1.0
             https://cdla.io/permissive-1-0/
