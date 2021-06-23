@@ -51,10 +51,11 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
         if unlabeled:
             from wilds.datasets.unlabeled.iwildcam_unlabeled_dataset import IWildCamUnlabeledDataset
             return IWildCamUnlabeledDataset(version=version, **dataset_kwargs)
-        #if version == '1.0':
-        #    from wilds.datasets.archive.iwildcam_v1_0_dataset import IWildCamDataset
         else:
-            from wilds.datasets.iwildcam_dataset import IWildCamDataset # type:ignore
+            if version == '1.0':
+                from wilds.datasets.archive.iwildcam_v1_0_dataset import IWildCamDataset
+            else:
+                from wilds.datasets.iwildcam_dataset import IWildCamDataset # type:ignore
             return IWildCamDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'waterbirds':
