@@ -126,15 +126,15 @@ class PovertyMapUnlabeledDataset(WILDSUnlabeledDataset):
 
         # no labels
         self.metadata['y'] = (-100 * np.ones(len(self.metadata)))
+        # no urban/rural classification
+        self.metadata['urban'] = (-100 * np.ones(len(self.metadata)))
 
         # add country group field
         country_to_idx = {country: i for i, country in enumerate(DHS_COUNTRIES)}
         self.metadata['country'] = [country_to_idx[country] for country in self.metadata['country'].tolist()]
         self._metadata_map = {'country': DHS_COUNTRIES}
         # rename wealthpooled to y
-        # self._metadata_fields = ['urban', 'y', 'country']
-        # TODO urban/rural classfication?
-        self._metadata_fields = ['y', 'country']
+        self._metadata_fields = ['urban', 'y', 'country']
         self._metadata_array = torch.from_numpy(self.metadata[self._metadata_fields].astype(float).to_numpy())
         super().__init__(root_dir, download, split_scheme)
 

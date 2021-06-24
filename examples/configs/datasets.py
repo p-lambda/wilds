@@ -238,7 +238,7 @@ dataset_defaults = {
         'weight_decay': 0.0,
         'n_epochs': 200,
         'n_groups_per_batch': 8,
-        'unlabeled_n_groups_per_batch': 8,
+        'unlabeled_n_groups_per_batch': 4,
         'irm_lambda': 1.0,
         'coral_penalty_weight': 0.1,
         'process_outputs_function': None,

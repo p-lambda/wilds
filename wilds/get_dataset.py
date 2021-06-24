@@ -67,11 +67,15 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
         return OGBPCBADataset(version=version, **dataset_kwargs)
 
     elif dataset == 'poverty':
-        if version == '1.0':
-            from wilds.datasets.archive.poverty_v1_0_dataset import PovertyMapDataset
-        else:            
-            from wilds.datasets.poverty_dataset import PovertyMapDataset # type:ignore
-        return PovertyMapDataset(version=version, **dataset_kwargs)
+        if unlabeled:
+            from wilds.datasets.unlabeled.poverty_unlabeled_dataset import PovertyMapUnlabeledDataset
+            return PovertyMapUnlabeledDataset(version=version, **dataset_kwargs)
+        else:
+            if version == '1.0':
+                from wilds.datasets.archive.poverty_v1_0_dataset import PovertyMapDataset
+            else:            
+                from wilds.datasets.poverty_dataset import PovertyMapDataset # type:ignore
+            return PovertyMapDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'fmow':
         if unlabeled:
