@@ -57,7 +57,11 @@ class GlobalWheatDataset(WILDSDataset):
     _versions_dict = {
         '0.9': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8ba9122a41454997afdfb78762d390cf/contents/blob/',
-            'compressed_size': 10_280_247_296}}
+            'compressed_size': 10_280_247_296},
+        '1.0': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8ba9122a41454997afdfb78762d390cf/contents/blob/',
+            'compressed_size': 10_280_247_296}
+            }
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
 
@@ -84,15 +88,32 @@ class GlobalWheatDataset(WILDSDataset):
             else:
                 train_data_df = pd.read_csv(self.root / f'official_train.csv')
                 val_data_df = pd.read_csv(self.root / f'official_val.csv')
-                test_data_df = pd.read_csv(self.root / f'in-dist_test.csv')
+                test_data_df = pd.read_csv(self.root / f'in_dist_test.csv')
 
         elif split_scheme == "in-dist":
             if version == "0.9":
-                print("Warning: ood_with_subsampled_test is not available in 0.9")
+                print("Warning: in-dist is not available in 0.9")
             else:
-                train_data_df = pd.read_csv(self.root / f'in-dist_train.csv')
+                train_data_df = pd.read_csv(self.root / f'in_dist_train.csv')
                 val_data_df = pd.read_csv(self.root / f'official_val.csv')
-                test_data_df = pd.read_csv(self.root / f'in-dist_test.csv')
+                test_data_df = pd.read_csv(self.root / f'in_dist_test.csv')
+
+        elif split_scheme == "fixed-train":
+            if version == "0.9":
+                print("Warning: fixed-train is not available in 0.9")
+            else:
+                train_data_df = pd.read_csv(self.root / f'fixed_train_train.csv')
+                val_data_df = pd.read_csv(self.root / f'fixed_train_val.csv')
+                test_data_df = pd.read_csv(self.root / f'fixed_train_test.csv')
+
+        elif split_scheme == "fixed-test":
+            if version == "0.9":
+                print("Warning: fixed-test is not available in 0.9")
+            else:
+                train_data_df = pd.read_csv(self.root / f'fixed_test_train.csv')
+                val_data_df = pd.read_csv(self.root / f'official_val.csv')
+                test_data_df = pd.read_csv(self.root / f'fixed_test_test.csv')
+
 
         self._image_array = []
         self._split_array, self._y_array, self._metadata_array = [], [], []
@@ -169,7 +190,7 @@ class GlobalWheatDataset(WILDSDataset):
             return np.zeros((0,4))
         else:
             try:
-                boxes =  np.array([np.array([int(i) for i in box.split(" ")])
+                boxes =  np.array([np.array([int(eval(i)) for i in box.split(" ")])
                             for box in box_string.split(";")])
                 return boxes
             except:
