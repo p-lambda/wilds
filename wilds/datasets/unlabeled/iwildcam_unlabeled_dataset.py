@@ -27,7 +27,7 @@ class IWildCamUnlabeledDataset(WILDSUnlabeledDataset):
         Original publication:
             @misc{wcsdataset,
               title = {Wildlife Conservation Society Camera Traps Dataset},
-              howpublished = {\url{http://lila.science/datasets/wcscameratraps}},
+              howpublished = {\\url{http://lila.science/datasets/wcscameratraps}},
             }
         License:
             This dataset is distributed under Community Data License Agreement – Permissive – Version 1.0
@@ -36,10 +36,9 @@ class IWildCamUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name = 'iwildcam_unlabeled'
     _versions_dict = {
         '1.0': {
-            'download_url': 'TODO',
-            'compressed_size': 0,
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xb5950cf629c84b0b9f23794a71f08db0/contents/blob/',
+            'compressed_size': 41_016_937_676,
             'equivalent_dataset': 'iwildcam_unlabeled_v1.0'}}
-
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
 
