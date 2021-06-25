@@ -186,7 +186,7 @@ class GlobalWheatDataset(WILDSDataset):
             } for boxes in all_boxes]
 
             self._y_array.extend(labels)
-            self._metadata_array.extend([DATASETS_DECODER[int(item)] for item in df['domain'].values]))
+            self._metadata_array.extend([int(item) for item in df['domain'].values])
 
         self._split_array = np.array(self._split_array)
         self._metadata_array = torch.tensor(self._metadata_array,
