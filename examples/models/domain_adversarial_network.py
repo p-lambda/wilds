@@ -53,8 +53,8 @@ class DomainDiscriminator(nn.Sequential):
                 nn.Linear(hidden_size, n_domains),
             )
 
-    def get_parameters(self) -> List[Dict]:
-        return [{"params": self.parameters(), "lr": 1.}]
+    def get_parameters(self, lr=1.0) -> List[Dict]:
+        return [{"params": self.parameters(), "lr": lr}]
 
 class GradientReverseFunction(Function):
     """
@@ -145,7 +145,7 @@ class DomainAdversarialNetwork(nn.Module):
         domains_pred = self.domain_classifier(features)
         return y_pred, domains_pred
 
-    def get_parameters(self, base_lr=1.0) -> List[Dict]:
+    def get_parameters(self, base_lr=1.0, discriminator_lr=1.0) -> List[Dict]:
         """
         A parameter list which decides optimization hyper-parameters,
         such as the relative learning rate of each layer
@@ -156,4 +156,4 @@ class DomainAdversarialNetwork(nn.Module):
             {"params": self.featurizer.parameters(), "lr": 0.1 * base_lr},
             {"params": self.classifier.parameters(), "lr": 1.0 * base_lr},
         ]
-        return params + self.domain_classifier.get_parameters()
+        return params + self.domain_classifier.get_parameters(discriminator_lr)

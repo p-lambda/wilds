@@ -18,8 +18,9 @@ class SingleModelAlgorithm(GroupAlgorithm):
             logged_metrics.append(self.metric)
         else:
             self.metric = None
+
         # initialize models, optimizers, and schedulers
-        if self.optimizer is None:
+        if not hasattr(self, 'optimizer') or self.optimizer is None:
             self.optimizer = initialize_optimizer(config, model)
         self.max_grad_norm = config.max_grad_norm
         scheduler = initialize_scheduler(config, self.optimizer, n_train_steps)

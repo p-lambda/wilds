@@ -37,7 +37,11 @@ class DANN(SingleModelAlgorithm):
         model = DomainAdversarialNetwork(featurizer, classifier, n_domains).to(
             config.device
         )
-        self.optimizer = initialize_optimizer_with_model_params(config, model.get_parameters())
+        parameters_to_optimize = model.get_parameters(
+            base_lr=config.dann_classifier_lr,
+            discriminator_lr = config.dann_discriminator_lr,
+        )
+        self.optimizer = initialize_optimizer_with_model_params(config, parameters_to_optimize)
 
         # Initialize module
         super().__init__(
