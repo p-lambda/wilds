@@ -32,6 +32,9 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
         else:
             batch_results = algorithm.evaluate(batch)
 
+        import IPython
+        IPython.embed()
+
         # These tensors are already detached, but we need to clone them again
         # Otherwise they don't get garbage collected properly in some versions
         # The extra detach is just for safety

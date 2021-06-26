@@ -7,55 +7,103 @@ from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import DetectionAccuracy
 
+SESSIONS = [
+    'Rres_1',
+    'NMBU_2',
+    'NMBU_1',
+    'Arvalis_9',
+    'Arvalis_11',
+    'Arvalis_6',
+    'Arvalis_5',
+    'Arvalis_7',
+    'Inrae_1',
+    'Arvalis_10',
+    'Arvalis_12',
+    'Arvalis_4',
+    'Arvalis_3',
+    'Arvalis_2',
+    'Arvalis_1',
+    'Arvalis_8',
+    'Ethz_1',
+    'ULiège-GxABT_1',
+    'Utokyo_2',
+    'Utokyo_1',
+    'Utokyo_3',
+    'NAU_1',
+    'Ukyoto_1',
+    'NAU_3',
+    'NAU_2',
+    'ARC_1',
+    'UQ_11',
+    'UQ_10',
+    'UQ_9',
+    'UQ_8',
+    'UQ_6',
+    'Terraref_2',
+    'Terraref_1',
+    'KSU_4',
+    'KSU_3',
+    'KSU_2',
+    'KSU_1',
+    'CIMMYT_3',
+    'CIMMYT_2',
+    'CIMMYT_1',
+    'UQ_6',
+    'UQ_5',
+    'UQ_4',
+    'UQ_3',
+    'UQ_2',
+    'UQ_1',
+    'Usask_1',
+]
 
-DATASETS_DECODER = {0: 'Rres_1',
- 1: 'NMBU_2',
- 2: 'NMBU_1',
- 3: 'Arvalis_9',
- 4: 'Arvalis_11',
- 5: 'Arvalis_6',
- 6: 'Arvalis_5',
- 7: 'Arvalis_7',
- 8: 'Inrae_1',
- 9: 'Arvalis_10',
- 10: 'Arvalis_12',
- 11: 'Arvalis_4',
- 12: 'Arvalis_3',
- 13: 'Arvalis_2',
- 14: 'Arvalis_1',
- 15: 'Arvalis_8',
- 16: 'Ethz_1',
- 17: 'ULiège-GxABT_1',
- 18: 'Utokyo_2',
- 19: 'Utokyo_1',
- 20: 'Utokyo_3',
- 21: 'NAU_1',
- 22: 'Ukyoto_1',
- 23: 'NAU_3',
- 24: 'NAU_2',
- 25: 'ARC_1',
- 26: 'UQ_11',
- 27: 'UQ_10',
- 28: 'UQ_9',
- 29: 'UQ_8',
- 30: 'UQ_6',
- 31: 'Terraref_2',
- 32: 'Terraref_1',
- 33: 'KSU_4',
- 34: 'KSU_3',
- 35: 'KSU_2',
- 36: 'KSU_1',
- 37: 'CIMMYT_3',
- 38: 'CIMMYT_2',
- 39: 'CIMMYT_1',
- 40: 'UQ_6',
- 41: 'UQ_5',
- 42: 'UQ_4',
- 43: 'UQ_3',
- 44: 'UQ_2',
- 45: 'UQ_1',
- 46: 'Usask_1'
-}
+COUNTRIES = [
+    'Switzerland',
+    'UK',
+    'Belgium',
+    'Norway',
+    'France',
+    'Canada',
+    'US',
+    'Mexico',
+    'Japan',
+    'China',
+    'Australia',
+    'Sudan',
+]
+
+LOCATIONS = [
+    'Baima',
+    'Brookstead',
+    'Ciudad Obregon',
+    'Gatton',
+    'Gembloux',
+    'Gréoux',
+    'KSU',
+    'Kyoto',
+    'Maricopa, AZ',
+    'McAllister',
+    'Mons',
+    'NARO-Hokkaido',
+    'NARO-Tsukuba',
+    'NMBU',
+    'Rothamsted',
+    'Saskatchewan',
+    'Toulouse',
+    'Usask',
+    'VLB',
+    'VSC',
+    'Wad Medani',
+]
+
+STAGES = [
+    'Filling',
+    'Filling - Ripening',
+    'multiple',
+    'Post-flowering',
+    'Post-Flowering',
+    'Ripening',
+]
 
 class GlobalWheatDataset(WILDSDataset):
     """
@@ -191,10 +239,36 @@ class GlobalWheatDataset(WILDSDataset):
         self._split_array = np.array(self._split_array)
         self._metadata_array = torch.tensor(self._metadata_array,
                                             dtype=torch.long).unsqueeze(1)
-        self._metadata_fields = ['location_date_sensor']
+        self._metadata_array = torch.cat(
+            (self._metadata_array,
+            torch.zeros(
+                (len(self._metadata_array), 3),
+                dtype=torch.long)),
+            dim=1)
+
+        domain_df = pd.read_csv(self.root / 'metadata_domain.csv', sep=';')
+        for session_idx, session_name in enumerate(SESSIONS):
+            idx = pd.Index(domain_df['name']).get_loc(session_name)
+            country = domain_df.loc[idx, 'country']
+            location = domain_df.loc[idx, 'location']
+            stage = domain_df.loc[idx, 'development_stage']
+
+            session_mask = (self._metadata_array[:, 0] == session_idx)
+            self._metadata_array[session_mask, 1] = COUNTRIES.index(country)
+            self._metadata_array[session_mask, 2] = LOCATIONS.index(location)
+            self._metadata_array[session_mask, 3] = STAGES.index(stage)
+
+        self._metadata_fields = ['session', 'country', 'location', 'stage']
+        self._metadata_map = {
+            'session': SESSIONS,
+            'country': COUNTRIES,
+            'location': LOCATIONS,
+            'stage': STAGES,
+        }
+
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
-            groupby_fields=['location_date_sensor'])
+            groupby_fields=['session'])
         self._metric = DetectionAccuracy()
         self._collate = GlobalWheatDataset._collate_fn
 
