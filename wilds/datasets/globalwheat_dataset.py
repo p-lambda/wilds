@@ -7,6 +7,56 @@ from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import DetectionAccuracy
 
+
+DATASETS_DECODER = {0: 'Rres_1',
+ 1: 'NMBU_2',
+ 2: 'NMBU_1',
+ 3: 'Arvalis_9',
+ 4: 'Arvalis_11',
+ 5: 'Arvalis_6',
+ 6: 'Arvalis_5',
+ 7: 'Arvalis_7',
+ 8: 'Inrae_1',
+ 9: 'Arvalis_10',
+ 10: 'Arvalis_12',
+ 11: 'Arvalis_4',
+ 12: 'Arvalis_3',
+ 13: 'Arvalis_2',
+ 14: 'Arvalis_1',
+ 15: 'Arvalis_8',
+ 16: 'Ethz_1',
+ 17: 'ULiège-GxABT_1',
+ 18: 'Utokyo_2',
+ 19: 'Utokyo_1',
+ 20: 'Utokyo_3',
+ 21: 'NAU_1',
+ 22: 'Ukyoto_1',
+ 23: 'NAU_3',
+ 24: 'NAU_2',
+ 25: 'ARC_1',
+ 26: 'UQ_11',
+ 27: 'UQ_10',
+ 28: 'UQ_9',
+ 29: 'UQ_8',
+ 30: 'UQ_6',
+ 31: 'Terraref_2',
+ 32: 'Terraref_1',
+ 33: 'KSU_4',
+ 34: 'KSU_3',
+ 35: 'KSU_2',
+ 36: 'KSU_1',
+ 37: 'CIMMYT_3',
+ 38: 'CIMMYT_2',
+ 39: 'CIMMYT_1',
+ 40: 'UQ_6',
+ 41: 'UQ_5',
+ 42: 'UQ_4',
+ 43: 'UQ_3',
+ 44: 'UQ_2',
+ 45: 'UQ_1',
+ 46: 'Usask_1'
+}
+
 class GlobalWheatDataset(WILDSDataset):
     """
     The GlobalWheat-WILDS wheat head localization dataset.
@@ -136,7 +186,7 @@ class GlobalWheatDataset(WILDSDataset):
             } for boxes in all_boxes]
 
             self._y_array.extend(labels)
-            self._metadata_array.extend(list(df['domain'].values))
+            self._metadata_array.extend([int(item) for item in df['domain'].values])
 
         self._split_array = np.array(self._split_array)
         self._metadata_array = torch.tensor(self._metadata_array,
