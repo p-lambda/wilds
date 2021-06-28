@@ -60,13 +60,13 @@ def save_model(algorithm, epoch, best_val_metric, path):
     state['best_val_metric'] = best_val_metric
     torch.save(state, path)
 
-def load(module, path, mode='algorithm'):
+def load(module, path, device='cpu', mode='algorithm'):
     """
     Loads an algorithm/model from an algorithm's saved parameters.
     - mode: either "algorithm" or "model". if "model", regex changes parameter
       names from 'model.fc' to 'fc'
     """
-    state = torch.load(path)
+    state = torch.load(path, map_location=torch.device(device))
     if mode == 'algorithm':
         module.load_state_dict(state['algorithm'])
     elif mode == 'model':

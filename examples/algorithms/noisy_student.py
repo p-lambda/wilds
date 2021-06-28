@@ -29,7 +29,7 @@ class NoisyStudent(SingleModelAlgorithm):
         assert config.teacher_model_path is not None
         # load teacher model
         teacher_model = initialize_model(config, d_out).to(config.device)
-        load(teacher_model, config.teacher_model_path, mode="model")
+        load(teacher_model, config.teacher_model_path, device=config.device, mode="model")
         # initialize student model
         student_model = initialize_model(config, d_out=d_out) # note: pretrained on imagenet
         student_model = student_model.to(config.device)
