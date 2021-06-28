@@ -11,6 +11,12 @@ def initialize_transform(transform_name, config, dataset):
         return initialize_image_base_transform(config, dataset)
     elif transform_name=='image_resize_and_center_crop':
         return initialize_image_resize_and_center_crop_transform(config, dataset)
+    elif transform_name=='image_flip_and_shift':
+        return initialize_image_flip_and_shift_transform()
+    elif transform_name=='image_autoaugment':
+        return initialize_image_autoaugment_transform()
+    elif transform_name=='image_randaugment':
+        return initialize_image_randaugment_transform()
     elif transform_name=='poverty_train':
         return initialize_poverty_train_transform()
     else:

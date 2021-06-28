@@ -6,6 +6,7 @@ from algorithms.DANN import DANN
 from algorithms.groupDRO import GroupDRO
 from algorithms.deepCORAL import DeepCORAL
 from algorithms.IRM import IRM
+from algorithms.noisy_student import NoisyStudent
 from configs.supported import algo_log_metrics, losses
 
 def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None):
@@ -96,6 +97,14 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
             n_domains = domain_idx + 1,
             group_ids_to_domains=group_ids_to_domains,
         )
+    elif config.algorithm=='noisy_student':
+        algorithm = NoisyStudent(
+            config=config,
+            d_out=d_out,
+            grouper=train_grouper,
+            loss=loss,
+            metric=metric,
+            n_train_steps=n_train_steps)
     else:
         raise ValueError(f"Algorithm {config.algorithm} not recognized")
 
