@@ -7,6 +7,7 @@ from algorithms.groupDRO import GroupDRO
 from algorithms.deepCORAL import DeepCORAL
 from algorithms.IRM import IRM
 from algorithms.noisy_student import NoisyStudent
+from algorithms.fixmatch import FixMatch
 from configs.supported import algo_log_metrics, losses
 
 def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None):
@@ -99,6 +100,14 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
         )
     elif config.algorithm=='noisy_student':
         algorithm = NoisyStudent(
+            config=config,
+            d_out=d_out,
+            grouper=train_grouper,
+            loss=loss,
+            metric=metric,
+            n_train_steps=n_train_steps)
+    elif config.algorithm=='fixmatch':
+        algorithm = FixMatch(
             config=config,
             d_out=d_out,
             grouper=train_grouper,

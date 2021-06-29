@@ -79,6 +79,8 @@ def main():
     parser.add_argument('--coral_penalty_weight', type=float)
     parser.add_argument('--irm_lambda', type=float)
     parser.add_argument('--irm_penalty_anneal_iters', type=int)
+    parser.add_argument('--fixmatch_lambda', type=float)
+    parser.add_argument('--fixmatch_threshold', type=float)
     parser.add_argument('--algo_log_metric')
 
     # Model selection

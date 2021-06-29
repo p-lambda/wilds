@@ -40,5 +40,12 @@ algorithm_defaults = {
         # 'batch_size': 128,
         # 'unlabeled_batch_size': 5 * 128,
         # 'model': 'efficientnet-b0'
+    },
+    'fixmatch': {
+        'train_loader': 'standard',
+        'uniform_over_groups': False,
+        'eval_loader': 'standard',
+        'fixmatch_lambda': 1,
+        'fixmatch_threshold': 0.7
     }
 }
