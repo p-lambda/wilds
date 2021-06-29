@@ -67,12 +67,14 @@ class FixMatch(SingleModelAlgorithm):
                 x_weak = x
                 x_weak = x_weak.to(self.device)
                 outputs = self.model(x_weak)
-                mask = torch.max(F.softmax(outputs), -1) >= self.confidence_threshold
-                results['unlabeled_weak_y_pseudo'] = outputs[mask]
+                mask = torch.max(F.softmax(outputs, -1), -1)[0] >= self.confidence_threshold
+                pseudolabels = self.process_outputs_function(outputs)
+                results['unlabeled_weak_y_pseudo'] = pseudolabels[mask]
 
             x_strong = x
             x_strong = x_strong.to(self.device)
-            results['unlabeled_strong_y_pred'] = self.model(x_strong)[mask]
+            outputs = self.model(x_strong)
+            results['unlabeled_strong_y_pred'] = outputs[mask]
         return results
 
     def objective(self, results):
