@@ -109,11 +109,7 @@ def _record_patches(center_size,
                     slide, slide_map, patch_level,
                     mask_level, tumor_mask, tissue_mask, normal_mask,
                     tumor_threshold,
-                    tumor_sel_ratio,
-                    tumor_sel_max,
-                    normal_threshold,
-                    normal_sel_ratio,
-                    normal_sel_max,
+                    normal_threshold,                    
                     **args):
     """
     Extract all tumor and non-tumor patches from a slide, using the given masks.
@@ -197,11 +193,7 @@ def generate_file(patient, node, xml_path, slide_path, folder_path):
         'mask_level' : MASK_LEVEL,
         'center_size' : CENTER_SIZE,
         'tumor_threshold' : 0,
-        'tumor_sel_ratio' : 1,
-        'tumor_sel_max' : 100000,
         'normal_threshold' : 0.2,
-        'normal_sel_ratio' : 1,
-        'normal_sel_max' : 100000,
         'mask_folder_path' : folder_path,
         'make_map' : True
     }
