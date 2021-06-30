@@ -37,11 +37,11 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --coarse
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_deepcoral_coarse_tune
 
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm DANN --random
-    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_dann_tune
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x6eff199eaf61473291730321951dca7d --datasets fmow --algorithm DANN --random
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x6eff199eaf61473291730321951dca7d --datasets fmow --experiment fmow_dann_tune
     
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm DANN --coarse --random
-    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_dann_coarse_tune
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x6eff199eaf61473291730321951dca7d --datasets fmow --algorithm DANN --coarse --random
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x6eff199eaf61473291730321951dca7d --datasets fmow --experiment fmow_dann_coarse_tune
     
     python reproducibility/codalab/reproduce.py --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --repair
 
@@ -54,8 +54,9 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --split test_eval --uuid 0x4516cc
      
     # To output full results of a experiment across multiple replicates
-    python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0xa0b262fc173f43c297409a069a021496 --experiment globalwheat_erm_indist_seed
-    python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x710beabc2aa84778a7fe21db55e24492 --experiment poverty_erm_ID_fold --id-val   
+    python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x6eff199eaf61473291730321951dca7d --experiment fmow_dann_coarse_seed
+    python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x6eff199eaf61473291730321951dca7d --experiment fmow_dann_seed
+    python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --experiment fmow_deepcoral_tune1
     
     # DANN on domainnent
     python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x13ef64a3a90842d981b6b1f566b1cc78 --experiment domainnet_real-sketch
