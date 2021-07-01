@@ -112,9 +112,6 @@ class GlobalWheatDataset(WILDSDataset):
 
     The current version does not contain test or validation labels, as it is being used in a
     currently-running competition.
-    After the competition concludes in July 2021, we will update the dataset to contain the
-    final splits with test and validation labels, and add the dataset to the official WILDS
-    benchmark.
 
     Supported `split_scheme`:
         - 'official'
@@ -139,6 +136,14 @@ class GlobalWheatDataset(WILDSDataset):
             note = {Publisher: AAAS},
             pages = {3521852},
         }
+        @misc{david2021global,
+            title={Global Wheat Head Dataset 2021: more diversity to improve the benchmarking of wheat head localization methods}, 
+            author={Etienne David and Mario Serouart and Daniel Smith and Simon Madec and Kaaviya Velumani and Shouyang Liu and Xu Wang and Francisco Pinto Espinosa and Shahameh Shafiee and Izzat S. A. Tahir and Hisashi Tsujimoto and Shuhei Nasuda and Bangyou Zheng and Norbert Kichgessner and Helge Aasen and Andreas Hund and Pouria Sadhegi-Tehran and Koichi Nagasawa and Goro Ishikawa and Sébastien Dandrifosse and Alexis Carlier and Benoit Mercatoris and Ken Kuroki and Haozhou Wang and Masanori Ishii and Minhajul A. Badhon and Curtis Pozniak and David Shaner LeBauer and Morten Lilimo and Jesse Poland and Scott Chapman and Benoit de Solan and Frédéric Baret and Ian Stavness and Wei Guo},
+            year={2021},
+            eprint={2105.07660},
+            archivePrefix={arXiv},
+            primaryClass={cs.CV}
+        }
     License:
         This dataset is distributed under the MIT license.
     """
@@ -157,8 +162,8 @@ class GlobalWheatDataset(WILDSDataset):
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8ba9122a41454997afdfb78762d390cf/contents/blob/',
             'compressed_size': 10_280_247_296},
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8ba9122a41454997afdfb78762d390cf/contents/blob/',
-            'compressed_size': 10_280_247_296}
+            'download_url': 'https://worksheets.codalab.org/bundles/0x03b0584cb00d4ea987aa3269aa2fd2b4/contents/blob/'
+            }
             }
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
