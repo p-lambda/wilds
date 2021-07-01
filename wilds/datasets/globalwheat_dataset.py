@@ -123,7 +123,7 @@ class GlobalWheatDataset(WILDSDataset):
     Output (y):
         y is a n x 4-dimensional vector where each line represents a box coordinate (x_min, y_min, x_max, y_max)
     Metadata:
-        Each image is annotated with the ID of the domain (location_date_sensor) it came from (integer from 0 to 46).
+        Each image is annotated with the ID of the domain (session) it came from (integer from 0 to 46).
     Website:
         http://www.global-wheat.com/
     Original publication:
@@ -295,14 +295,15 @@ class GlobalWheatDataset(WILDSDataset):
 
         detection_accs = []
         for k, v in results.items():
-            if k.startswith('detection_acc_location_date_sensor:'):
+            if k.startswith('detection_acc_session:'):
                 d = k.split(':')[1]
-                count = results[f'count_location_date_sensor:{d}']
+                count = results[f'count_session:{d}']
                 if count > 0:
                     detection_accs.append(v)
         detection_acc_avg_dom = np.array(detection_accs).mean()
+        print("DEBUG ", detection_acc_avg_dom)
         results['detection_acc_avg_dom'] = detection_acc_avg_dom
-        results_str = f'Average detection_acc across domains: {detection_acc_avg_dom:.3f}\n' + results_str
+        results_str = f'Average detection_acc across session: {detection_acc_avg_dom:.3f}\n' + results_str
         return results, results_str
 
     @staticmethod
