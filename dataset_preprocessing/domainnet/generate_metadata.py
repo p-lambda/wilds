@@ -18,6 +18,8 @@ Generate a CSV with the metadata for DomainNet:
       pages={1406--1415},
       year={2019}
     }
+
+The dataset can be downloaded from http://ai.bu.edu/M3SDA.
     
 There are 586,576 images in 345 categories (airplane, ball, cup, etc.) across 6 domains (clipart, infograph, 
 painting, quickdraw, real and sketch). Images are either PNG or JPG files.
@@ -28,11 +30,11 @@ The metadata CSV file has the following fields:
 2. domain: One of the 6 possible domains.
 3. split: One of "train", "val" or "test".
 4. category: One of the 345 possible categories.
-5. y: The index corresponding to the category (e.g. 1 if the image is of an aircraft carrier). 
+5. y: The index corresponding to the category (e.g. 2 if the image is of a ball). 
 
 Example usage:
 
-    python dataset_preprocessing/domainnet/generate_metadata.py ../data/domainnet_v1.0
+    python dataset_preprocessing/domainnet/generate_metadata.py <path to the downloaded dataset>.
 
 """
 

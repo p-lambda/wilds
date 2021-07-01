@@ -134,7 +134,6 @@ dataset_defaults = {
         'optimizer': 'SGD',
         'optimizer_kwargs': {
             'momentum': 0.9,
-            'nesterov': True,
         },
         'lr': 1.0,
         'weight_decay': 1e-3,
