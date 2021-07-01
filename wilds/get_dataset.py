@@ -56,11 +56,15 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
             return DomainNetDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'iwildcam':
-        if version == '1.0':
-            from wilds.datasets.archive.iwildcam_v1_0_dataset import IWildCamDataset
+        if unlabeled:
+            from wilds.datasets.unlabeled.iwildcam_unlabeled_dataset import IWildCamUnlabeledDataset
+            return IWildCamUnlabeledDataset(version=version, **dataset_kwargs)
         else:
-            from wilds.datasets.iwildcam_dataset import IWildCamDataset # type:ignore
-        return IWildCamDataset(version=version, **dataset_kwargs)
+            if version == '1.0':
+                from wilds.datasets.archive.iwildcam_v1_0_dataset import IWildCamDataset
+            else:
+                from wilds.datasets.iwildcam_dataset import IWildCamDataset # type:ignore
+            return IWildCamDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'waterbirds':
         from wilds.datasets.waterbirds_dataset import WaterbirdsDataset
@@ -77,7 +81,7 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
     elif dataset == 'poverty':
         if version == '1.0':
             from wilds.datasets.archive.poverty_v1_0_dataset import PovertyMapDataset
-        else:            
+        else:
             from wilds.datasets.poverty_dataset import PovertyMapDataset # type:ignore
         return PovertyMapDataset(version=version, **dataset_kwargs)
 
