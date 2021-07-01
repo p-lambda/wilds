@@ -301,7 +301,6 @@ class GlobalWheatDataset(WILDSDataset):
                 if count > 0:
                     detection_accs.append(v)
         detection_acc_avg_dom = np.array(detection_accs).mean()
-        print("DEBUG ", detection_acc_avg_dom)
         results['detection_acc_avg_dom'] = detection_acc_avg_dom
         results_str = f'Average detection_acc across session: {detection_acc_avg_dom:.3f}\n' + results_str
         return results, results_str
