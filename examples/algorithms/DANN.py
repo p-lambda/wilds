@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 import torch
 
 from algorithms.single_model_algorithm import SingleModelAlgorithm
@@ -37,9 +39,10 @@ class DANN(SingleModelAlgorithm):
         model = DomainAdversarialNetwork(featurizer, classifier, n_domains).to(
             config.device
         )
-        parameters_to_optimize = model.get_parameters(
-            base_lr=config.dann_classifier_lr,
-            discriminator_lr = config.dann_discriminator_lr,
+        parameters_to_optimize: List[Dict] = model.get_parameters(
+            featurizer_lr=config.dann_featurizer_lr,
+            classifier_lr=config.dann_classifier_lr,
+            discriminator_lr=config.dann_discriminator_lr,
         )
         self.optimizer = initialize_optimizer_with_model_params(config, parameters_to_optimize)
 

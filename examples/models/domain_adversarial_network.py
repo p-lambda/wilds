@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
 import torch
 import torch.nn as nn
 from torch.autograd import Function
@@ -59,10 +58,7 @@ class DomainDiscriminator(nn.Sequential):
 class GradientReverseFunction(Function):
     """
     Credit: https://github.com/thuml/Transfer-Learning-Library
-
-    coeff is the same as lambda (domain adaptation parameter) in the original paper
     """
-
     @staticmethod
     def forward(
         ctx: Any, input: torch.Tensor, coeff: Optional[float] = 1.0
@@ -78,56 +74,13 @@ class GradientReverseFunction(Function):
 
 class GradientReverseLayer(nn.Module):
     """
-    Adapted from https://github.com/thuml/Transfer-Learning-Library
-
-    Gradient Reverse Layer :math:`\mathcal{R}(x)` with warm start
-
-    The forward and backward behaviours are:
-
-    .. math::
-        \mathcal{R}(x) = x,
-
-        \dfrac{ d\mathcal{R}} {dx} = - \lambda I.
-
-    :math:`\lambda` is initiated at :math:`lo` and is gradually changed to :math:`hi` using the following schedule:
-
-    .. math::
-        \lambda = \dfrac{2(hi-lo)}{1+\exp(- α \dfrac{i}{N})} - (hi-lo) + lo
-
-    where :math:`i` is the iteration step.
-
-    Args:
-        alpha (float, optional): :math:`α`. Default: 1.0
-        lo (float, optional): Initial value of :math:`\lambda`. Default: 0.0
-        hi (float, optional): Final value of :math:`\lambda`. Default: 1.0
-        max_iters (int, optional): :math:`N`. Default: 1000
-        auto_step (bool, optional): If True, increase :math:`i` each time `forward` is called.
-          Otherwise use function `step` to increase :math:`i`. Default: True
+    Credit: https://github.com/thuml/Transfer-Learning-Library
     """
-
-    def __init__(self, alpha: Optional[float] = 1.0, lo: Optional[float] = 0.0, hi: Optional[float] = 1.,
-                 max_iters: Optional[int] = 1000., auto_step: Optional[bool] = True):
+    def __init__(self):
         super(GradientReverseLayer, self).__init__()
-        self.alpha = alpha
-        self.lo = lo
-        self.hi = hi
-        self.iter_num = 0
-        self.max_iters = max_iters
-        self.auto_step = auto_step
 
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        """"""
-        coeff = np.float(
-            2.0 * (self.hi - self.lo) / (1.0 + np.exp(-self.alpha * self.iter_num / self.max_iters))
-            - (self.hi - self.lo) + self.lo
-        )
-        if self.auto_step:
-            self.step()
-        return GradientReverseFunction.apply(input, coeff)
-
-    def step(self):
-        """Increase iteration number :math:`i` by 1"""
-        self.iter_num += 1
+    def forward(self, *input):
+        return GradientReverseFunction.apply(*input)
 
 
 class DomainAdversarialNetwork(nn.Module):
@@ -135,7 +88,7 @@ class DomainAdversarialNetwork(nn.Module):
         super().__init__()
         self.featurizer = featurizer
         self.classifier = classifier
-        self.domain_classifier= DomainDiscriminator(featurizer.d_out, n_domains)
+        self.domain_classifier = DomainDiscriminator(featurizer.d_out, n_domains)
         self.gradient_reverse_layer = GradientReverseLayer()
 
     def forward(self, input):
@@ -145,15 +98,18 @@ class DomainAdversarialNetwork(nn.Module):
         domains_pred = self.domain_classifier(features)
         return y_pred, domains_pred
 
-    def get_parameters(self, base_lr=1.0, discriminator_lr=1.0) -> List[Dict]:
+    def get_parameters(self, featurizer_lr=1.0, classifier_lr=1.0, discriminator_lr=1.0) -> List[Dict]:
         """
+        Adapted from https://github.com/thuml/Transfer-Learning-Library
+
         A parameter list which decides optimization hyper-parameters,
         such as the relative learning rate of each layer
         """
-        # From TLL, the learning rate of this classifier is set 10 times to that of the
-        # feature extractor for better accuracy by default.
+        # In TLL's implementation, the learning rate of this classifier is set 10 times to that of the
+        # feature extractor for better accuracy by default. For our implementation, we allow the learning
+        # rates to be passed in separately for featurizer and classifier.
         params = [
-            {"params": self.featurizer.parameters(), "lr": 0.1 * base_lr},
-            {"params": self.classifier.parameters(), "lr": 1.0 * base_lr},
+            {"params": self.featurizer.parameters(), "lr": featurizer_lr},
+            {"params": self.classifier.parameters(), "lr": classifier_lr},
         ]
         return params + self.domain_classifier.get_parameters(discriminator_lr)

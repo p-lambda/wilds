@@ -5,14 +5,14 @@ def initialize_scheduler(config, optimizer, n_train_steps):
     # construct schedulers
     if config.scheduler is None:
         return None
-    elif config.scheduler=='linear_schedule_with_warmup':
+    elif config.scheduler == 'linear_schedule_with_warmup':
         scheduler = get_linear_schedule_with_warmup(
             optimizer,
             num_training_steps=n_train_steps,
             **config.scheduler_kwargs)
         step_every_batch = True
         use_metric = False
-    elif config.scheduler=='ReduceLROnPlateau':
+    elif config.scheduler == 'ReduceLROnPlateau':
         assert config.scheduler_metric_name, f'scheduler metric must be specified for {config.scheduler}'
         scheduler = ReduceLROnPlateau(
             optimizer,
@@ -26,7 +26,7 @@ def initialize_scheduler(config, optimizer, n_train_steps):
     elif config.scheduler == 'DANNLR':
         scheduler = LambdaLR(
             optimizer,
-            lambda x:  config.lr * (1. + config.scheduler_kwargs['lr_gamma'] * float(x)) ** (-config.scheduler_kwargs['lr_decay'])
+            lambda x: (1.0 + config.scheduler_kwargs['lr_gamma'] * float(x)) ** (-config.scheduler_kwargs['lr_decay'])
         )
         step_every_batch = True
         use_metric = False
