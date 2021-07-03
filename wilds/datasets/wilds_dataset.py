@@ -83,8 +83,9 @@ class WILDSDataset:
         """
         Update metadata fields, map and values with coarse-grained domain information.
         """
+        if hasattr(self, '_metadata_map'):
+            self._metadata_map['from_source_domain'] = [False, True]
         self._metadata_fields.append('from_source_domain')
-        self._metadata_map['from_source_domain'] = [False, True]
         from_source_domain = torch.as_tensor(
             [1 if split in self.source_domain_splits else 0 for split in self.split_array],
             dtype=torch.int64

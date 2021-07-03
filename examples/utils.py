@@ -9,6 +9,8 @@ import torch
 import pandas as pd
 import re
 
+from algorithms.algorithm import Algorithm
+
 try:
     import wandb
 except Exception as e:
@@ -60,20 +62,31 @@ def save_model(algorithm, epoch, best_val_metric, path):
     state['best_val_metric'] = best_val_metric
     torch.save(state, path)
 
-def load(module, path, device='cpu', mode='algorithm'):
-    """
-    Loads an algorithm/model from an algorithm's saved parameters.
-    - mode: either "algorithm" or "model". if "model", regex changes parameter
-      names from 'model.fc' to 'fc'
-    """
-    state = torch.load(path, map_location=torch.device(device))
-    if mode == 'algorithm':
-        module.load_state_dict(state['algorithm'])
-    elif mode == 'model':
-        params = state['algorithm']
-        params = {re.sub('model.', '', k): v for k,v in params.items() if k.startswith('model')}
-        module.load_state_dict(params)
-    return state['epoch'], state['best_val_metric']
+def load(module, path, device=None):
+    """Handles loading weights saved from this repo/model into an algorithm/model."""
+    if device is not None:
+        state = torch.load(path, map_location=device)
+    else:
+        state = torch.load(path)
+
+    module_type = "algorithm" if isinstance(module, Algorithm) else "model"
+    state_type = "algorithm" if "algorithm" in state else "model"
+    if state_type == 'algorithm': 
+        prev_epoch = state['epoch']
+        best_val_metric = state['best_val_metric']
+        state = state['algorithm']
+    else:
+        prev_epoch, best_val_metric = None, None
+
+    if module_type == state_type: # alg-alg / mod-mod
+        module.load_state_dict(state)
+    elif module_type == "algorithm": # alg-mod
+        module.model.load_state_dict(state)
+    else: # mod-alg
+        state = {re.sub('model.', '', k): v for k,v in state.items() if k.startswith('model')}
+        module.load_state_dict(state)
+    
+    return prev_epoch, best_val_metric
 
 def log_group_data(datasets, grouper, logger):
     for k, dataset in datasets.items():
