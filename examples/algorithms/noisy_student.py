@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from models.initializer import initialize_model
 from algorithms.ERM import ERM
@@ -15,6 +16,10 @@ class NoisyStudent(SingleModelAlgorithm):
 
     Assumes that the teacher model is the same class as the student model. 
 
+    For model regularization, adds the following to the student:
+        - Single dropout layer before final classifier (fc) layer
+        - TODO: stochastic depth
+
     Original paper:
         @inproceedings{xie2020self,
             title={Self-training with noisy student improves imagenet classification},
@@ -25,13 +30,22 @@ class NoisyStudent(SingleModelAlgorithm):
             }
     """
     def __init__(self, config, d_out, grouper, loss, metric, n_train_steps):
+        import pdb
+        pdb.set_trace()
         # check config
         assert config.teacher_model_path is not None
+        
         # load teacher model
         teacher_model = initialize_model(config, d_out).to(config.device)
         load(teacher_model, config.teacher_model_path, device=config.device)
-        # initialize student model
-        student_model = initialize_model(config, d_out=d_out) # note: pretrained on imagenet
+
+        # initialize student model with dropout before last layer
+        model = initialize_model(config, d_out=d_out) # note: pretrained on imagenet
+        student_model = nn.Sequential( # assumes last layer is the linear layer
+            nn.Sequential(*list(model.children())[:-1]), 
+            nn.Dropout(p=config.dropout_rate),
+            list(model.children())[-1]
+        )
         student_model = student_model.to(config.device)
         # initialize module
         super().__init__(
