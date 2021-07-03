@@ -276,6 +276,7 @@ def main():
         train_grouper=train_grouper,
         unlabeled_dataset=unlabeled_dataset,
     )
+    s = algorithm.state_dict() # TODO: for testing, remove
 
     # Load pretrained weights if specified (this can be overriden by resume)
     if config.pretrained_model_path is not None and os.path.exists(config.pretrained_model_path):

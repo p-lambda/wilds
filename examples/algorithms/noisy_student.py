@@ -30,22 +30,17 @@ class NoisyStudent(SingleModelAlgorithm):
             }
     """
     def __init__(self, config, d_out, grouper, loss, metric, n_train_steps):
-        import pdb
-        pdb.set_trace()
         # check config
         assert config.teacher_model_path is not None
-        
         # load teacher model
         teacher_model = initialize_model(config, d_out).to(config.device)
         load(teacher_model, config.teacher_model_path, device=config.device)
-
         # initialize student model with dropout before last layer
-        model = initialize_model(config, d_out=d_out) # note: pretrained on imagenet
-        student_model = nn.Sequential( # assumes last layer is the linear layer
-            nn.Sequential(*list(model.children())[:-1]), 
-            nn.Dropout(p=config.dropout_rate),
-            list(model.children())[-1]
-        )
+        featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True) # note: pretrained on imagenet
+        student_model = torch.nn.Sequential()
+        setattr(student_model, 'features', featurizer)
+        setattr(student_model, 'student_dropout', nn.Dropout(p=config.dropout_rate))
+        setattr(student_model, 'classifier', classifier)
         student_model = student_model.to(config.device)
         # initialize module
         super().__init__(
@@ -64,6 +59,18 @@ class NoisyStudent(SingleModelAlgorithm):
         # additional logging
         # set model components
 
+    def state_dict(self):
+        """
+        Override the information that gets returned for saving in save_model
+
+        Removes:
+            - teacher state
+            - student dropout layer
+        """
+        state = super().state_dict()
+        state = { k:v for k,v in state.items() if 'teacher' not in k and 'student_dropout' not in k } # remove teacher & dropout info
+        return state
+        
     def process_batch(self, labeled_batch, unlabeled_batch=None):
         # TODO: for now, teacher takes in the same inputs as the student (same augs)
         # ideally, the data loader would yield: laebled, strongly augmented (student), normal unlabeled (teacher)
