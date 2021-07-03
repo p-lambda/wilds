@@ -108,10 +108,7 @@ STAGES = [
 class GlobalWheatDataset(WILDSDataset):
     """
     The GlobalWheat-WILDS wheat head localization dataset.
-    This is a modified version of the original Global Wheat Head Dataset 2021.
-
-    The current version does not contain test or validation labels, as it is being used in a
-    currently-running competition.
+    This is a modified version of the original Global Wheat Head Dataset 2021.    
 
     Supported `split_scheme`:
         - 'official'
@@ -149,21 +146,10 @@ class GlobalWheatDataset(WILDSDataset):
     """
 
     _dataset_name = 'globalwheat'
-
-    # Version 0.9 corresponds to the final dataset, but without the validation and test labels,
-    # since it is being used in a currently-running competition (http://www.global-wheat.com/).
-    # Users can submit their val+test predictions to the competition to obtain an estimate of
-    # held-out performance computed on a fraction of those predictions;
-    # please see the tutorial at https://www.aicrowd.com/challenges/global-wheat-challenge-2021.
-    # We will update the dataset to include these labels and update the splits after the
-    # competition ends in July 2021.
     _versions_dict = {
-        '0.9': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8ba9122a41454997afdfb78762d390cf/contents/blob/',
-            'compressed_size': 10_280_247_296},
         '1.0': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x03b0584cb00d4ea987aa3269aa2fd2b4/contents/blob/',
-            'compressed_size': None}
+            'compressed_size': 10_286_874_624}
         }
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
@@ -185,38 +171,25 @@ class GlobalWheatDataset(WILDSDataset):
             val_data_df = pd.read_csv(self.root / f'official_val.csv')
             test_data_df = pd.read_csv(self.root / f'official_test.csv')
 
-        elif split_scheme == "ood_with_subsampled_test":
-            if version == "0.9":
-                print("Warning: ood_with_subsampled_test is not available in 0.9")
-            else:
-                train_data_df = pd.read_csv(self.root / f'official_train.csv')
-                val_data_df = pd.read_csv(self.root / f'official_val.csv')
-                test_data_df = pd.read_csv(self.root / f'in_dist_test.csv')
+        elif split_scheme == "official_with_subsampled_test":
+            train_data_df = pd.read_csv(self.root / f'official_train.csv')
+            val_data_df = pd.read_csv(self.root / f'official_val.csv')
+            test_data_df = pd.read_csv(self.root / f'fixed_test_test.csv')
 
         elif split_scheme == "in-dist":
-            if version == "0.9":
-                print("Warning: in-dist is not available in 0.9")
-            else:
-                train_data_df = pd.read_csv(self.root / f'in_dist_train.csv')
-                val_data_df = pd.read_csv(self.root / f'official_val.csv')
-                test_data_df = pd.read_csv(self.root / f'in_dist_test.csv')
+            train_data_df = pd.read_csv(self.root / f'in_dist_train.csv')
+            val_data_df = pd.read_csv(self.root / f'official_val.csv')
+            test_data_df = pd.read_csv(self.root / f'in_dist_test.csv')
 
         elif split_scheme == "fixed-train":
-            if version == "0.9":
-                print("Warning: fixed-train is not available in 0.9")
-            else:
-                train_data_df = pd.read_csv(self.root / f'fixed_train_train.csv')
-                val_data_df = pd.read_csv(self.root / f'fixed_train_val.csv')
-                test_data_df = pd.read_csv(self.root / f'fixed_train_test.csv')
+            train_data_df = pd.read_csv(self.root / f'fixed_train_train.csv')
+            val_data_df = pd.read_csv(self.root / f'fixed_train_val.csv')
+            test_data_df = pd.read_csv(self.root / f'fixed_train_test.csv')
 
         elif split_scheme == "fixed-test":
-            if version == "0.9":
-                print("Warning: fixed-test is not available in 0.9")
-            else:
-                train_data_df = pd.read_csv(self.root / f'fixed_test_train.csv')
-                val_data_df = pd.read_csv(self.root / f'official_val.csv')
-                test_data_df = pd.read_csv(self.root / f'fixed_test_test.csv')
-
+            train_data_df = pd.read_csv(self.root / f'fixed_test_train.csv')
+            val_data_df = pd.read_csv(self.root / f'official_val.csv')
+            test_data_df = pd.read_csv(self.root / f'fixed_test_test.csv')
 
         self._image_array = []
         self._split_array, self._y_array, self._metadata_array = [], [], []
