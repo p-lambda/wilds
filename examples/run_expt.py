@@ -278,7 +278,7 @@ def main():
     )
 
     # Load pretrained weights if specified (this can be overriden by resume)
-    if os.path.exists(config.pretrained_model_path):
+    if config.pretrained_model_path is not None and os.path.exists(config.pretrained_model_path):
         # The full model name is expected to be specified, so just load.
         try:
             prev_epoch, best_val_metric = load(algorithm, config.pretrained_model_path, device=config.device)
