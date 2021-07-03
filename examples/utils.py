@@ -61,9 +61,13 @@ def save_model(algorithm, epoch, best_val_metric, path):
     state['best_val_metric'] = best_val_metric
     torch.save(state, path)
 
-def load(module, path):
+def load(module, path, device=None):
     """Handles loading weights saved from this repo/model into an algorithm/model."""
-    state = torch.load(path)
+    if device is not None:
+        state = torch.load(path, map_location=device)
+    else:
+        state = torch.load(path)
+
     module_type = "algorithm" if isinstance(module, Algorithm) else "model"
     state_type = "algorithm" if "algorithm" in state else "model"
     if state_type == 'algorithm': 
