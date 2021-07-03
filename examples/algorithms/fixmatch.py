@@ -13,6 +13,13 @@ class FixMatch(SingleModelAlgorithm):
     FixMatch.
     This algorithm was originally proposed as a semi-supervised learning algorithm. 
 
+    Loss is of the form
+        \ell_s + \lambda * \ell_u
+    where 
+        \ell_s = cross-entropy with true labels usign weakly augmented labeled examples
+        \ell_u = cross-entropy with pseudolabel generated using weak augmentation and prediction
+            using strong augmentation
+
     Original paper:
         @article{sohn2020fixmatch,
             title={Fixmatch: Simplifying semi-supervised learning with consistency and confidence},
@@ -42,6 +49,11 @@ class FixMatch(SingleModelAlgorithm):
         # set model components
 
     def process_batch(self, labeled_batch, unlabeled_batch=None):
+        """
+        Args:
+            - labeled_batch: examples (x, y, m) where x is weakly augmented
+            - unlabeled_batch: examples (x, m) where x is unaugmented
+        """
         # Labeled examples
         x, y_true, metadata = labeled_batch
         x = x.to(self.device)
