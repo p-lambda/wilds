@@ -282,9 +282,10 @@ def main():
             prev_epoch, best_val_metric = load(algorithm, config.pretrained_model_path, device=config.device)
             epoch_offset = 0
             logger.write(
-                f'Initialized algorithm with pretrained weights from {config.pretrained_model_path}' +
-                f'previously trained for {prev_epoch} epochs' if prev_epoch else '' +
-                f'with previous val metric {best_val_metric}' if best_val_metric else '')
+                (f'Initialized algorithm with pretrained weights from {config.pretrained_model_path} ')
+                + (f'previously trained for {prev_epoch} epochs ' if prev_epoch else '')
+                + (f'with previous val metric {best_val_metric} ' if best_val_metric else '')
+            )
         except:
             pass
 
