@@ -31,6 +31,7 @@ def main():
     parser.add_argument('--algorithm', required=True, choices=supported.algorithms)
     parser.add_argument('--root_dir', required=True,
                         help='The directory where [dataset]/data can be found (or should be downloaded to, if it does not exist).')
+    parser.add_argument('--pretrained_model_path', default=None, type=str, help="Specify a path to a pretrained model's weights")
 
     # Dataset
     parser.add_argument('--split_scheme', help='Identifies how the train/val/test split is constructed. Choices are dataset-specific.')
@@ -118,7 +119,7 @@ def main():
     parser.add_argument('--no_group_logging', type=parse_bool, const=True, nargs='?')
     parser.add_argument('--use_wandb', type=parse_bool, const=True, nargs='?', default=False)
     parser.add_argument('--progress_bar', type=parse_bool, const=True, nargs='?', default=False)
-    parser.add_argument('--resume', type=parse_bool, const=True, nargs='?', default=False)
+    parser.add_argument('--resume', type=parse_bool, const=True, nargs='?', default=False, help='Whether to resume from the most recent saved model in the current log_dir.')
 
     config = parser.parse_args()
     config = populate_defaults(config)
@@ -275,9 +276,23 @@ def main():
         unlabeled_dataset=unlabeled_dataset,
     )
 
+    # Load pretrained weights if specified (this can be overriden by resume)
+    if os.path.exists(config.pretrained_model_path):
+        # The full model name is expected to be specified, so just load.
+        try:
+            prev_epoch, best_val_metric = load(algorithm, config.pretrained_model_path, device=config.device)
+            epoch_offset = 0
+            logger.write(
+                (f'Initialized algorithm with pretrained weights from {config.pretrained_model_path} ')
+                + (f'previously trained for {prev_epoch} epochs ' if prev_epoch else '')
+                + (f'with previous val metric {best_val_metric} ' if best_val_metric else '')
+            )
+        except:
+            pass
+
+    # Resume from most recent model in log_dir
     model_prefix = get_model_prefix(datasets['train'], config)
     if not config.eval_only:
-        ## Load saved results if resuming
         resume_success = False
         if resume:
             save_path = model_prefix + 'epoch:last_model.pth'
@@ -295,7 +310,6 @@ def main():
                 resume_success = True
             except FileNotFoundError:
                 pass
-
         if resume_success == False:
             epoch_offset=0
             best_val_metric=None
