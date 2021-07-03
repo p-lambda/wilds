@@ -8,6 +8,8 @@ import numpy as np
 import torch
 import pandas as pd
 
+from algorithms.algorithm import Algorithm
+
 try:
     import wandb
 except Exception as e:
@@ -59,10 +61,27 @@ def save_model(algorithm, epoch, best_val_metric, path):
     state['best_val_metric'] = best_val_metric
     torch.save(state, path)
 
-def load(algorithm, path):
+def load(module, path):
+    """Handles loading weights saved from this repo/model into an algorithm/model."""
     state = torch.load(path)
-    algorithm.load_state_dict(state['algorithm'])
-    return state['epoch'], state['best_val_metric']
+    module_type = "algorithm" if isinstance(module, Algorithm) else "model"
+    state_type = "algorithm" if "algorithm" in state else "model"
+    if state_type == 'algorithm': 
+        prev_epoch = state['epoch']
+        best_val_metric = state['best_val_metric']
+        state = state['algorithm']
+    else:
+        prev_epoch, best_val_metric = None, None
+
+    if module_type == state_type: # alg-alg / mod-mod
+        module.load_state_dict(state)
+    elif module_type == "algorithm": # alg-mod
+        module.model.load_state_dict(state)
+    else: # mod-alg
+        state = {re.sub('model.', '', k): v for k,v in state.items() if k.startswith('model')}
+        module.load_state_dict(state)
+    
+    return prev_epoch, best_val_metric
 
 def log_group_data(datasets, grouper, logger):
     for k, dataset in datasets.items():
