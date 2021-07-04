@@ -12,13 +12,24 @@ from utils import load
 class NoisyStudent(SingleModelAlgorithm):
     """
     Noisy Student.
-    This algorithm was originally proposed as a semi-supervised learning algorithm. 
+    This algorithm was originally proposed as a semi-supervised learning algorithm.
 
-    Assumes that the teacher model is the same class as the student model. 
+    One run of this codebase gives us one iteration (load a teacher, train student). To run another iteration,
+    re-run the previous command, pointing config.teacher_model_path to the trained student weights.
 
-    For model regularization, adds the following to the student:
+    To warm start the student model, point config.pretrained_model_path to config.teacher_model_path
+
+    Based on the original paper, loss is of the form
+        \ell_s + \ell_u
+    where 
+        \ell_s = cross-entropy with true labels; student predicts with noise
+        \ell_u = cross-entropy with pseudolabel generated without noise; student predicts with noise
+    The student is noised using:
+        - Input images are augmented using RandAugment
         - Single dropout layer before final classifier (fc) layer
-        - TODO: stochastic depth
+        - TODO: stochastic depth with linearly decaying survival probability from last to first
+
+    This code only supports hard pseudolabeling and a teacher that is the same class as the student (e.g. both densenet121s)
 
     Original paper:
         @inproceedings{xie2020self,
@@ -36,7 +47,7 @@ class NoisyStudent(SingleModelAlgorithm):
         teacher_model = initialize_model(config, d_out).to(config.device)
         load(teacher_model, config.teacher_model_path, device=config.device)
         # initialize student model with dropout before last layer
-        featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True) # note: pretrained on imagenet
+        featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
         student_model = torch.nn.Sequential()
         setattr(student_model, 'features', featurizer)
         setattr(student_model, 'student_dropout', nn.Dropout(p=config.dropout_rate))
@@ -53,16 +64,14 @@ class NoisyStudent(SingleModelAlgorithm):
         )
         self.teacher = teacher_model
         # algorithm hyperparameters
-        self.hard_pseudolabels = True
         if config.process_outputs_function is not None: 
             self.process_outputs_function = process_outputs_functions[config.process_outputs_function]
-        # additional logging
-        # set model components
+        else:
+            self.process_outputs_function = None
 
     def state_dict(self):
         """
         Override the information that gets returned for saving in save_model
-
         Removes:
             - teacher state
             - student dropout layer
@@ -74,7 +83,7 @@ class NoisyStudent(SingleModelAlgorithm):
     def process_batch(self, labeled_batch, unlabeled_batch=None):
         # TODO: for now, teacher takes in the same inputs as the student (same augs)
         # ideally, the data loader would yield: laebled, strongly augmented (student), normal unlabeled (teacher)
-        # Student learns from labeled examples
+        # Labeled examples
         x, y_true, metadata = labeled_batch
         x = x.to(self.device)
         y_true = y_true.to(self.device)
@@ -87,14 +96,15 @@ class NoisyStudent(SingleModelAlgorithm):
             'y_pred': outputs,
             'metadata': metadata
         }
-        # Student learns from pseudolabeled examples
+        # Unlabeled examples
         if unlabeled_batch is not None:
             x, metadata = unlabeled_batch
             x = x.to(self.device)
             g = self.grouper.metadata_to_group(metadata).to(self.device)
             with torch.no_grad(): 
                 teacher_outputs = self.teacher(x)
-                if self.hard_pseudolabels: teacher_outputs = self.process_outputs_function(teacher_outputs)
+                if self.process_outputs_function is not None: 
+                    teacher_outputs = self.process_outputs_function(teacher_outputs)
             student_outputs = self.model(x)
             results['unlabeled_metadata'] = metadata
             results['unlabeled_y_pseudo'] = teacher_outputs 
@@ -103,10 +113,7 @@ class NoisyStudent(SingleModelAlgorithm):
         return results
 
     def objective(self, results):
-        # TODO: check the scaling that the original paper does based on labeled v. unlabeled batch size
-        # Labeled loss
         labeled_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
-        # Pseudolabeled loss
         if 'unlabeled_y_pred' in results: 
             unlabeled_loss = self.loss.compute(results['unlabeled_y_pred'], results['unlabeled_y_pseudo'], return_dict=False)
         else: unlabeled_loss = 0
