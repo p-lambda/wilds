@@ -1,9 +1,11 @@
-import numpy as np
+from typing import Dict, List
+
 import torch
 
 from algorithms.single_model_algorithm import SingleModelAlgorithm
 from models.domain_adversarial_network import DomainAdversarialNetwork
 from models.initializer import initialize_model
+from optimizer import initialize_optimizer_with_model_params
 
 
 class DANN(SingleModelAlgorithm):
@@ -37,6 +39,12 @@ class DANN(SingleModelAlgorithm):
         model = DomainAdversarialNetwork(featurizer, classifier, n_domains).to(
             config.device
         )
+        parameters_to_optimize: List[Dict] = model.get_parameters_with_lr(
+            featurizer_lr=config.dann_featurizer_lr,
+            classifier_lr=config.dann_classifier_lr,
+            discriminator_lr=config.dann_discriminator_lr,
+        )
+        self.optimizer = initialize_optimizer_with_model_params(config, parameters_to_optimize)
 
         # Initialize module
         super().__init__(
@@ -50,7 +58,6 @@ class DANN(SingleModelAlgorithm):
         self.group_ids_to_domains = group_ids_to_domains
 
         # Algorithm hyperparameters
-        self.gamma = config.dann_gamma
         self.penalty_weight = config.dann_penalty_weight
 
         # Additional logging
@@ -79,7 +86,7 @@ class DANN(SingleModelAlgorithm):
         x = x.to(self.device)
         y_true = y_true.to(self.device)
         domains_true = domains_true.to(self.device)
-        y_pred, domains_pred = self.model(x, 1.0 if self.is_training else 0.0)
+        y_pred, domains_pred = self.model(x)
 
         # Ignore the predicted labels for the unlabeled data
         y_pred = y_pred[: len(y_true)]

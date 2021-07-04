@@ -93,7 +93,7 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
             loss=loss,
             metric=metric,
             n_train_steps=n_train_steps,
-            n_domains = domain_idx + 1,
+            n_domains = domain_idx,
             group_ids_to_domains=group_ids_to_domains,
         )
     else:
