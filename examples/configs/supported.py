@@ -2,15 +2,12 @@ import torch.nn as nn
 import torch
 import sys, os
 
-from utils import CrossEntropyWithLogitsLoss
-
 # metrics
 from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
 from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE, multiclass_logits_to_pred, binary_logits_to_pred
 
 losses = {
-    'cross_entropy': ElementwiseLoss(loss_fn=nn.CrossEntropyLoss(reduction='none')), # target is a hard label
-    'cross_entropy_logits': ElementwiseLoss(loss_fn=CrossEntropyWithLogitsLoss()), # target is a soft label
+    'cross_entropy': ElementwiseLoss(loss_fn=nn.CrossEntropyLoss(reduction='none')),
     'lm_cross_entropy': MultiTaskLoss(loss_fn=nn.CrossEntropyLoss(reduction='none')),
     'mse': MSE(name='loss'),
     'multitask_bce': MultiTaskLoss(loss_fn=nn.BCEWithLogitsLoss(reduction='none')),

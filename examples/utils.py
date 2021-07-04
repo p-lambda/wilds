@@ -29,23 +29,6 @@ def update_average(prev_avg, prev_counts, curr_avg, curr_counts):
     curr_weight = curr_counts/denom
     return prev_weight*prev_avg + curr_weight*curr_avg
 
-class CrossEntropyWithLogitsLoss(torch.nn.Module):
-    """
-    Normally, cross entropy loss is 
-        \sum_j 1{j == y} -log \frac{e^{s_j}}{\sum_k e^{s_k}} = -log \frac{e^{s_y}}{\sum_k e^{s_k}}
-    Here we use
-        \sum_j P_j *-log \frac{e^{s_j}}{\sum_k e^{s_k}}
-    where 0 <= P_j <= 1    
-    Does not support fancy nn.CrossEntropy options (e.g. weight, size_average, ignore_index, reductions, etc.)
-    """
-    def __init__(self):
-        super().__init__()
-    
-    def forward(self, input: torch.Tensor, soft_target: torch.Tensor) -> torch.Tensor:
-        import pdb
-        pdb.set_trace()
-        return torch.sum(- soft_target * torch.nn.functional.log_softmax(input), 1)
-
 # Taken from https://sumit-ghosh.com/articles/parsing-dictionary-key-value-pairs-kwargs-argparse-python/
 class ParseKwargs(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
