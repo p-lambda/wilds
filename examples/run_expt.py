@@ -69,6 +69,10 @@ def main():
     parser.add_argument('--target_resolution', nargs='+', type=int, help='The input resolution that images will be resized to before being passed into the model. For example, use --target_resolution 224 224 for a standard ResNet.')
     parser.add_argument('--resize_scale', type=float)
     parser.add_argument('--max_token_length', type=int)
+    parser.add_argument('--augment', type=parse_bool, const=True, nargs='?', default=False, help='Whether to augment the training data')
+    parser.add_argument('--randaugment_N', type=int, default=1, help='N parameter of RandAugment - the number of transformations to apply.')
+    parser.add_argument('--randaugment_M', type=int, default=0,
+                        help='M parameter of RandAugment - the magnitude of the transformation. Values range from 0 to 30, where 30 indicates the maximum scale for a transformation.')
 
     # Objective
     parser.add_argument('--loss_function', choices = supported.losses)
@@ -163,11 +167,14 @@ def main():
     train_transform = initialize_transform(
         transform_name=config.train_transform,
         config=config,
-        dataset=full_dataset)
+        dataset=full_dataset,
+        augment=config.augment,
+    )
     eval_transform = initialize_transform(
         transform_name=config.eval_transform,
         config=config,
-        dataset=full_dataset)
+        dataset=full_dataset
+    )
 
     unlabeled_dataset = None
     if config.unlabeled_split is not None:

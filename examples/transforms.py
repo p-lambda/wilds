@@ -1,11 +1,13 @@
 import torchvision.transforms as transforms
-from transformers import BertTokenizerFast, DistilBertTokenizerFast
 import torch
+from RandAugment import RandAugment
+from transformers import BertTokenizerFast, DistilBertTokenizerFast
 
-def initialize_transform(transform_name, config, dataset):
+def initialize_transform(transform_name, config, dataset, augment=False):
     if transform_name is None:
         return None
-    elif transform_name=='bert':
+    elif transform_name == 'bert':
+        # TODO: support RandAugment equivalent for language -Tony
         return initialize_bert_transform(config)
     elif transform_name=='image_base':
         return initialize_image_base_transform(config, dataset)
@@ -21,6 +23,10 @@ def initialize_transform(transform_name, config, dataset):
         return initialize_poverty_train_transform()
     else:
         raise ValueError(f"{transform_name} not recognized")
+
+    if augment:
+        transform.transforms.insert(0, RandAugment(config.randaugment_N, config.randaugment_M))
+    return transform
 
 def initialize_bert_transform(config):
     assert 'bert' in config.model
@@ -92,7 +98,7 @@ def initialize_image_resize_and_center_crop_transform(config, dataset):
     ])
     return transform
 
-def initialize_poverty_train_transform():
+def initialize_poverty_train_transform(config, augment=False):
     transforms_ls = [
         transforms.ToPILImage(),
         transforms.RandomHorizontalFlip(),
@@ -100,6 +106,9 @@ def initialize_poverty_train_transform():
         transforms.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.1),
         transforms.ToTensor()]
     rgb_transform = transforms.Compose(transforms_ls)
+
+    if augment:
+        rgb_transform.transforms.insert(0, RandAugment(config.randaugment_N, config.randaugment_M))
 
     def transform_rgb(img):
         # bgr to rgb and back to bgr
