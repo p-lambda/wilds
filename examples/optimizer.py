@@ -48,6 +48,7 @@ def initialize_optimizer_with_model_params(config, params):
         optimizer = AdamW(
             params,
             lr=config.lr,
+            weight_decay=config.weight_decay,
             **config.optimizer_kwargs
         )
     elif config.optimizer == 'Adam':

@@ -52,7 +52,7 @@ class DomainDiscriminator(nn.Sequential):
                 nn.Linear(hidden_size, n_domains),
             )
 
-    def get_parameters(self, lr=1.0) -> List[Dict]:
+    def get_parameters_with_lr(self, lr=1.0) -> List[Dict]:
         return [{"params": self.parameters(), "lr": lr}]
 
 class GradientReverseFunction(Function):
@@ -98,7 +98,7 @@ class DomainAdversarialNetwork(nn.Module):
         domains_pred = self.domain_classifier(features)
         return y_pred, domains_pred
 
-    def get_parameters(self, featurizer_lr=1.0, classifier_lr=1.0, discriminator_lr=1.0) -> List[Dict]:
+    def get_parameters_with_lr(self, featurizer_lr=1.0, classifier_lr=1.0, discriminator_lr=1.0) -> List[Dict]:
         """
         Adapted from https://github.com/thuml/Transfer-Learning-Library
 
@@ -112,4 +112,4 @@ class DomainAdversarialNetwork(nn.Module):
             {"params": self.featurizer.parameters(), "lr": featurizer_lr},
             {"params": self.classifier.parameters(), "lr": classifier_lr},
         ]
-        return params + self.domain_classifier.get_parameters(discriminator_lr)
+        return params + self.domain_classifier.get_parameters_with_lr(discriminator_lr)

@@ -10,6 +10,7 @@ def populate_defaults(config):
     assert config.dataset is not None, 'dataset must be specified'
     assert config.algorithm is not None, 'algorithm must be specified'
 
+    # Validations
     if config.groupby_fields == ['from_source_domain']:
         if config.n_groups_per_batch is None:
             config.n_groups_per_batch = 1
@@ -26,6 +27,13 @@ def populate_defaults(config):
                 f"from_source_domain was specified for groupby_fields, but unlabeled_n_groups_per_batch "
                 f"was {config.unlabeled_n_groups_per_batch}, when it should be 1."
             )
+
+    if config.algorithm == 'DANN' and config.lr is not None:
+        raise ValueError(
+            "Cannot pass in a value for lr. For DANN, only dann_classifier_lr, dann_featurizer_lr "
+            "and dann_discriminator_lr are valid learning rate parameters."
+        )
+
 
     # implied defaults from choice of dataset
     config = populate_config(

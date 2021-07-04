@@ -39,7 +39,7 @@ class DANN(SingleModelAlgorithm):
         model = DomainAdversarialNetwork(featurizer, classifier, n_domains).to(
             config.device
         )
-        parameters_to_optimize: List[Dict] = model.get_parameters(
+        parameters_to_optimize: List[Dict] = model.get_parameters_with_lr(
             featurizer_lr=config.dann_featurizer_lr,
             classifier_lr=config.dann_classifier_lr,
             discriminator_lr=config.dann_discriminator_lr,
