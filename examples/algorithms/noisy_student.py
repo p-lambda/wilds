@@ -8,6 +8,18 @@ from wilds.common.utils import split_into_groups
 from configs.supported import process_outputs_functions
 import copy
 from utils import load
+import re
+
+class DropoutModel(nn.Module):
+    def __init__(self, featurizer, classifier, dropout_rate):
+        super().__init__()
+        self.featurizer = featurizer
+        self.dropout = nn.Dropout(p=dropout_rate)
+        self.classifier = classifier
+    def forward(self, x):
+        features = self.featurizer(x)
+        features_sparse = self.dropout(features)
+        return self.classifier(features_sparse)
 
 class NoisyStudent(SingleModelAlgorithm):
     """
@@ -48,11 +60,7 @@ class NoisyStudent(SingleModelAlgorithm):
         load(teacher_model, config.teacher_model_path, device=config.device)
         # initialize student model with dropout before last layer
         featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
-        student_model = torch.nn.Sequential()
-        setattr(student_model, 'features', featurizer)
-        setattr(student_model, 'student_dropout', nn.Dropout(p=config.dropout_rate))
-        setattr(student_model, 'classifier', classifier)
-        student_model = student_model.to(config.device)
+        student_model = DropoutModel(featurizer, classifier, config.dropout_rate).to(config.device)
         # initialize module
         super().__init__(
             config=config,
@@ -68,16 +76,21 @@ class NoisyStudent(SingleModelAlgorithm):
             self.process_outputs_function = process_outputs_functions[config.process_outputs_function]
         else:
             self.process_outputs_function = None
+        # auxiliary information
+        *_, last_layer = featurizer.named_children()
+        self.last_layer_name = last_layer[0]
 
     def state_dict(self):
         """
-        Override the information that gets returned for saving in save_model
-        Removes:
-            - teacher state
-            - student dropout layer
+        Overrides function called when saving the model. We want to be able to directly load the saved student into the teacher,
+        so we need to reformat the state dict to match the teacher's state dict.
         """
+        def omit(k):
+            return 'teacher' in k or k.startswith('featurizer') or k.startswith(self.last_layer_name)
+        def fmt(k):
+            return re.sub('featurizer.', '', k)            
         state = super().state_dict()
-        state = { k:v for k,v in state.items() if 'teacher' not in k and 'student_dropout' not in k } # remove teacher & dropout info
+        state = { fmt(k):v for k,v in state.items() if not omit(k) }
         return state
         
     def process_batch(self, labeled_batch, unlabeled_batch=None):
@@ -89,6 +102,7 @@ class NoisyStudent(SingleModelAlgorithm):
         y_true = y_true.to(self.device)
         g = self.grouper.metadata_to_group(metadata).to(self.device)
         outputs = self.model(x)
+        # outputs = self.model(x)
         # package the results
         results = {
             'g': g,
