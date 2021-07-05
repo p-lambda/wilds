@@ -1,4 +1,4 @@
-from typing import Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -40,7 +40,6 @@ class DomainDiscriminator(nn.Sequential):
                 nn.BatchNorm1d(hidden_size),
                 nn.ReLU(),
                 nn.Linear(hidden_size, n_domains),
-                nn.Sigmoid(),
             )
         else:
             super(DomainDiscriminator, self).__init__(
@@ -51,17 +50,15 @@ class DomainDiscriminator(nn.Sequential):
                 nn.ReLU(inplace=True),
                 nn.Dropout(0.5),
                 nn.Linear(hidden_size, n_domains),
-                nn.Sigmoid(),
             )
 
+    def get_parameters_with_lr(self, lr=1.0) -> List[Dict]:
+        return [{"params": self.parameters(), "lr": lr}]
 
 class GradientReverseFunction(Function):
     """
     Credit: https://github.com/thuml/Transfer-Learning-Library
-
-    coeff is the same as lambda (domain adaptation parameter) in the original paper
     """
-
     @staticmethod
     def forward(
         ctx: Any, input: torch.Tensor, coeff: Optional[float] = 1.0
@@ -79,7 +76,6 @@ class GradientReverseLayer(nn.Module):
     """
     Credit: https://github.com/thuml/Transfer-Learning-Library
     """
-
     def __init__(self):
         super(GradientReverseLayer, self).__init__()
 
@@ -95,9 +91,25 @@ class DomainAdversarialNetwork(nn.Module):
         self.domain_classifier = DomainDiscriminator(featurizer.d_out, n_domains)
         self.gradient_reverse_layer = GradientReverseLayer()
 
-    def forward(self, input, grl_lambda=1.0):
+    def forward(self, input):
         features = self.featurizer(input)
         y_pred = self.classifier(features)
-        features = self.gradient_reverse_layer(features, grl_lambda)
+        features = self.gradient_reverse_layer(features)
         domains_pred = self.domain_classifier(features)
         return y_pred, domains_pred
+
+    def get_parameters_with_lr(self, featurizer_lr=1.0, classifier_lr=1.0, discriminator_lr=1.0) -> List[Dict]:
+        """
+        Adapted from https://github.com/thuml/Transfer-Learning-Library
+
+        A parameter list which decides optimization hyper-parameters,
+        such as the relative learning rate of each layer
+        """
+        # In TLL's implementation, the learning rate of this classifier is set 10 times to that of the
+        # feature extractor for better accuracy by default. For our implementation, we allow the learning
+        # rates to be passed in separately for featurizer and classifier.
+        params = [
+            {"params": self.featurizer.parameters(), "lr": featurizer_lr},
+            {"params": self.classifier.parameters(), "lr": classifier_lr},
+        ]
+        return params + self.domain_classifier.get_parameters_with_lr(discriminator_lr)
