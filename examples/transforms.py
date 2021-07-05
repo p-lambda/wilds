@@ -1,5 +1,5 @@
 import torchvision.transforms as transforms
-from transformers import BertTokenizerFast, DistilBertTokenizerFast
+from transformers import BertTokenizerFast, DistilBertTokenizerFast, RobertaTokenizerFast
 import torch
 
 def initialize_transform(transform_name, config, dataset):
@@ -28,12 +28,11 @@ def initialize_bert_transform(config):
             truncation=True,
             max_length=config.max_token_length,
             return_tensors='pt')
-        if config.model == 'bert-base-uncased':
+        if config.model == 'bert-base-uncased' or config.model == 'roberta-base':
             x = torch.stack(
                 (tokens['input_ids'],
-                 tokens['attention_mask'],
-                 tokens['token_type_ids']),
-                dim=2)
+                 tokens['attention_mask']),
+                 dim=2)
         elif config.model == 'distilbert-base-uncased':
             x = torch.stack(
                 (tokens['input_ids'],
@@ -48,6 +47,8 @@ def getBertTokenizer(model):
         tokenizer = BertTokenizerFast.from_pretrained(model)
     elif model == 'distilbert-base-uncased':
         tokenizer = DistilBertTokenizerFast.from_pretrained(model)
+    elif model == 'roberta-base':
+        tokenizer = RobertaTokenizerFast.from_pretrained(model)
     else:
         raise ValueError(f'Model: {model} not recognized.')
 

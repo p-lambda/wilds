@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torchvision
 from models.bert.bert import BertClassifier, BertFeaturizer
+from models.bert.roberta import RobertaClassifier, RobertaFeaturizer
 from models.bert.distilbert import DistilBertClassifier, DistilBertFeaturizer
 from models.resnet_multispectral import ResNet18
 from models.layers import Identity
@@ -85,6 +86,15 @@ def initialize_bert_based_model(config, d_out, is_featurizer=False):
                 config.model,
                 num_labels=d_out,
                 **config.model_kwargs)
+    elif config.model == 'roberta-base':
+        if is_featurizer:
+            model = RobertaFeaturizer.from_pretrained(config.model, **config.model_kwargs)
+        else:
+            model = RobertaClassifier.from_pretrained(
+                config.model,
+                num_labels=d_out,
+                **config.model_kwargs)
+
     elif config.model == 'distilbert-base-uncased':
         if is_featurizer:
             model = DistilBertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
