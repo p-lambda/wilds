@@ -62,7 +62,6 @@ def main():
     parser.add_argument('--model', choices=supported.models)
     parser.add_argument('--model_kwargs', nargs='*', action=ParseKwargs, default={},
         help='keyword arguments for model initialization passed as key1=value1 key2=value2')
-    parser.add_argument('--teacher_model_path', type=str)
 
     # Transforms
     parser.add_argument('--train_transform', choices=supported.transforms)
