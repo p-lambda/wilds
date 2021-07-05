@@ -40,6 +40,7 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
         return CelebADataset(version=version, **dataset_kwargs)
 
     elif dataset == 'civilcomments':
+        import pdb; pdb.set_trace()
         if unlabeled:
             from wilds.datasets.unlabeled.civilcomments_unlabeled_dataset import CivilCommentsUnlabeledDataset
             return CivilCommentsUnlabeledDataset(version=version, **dataset_kwargs)
