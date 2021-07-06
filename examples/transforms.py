@@ -1,31 +1,24 @@
 import torchvision.transforms as transforms
 import torch
-from RandAugment import RandAugment
+from data_augmentation.randaugment import FIX_MATCH_AUGMENTATION_POOL, RandAugment
 from transformers import BertTokenizerFast, DistilBertTokenizerFast
 
-def initialize_transform(transform_name, config, dataset, augment=False):
+def initialize_transform(transform_name, config, dataset):
     if transform_name is None:
         return None
     elif transform_name == 'bert':
-        # TODO: support RandAugment equivalent for language -Tony
         return initialize_bert_transform(config)
-    elif transform_name=='image_base':
+    elif transform_name == 'image_base':
         return initialize_image_base_transform(config, dataset)
-    elif transform_name=='image_resize_and_center_crop':
+    elif transform_name == 'image_resize_and_center_crop':
         return initialize_image_resize_and_center_crop_transform(config, dataset)
-    elif transform_name=='image_flip_and_shift':
-        return initialize_image_flip_and_shift_transform()
-    elif transform_name=='image_autoaugment':
-        return initialize_image_autoaugment_transform()
-    elif transform_name=='image_randaugment':
-        return initialize_image_randaugment_transform()
-    elif transform_name=='poverty_train':
+    elif transform_name == 'fix_match':
+        return initialize_fix_match_transform(config)
+    elif transform_name == 'poverty_train':
         return initialize_poverty_train_transform()
     else:
         raise ValueError(f"{transform_name} not recognized")
 
-    if augment:
-        transform.transforms.insert(0, RandAugment(config.randaugment_N, config.randaugment_M))
     return transform
 
 def initialize_bert_transform(config):
@@ -98,7 +91,7 @@ def initialize_image_resize_and_center_crop_transform(config, dataset):
     ])
     return transform
 
-def initialize_poverty_train_transform(config, augment=False):
+def initialize_poverty_train_transform():
     transforms_ls = [
         transforms.ToPILImage(),
         transforms.RandomHorizontalFlip(),
@@ -107,12 +100,62 @@ def initialize_poverty_train_transform(config, augment=False):
         transforms.ToTensor()]
     rgb_transform = transforms.Compose(transforms_ls)
 
-    if augment:
-        rgb_transform.transforms.insert(0, RandAugment(config.randaugment_N, config.randaugment_M))
-
     def transform_rgb(img):
         # bgr to rgb and back to bgr
         img[:3] = rgb_transform(img[:3][[2,1,0]])[[2,1,0]]
         return img
     transform = transforms.Lambda(lambda x: transform_rgb(x))
     return transform
+
+
+def initialize_fix_match_transform(config):
+    # TODO: hardcoded mean and std. How do we determine a good mean and std? hyperparameter tuning? -Tony
+    return TransformFixMatch(
+        mean=[0.5071, 0.4867, 0.4408],
+        std=[0.2675, 0.2565, 0.2761],
+        randaugment_n=config.randaugment_n,
+        randaugment_m=config.randaugment_m,
+        augmentation_pool=FIX_MATCH_AUGMENTATION_POOL,
+    )
+
+class TransformFixMatch(object):
+    # Adapted from https://github.com/kekmodel/FixMatch-pytorch
+    def __init__(self, mean, std, randaugment_n, randaugment_m, augmentation_pool):
+        self.weak = transforms.Compose(
+            [
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomCrop(
+                    size=32,
+                    padding=int(32 * 0.125),
+                    padding_mode='reflect'
+                )
+            ]
+        )
+        self.strong = transforms.Compose(
+            [
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomCrop(
+                    size=32,
+                    padding=int(32 * 0.125),
+                    padding_mode='reflect'
+                ),
+                # TODO: Support text RandAugment later.
+                #       Then, create a factory that returns either the image or text RandAugment -Tony
+                RandAugment(
+                    n=randaugment_n,
+                    m=randaugment_m,
+                    augmentation_pool=augmentation_pool,
+                )
+            ]
+        )
+        self.normalize = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(mean=mean, std=std),
+            ]
+        )
+
+    def __call__(self, x):
+        weak = self.weak(x)
+        strong = self.strong(x)
+        return self.normalize(weak), self.normalize(strong)

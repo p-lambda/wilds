@@ -30,8 +30,6 @@ setuptools.setup(
         'tqdm>=4.53.0',
         'outdated>=0.2.0',
         'pytz>=2020.4',
-        'git+https://github.com/ildoonet/pytorch-randaugment',
-        'niacin',
     ],
     license='MIT',
     packages=setuptools.find_packages(exclude=['dataset_preprocessing', 'examples', 'examples.models', 'examples.models.bert']),

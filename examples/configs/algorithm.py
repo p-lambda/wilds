@@ -32,7 +32,7 @@ algorithm_defaults = {
         'distinct_groups': True,
         'eval_loader': 'standard',
     },
-    'fixmatch': {
+    'FixMatch': {
         'train_loader': 'standard',
         'uniform_over_groups': False,
         'eval_loader': 'standard',

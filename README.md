@@ -50,9 +50,7 @@ pip install -e .
 - torch>=1.7.0
 - torch-scatter>=2.0.5
 - torch-geometric>=1.6.1
-- tqdm>=4.53.0 
-- git+https://github.com/ildoonet/pytorch-randaugment
-- niacin
+- tqdm>=4.53.0
 
 Running `pip install wilds` or `pip install -e .` will automatically check for and install all of these requirements
 except for the `torch-scatter` and `torch-geometric` packages, which require a [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
