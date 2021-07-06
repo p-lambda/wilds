@@ -68,8 +68,8 @@ def main():
     parser.add_argument('--target_resolution', nargs='+', type=int, help='The input resolution that images will be resized to before being passed into the model. For example, use --target_resolution 224 224 for a standard ResNet.')
     parser.add_argument('--resize_scale', type=float)
     parser.add_argument('--max_token_length', type=int)
-    parser.add_argument('--randaugment_n', type=int, default=2, help='N parameter of RandAugment - the number of transformations to apply.')
-    parser.add_argument('--randaugment_m', type=int, default=10,
+    parser.add_argument('--randaugment_n', type=int, help='N parameter of RandAugment - the number of transformations to apply.')
+    parser.add_argument('--randaugment_m', type=int,
         help='M parameter of RandAugment - the magnitude of the transformation. Values range from 1 to 10, where 10 indicates the maximum scale for a transformation.')
 
     # Objective

@@ -37,6 +37,8 @@ algorithm_defaults = {
         'uniform_over_groups': False,
         'eval_loader': 'standard',
         'fixmatch_lambda': 1,
-        'fixmatch_threshold': 0.7
+        'fixmatch_threshold': 0.7,
+        'randaugment_n': 2,
+        'randaugment_m': 10,
     }
 }
