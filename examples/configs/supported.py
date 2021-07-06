@@ -29,7 +29,7 @@ process_outputs_functions = {
 
 # see initialize_*() functions for correspondence
 transforms = ['bert', 'image_base', 'image_resize_and_center_crop', 'poverty_train']
-models = ['resnet18_ms', 'resnet50', 'resnet34', 'wideresnet50',
+models = ['resnet18_ms', 'resnet34', 'resnet50', 'resnet101', 'wideresnet50',
          'densenet121', 'bert-base-uncased', 'distilbert-base-uncased',
          'gin-virtual', 'logistic_regression', 'code-gpt-py',
          'efficientnet-b0', 'efficientnet-b1', 'efficientnet-b2', 'efficientnet-b3']
