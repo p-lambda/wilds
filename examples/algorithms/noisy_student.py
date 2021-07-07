@@ -56,8 +56,9 @@ class NoisyStudent(SingleModelAlgorithm):
         # check that we had a teacher model (and thus computed pseudolabels in run_expt.py)
         assert config.teacher_model_path is not None
         # initialize student model with dropout before last layer
-        featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
-        student_model = DropoutModel(featurizer, classifier, config.dropout_rate).to(config.device)
+        student_model = initialize_model(config, d_out=d_out)
+        # featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
+        # student_model = DropoutModel(featurizer, classifier, config.dropout_rate).to(config.device)
         # initialize module
         super().__init__(
             config=config,
@@ -69,8 +70,8 @@ class NoisyStudent(SingleModelAlgorithm):
         )
         # algorithm hyperparameters
         # auxiliary information
-        *_, last_layer = featurizer.named_children()
-        self.last_layer_name = last_layer[0]
+        # *_, last_layer = featurizer.named_children()
+        # self.last_layer_name = last_layer[0]
 
     def state_dict(self):
         """
@@ -82,7 +83,7 @@ class NoisyStudent(SingleModelAlgorithm):
         def fmt(k):
             return re.sub('featurizer.', '', k)            
         state = super().state_dict()
-        state = { fmt(k):v for k,v in state.items() if not omit(k) }
+        # state = { fmt(k):v for k,v in state.items() if not omit(k) }
         return state
         
     def process_batch(self, labeled_batch, unlabeled_batch=None):
