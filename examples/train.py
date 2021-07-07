@@ -11,8 +11,10 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
 
     if train:
         algorithm.train()
+        torch.set_grad_enabled(True)
     else:
         algorithm.eval()
+        torch.set_grad_enabled(False)
 
     # Not preallocating memory is slower
     # but makes it easier to handle different types of data loaders
@@ -30,7 +32,7 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
         if train:
             batch_results = algorithm.update(batch)
         else:
-            batch_results = algorithm.evaluate(batch)        
+            batch_results = algorithm.evaluate(batch)
 
         # These tensors are already detached, but we need to clone them again
         # Otherwise they don't get garbage collected properly in some versions
@@ -115,6 +117,7 @@ def train(algorithm, datasets, general_logger, config, epoch_offset, best_val_me
 
 def evaluate(algorithm, datasets, epoch, general_logger, config, is_best):
     algorithm.eval()
+    torch.set_grad_enabled(False)
     for split, dataset in datasets.items():
         if (not config.evaluate_all_splits) and (split not in config.eval_splits):
             continue
