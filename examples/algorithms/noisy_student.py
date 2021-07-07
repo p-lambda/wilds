@@ -13,9 +13,7 @@ import re
 class DropoutModel(nn.Module):
     def __init__(self, featurizer, classifier, dropout_rate):
         super().__init__()
-        self.featurizer = featurizer
-        self.dropout = nn.Dropout(p=dropout_rate)
-        self.classifier = classifier
+
     def forward(self, x):
         features = self.featurizer(x)
         features_sparse = self.dropout(features)
@@ -56,8 +54,9 @@ class NoisyStudent(SingleModelAlgorithm):
         # check that we had a teacher model (and thus computed pseudolabels in run_expt.py)
         assert config.teacher_model_path is not None
         # initialize student model with dropout before last layer
-        student_model = initialize_model(config, d_out=d_out)
-        # featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
+        # student_model = initialize_model(config, d_out=d_out).to(config.device)
+        featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
+        student_model = torch.nn.Sequential(featurizer, classifier)
         # student_model = DropoutModel(featurizer, classifier, config.dropout_rate).to(config.device)
         # initialize module
         super().__init__(
@@ -72,6 +71,9 @@ class NoisyStudent(SingleModelAlgorithm):
         # auxiliary information
         # *_, last_layer = featurizer.named_children()
         # self.last_layer_name = last_layer[0]
+        self.featurizer = featurizer.to(config.device)
+        self.dropout = nn.Dropout(p=config.dropout_rate).to(config.device)
+        self.classifier = classifier.to(config.device)
 
     def state_dict(self):
         """
@@ -93,7 +95,9 @@ class NoisyStudent(SingleModelAlgorithm):
         x = x.to(self.device)
         y_true = y_true.to(self.device)
         g = self.grouper.metadata_to_group(metadata).to(self.device)
-        outputs = self.model(x)
+        features = self.featurizer(x)
+        features_sparse = self.dropout(features)
+        outputs = self.classifier(features_sparse)
         # package the results
         results = {
             'g': g,
@@ -107,7 +111,9 @@ class NoisyStudent(SingleModelAlgorithm):
             x = x.to(self.device)
             g = self.grouper.metadata_to_group(metadata).to(self.device)
             y_pseudo = y_pseudo.to(self.device)
-            outputs = self.model(x)
+            features = self.featurizer(x)
+            features_sparse = self.dropout(features)
+            outputs = self.classifier(features_sparse)
             results['unlabeled_metadata'] = metadata
             results['unlabeled_y_pseudo'] = y_pseudo 
             results['unlabeled_y_pred'] = outputs
