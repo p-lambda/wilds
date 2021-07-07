@@ -94,15 +94,13 @@ class NoisyStudent(SingleModelAlgorithm):
         return state
         
     def process_batch(self, labeled_batch, unlabeled_batch=None):
-        # TODO: for now, teacher takes in the same inputs as the student (same augs)
-        # ideally, the data loader would yield: laebled, strongly augmented (student), normal unlabeled (teacher)
+        # TODO: augmentations
         # Labeled examples
         x, y_true, metadata = labeled_batch
         x = x.to(self.device)
         y_true = y_true.to(self.device)
         g = self.grouper.metadata_to_group(metadata).to(self.device)
         outputs = self.model(x)
-        # outputs = self.model(x)
         # package the results
         results = {
             'g': g,
@@ -112,7 +110,7 @@ class NoisyStudent(SingleModelAlgorithm):
         }
         # Unlabeled examples
         if unlabeled_batch is not None:
-            x, metadata = unlabeled_batch
+            x, metadata = unlabeled_batch # x should be strongly augmented
             x = x.to(self.device)
             g = self.grouper.metadata_to_group(metadata).to(self.device)
             with torch.no_grad(): 
