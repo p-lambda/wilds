@@ -125,10 +125,10 @@ dataset_defaults = {
         'lr': 1e-3,
         'weight_decay': 1e-4,
         'n_epochs': 12,
-        'n_groups_per_batch': 2,
+        'n_groups_per_batch': 4,
         'algo_log_metric': 'multitask_binary_accuracy',
         'irm_lambda': 100.0,
-        # 'coral_penalty_weight': 0.1,
+        'coral_penalty_weight': 0.1,
     },
     'fmow': {
         'split_scheme': 'official',
