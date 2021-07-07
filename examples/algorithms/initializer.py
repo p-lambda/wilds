@@ -12,22 +12,7 @@ from configs.supported import algo_log_metrics, losses
 def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None):
     train_dataset = datasets['train']['dataset']
     train_loader = datasets['train']['loader']
-
-    # Configure the final layer of the networks used
-    # The code below are defaults. Edit this if you need special config for your model.
-    if (train_dataset.is_classification) and (train_dataset.y_size == 1):
-        # For single-task classification, we have one output per class
-        d_out = train_dataset.n_classes
-    elif (train_dataset.is_classification) and (train_dataset.y_size is None):
-        d_out = train_dataset.n_classes
-    elif (train_dataset.is_classification) and (train_dataset.y_size > 1) and (train_dataset.n_classes == 2):
-        # For multi-task binary classification (each output is the logit for each binary class)
-        d_out = train_dataset.y_size
-    elif (not train_dataset.is_classification):
-        # For regression, we have one output per target dimension
-        d_out = train_dataset.y_size
-    else:
-        raise RuntimeError('d_out not defined.')
+    d_out = infer_d_out(train_dataset)
 
     # Other config
     n_train_steps = len(train_loader) * config.n_epochs
@@ -109,3 +94,21 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
         raise ValueError(f"Algorithm {config.algorithm} not recognized")
 
     return algorithm
+
+def infer_d_out(train_dataset):
+    # Configure the final layer of the networks used
+    # The code below are defaults. Edit this if you need special config for your model.
+    if (train_dataset.is_classification) and (train_dataset.y_size == 1):
+        # For single-task classification, we have one output per class
+        d_out = train_dataset.n_classes
+    elif (train_dataset.is_classification) and (train_dataset.y_size is None):
+        d_out = train_dataset.n_classes
+    elif (train_dataset.is_classification) and (train_dataset.y_size > 1) and (train_dataset.n_classes == 2):
+        # For multi-task binary classification (each output is the logit for each binary class)
+        d_out = train_dataset.y_size
+    elif (not train_dataset.is_classification):
+        # For regression, we have one output per target dimension
+        d_out = train_dataset.y_size
+    else:
+        raise RuntimeError('d_out not defined.')
+    return d_out

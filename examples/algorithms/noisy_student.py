@@ -53,11 +53,8 @@ class NoisyStudent(SingleModelAlgorithm):
             }
     """
     def __init__(self, config, d_out, grouper, loss, metric, n_train_steps):
-        # check config
+        # check that we had a teacher model (and thus computed pseudolabels in run_expt.py)
         assert config.teacher_model_path is not None
-        # load teacher model
-        teacher_model = initialize_model(config, d_out).to(config.device)
-        load(teacher_model, config.teacher_model_path, device=config.device)
         # initialize student model with dropout before last layer
         featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
         student_model = DropoutModel(featurizer, classifier, config.dropout_rate).to(config.device)
@@ -70,12 +67,7 @@ class NoisyStudent(SingleModelAlgorithm):
             metric=metric,
             n_train_steps=n_train_steps,
         )
-        self.teacher = teacher_model
         # algorithm hyperparameters
-        if config.process_outputs_function is not None: 
-            self.process_outputs_function = process_outputs_functions[config.process_outputs_function]
-        else:
-            self.process_outputs_function = None
         # auxiliary information
         *_, last_layer = featurizer.named_children()
         self.last_layer_name = last_layer[0]
@@ -86,7 +78,7 @@ class NoisyStudent(SingleModelAlgorithm):
         so we need to reformat the state dict to match the teacher's state dict.
         """
         def omit(k):
-            return 'teacher' in k or k.startswith('featurizer') or k.startswith(self.last_layer_name)
+            return k.startswith('featurizer') or k.startswith(self.last_layer_name)
         def fmt(k):
             return re.sub('featurizer.', '', k)            
         state = super().state_dict()
@@ -110,17 +102,14 @@ class NoisyStudent(SingleModelAlgorithm):
         }
         # Unlabeled examples
         if unlabeled_batch is not None:
-            x, metadata = unlabeled_batch # x should be strongly augmented
+            x, y_pseudo, metadata = unlabeled_batch # x should be strongly augmented
             x = x.to(self.device)
             g = self.grouper.metadata_to_group(metadata).to(self.device)
-            with torch.no_grad(): 
-                teacher_outputs = self.teacher(x)
-                if self.process_outputs_function is not None: 
-                    teacher_outputs = self.process_outputs_function(teacher_outputs)
-            student_outputs = self.model(x)
+            y_pseudo = y_pseudo.to(self.device)
+            outputs = self.model(x)
             results['unlabeled_metadata'] = metadata
-            results['unlabeled_y_pseudo'] = teacher_outputs 
-            results['unlabeled_y_pred'] = student_outputs
+            results['unlabeled_y_pseudo'] = y_pseudo 
+            results['unlabeled_y_pred'] = outputs
             results['unlabeled_g'] = g
         return results
 
