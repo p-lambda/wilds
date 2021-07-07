@@ -345,7 +345,7 @@ class EncodeTFBSDataset(WILDSDataset):
 
         self._metadata_df = self._metadata_df[keep_mask]
         self._split_array = self._split_array[keep_mask]
-        self._y_array = self._y_array[keep_mask]        
+        self._y_array = self._y_array[keep_mask]
 
         self._all_chroms = sorted(list({chrom for _, d in splits.items() for chrom in d['chroms']}))
         self._all_celltypes = sorted(list({chrom for _, d in splits.items() for chrom in d['celltypes']}))
@@ -418,9 +418,6 @@ class EncodeTFBSDataset(WILDSDataset):
         seq_this = self._seq_bp[this_metadata['chr']][interval_start:interval_end]
         dnase_bw = self._dnase_allcelltypes[this_metadata['celltype']]
         dnase_this = np.nan_to_num(dnase_bw.values(chrom, interval_start, interval_end, numpy=True))
-#         assert(np.isnan(seq_this).sum() == 0)
-#         assert(np.isnan(dnase_this).sum() == 0)
-#         dnase_this = self.norm_signal(dnase_this, this_metadata['celltype'])
         return torch.tensor(np.column_stack(
             [seq_this,
              dnase_this]

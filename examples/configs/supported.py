@@ -18,8 +18,7 @@ algo_log_metrics = {
     'mse': MSE(),
     'multitask_accuracy': MultiTaskAccuracy(prediction_fn=multiclass_logits_to_pred),
     'multitask_binary_accuracy': MultiTaskAccuracy(prediction_fn=binary_logits_to_pred),
-    'multitask_avgprec': MultiTaskAveragePrecision(prediction_fn=None),
-    # 'multitask_preven': MultiTaskPREven(prediction_fn=None),
+    'multitask_avgprec': MultiTaskAveragePrecision(prediction_fn=None),    
     None: None,
 }
 
