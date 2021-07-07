@@ -304,7 +304,7 @@ dataset_defaults = {
             'pretrained': True
         },
         'loss_function': 'fasterrcnn_criterion',
-        'groupby_fields': ['location_date_sensor'],
+        'groupby_fields': ['session'],
         'val_metric': 'detection_acc_avg_dom',
         'val_metric_decreasing': False,
         'algo_log_metric': None, # TODO
@@ -313,7 +313,7 @@ dataset_defaults = {
         'scheduler': None,
         'batch_size': 4,
         'lr': 1e-5,
-        'weight_decay': 1e-4,
+        'weight_decay': 0,
         'n_epochs': 10,
         'loader_kwargs': {
             'num_workers': 1,

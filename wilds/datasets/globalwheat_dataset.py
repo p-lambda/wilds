@@ -7,16 +7,108 @@ from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import DetectionAccuracy
 
+SESSIONS = [
+    'Arvalis_1',
+    'Arvalis_2',
+    'Arvalis_3',
+    'Arvalis_4',
+    'Arvalis_5',
+    'Arvalis_6',
+    'Arvalis_7',
+    'Arvalis_8',
+    'Arvalis_9',
+    'Arvalis_10',
+    'Arvalis_11',
+    'Arvalis_12',
+    'ETHZ_1',
+    'Inrae_1',
+    'NMBU_1',
+    'NMBU_2',
+    'Rres_1',
+    'ULiège-GxABT_1',
+    'Utokyo_1',
+    'Utokyo_2',
+    'Utokyo_3',
+    'Ukyoto_1',
+    'NAU_1',
+    'NAU_2',
+    'NAU_3',
+    'ARC_1',
+    'UQ_1',
+    'UQ_2',
+    'UQ_3',
+    'UQ_4',
+    'UQ_5',
+    'UQ_6',
+    'UQ_7',
+    'UQ_8',
+    'UQ_9',
+    'UQ_10',
+    'UQ_11',
+    'Terraref_1',
+    'Terraref_2',
+    'KSU_1',
+    'KSU_2',
+    'KSU_3',
+    'KSU_4',
+    'CIMMYT_1',
+    'CIMMYT_2',
+    'CIMMYT_3',
+    'Usask_1'
+]
+
+COUNTRIES = [
+    'Switzerland',
+    'UK',
+    'Belgium',
+    'Norway',
+    'France',
+    'Canada',
+    'US',
+    'Mexico',
+    'Japan',
+    'China',
+    'Australia',
+    'Sudan',
+]
+
+LOCATIONS = [
+    'Baima',
+    'Brookstead',
+    'Ciudad Obregon',
+    'Gatton',
+    'Gembloux',
+    'Gréoux',
+    'KSU',
+    'Kyoto',
+    'Maricopa, AZ',
+    'McAllister',
+    'Mons',
+    'NARO-Hokkaido',
+    'NARO-Tsukuba',
+    'NMBU',
+    'Rothamsted',
+    'Saskatchewan',
+    'Toulouse',
+    'Usask',
+    'VLB',
+    'VSC',
+    'Wad Medani',
+]
+
+STAGES = [
+    'Filling',
+    'Filling - Ripening',
+    'multiple',
+    'Post-flowering',
+    'Post-Flowering',
+    'Ripening',
+]
+
 class GlobalWheatDataset(WILDSDataset):
     """
     The GlobalWheat-WILDS wheat head localization dataset.
-    This is a modified version of the original Global Wheat Head Dataset 2021.
-
-    The current version does not contain test or validation labels, as it is being used in a
-    currently-running competition.
-    After the competition concludes in July 2021, we will update the dataset to contain the
-    final splits with test and validation labels, and add the dataset to the official WILDS
-    benchmark.
+    This is a modified version of the original Global Wheat Head Dataset 2021.    
 
     Supported `split_scheme`:
         - 'official'
@@ -25,7 +117,7 @@ class GlobalWheatDataset(WILDSDataset):
     Output (y):
         y is a n x 4-dimensional vector where each line represents a box coordinate (x_min, y_min, x_max, y_max)
     Metadata:
-        Each image is annotated with the ID of the domain (location_date_sensor) it came from (integer from 0 to 46).
+        Each image is annotated with the ID of the domain (session) it came from (integer from 0 to 46).
     Website:
         http://www.global-wheat.com/
     Original publication:
@@ -41,27 +133,24 @@ class GlobalWheatDataset(WILDSDataset):
             note = {Publisher: AAAS},
             pages = {3521852},
         }
+        @misc{david2021global,
+            title={Global Wheat Head Dataset 2021: more diversity to improve the benchmarking of wheat head localization methods},
+            author={Etienne David and Mario Serouart and Daniel Smith and Simon Madec and Kaaviya Velumani and Shouyang Liu and Xu Wang and Francisco Pinto Espinosa and Shahameh Shafiee and Izzat S. A. Tahir and Hisashi Tsujimoto and Shuhei Nasuda and Bangyou Zheng and Norbert Kichgessner and Helge Aasen and Andreas Hund and Pouria Sadhegi-Tehran and Koichi Nagasawa and Goro Ishikawa and Sébastien Dandrifosse and Alexis Carlier and Benoit Mercatoris and Ken Kuroki and Haozhou Wang and Masanori Ishii and Minhajul A. Badhon and Curtis Pozniak and David Shaner LeBauer and Morten Lilimo and Jesse Poland and Scott Chapman and Benoit de Solan and Frédéric Baret and Ian Stavness and Wei Guo},
+            year={2021},
+            eprint={2105.07660},
+            archivePrefix={arXiv},
+            primaryClass={cs.CV}
+        }
     License:
         This dataset is distributed under the MIT license.
     """
 
     _dataset_name = 'globalwheat'
-
-    # Version 0.9 corresponds to the final dataset, but without the validation and test labels,
-    # since it is being used in a currently-running competition (http://www.global-wheat.com/).
-    # Users can submit their val+test predictions to the competition to obtain an estimate of
-    # held-out performance computed on a fraction of those predictions;
-    # please see the tutorial at https://www.aicrowd.com/challenges/global-wheat-challenge-2021.
-    # We will update the dataset to include these labels and update the splits after the
-    # competition ends in July 2021.
     _versions_dict = {
-        '0.9': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8ba9122a41454997afdfb78762d390cf/contents/blob/',
-            'compressed_size': 10_280_247_296},
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8ba9122a41454997afdfb78762d390cf/contents/blob/',
-            'compressed_size': 10_280_247_296}
-            }
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x03b0584cb00d4ea987aa3269aa2fd2b4/contents/blob/',
+            'compressed_size': 10_286_874_624}
+        }
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
 
@@ -82,38 +171,25 @@ class GlobalWheatDataset(WILDSDataset):
             val_data_df = pd.read_csv(self.root / f'official_val.csv')
             test_data_df = pd.read_csv(self.root / f'official_test.csv')
 
-        elif split_scheme == "ood_with_subsampled_test":
-            if version == "0.9":
-                print("Warning: ood_with_subsampled_test is not available in 0.9")
-            else:
-                train_data_df = pd.read_csv(self.root / f'official_train.csv')
-                val_data_df = pd.read_csv(self.root / f'official_val.csv')
-                test_data_df = pd.read_csv(self.root / f'in_dist_test.csv')
+        elif split_scheme == "official_with_subsampled_test":
+            train_data_df = pd.read_csv(self.root / f'official_train.csv')
+            val_data_df = pd.read_csv(self.root / f'official_val.csv')
+            test_data_df = pd.read_csv(self.root / f'fixed_test_test.csv')
 
         elif split_scheme == "in-dist":
-            if version == "0.9":
-                print("Warning: in-dist is not available in 0.9")
-            else:
-                train_data_df = pd.read_csv(self.root / f'in_dist_train.csv')
-                val_data_df = pd.read_csv(self.root / f'official_val.csv')
-                test_data_df = pd.read_csv(self.root / f'in_dist_test.csv')
+            train_data_df = pd.read_csv(self.root / f'in_dist_train.csv')
+            val_data_df = pd.read_csv(self.root / f'official_val.csv')
+            test_data_df = pd.read_csv(self.root / f'in_dist_test.csv')
 
         elif split_scheme == "fixed-train":
-            if version == "0.9":
-                print("Warning: fixed-train is not available in 0.9")
-            else:
-                train_data_df = pd.read_csv(self.root / f'fixed_train_train.csv')
-                val_data_df = pd.read_csv(self.root / f'fixed_train_val.csv')
-                test_data_df = pd.read_csv(self.root / f'fixed_train_test.csv')
+            train_data_df = pd.read_csv(self.root / f'fixed_train_train.csv')
+            val_data_df = pd.read_csv(self.root / f'fixed_train_val.csv')
+            test_data_df = pd.read_csv(self.root / f'fixed_train_test.csv')
 
         elif split_scheme == "fixed-test":
-            if version == "0.9":
-                print("Warning: fixed-test is not available in 0.9")
-            else:
-                train_data_df = pd.read_csv(self.root / f'fixed_test_train.csv')
-                val_data_df = pd.read_csv(self.root / f'official_val.csv')
-                test_data_df = pd.read_csv(self.root / f'fixed_test_test.csv')
-
+            train_data_df = pd.read_csv(self.root / f'fixed_test_train.csv')
+            val_data_df = pd.read_csv(self.root / f'official_val.csv')
+            test_data_df = pd.read_csv(self.root / f'fixed_test_test.csv')
 
         self._image_array = []
         self._split_array, self._y_array, self._metadata_array = [], [], []
@@ -136,15 +212,41 @@ class GlobalWheatDataset(WILDSDataset):
             } for boxes in all_boxes]
 
             self._y_array.extend(labels)
-            self._metadata_array.extend(list(df['domain'].values))
+            self._metadata_array.extend([int(item) for item in df['domain'].values])
 
         self._split_array = np.array(self._split_array)
         self._metadata_array = torch.tensor(self._metadata_array,
                                             dtype=torch.long).unsqueeze(1)
-        self._metadata_fields = ['location_date_sensor']
+        self._metadata_array = torch.cat(
+            (self._metadata_array,
+            torch.zeros(
+                (len(self._metadata_array), 3),
+                dtype=torch.long)),
+            dim=1)
+
+        domain_df = pd.read_csv(self.root / 'metadata_domain.csv', sep=';')
+        for session_idx, session_name in enumerate(SESSIONS):
+            idx = pd.Index(domain_df['name']).get_loc(session_name)
+            country = domain_df.loc[idx, 'country']
+            location = domain_df.loc[idx, 'location']
+            stage = domain_df.loc[idx, 'development_stage']
+
+            session_mask = (self._metadata_array[:, 0] == session_idx)
+            self._metadata_array[session_mask, 1] = COUNTRIES.index(country)
+            self._metadata_array[session_mask, 2] = LOCATIONS.index(location)
+            self._metadata_array[session_mask, 3] = STAGES.index(stage)
+
+        self._metadata_fields = ['session', 'country', 'location', 'stage']
+        self._metadata_map = {
+            'session': SESSIONS,
+            'country': COUNTRIES,
+            'location': LOCATIONS,
+            'stage': STAGES,
+        }
+
         self._eval_grouper = CombinatorialGrouper(
             dataset=self,
-            groupby_fields=['location_date_sensor'])
+            groupby_fields=['session'])
         self._metric = DetectionAccuracy()
         self._collate = GlobalWheatDataset._collate_fn
 
@@ -171,14 +273,14 @@ class GlobalWheatDataset(WILDSDataset):
 
         detection_accs = []
         for k, v in results.items():
-            if k.startswith('detection_acc_location_date_sensor:'):
+            if k.startswith('detection_acc_session:'):
                 d = k.split(':')[1]
-                count = results[f'count_location_date_sensor:{d}']
+                count = results[f'count_session:{d}']
                 if count > 0:
                     detection_accs.append(v)
         detection_acc_avg_dom = np.array(detection_accs).mean()
         results['detection_acc_avg_dom'] = detection_acc_avg_dom
-        results_str = f'Average detection_acc across domains: {detection_acc_avg_dom:.3f}\n' + results_str
+        results_str = f'Average detection_acc across session: {detection_acc_avg_dom:.3f}\n' + results_str
         return results, results_str
 
     @staticmethod

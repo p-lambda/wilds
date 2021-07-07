@@ -30,7 +30,7 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train):
         if train:
             batch_results = algorithm.update(batch)
         else:
-            batch_results = algorithm.evaluate(batch)
+            batch_results = algorithm.evaluate(batch)        
 
         # These tensors are already detached, but we need to clone them again
         # Otherwise they don't get garbage collected properly in some versions
