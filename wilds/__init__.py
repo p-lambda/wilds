@@ -9,7 +9,7 @@ benchmark_datasets = [
     'ogb-molpcba',
     'poverty',
     'fmow',
-    'py150',    
+    'py150',
 ]
 
 additional_datasets = [
@@ -18,7 +18,7 @@ additional_datasets = [
     'yelp',
     'bdd100k',
     'sqf',
-    'encode-tfbs'
+    'encode'
 ]
 
 supported_datasets = benchmark_datasets + additional_datasets

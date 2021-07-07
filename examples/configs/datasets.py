@@ -105,7 +105,7 @@ dataset_defaults = {
         },
         'process_outputs_function': 'multiclass_logits_to_pred',
     },
-    'encode-tfbs': {
+    'encode': {
         'split_scheme': 'official',
         'model': 'unet-seq',
         'model_kwargs': {'n_channels_in': 5},

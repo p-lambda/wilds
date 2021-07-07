@@ -78,6 +78,6 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
         from wilds.datasets.sqf_dataset import SQFDataset
         return SQFDataset(version=version, **dataset_kwargs)
 
-    elif dataset == 'encode-tfbs':
-        from wilds.datasets.encodetfbs_dataset import EncodeTFBSDataset
-        return EncodeTFBSDataset(version=version, **dataset_kwargs)
+    elif dataset == 'encode':
+        from wilds.datasets.encode_dataset import EncodeDataset
+        return EncodeDataset(version=version, **dataset_kwargs)
