@@ -11,7 +11,7 @@ dataset_defaults = {
         'lr': 1e-5,
         'weight_decay': 0.01,
         'n_epochs': 3,
-        'n_groups_per_batch': 2,
+        'n_groups_per_batch': 4,
         'irm_lambda': 1.0,
         'coral_penalty_weight': 1.0,
         'loader_kwargs': {
