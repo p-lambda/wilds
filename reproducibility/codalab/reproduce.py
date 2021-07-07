@@ -83,7 +83,7 @@ class CodaLabReproducibility:
         "camelyon17": 32,
         "iwildcam": 32,
         "fmow": 96,
-        "poverty": 64,
+        "poverty": 160,
     }
 
     def __init__(self, wilds_version, all_datasets=False):

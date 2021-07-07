@@ -39,7 +39,7 @@ class IWildCamDataset(WILDSDataset):
     _dataset_name = 'iwildcam'
     _versions_dict = {
         '2.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles//contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x6313da2b204647e79a14b468131fcd64/contents/blob/',
             'compressed_size': 11_957_420_032}}
 
 

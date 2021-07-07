@@ -108,6 +108,9 @@ dataset_defaults = {
         'lr': 1e-5,
         'weight_decay': 0.01,
         'n_epochs': 5,
+        # TODO: double check n_groups_per_batch -Tony
+        'n_groups_per_batch': 1,
+        'unlabeled_n_groups_per_batch': 1,
         'algo_log_metric': 'accuracy',
         'max_token_length': 300,
         'irm_lambda': 1.0,
@@ -215,6 +218,7 @@ dataset_defaults = {
         'split_scheme': 'official',
         'scheduler': None,
         'groupby_fields': ['location',],
+        # TODO: double check this -Tony
         'n_groups_per_batch': 2,
         'unlabeled_n_groups_per_batch': 2,
         'irm_lambda': 1.,
