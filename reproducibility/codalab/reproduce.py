@@ -31,17 +31,17 @@ Usage:
     
 Example Usage:
     # To tune model hyperparameters for Unlabeled WILDS
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --random --unlabeled-split test_unlabeled
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --random --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_deepcoral_tune
   
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --random --coarse --unlabeled-split test_unlabeled
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --random --coarse --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_deepcoral_coarse_tune
 
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x6eff199eaf61473291730321951dca7d --datasets fmow --algorithm DANN --random --unlabeled-split test_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x6eff199eaf61473291730321951dca7d --datasets fmow --experiment fmow_dann_tune
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm DANN --random --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_dann_tune
     
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x6eff199eaf61473291730321951dca7d --datasets fmow --algorithm DANN --random --coarse --unlabeled-split test_unlabeled
-    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x6eff199eaf61473291730321951dca7d --datasets fmow --experiment fmow_dann_coarse_tune
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm DANN --random --coarse --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_dann_coarse_tune
     
     python reproducibility/codalab/reproduce.py --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --repair
 
@@ -85,6 +85,7 @@ class CodaLabReproducibility:
         "fmow": 96,
         "poverty": 160,
     }
+    _HAS_SEPARATE_UNLABELED_BUNDLE = ["civilcomments", "iwildcam"]
 
     def __init__(self, wilds_version, all_datasets=False):
         self._wilds_version = wilds_version
@@ -234,6 +235,17 @@ class CodaLabReproducibility:
             dataset_fullname = self._get_field_value(dataset_uuid, "name")
             search_space = self._get_hyperparameter_search_space(algorithm)
 
+            if dataset in CodaLabReproducibility._HAS_SEPARATE_UNLABELED_BUNDLE:
+                unlabeled_dataset_uuid = self._get_bundle_uuid(
+                    f"{dataset}_unlabeled", worksheet_uuid
+                )
+                unlabeled_dataset_fullname = self._get_field_value(
+                    unlabeled_dataset_uuid, "name"
+                )
+            else:
+                unlabeled_dataset_uuid = None
+                unlabeled_dataset_fullname = None
+
             for _ in range(num_of_samples):
                 hyperparameter_config = dict()
                 for hyperparameter, values in search_space[dataset].items():
@@ -263,13 +275,17 @@ class CodaLabReproducibility:
                                     hyperparameter_config[hyperparameter] / 10.0
                                 )
 
+                dependencies = {
+                    "wilds": wilds_src_uuid,
+                    dataset_fullname: dataset_uuid,
+                }
+                if unlabeled_dataset_uuid:
+                    dependencies[unlabeled_dataset_fullname] = unlabeled_dataset_uuid
+
                 self._run_experiment(
                     name=f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}_tune",
                     description=f"{str(hyperparameter_config)}",
-                    dependencies={
-                        "wilds": wilds_src_uuid,
-                        dataset_fullname: dataset_uuid,
-                    },
+                    dependencies=dependencies,
                     command=self._construct_command(
                         dataset,
                         algorithm=algorithm,

@@ -100,7 +100,7 @@ def compile_results(dataset, results, in_distribution_val=False):
                         result_df[result_type],
                         result_df[val_split],
                         sort_metrics=metrics,
-                        log=result_type == 'test_eval' and metric == metrics[0]
+                        log=result_type == "test_eval" and metric == metrics[0],
                     )
                     compiled_results[algorithm][result_type][metric].append(
                         result[metric]
@@ -109,7 +109,7 @@ def compile_results(dataset, results, in_distribution_val=False):
         for result_type in RESULT_TYPES:
             if result_type in compiled_results[algorithm]:
                 for metric in metrics:
-                    if result_type == 'test_eval' and metric == metrics[0]:
+                    if result_type == "test_eval" and metric == metrics[0]:
                         print(compiled_results[algorithm][result_type][metric])
 
                     # Take the sample standard deviation (delta degree of freedom = 1)
