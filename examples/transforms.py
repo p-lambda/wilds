@@ -193,7 +193,7 @@ def _get_target_resolution(config, dataset):
 
 
 class MultipleTransforms(object):
-    """When multiple transformations of the same data needs to be returned."""
+    """When multiple transformations of the same data need to be returned."""
 
     def __init__(self, transformations):
         self.transformations = transformations
