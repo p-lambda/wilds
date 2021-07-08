@@ -1,8 +1,7 @@
 # Adapted from https://github.com/kekmodel/FixMatch-pytorch
 
-import random
-
 import numpy as np
+import torch
 import PIL
 import PIL.ImageOps
 import PIL.ImageEnhance
@@ -10,6 +9,7 @@ import PIL.ImageDraw
 from PIL import Image
 
 _PARAMETER_MAX = 10
+
 
 def AutoContrast(img, **kwarg):
     return PIL.ImageOps.autocontrast(img)
@@ -40,10 +40,10 @@ def Cutout(img, v, max_v, bias=0):
 
 def CutoutAbs(img, v, **kwarg):
     w, h = img.size
-    x0 = np.random.uniform(0, w)
-    y0 = np.random.uniform(0, h)
-    x0 = int(max(0, x0 - v / 2.))
-    y0 = int(max(0, y0 - v / 2.))
+    x0 = _sample_uniform(a=0, b=w)
+    y0 = _sample_uniform(a=0, b=h)
+    x0 = int(max(0, x0 - v / 2.0))
+    y0 = int(max(0, y0 - v / 2.0))
     x1 = int(min(w, x0 + v))
     y1 = int(min(h, y0 + v))
     xy = (x0, y0, x1, y1)
@@ -73,7 +73,7 @@ def Posterize(img, v, max_v, bias=0):
 
 def Rotate(img, v, max_v, bias=0):
     v = _int_parameter(v, max_v) + bias
-    if random.random() < 0.5:
+    if _sample_uniform(a=0, b=1) < 0.5:
         v = -v
     return img.rotate(v)
 
@@ -85,14 +85,14 @@ def Sharpness(img, v, max_v, bias=0):
 
 def ShearX(img, v, max_v, bias=0):
     v = _float_parameter(v, max_v) + bias
-    if random.random() < 0.5:
+    if _sample_uniform(a=0, b=1) < 0.5:
         v = -v
     return img.transform(img.size, PIL.Image.AFFINE, (1, v, 0, 0, 1, 0))
 
 
 def ShearY(img, v, max_v, bias=0):
     v = _float_parameter(v, max_v) + bias
-    if random.random() < 0.5:
+    if _sample_uniform(a=0, b=1) < 0.5:
         v = -v
     return img.transform(img.size, PIL.Image.AFFINE, (1, 0, 0, v, 1, 0))
 
@@ -104,7 +104,7 @@ def Solarize(img, v, max_v, bias=0):
 
 def SolarizeAdd(img, v, max_v, bias=0, threshold=128):
     v = _int_parameter(v, max_v) + bias
-    if random.random() < 0.5:
+    if _sample_uniform(a=0, b=1) < 0.5:
         v = -v
     img_np = np.array(img).astype(np.int)
     img_np = img_np + v
@@ -116,7 +116,7 @@ def SolarizeAdd(img, v, max_v, bias=0, threshold=128):
 
 def TranslateX(img, v, max_v, bias=0):
     v = _float_parameter(v, max_v) + bias
-    if random.random() < 0.5:
+    if _sample_uniform(a=0, b=1) < 0.5:
         v = -v
     v = int(v * img.size[0])
     return img.transform(img.size, PIL.Image.AFFINE, (1, 0, v, 0, 1, 0))
@@ -124,10 +124,14 @@ def TranslateX(img, v, max_v, bias=0):
 
 def TranslateY(img, v, max_v, bias=0):
     v = _float_parameter(v, max_v) + bias
-    if random.random() < 0.5:
+    if _sample_uniform(a=0, b=1) < 0.5:
         v = -v
     v = int(v * img.size[1])
     return img.transform(img.size, PIL.Image.AFFINE, (1, 0, 0, 0, 1, v))
+
+
+def _sample_uniform(a, b):
+    return torch.FloatTensor(a, b).uniform_().item()
 
 
 def _float_parameter(v, max_v):
@@ -141,18 +145,24 @@ def _int_parameter(v, max_v):
 class RandAugment(object):
     def __init__(self, n, m, augmentation_pool):
         assert n >= 1, "RandAugment N has to be a value greater than 1."
-        assert 1 <= m <= 10, "RandAugment M has to be a value between 1 and 10 inclusive."
+        assert (
+            1 <= m <= 10
+        ), "RandAugment M has to be a value between 1 and 10 inclusive."
         self.n = n
         self.m = m
         self.augmentation_pool = augmentation_pool
 
     def __call__(self, img):
-        ops = random.choices(self.augmentation_pool, k=self.n)
+        # Choose n augmentations with replacement. Equivalent to random.choices(self.augmentation_pool, k=self.n).
+        ops = [
+            self.augmentation_pool[torch.randint(len(self.augmentation_pool), (1,))]
+            for _ in range(self.n)
+        ]
         for op, max_v, bias in ops:
-            v = np.random.randint(1, self.m)
-            if random.random() < 0.5:
+            v = torch.randint(low=1, high=self.m, size=(1,)).item()
+            if _sample_uniform(a=0, b=1) < 0.5:
                 img = op(img, v=v, max_v=max_v, bias=bias)
-        img = CutoutAbs(img, int(32*0.5))
+        img = CutoutAbs(img, int(32 * 0.5))
         return img
 
 
