@@ -146,7 +146,7 @@ class RandAugment(object):
     def __init__(self, n, m, augmentation_pool):
         assert n >= 1, "RandAugment N has to be a value greater than 1."
         assert (
-            1 <= m <= 10
+            m >= 1 and m <= 10
         ), "RandAugment M has to be a value between 1 and 10 inclusive."
         self.n = n
         self.m = m
