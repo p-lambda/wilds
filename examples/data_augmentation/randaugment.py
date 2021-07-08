@@ -131,7 +131,7 @@ def TranslateY(img, v, max_v, bias=0):
 
 
 def _sample_uniform(a, b):
-    return torch.FloatTensor(a, b).uniform_().item()
+    return torch.FloatTensor(1).uniform_(a, b).item()
 
 
 def _float_parameter(v, max_v):
