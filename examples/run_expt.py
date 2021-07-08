@@ -195,7 +195,9 @@ def main():
         )
 
         if config.algorithm == "FixMatch":
-            unlabeled_train_transform = initialize_transform("fix_match", config, config.dataset)
+            unlabeled_train_transform = initialize_transform(
+                config.train_transform, config, full_unlabeled_dataset, additional_transform_name="fix_match"
+            )
         else:
             unlabeled_train_transform = train_transform
 
