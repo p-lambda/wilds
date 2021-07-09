@@ -106,6 +106,10 @@ def evaluate_benchmark(
             return ["r_wg", "r_all"]
         elif "py150" == dataset_name:
             return ["acc", "Acc (Overall)"]
+        elif "globalwheat" == dataset_name:
+            return ["detection_acc_avg_dom"]
+        elif "rxrx1" == dataset_name:
+            return ["acc_avg", "acc_wg"]
         else:
             raise ValueError(f"Invalid dataset: {dataset_name}")
 
