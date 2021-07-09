@@ -25,6 +25,11 @@ def initialize_transform(
     if transform_name == "image_base":
         normalize = True
         transform_steps = get_image_base_transform_steps(config, dataset)
+    elif transform_name == "image_resize":
+        normalize = True
+        transform_steps = get_image_resize_transform_steps(
+            config, dataset
+        )
     elif transform_name == "image_resize_and_center_crop":
         normalize = True
         transform_steps = get_image_resize_and_center_crop_transform_steps(
@@ -116,16 +121,26 @@ def get_image_resize_and_center_crop_transform_steps(config, dataset) -> List:
     """
     Resizes the image to a slightly larger square then crops the center.
     """
+    transform_steps = get_image_resize_transform_steps(config, dataset)
+    target_resolution = _get_target_resolution(config, dataset)
+    transform_steps.append(
+        transforms.CenterCrop(target_resolution),
+    )
+    return transform_steps
+
+
+def get_image_resize_transform_steps(config, dataset) -> List:
+    """
+    Resizes the image to a slightly larger square.
+    """
     assert dataset.original_resolution is not None
     assert config.resize_scale is not None
 
     scaled_resolution = tuple(
         int(res * config.resize_scale) for res in dataset.original_resolution
     )
-    target_resolution = _get_target_resolution(config, dataset)
     return [
-        transforms.Resize(scaled_resolution),
-        transforms.CenterCrop(target_resolution),
+        transforms.Resize(scaled_resolution)
     ]
 
 
@@ -156,8 +171,9 @@ def add_fix_match_transform(config, dataset, base_transform_steps, normalization
             transforms.RandomHorizontalFlip(),
             transforms.RandomCrop(
                 size=target_resolution,
-                padding=int(target_resolution[0] * 0.125),
-                padding_mode="reflect",
+                # TODO: double check the importance of this. There are different implementations of this. -Tony
+                # padding=int(target_resolution[0] * 0.125),
+                # padding_mode="reflect",
             ),
             transforms.ToTensor(),
             normalization,
@@ -170,8 +186,8 @@ def add_fix_match_transform(config, dataset, base_transform_steps, normalization
             transforms.RandomHorizontalFlip(),
             transforms.RandomCrop(
                 size=target_resolution,
-                padding=int(target_resolution[0] * 0.125),
-                padding_mode="reflect",
+                # padding=int(target_resolution[0] * 0.125),
+                # padding_mode="reflect",
             ),
             RandAugment(
                 n=config.randaugment_n,
