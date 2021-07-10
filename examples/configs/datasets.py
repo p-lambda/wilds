@@ -121,7 +121,7 @@ dataset_defaults = {
         'scheduler_kwargs': {'milestones':[3,6], 'gamma': 0.1}, # used to be 6, 9, with 12 epochs
         # 'scheduler': 'linear_schedule_with_warmup',
         # 'scheduler_kwargs': {'num_warmup_steps': 800}, # about 160 minibatches per epoch
-        'batch_size': 256,
+        'batch_size': 128,
         'lr': 1e-3,
         'weight_decay': 1e-4,
         'n_epochs': 12,
