@@ -11,6 +11,7 @@ benchmark_datasets = [
     'fmow',
     'py150',
     'rxrx1',
+    'globalwheat',
 ]
 
 additional_datasets = [
