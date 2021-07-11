@@ -6,14 +6,12 @@ from ast import literal_eval
 from operator import itemgetter
 from typing import Dict, List
 from urllib.parse import urlparse
-from urllib.parse import urlparse
 
 import numpy as np
 import torch
 
 from wilds import benchmark_datasets
 from wilds import get_dataset
-from wilds.datasets.globalwheat_dataset import GlobalWheatDataset
 from wilds.datasets.wilds_dataset import WILDSDataset, WILDSSubset
 
 
