@@ -28,6 +28,40 @@ CIVIL_COMMENTS_ALL_ACCURACY_METRICS = [
     "acc_y:1_white:1",
 ]
 
+WHEAT_ALL_ACCURACY_METRICS = [
+    "detection_acc_avg_dom",
+    "detection_acc_session:ETHZ_1",
+    "detection_acc_session:Inrae_1",
+    "detection_acc_session:NMBU_1",
+    "detection_acc_session:NMBU_2",
+    "detection_acc_session:Rres_1",
+    "detection_acc_session:NAU_1",
+    "detection_acc_session:NAU_2",
+    "detection_acc_session:NAU_3",
+    "detection_acc_session:ARC_1",
+    "detection_acc_session:UQ_1",
+    "detection_acc_session:UQ_2",
+    "detection_acc_session:UQ_3",
+    "detection_acc_session:UQ_4",
+    "detection_acc_session:UQ_5",
+    "detection_acc_session:UQ_6",
+    "detection_acc_session:UQ_7",
+    "detection_acc_session:UQ_8",
+    "detection_acc_session:UQ_9",
+    "detection_acc_session:UQ_10",
+    "detection_acc_session:UQ_11",
+    "detection_acc_session:Terraref_1",
+    "detection_acc_session:Terraref_2",
+    "detection_acc_session:KSU_1",
+    "detection_acc_session:KSU_2",
+    "detection_acc_session:KSU_3",
+    "detection_acc_session:KSU_4",
+    "detection_acc_session:CIMMYT_1",
+    "detection_acc_session:CIMMYT_2",
+    "detection_acc_session:CIMMYT_3",
+    "detection_acc_session:Usask_1",
+]
+
 FMOW_ALL_ACCURACY_METRICS = [
     "acc_avg",
     "acc_worst_region",  # Keep "acc_worst_region" as the first element of the list!
@@ -166,7 +200,7 @@ def get_metrics(dataset):
     elif "fmow" in dataset:
         return FMOW_ALL_ACCURACY_METRICS
     elif "globalwheat" in dataset:
-        return ["detection_acc_avg_dom"]
+        return WHEAT_ALL_ACCURACY_METRICS
     elif "iwildcam" in dataset:
         return ["F1-macro_all", "acc_avg"]
     elif "ogb-molpcba" in dataset:
