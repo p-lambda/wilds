@@ -4,7 +4,8 @@ import os
 import urllib.request
 from ast import literal_eval
 from operator import itemgetter
-from typing import Any, Dict, List
+from typing import Dict, List
+from urllib.parse import urlparse
 from urllib.parse import urlparse
 
 import numpy as np
@@ -142,10 +143,17 @@ def evaluate_benchmark(
                 f"Processing split={split}, replicate={replicate}, predictions_file={predictions_file}..."
             )
             full_path = os.path.join(predictions_dir, predictions_file)
-            predicted_labels: List[Any] = get_predictions(full_path)
-            metric_results: Dict[str, float] = evaluate_replicate(
-                wilds_dataset, split, predicted_labels
-            )
+
+            # GlobalWheat's predictions are a list of dictionaries, so it has to be handle separately
+            if dataset_name == "wheat":
+                metric_results: Dict[str, float] = evaluate_replicate_for_globalwheat(
+                    wilds_dataset, split, full_path
+                )
+            else:
+                predicted_labels: torch.Tensor = get_predictions(full_path)
+                metric_results = evaluate_replicate(
+                    wilds_dataset, split, predicted_labels
+                )
             for metric in metrics:
                 replicates_results[split][metric].append(metric_results[metric])
 
@@ -186,20 +194,23 @@ def evaluate_replicate(
     # Dataset will only be downloaded if it does not exist
     subset: WILDSSubset = dataset.get_subset(split)
     metadata: torch.Tensor = subset.metadata_array
-
-    if type(dataset) == GlobalWheatDataset:
-        predicted_labels = predicted_labels
-        true_labels = list(itemgetter(*subset.indices)(subset.dataset.y_array))
-    else:
-        true_labels: torch.Tensor = subset.y_array
-        if predicted_labels.shape != true_labels.shape:
-            predicted_labels.unsqueeze_(-1)
-
-    results_dict, results_str = dataset.eval(predicted_labels, true_labels, metadata)
-    return results_dict
+    true_labels = subset.y_array
+    if predicted_labels.shape != true_labels.shape:
+        predicted_labels.unsqueeze_(-1)
+    return dataset.eval(predicted_labels, true_labels, metadata)[0]
 
 
-def get_predictions(path: str) -> torch.tensor:
+def evaluate_replicate_for_globalwheat(
+    dataset: WILDSDataset, split: str, path_to_predictions: str
+) -> Dict[str, float]:
+    predicted_labels = torch.load(path_to_predictions)
+    subset: WILDSSubset = dataset.get_subset(split)
+    metadata: torch.Tensor = subset.metadata_array
+    true_labels = list(itemgetter(*subset.indices)(subset.dataset.y_array))
+    return dataset.eval(predicted_labels, true_labels, metadata)[0]
+
+
+def get_predictions(path: str) -> torch.Tensor:
     """
     Extract out the predictions from the file at path.
 
@@ -207,11 +218,9 @@ def get_predictions(path: str) -> torch.tensor:
         path (str): Path to the file that has the predicted labels. Can be a URL.
 
     Return:
-        List of predictions.
+        Tensor representing predictions
     """
-    if path.endswith(".pth"):
-        return torch.load(path)
-    elif is_path_url(path):
+    if is_path_url(path):
         data = urllib.request.urlopen(path)
     else:
         file = open(path, mode="r")
