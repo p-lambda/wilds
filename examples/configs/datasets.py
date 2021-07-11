@@ -118,9 +118,7 @@ dataset_defaults = {
         'val_metric_decreasing': False,
         'optimizer': 'Adam',
         'scheduler': 'MultiStepLR',
-        'scheduler_kwargs': {'milestones':[3,6], 'gamma': 0.1}, # used to be 6, 9, with 12 epochs
-        # 'scheduler': 'linear_schedule_with_warmup',
-        # 'scheduler_kwargs': {'num_warmup_steps': 800}, # about 160 minibatches per epoch
+        'scheduler_kwargs': {'milestones':[3,6], 'gamma': 0.1}, 
         'batch_size': 128,
         'lr': 1e-3,
         'weight_decay': 1e-4,

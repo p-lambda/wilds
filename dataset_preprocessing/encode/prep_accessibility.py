@@ -120,7 +120,6 @@ def dnase_normalize(
     bw_output = pyBigWig.open(data_pfx + 'DNase.{}.{}.bigwig'.format(
         input_bw_celltype, out_fname), 'w')
     bw_output.addHeader(chromsizes_list)
-    # bw_output.addHeader(list(zip(chr_all , num_bp)), maxZooms=0) # zip two turples
 
     for the_chr in chrom_sizes:
         signal = np.zeros(chrom_sizes[the_chr])

@@ -59,7 +59,7 @@ def write_label_bigwigs(
         sep='\t', header=None, index_col=None, names=['chr', 'start', 'stop', 'y', 'celltype']
     )
 
-    # Write the binned labels to bigwig files - genome-wide labels
+    # Write the binned labels to bigwig files,  genome-wide labels
     chromsizes_list = [(k, v) for k, v in chrom_sizes.items()]
     for ct in celltypes:
         ct_labels_bw_path = _data_dir + "labels/{}/{}_{}.bigwig".format(
@@ -134,13 +134,12 @@ def write_metadata_products(
 
 
 if __name__ == '__main__':
-    tf_name = 'JUND'
     tfs_to_celltypes = {
-        'MAX': ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562', 'A549', 'GM12878', 'liver'],
-        'REST': ['H1-hESC', 'HeLa-S3', 'HepG2', 'MCF-7', 'Panc1', 'liver'],
+        'MAX': ['H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562', 'A549', 'GM12878', 'liver'], 
         'JUND': ['HCT116', 'HeLa-S3', 'HepG2', 'K562', 'MCF-7', 'liver']
     }
-    all_celltypes = tfs_to_celltypes[tf_name]
-    write_label_bigwigs([x for x in all_celltypes if x != 'liver'], tf_name=tf_name)
-    write_label_bigwigs(['liver'], train_suffix='train_wc.labels.tsv.gz', val_suffix='test.labels.tsv.gz', tf_name=tf_name)
-    write_metadata_products(all_celltypes, tf_name=tf_name)
+    for tf_name in tfs_to_celltypes:
+        all_celltypes = tfs_to_celltypes[tf_name]
+        write_label_bigwigs([x for x in all_celltypes if x != 'liver'], tf_name=tf_name)
+        write_label_bigwigs(['liver'], train_suffix='train_wc.labels.tsv.gz', val_suffix='test.labels.tsv.gz', tf_name=tf_name)
+        write_metadata_products(all_celltypes, tf_name=tf_name)
