@@ -113,7 +113,7 @@ def evaluate_benchmark(
         elif "globalwheat" == dataset_name:
             return ["detection_acc_avg_dom"]
         elif "rxrx1" == dataset_name:
-            return ["acc_avg", "acc_wg"]
+            return ["acc_avg"]
         else:
             raise ValueError(f"Invalid dataset: {dataset_name}")
 
@@ -144,7 +144,7 @@ def evaluate_benchmark(
             )
             full_path = os.path.join(predictions_dir, predictions_file)
 
-            # GlobalWheat's predictions are a list of dictionaries, so it has to be handle separately
+            # GlobalWheat's predictions are a list of dictionaries, so it has to be handled separately
             if dataset_name == "globalwheat":
                 metric_results: Dict[str, float] = evaluate_replicate_for_globalwheat(
                     wilds_dataset, split, full_path
