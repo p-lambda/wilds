@@ -301,10 +301,7 @@ class EncodeDataset(WILDSDataset):
         self._y_array = torch.tensor(np.load(
             self._data_dir + '/labels/{}/metadata_y.npy'.format(self._transcription_factor)))
 
-        # ~10% of the dataset has ambiguous labels
-        # i.e., we can't tell if there is a binding event or not.
-        # This typically happens at the flanking regions of peaks.
-        # For our purposes, we will ignore these ambiguous labels during training and eval.
+        # ~10% of the dataset has ambiguous labels, i.e., we can't tell if there is a binding event or not. This typically happens at the flanking regions of peaks. For our purposes, we will ignore these ambiguous labels during training and eval.
         self.y_array[self.y_array == 0.5] = float('nan')
 
         self._split_array = -1 * np.ones(self._metadata_df.shape[0]).astype(int)
@@ -396,7 +393,8 @@ class EncodeDataset(WILDSDataset):
         self._metric = MultiTaskAveragePrecision()
 
         super().__init__(root_dir, download, split_scheme)
-
+    
+    
     def get_input(self, idx, window_size=12800):
         """
         Returns x for a given idx in metadata_array, which has been filtered to only take windows with the desired stride.
@@ -417,7 +415,8 @@ class EncodeDataset(WILDSDataset):
             [seq_this,
              dnase_this]
         ).T)
-
+    
+    
     def eval(self, y_pred, y_true, metadata):
         return self.standard_group_eval(
             self._metric,
