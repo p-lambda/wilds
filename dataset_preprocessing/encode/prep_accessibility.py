@@ -71,17 +71,11 @@ def anchor(input_data, sample, ref): # input 1d array
     degree = 1 # degree of the fitting polynomial
     num = 10 # number of positions for extrapolate
     f1 = np.poly1d(np.polyfit(sample[-num:],ref[-num:],degree))
-#    f2=np.poly1d(np.polyfit(sample[:num],ref[:num],degree))
     output[input_data > sample[-1]] = f1(input_data[input_data > sample[-1]])
-#    output[input_data<sample[0]]=f2(input_data[input_data<sample[0]])
     return output
 
 
-def wrap_anchor(
-    signal,
-    sample,
-    ref
-):
+def wrap_anchor(signal, sample, ref):
     ## 1.format as bigwig first
     x = signal
     z = np.concatenate(([0],x,[0])) # pad two zeroes
@@ -133,30 +127,6 @@ def dnase_normalize(
         print(input_bw_celltype, the_chr, time.time() - itime)
 
     bw_output.close()
-
-def generate_accessibility_archives(input_dir='dnase_bigwigs', output_dir='codalab_archive'):
-    dnases = {}
-    celltypes = ['A549', 'GM12878', 'H1-hESC', 'HCT116', 'HeLa-S3', 'HepG2', 'K562']
-
-    for ctype in celltypes:
-        itime = time.time()
-        bw = pyBigWig.open("{}/DNASE.{}.fc.signal.bigwig".format(input_dir, ctype))
-        chromsizes = bw.chroms()
-        dn_dict = {}
-        for chrom in chromsizes: #chr_IDs:
-            x = bw.values(chrom, 0, chromsizes[chrom], numpy=True)
-            # half-precision makes things significantly smaller (less time to load)
-            dn_dict[chrom] = np.nan_to_num(x).astype(np.float16)
-            print("{}, {}. Time: {}".format(ctype, chrom, time.time() - itime))
-        dnases[ctype] = dn_dict
-
-    for ctype in dnases:
-        itime = time.time()
-        dn_dict = dnases[ctype]
-
-        # Save as npz archive
-        np.savez_compressed('{}/{}_dnase'.format(output_dir, ctype), **dn_dict)
-        print("Saving npz archive for celltype {}. Time: {}".format(ctype, time.time() - itime))
 
 
 if __name__ == '__main__':
