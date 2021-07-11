@@ -40,8 +40,12 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm DANN --random --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_dann_tune
     
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --random --unlabeled-split val_unlabeled
+    
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm DANN --random --coarse --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_dann_coarse_tune
+    
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0xdc42650973ef4c4e9db3ed356de876ee --datasets amazon --experiment amazon_dann_coarse_tune
     
     python reproducibility/codalab/reproduce.py --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --repair
 
@@ -283,7 +287,7 @@ class CodaLabReproducibility:
                     dependencies[unlabeled_dataset_fullname] = unlabeled_dataset_uuid
 
                 self._run_experiment(
-                    name=f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}_tune",
+                    name=f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}_{unlabeled_split.replace('_', '')}_tune",
                     description=f"{str(hyperparameter_config)}",
                     dependencies=dependencies,
                     command=self._construct_command(
