@@ -145,7 +145,7 @@ def evaluate_benchmark(
             full_path = os.path.join(predictions_dir, predictions_file)
 
             # GlobalWheat's predictions are a list of dictionaries, so it has to be handle separately
-            if dataset_name == "wheat":
+            if dataset_name == "globalwheat":
                 metric_results: Dict[str, float] = evaluate_replicate_for_globalwheat(
                     wilds_dataset, split, full_path
                 )
