@@ -14,11 +14,13 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import wilds
 from wilds.common.data_loaders import get_train_loader, get_eval_loader
 from wilds.common.grouper import CombinatorialGrouper
+from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSPseudolabeledSubset
 
 from utils import set_seed, Logger, BatchLogger, log_config, ParseKwargs, load, initialize_wandb, log_group_data, parse_bool, get_model_prefix
-from train import train, evaluate
-from algorithms.initializer import initialize_algorithm
+from train import train, evaluate, infer_predictions
+from algorithms.initializer import initialize_algorithm, infer_d_out
 from transforms import initialize_transform
+from models.initializer import initialize_model
 from configs.utils import populate_defaults
 import configs.supported as supported
 
@@ -61,6 +63,8 @@ def main():
     parser.add_argument('--model', choices=supported.models)
     parser.add_argument('--model_kwargs', nargs='*', action=ParseKwargs, default={},
         help='keyword arguments for model initialization passed as key1=value1 key2=value2')
+    parser.add_argument('--teacher_model_path', type=str, help='Path to teacher model weights. If this is defined, pseudolabels will first be computed for unlabeled data before anything else runs.')
+    parser.add_argument('--dropout_rate', type=float)
 
     # Transforms
     parser.add_argument('--train_transform', choices=supported.transforms)
@@ -177,9 +181,9 @@ def main():
         dataset=full_dataset
     )
 
+    # Configure unlabeled datasets
     unlabeled_dataset = None
     if config.unlabeled_split is not None:
-        # Unlabeled data
         split = config.unlabeled_split
         full_unlabeled_dataset = wilds.get_dataset(
             dataset=config.dataset,
@@ -195,16 +199,46 @@ def main():
         )
 
         if config.algorithm == "FixMatch":
+            # For FixMatch, we need our loader to return batches in the form ((x_weak, x_strong), m)
+            # We do this by initializing a special transform function
             unlabeled_train_transform = initialize_transform(
                 config.train_transform, config, full_unlabeled_dataset, additional_transform_name="fixmatch"
             )
         else:
             unlabeled_train_transform = train_transform
+        
+        if config.algorithm == "noisy_student": 
+            # For Noisy Student, we need to first generate pseudolabels using the teacher
+            # and then prep the unlabeled dataset to return these pseudolabels in __getitem__
+            assert config.teacher_model_path is not None
+            d_out = infer_d_out(full_dataset)
+            teacher_model = initialize_model(config, d_out).to(config.device)
+            load(teacher_model, config.teacher_model_path, device=config.device)
+            # Infer teacher outputs on unlabeled examples in sequential order
+            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=train_transform)
+            sequential_loader = get_eval_loader(
+                loader=config.eval_loader,
+                dataset=unlabeled_split_dataset,
+                grouper=train_grouper,
+                batch_size=config.unlabeled_batch_size,
+                **config.loader_kwargs
+            )
+            teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
+            teacher_outputs = teacher_outputs.to(torch.device("cpu"))
+            teacher_model = teacher_model.to(torch.device("cpu"))
+            strong_transform = train_transform # TODO: replace with randaugment
+            unlabeled_split_dataset = WILDSPseudolabeledSubset(
+                reference_subset=unlabeled_split_dataset,
+                pseudolabels=teacher_outputs, 
+                transform=strong_transform
+            )
+        else:
+            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=train_transform)
 
         unlabeled_dataset = {
             'split': split,
             'name': full_unlabeled_dataset.split_names[split],
-            'dataset': full_unlabeled_dataset.get_subset(split, transform=unlabeled_train_transform)
+            'dataset': unlabeled_split_dataset
         }
         unlabeled_dataset['loader'] = get_train_loader(
             loader=config.train_loader,
@@ -222,6 +256,7 @@ def main():
             groupby_fields=config.groupby_fields
         )
 
+    # Configure labeled datasets
     datasets = defaultdict(dict)
     for split in full_dataset.split_dict.keys():
         if split=='train':

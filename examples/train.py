@@ -88,6 +88,14 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
 
 
 def train(algorithm, datasets, general_logger, config, epoch_offset, best_val_metric, unlabeled_dataset=None):
+    """
+    Train loop that, each epoch:
+        - Steps an algorithm on the datasets['train'] split and the unlabeled split
+        - Evaluates the algorithm on the datasets['val'] split
+        - Saves models / preds with frequency according to the configs
+        - Evaluates on any other specified splits in the configs
+    Assumes that the datasets dict contains labeled data.
+    """
     for epoch in range(epoch_offset, config.n_epochs):
         general_logger.write('\nEpoch [%d]:\n' % epoch)
 
@@ -126,6 +134,10 @@ def train(algorithm, datasets, general_logger, config, epoch_offset, best_val_me
 
 
 def evaluate(algorithm, datasets, epoch, general_logger, config):
+    """
+    Eval loop that computes metrics / save preds for each split in the config.
+    Assumes that the datasets dict contains labeled data.
+    """
     algorithm.eval()
     for split, dataset in datasets.items():
         if (not config.evaluate_all_splits) and (split not in config.eval_splits):
@@ -157,6 +169,23 @@ def evaluate(algorithm, datasets, epoch, general_logger, config):
         if split != 'train':
             save_pred_if_needed(y_pred, dataset, epoch, config, is_best=False, force_save=True)
 
+def infer_predictions(model, loader, config):
+    """
+    Simple inference loop that performs inference using a model (not algorithm) and returns model outputs.
+    Compatible with both labeled and unlabeled WILDS datasets.
+    """
+    model.eval()
+    y_pred = []
+    iterator = tqdm(loader) if config.progress_bar else loader
+    for batch in iterator:
+        x = batch[0]
+        x = x.to(config.device)
+        with torch.no_grad(): 
+            output = model(x)
+            if config.process_outputs_function is not None:
+                output = process_outputs_functions[config.process_outputs_function](output)
+        y_pred.append(output.clone().detach())
+    return torch.cat(y_pred, 0)
 
 def log_results(algorithm, dataset, general_logger, epoch, batch_idx):
     if algorithm.has_log:
