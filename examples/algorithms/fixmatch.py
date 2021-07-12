@@ -81,22 +81,21 @@ class FixMatch(SingleModelAlgorithm):
         # Unlabeled examples
         if unlabeled_batch is not None:
             x, metadata = unlabeled_batch
+            x_weak, x_strong = x
+            x_weak = x_weak.to(self.device)
+            x_strong = x_strong.to(self.device)
+
             g = self.grouper.metadata_to_group(metadata).to(self.device)
             results['unlabeled_metadata'] = metadata
             results['unlabeled_g'] = g
 
-            # TODO: augmentations
             with torch.no_grad():
-                x_weak = x
-                x_weak = x_weak.to(self.device)
                 outputs = self.model(x_weak)
                 mask = torch.max(F.softmax(outputs, -1), -1)[0] >= self.confidence_threshold
                 pseudolabels = self.process_outputs_function(outputs)
                 results['unlabeled_weak_y_pseudo'] = pseudolabels
                 results['unlabeled_mask'] = mask
 
-            x_strong = x
-            x_strong = x_strong.to(self.device)
             outputs = self.model(x_strong)
             results['unlabeled_strong_y_pred'] = outputs
         return results
@@ -105,7 +104,7 @@ class FixMatch(SingleModelAlgorithm):
         # Labeled loss
         labeled_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
         # Pseudolabeled loss
-        if 'unlabeled_weak_y_pseudo' in results: 
+        if 'unlabeled_weak_y_pseudo' in results:
             mask = results['unlabeled_mask']
             unlabeled_loss = self.loss.compute(
                 results['unlabeled_strong_y_pred'][mask], 

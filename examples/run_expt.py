@@ -68,6 +68,9 @@ def main():
     parser.add_argument('--target_resolution', nargs='+', type=int, help='The input resolution that images will be resized to before being passed into the model. For example, use --target_resolution 224 224 for a standard ResNet.')
     parser.add_argument('--resize_scale', type=float)
     parser.add_argument('--max_token_length', type=int)
+    parser.add_argument('--randaugment_n', type=int, help='N parameter of RandAugment - the number of transformations to apply.')
+    parser.add_argument('--randaugment_m', type=int,
+        help='M parameter of RandAugment - the magnitude of the transformation. Values range from 1 to 10, where 10 indicates the maximum scale for a transformation.')
 
     # Objective
     parser.add_argument('--loss_function', choices = supported.losses)
@@ -166,11 +169,13 @@ def main():
     train_transform = initialize_transform(
         transform_name=config.train_transform,
         config=config,
-        dataset=full_dataset)
+        dataset=full_dataset,
+    )
     eval_transform = initialize_transform(
         transform_name=config.eval_transform,
         config=config,
-        dataset=full_dataset)
+        dataset=full_dataset
+    )
 
     unlabeled_dataset = None
     if config.unlabeled_split is not None:
@@ -188,10 +193,18 @@ def main():
             dataset=[full_dataset, full_unlabeled_dataset],
             groupby_fields=config.groupby_fields
         )
+
+        if config.algorithm == "FixMatch":
+            unlabeled_train_transform = initialize_transform(
+                config.train_transform, config, full_unlabeled_dataset, additional_transform_name="fix_match"
+            )
+        else:
+            unlabeled_train_transform = train_transform
+
         unlabeled_dataset = {
             'split': split,
             'name': full_unlabeled_dataset.split_names[split],
-            'dataset': full_unlabeled_dataset.get_subset(split, transform=train_transform)
+            'dataset': full_unlabeled_dataset.get_subset(split, transform=unlabeled_train_transform)
         }
         unlabeled_dataset['loader'] = get_train_loader(
             loader=config.train_loader,
@@ -281,7 +294,7 @@ def main():
     )
 
     # Load pretrained weights if specified (this can be overriden by resume)
-    if os.path.exists(config.pretrained_model_path):
+    if config.pretrained_model_path is not None and os.path.exists(config.pretrained_model_path):
         # The full model name is expected to be specified, so just load.
         try:
             prev_epoch, best_val_metric = load(algorithm, config.pretrained_model_path, device=config.device)

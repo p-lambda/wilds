@@ -34,7 +34,7 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
     loss = losses[config.loss_function]
     metric = algo_log_metrics[config.algo_log_metric]
 
-    if config.algorithm=='ERM':
+    if config.algorithm == 'ERM':
         algorithm = ERM(
             config=config,
             d_out=d_out,
@@ -53,7 +53,7 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
             metric=metric,
             n_train_steps=n_train_steps,
             is_group_in_train=is_group_in_train)
-    elif config.algorithm=='deepCORAL':
+    elif config.algorithm == 'deepCORAL':
         algorithm = DeepCORAL(
             config=config,
             d_out=d_out,
@@ -61,7 +61,7 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
             loss=loss,
             metric=metric,
             n_train_steps=n_train_steps)
-    elif config.algorithm=='IRM':
+    elif config.algorithm == 'IRM':
         algorithm = IRM(
             config=config,
             d_out=d_out,
@@ -69,7 +69,7 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
             loss=loss,
             metric=metric,
             n_train_steps=n_train_steps)
-    elif config.algorithm=='DANN':
+    elif config.algorithm == 'DANN':
         if unlabeled_dataset is not None:
             unlabeled_dataset = unlabeled_dataset['dataset']
             metadata_array = torch.cat(
@@ -97,7 +97,7 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
             n_domains = domain_idx,
             group_ids_to_domains=group_ids_to_domains,
         )
-    elif config.algorithm=='fixmatch':
+    elif config.algorithm == 'FixMatch':
         algorithm = FixMatch(
             config=config,
             d_out=d_out,

@@ -32,11 +32,13 @@ algorithm_defaults = {
         'distinct_groups': True,
         'eval_loader': 'standard',
     },
-    'fixmatch': {
+    'FixMatch': {
         'train_loader': 'standard',
         'uniform_over_groups': False,
         'eval_loader': 'standard',
         'fixmatch_lambda': 1,
-        'fixmatch_threshold': 0.7
+        'fixmatch_threshold': 0.7,
+        'randaugment_n': 2,
+        'randaugment_m': 10,
     }
 }
