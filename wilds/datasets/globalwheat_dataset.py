@@ -108,10 +108,13 @@ STAGES = [
 class GlobalWheatDataset(WILDSDataset):
     """
     The GlobalWheat-WILDS wheat head localization dataset.
-    This is a modified version of the original Global Wheat Head Dataset 2021.    
+    This is a modified version of the original Global Wheat Head Dataset 2021.
 
     Supported `split_scheme`:
         - 'official'
+        - 'official_with_subsampled_test'
+        - 'fixed-test'
+        - 'mixed-train'
     Input (x):
         1024 x 1024 RGB images of wheat field canopy starting from anthesis (flowering) to ripening.
     Output (y):
@@ -162,43 +165,68 @@ class GlobalWheatDataset(WILDSDataset):
         self._is_classification = False
         self._y_size = None
         self._n_classes = 1
-
         self._split_scheme = split_scheme
 
-        # Get filenames
+        self._split_dict = {
+            'train': 0,
+            'val': 1,
+            'test': 2,
+        }
+        self._split_names = {
+            'train': 'Train',
+            'val': 'Validation (OOD)',
+            'test':'Test (OOD)',
+        }
+
+        data_dfs = {}
         if split_scheme == "official":
-            train_data_df = pd.read_csv(self.root / f'official_train.csv')
-            val_data_df = pd.read_csv(self.root / f'official_val.csv')
-            test_data_df = pd.read_csv(self.root / f'official_test.csv')
+            data_dfs['train'] = pd.read_csv(self.root / f'official_train.csv')
+            data_dfs['val'] = pd.read_csv(self.root / f'official_val.csv')
+            data_dfs['test'] = pd.read_csv(self.root / f'official_test.csv')
+            data_dfs['id_val'] = pd.read_csv(self.root / f'fixed_train_val.csv')
+            data_dfs['id_test'] = pd.read_csv(self.root / f'fixed_train_test.csv')
+            self._split_dict = {
+                'train': 0,
+                'val': 1,
+                'test': 2,
+                'id_val': 3,
+                'id_test': 4,
+            }
+            self._split_names = {
+                'train': 'Train',
+                'val': 'Validation (OOD)',
+                'test':'Test (OOD)',
+                'id_val': 'Validation (ID)',
+                'id_test': 'Test (ID)'
+            }
 
         elif split_scheme == "official_with_subsampled_test":
-            train_data_df = pd.read_csv(self.root / f'official_train.csv')
-            val_data_df = pd.read_csv(self.root / f'official_val.csv')
-            test_data_df = pd.read_csv(self.root / f'fixed_test_test.csv')
+            data_dfs['train'] = pd.read_csv(self.root / f'official_train.csv')
+            data_dfs['val'] = pd.read_csv(self.root / f'official_val.csv')
+            data_dfs['test'] = pd.read_csv(self.root / f'fixed_test_test.csv')
 
-        elif split_scheme == "in-dist":
-            train_data_df = pd.read_csv(self.root / f'in_dist_train.csv')
-            val_data_df = pd.read_csv(self.root / f'official_val.csv')
-            test_data_df = pd.read_csv(self.root / f'in_dist_test.csv')
+        elif split_scheme == "fixed_test":
+            data_dfs['train'] = pd.read_csv(self.root / f'fixed_test_train.csv')
+            data_dfs['val'] = pd.read_csv(self.root / f'official_val.csv')
+            data_dfs['test'] = pd.read_csv(self.root / f'fixed_test_test.csv')
 
-        elif split_scheme == "fixed-train":
-            train_data_df = pd.read_csv(self.root / f'fixed_train_train.csv')
-            val_data_df = pd.read_csv(self.root / f'fixed_train_val.csv')
-            test_data_df = pd.read_csv(self.root / f'fixed_train_test.csv')
+        elif split_scheme == "mixed_train":
+            data_dfs['train'] = pd.read_csv(self.root / f'mixed_train_train.csv')
+            data_dfs['val'] = pd.read_csv(self.root / f'official_val.csv')
+            data_dfs['test'] = pd.read_csv(self.root / f'mixed_train_test.csv')
 
-        elif split_scheme == "fixed-test":
-            train_data_df = pd.read_csv(self.root / f'fixed_test_train.csv')
-            val_data_df = pd.read_csv(self.root / f'official_val.csv')
-            test_data_df = pd.read_csv(self.root / f'fixed_test_test.csv')
+        else:
+            raise ValueError(f'Split scheme {self.split_scheme} not recognized')
 
         self._image_array = []
         self._split_array, self._y_array, self._metadata_array = [], [], []
 
-        for i, df in enumerate([train_data_df, val_data_df, test_data_df]):
+        for split_name, split_idx in self._split_dict.items():
+            df = data_dfs[split_name]
             self._image_array.extend(list(df['image_name'].values))
             boxes_string = list(df['BoxesString'].values)
             all_boxes = [GlobalWheatDataset._decode_string(box_string) for box_string in boxes_string]
-            self._split_array.extend([i] * len(all_boxes))
+            self._split_array.extend([split_idx] * len(all_boxes))
 
             labels = [{
                 "boxes": torch.stack([
