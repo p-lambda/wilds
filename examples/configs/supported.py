@@ -33,6 +33,6 @@ models = ['resnet18_ms', 'resnet34', 'resnet50', 'resnet101', 'wideresnet50',
          'densenet121', 'bert-base-uncased', 'distilbert-base-uncased',
          'gin-virtual', 'logistic_regression', 'code-gpt-py',
          'efficientnet-b0', 'efficientnet-b1', 'efficientnet-b2', 'efficientnet-b3']
-algorithms = ['ERM', 'groupDRO', 'deepCORAL', 'IRM', 'DANN', 'FixMatch', 'PseudoLabel']
+algorithms = ['ERM', 'groupDRO', 'deepCORAL', 'IRM', 'DANN', 'FixMatch', 'PseudoLabel', 'noisy_student']
 optimizers = ['SGD', 'Adam', 'AdamW']
 schedulers = ['linear_schedule_with_warmup', 'ReduceLROnPlateau', 'StepLR']

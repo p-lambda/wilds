@@ -41,11 +41,15 @@ def initialize_transform(
         _DEFAULT_IMAGE_TENSOR_NORMALIZATION_MEAN,
         _DEFAULT_IMAGE_TENSOR_NORMALIZATION_STD,
     )
-    if additional_transform_name == "fixmatch":
+    if additional_transform_name == "fixmatch": # additionally layer on weak and strong (randaugment)
         transformations = add_fixmatch_transform(
             config, dataset, transform_steps, default_normalization
         )
         transform = MultipleTransforms(transformations)
+    elif additional_transform_name == 'noisy_student': # additionally layer on randaugment
+        transform = add_noisy_student_transform(
+            config, dataset, transform_steps, default_normalization
+        )
     else:
         transform_steps.append(transforms.ToTensor())
         if normalize:
@@ -184,6 +188,27 @@ def add_fixmatch_transform(config, dataset, base_transform_steps, normalization)
     )
     return transforms.Compose(weak_transform_steps), transforms.Compose(strong_transform_steps)
 
+def add_noisy_student_transform(config, dataset, base_transform_steps, normalization):
+    target_resolution = _get_target_resolution(config, dataset)
+    strong_transform_steps = copy.deepcopy(base_transform_steps)
+    strong_transform_steps.extend(
+        [
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomCrop(
+                size=target_resolution,
+                padding=int(target_resolution[0] * 0.125),
+                padding_mode="reflect",
+            ),
+            RandAugment(
+                n=config.randaugment_n,
+                m=config.randaugment_m,
+                augmentation_pool=FIX_MATCH_AUGMENTATION_POOL,
+            ),
+            transforms.ToTensor(),
+            normalization,
+        ]
+    )
+    return transforms.Compose(strong_transform_steps)
 
 def _get_target_resolution(config, dataset):
     if config.target_resolution is not None:

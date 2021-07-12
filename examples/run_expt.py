@@ -204,10 +204,20 @@ def main():
             unlabeled_train_transform = initialize_transform(
                 config.train_transform, config, full_unlabeled_dataset, additional_transform_name="fixmatch"
             )
+        elif config.algorithm == "noisy_student":
+            import pdb 
+            pdb.set_trace()
+            # For FixMatch, we need our loader to return batches in the form ((x_weak, x_strong), m)
+            # We do this by initializing a special transform function
+            unlabeled_train_transform = initialize_transform(
+                config.train_transform, config, full_unlabeled_dataset, additional_transform_name="noisy_student"
+            )
         else:
             unlabeled_train_transform = train_transform
         
         if config.algorithm == "noisy_student": 
+            import pdb 
+            pdb.set_trace()
             # For Noisy Student, we need to first generate pseudolabels using the teacher
             # and then prep the unlabeled dataset to return these pseudolabels in __getitem__
             assert config.teacher_model_path is not None

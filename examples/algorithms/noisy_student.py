@@ -86,7 +86,8 @@ class NoisyStudent(SingleModelAlgorithm):
         return state
         
     def process_batch(self, labeled_batch, unlabeled_batch=None):
-        # TODO: augmentations
+        import pdb 
+        pdb.set_trace()
         # Labeled examples
         x, y_true, metadata = labeled_batch
         x = x.to(self.device)
