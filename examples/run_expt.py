@@ -85,8 +85,8 @@ def main():
     parser.add_argument('--dann_discriminator_lr', type=float)
     parser.add_argument('--irm_lambda', type=float)
     parser.add_argument('--irm_penalty_anneal_iters', type=int)
-    parser.add_argument('--fixmatch_lambda', type=float)
-    parser.add_argument('--fixmatch_threshold', type=float)
+    parser.add_argument('--self_training_lambda', type=float)
+    parser.add_argument('--self_training_threshold', type=float)
     parser.add_argument('--algo_log_metric')
 
     # Model selection
@@ -196,7 +196,7 @@ def main():
 
         if config.algorithm == "FixMatch":
             unlabeled_train_transform = initialize_transform(
-                config.train_transform, config, full_unlabeled_dataset, additional_transform_name="fix_match"
+                config.train_transform, config, full_unlabeled_dataset, additional_transform_name="fixmatch"
             )
         else:
             unlabeled_train_transform = train_transform

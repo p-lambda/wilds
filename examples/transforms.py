@@ -41,8 +41,8 @@ def initialize_transform(
         _DEFAULT_IMAGE_TENSOR_NORMALIZATION_MEAN,
         _DEFAULT_IMAGE_TENSOR_NORMALIZATION_STD,
     )
-    if additional_transform_name == "fix_match":
-        transformations = add_fix_match_transform(
+    if additional_transform_name == "fixmatch":
+        transformations = add_fixmatch_transform(
             config, dataset, transform_steps, default_normalization
         )
         transform = MultipleTransforms(transformations)
@@ -147,7 +147,7 @@ def apply_rgb_transform(transform):
     return transforms.Lambda(lambda x: transform_rgb(x))
 
 
-def add_fix_match_transform(config, dataset, base_transform_steps, normalization):
+def add_fixmatch_transform(config, dataset, base_transform_steps, normalization):
     # Adapted from https://github.com/kekmodel/FixMatch-pytorch
     target_resolution = _get_target_resolution(config, dataset)
     weak_transform_steps = copy.deepcopy(base_transform_steps)
