@@ -151,8 +151,8 @@ class GlobalWheatDataset(WILDSDataset):
     _dataset_name = 'globalwheat'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x03b0584cb00d4ea987aa3269aa2fd2b4/contents/blob/',
-            'compressed_size': 10_286_874_624}
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x443fbcb18eeb4f80b5ea4a9f77795168/contents/blob/',
+            'compressed_size': None}
         }
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
