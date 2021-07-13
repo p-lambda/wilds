@@ -81,3 +81,11 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
     elif dataset == 'encode':
         from wilds.datasets.encode_dataset import EncodeDataset
         return EncodeDataset(version=version, **dataset_kwargs)
+
+    elif dataset == 'rxrx1':
+        from wilds.datasets.rxrx1_dataset import RxRx1Dataset
+        return RxRx1Dataset(version=version, **dataset_kwargs)
+
+    elif dataset == 'globalwheat':
+        from wilds.datasets.globalwheat_dataset import GlobalWheatDataset
+        return GlobalWheatDataset(version=version, **dataset_kwargs)

@@ -10,6 +10,8 @@ benchmark_datasets = [
     'poverty',
     'fmow',
     'py150',
+    'rxrx1',
+    'globalwheat',
 ]
 
 additional_datasets = [

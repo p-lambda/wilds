@@ -1,5 +1,8 @@
 import torch
 import torch.nn as nn
+from torchvision.ops.boxes import box_iou
+from torchvision.models.detection._utils import Matcher
+from torchvision.ops import nms, box_convert
 import numpy as np
 import torch.nn.functional as F
 from wilds.common.metrics.metric import Metric, ElementwiseMetric, MultiTaskMetric
@@ -185,6 +188,81 @@ class PrecisionAtRecall(Metric):
         score = self.score_fn(y_pred)
         predictions = (score > self.threshold)
         return torch.tensor(sklearn.metrics.precision_score(y_true, predictions))
+
+    def worst(self, metrics):
+        return minimum(metrics)
+
+class DummyMetric(Metric):
+    """
+    For testing purposes. This Metric always returns -1.
+    """
+    def __init__(self, prediction_fn=None, name=None):
+        self.prediction_fn = prediction_fn
+        if name is None:
+            name = 'dummy'
+        super().__init__(name=name)
+
+    def _compute(self, y_pred, y_true):
+        return torch.tensor(-1)
+
+    def _compute_group_wise(self, y_pred, y_true, g, n_groups):
+        group_metrics = torch.ones(n_groups, device=g.device) * -1
+        group_counts = get_counts(g, n_groups)
+        worst_group_metric = self.worst(group_metrics)
+        return group_metrics, group_counts, worst_group_metric
+
+    def worst(self, metrics):
+        return minimum(metrics)
+
+class DetectionAccuracy(ElementwiseMetric):
+    """
+    Given a specific Intersection over union threshold,
+    determine the accuracy achieved for a one-class detector
+    """
+    def __init__(self, iou_threshold=0.5, score_threshold=0.5, name=None):
+        self.iou_threshold = iou_threshold
+        self.score_threshold = score_threshold
+        if name is None:
+            name = "detection_acc"
+        super().__init__(name=name)
+
+    def _compute_element_wise(self, y_pred, y_true):
+        batch_results = []
+        for src_boxes, target in zip(y_true, y_pred):
+            target_boxes = target["boxes"]
+            target_scores = target["scores"]
+
+            pred_boxes = target_boxes[target_scores > self.score_threshold]
+            det_accuracy = torch.mean(torch.stack([ self._accuracy(src_boxes["boxes"],pred_boxes,iou_thr) for iou_thr in np.arange(0.5,0.51,0.05)]))
+            batch_results.append(det_accuracy)
+
+        return torch.tensor(batch_results)
+
+    def _accuracy(self, src_boxes,pred_boxes ,  iou_threshold):
+        total_gt = len(src_boxes)
+        total_pred = len(pred_boxes)
+        if total_gt > 0 and total_pred > 0:
+            # Define the matcher and distance matrix based on iou
+            matcher = Matcher(iou_threshold,iou_threshold,allow_low_quality_matches=False)
+            match_quality_matrix = box_iou(src_boxes,pred_boxes)
+            results = matcher(match_quality_matrix)
+            true_positive = torch.count_nonzero(results.unique() != -1)
+            matched_elements = results[results > -1]
+            #in Matcher, a pred element can be matched only twice
+            false_positive = (
+                torch.count_nonzero(results == -1) +
+                (len(matched_elements) - len(matched_elements.unique()))
+            )
+            false_negative = total_gt - true_positive
+            acc = true_positive / ( true_positive + false_positive + false_negative )
+            return true_positive / ( true_positive + false_positive + false_negative )
+        elif total_gt == 0:
+            if total_pred > 0:
+                return torch.tensor(0.)
+            else:
+                return torch.tensor(1.)
+        elif total_gt > 0 and total_pred == 0:
+            return torch.tensor(0.)
 
     def worst(self, metrics):
         return minimum(metrics)

@@ -1,8 +1,15 @@
+import random
+
 import torchvision.transforms as transforms
+import torchvision.transforms.functional as TF
 from transformers import BertTokenizerFast, DistilBertTokenizerFast
 import torch
 
-def initialize_transform(transform_name, config, dataset):
+def initialize_transform(transform_name, config, dataset, is_training):
+    """
+    Transforms should take in a single (x, y)
+    and return (transformed_x, transformed_y).
+    """
     if transform_name is None:
         return None
     elif transform_name=='bert':
@@ -11,10 +18,17 @@ def initialize_transform(transform_name, config, dataset):
         return initialize_image_base_transform(config, dataset)
     elif transform_name=='image_resize_and_center_crop':
         return initialize_image_resize_and_center_crop_transform(config, dataset)
-    elif transform_name=='poverty_train':
-        return initialize_poverty_train_transform()
+    elif transform_name=='poverty':
+        return initialize_poverty_transform(is_training)
+    elif transform_name=='rxrx1':
+        return initialize_rxrx1_transform(is_training)
     else:
         raise ValueError(f"{transform_name} not recognized")
+
+def transform_input_only(input_transform):
+    def transform(x, y):
+        return input_transform(x), y
+    return transform
 
 def initialize_bert_transform(config):
     assert 'bert' in config.model
@@ -41,7 +55,7 @@ def initialize_bert_transform(config):
                 dim=2)
         x = torch.squeeze(x, dim=0) # First shape dim is always 1
         return x
-    return transform
+    return transform_input_only(transform)
 
 def getBertTokenizer(model):
     if model == 'bert-base-uncased':
@@ -65,7 +79,7 @@ def initialize_image_base_transform(config, dataset):
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]
     transform = transforms.Compose(transform_steps)
-    return transform
+    return transform_input_only(transform)
 
 def initialize_image_resize_and_center_crop_transform(config, dataset):
     """
@@ -84,20 +98,54 @@ def initialize_image_resize_and_center_crop_transform(config, dataset):
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
-    return transform
+    return transform_input_only(transform)
 
-def initialize_poverty_train_transform():
-    transforms_ls = [
-        transforms.ToPILImage(),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomVerticalFlip(),
-        transforms.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.1),
-        transforms.ToTensor()]
-    rgb_transform = transforms.Compose(transforms_ls)
+def initialize_poverty_transform(is_training):
+    if is_training:
+        transforms_ls = [
+            transforms.ToPILImage(),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
+            transforms.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.1),
+            transforms.ToTensor()]
+        rgb_transform = transforms.Compose(transforms_ls)
 
-    def transform_rgb(img):
-        # bgr to rgb and back to bgr
-        img[:3] = rgb_transform(img[:3][[2,1,0]])[[2,1,0]]
-        return img
-    transform = transforms.Lambda(lambda x: transform_rgb(x))
-    return transform
+        def transform_rgb(img):
+            # bgr to rgb and back to bgr
+            img[:3] = rgb_transform(img[:3][[2,1,0]])[[2,1,0]]
+            return img
+        transform = transforms.Lambda(lambda x: transform_rgb(x))
+        return transform_input_only(transform)
+    else:
+        return None
+
+def initialize_rxrx1_transform(is_training):
+    def standardize(x: torch.Tensor) -> torch.Tensor:
+        mean = x.mean(dim=(1, 2))
+        std = x.std(dim=(1, 2))
+        std[std == 0.] = 1.
+        return TF.normalize(x, mean, std)
+    t_standardize = transforms.Lambda(lambda x: standardize(x))
+
+    angles = [0, 90, 180, 270]
+    def random_rotation(x: torch.Tensor) -> torch.Tensor:
+        angle = angles[torch.randint(low=0, high=len(angles), size=(1,))]
+        if angle > 0:
+            x = TF.rotate(x, angle)
+        return x
+    t_random_rotation = transforms.Lambda(lambda x: random_rotation(x))
+
+    if is_training:
+        transforms_ls = [
+            t_random_rotation,
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            t_standardize,
+        ]
+    else:
+        transforms_ls = [
+            transforms.ToTensor(),
+            t_standardize,
+        ]
+    transform = transforms.Compose(transforms_ls)
+    return transform_input_only(transform)

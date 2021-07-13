@@ -19,8 +19,11 @@ from transforms import initialize_transform
 from configs.utils import populate_defaults
 import configs.supported as supported
 
+import torch.multiprocessing
+
 def main():
-    ''' set default hyperparams in default_hyperparams.py '''
+
+    ''' to see default hyperparams for each dataset/model, look at configs/ '''
     parser = argparse.ArgumentParser()
 
     # Required arguments
@@ -53,14 +56,15 @@ def main():
         help='keyword arguments for model initialization passed as key1=value1 key2=value2')
 
     # Transforms
-    parser.add_argument('--train_transform', choices=supported.transforms)
-    parser.add_argument('--eval_transform', choices=supported.transforms)
+    parser.add_argument('--transform', choices=supported.transforms)
     parser.add_argument('--target_resolution', nargs='+', type=int, help='The input resolution that images will be resized to before being passed into the model. For example, use --target_resolution 224 224 for a standard ResNet.')
     parser.add_argument('--resize_scale', type=float)
     parser.add_argument('--max_token_length', type=int)
 
     # Objective
     parser.add_argument('--loss_function', choices = supported.losses)
+    parser.add_argument('--loss_kwargs', nargs='*', action=ParseKwargs, default={},
+        help='keyword arguments for loss initialization passed as key1=value1 key2=value2')
 
     # Algorithm
     parser.add_argument('--groupby_fields', nargs='+')
@@ -112,10 +116,16 @@ def main():
     config = parser.parse_args()
     config = populate_defaults(config)
 
-    # set device
+    # For the GlobalWheat detection dataset,
+    # we need to change the multiprocessing strategy or there will be
+    # too many open file descriptors.
+    if config.dataset == 'globalwheat':
+        torch.multiprocessing.set_sharing_strategy('file_system')
+
+    # Set device
     config.device = torch.device("cuda:" + str(config.device)) if torch.cuda.is_available() else torch.device("cpu")
 
-    ## Initialize logs
+    # Initialize logs
     if os.path.exists(config.log_dir) and config.resume:
         resume=True
         mode='a'
@@ -148,14 +158,16 @@ def main():
     # To implement data augmentation (i.e., have different transforms
     # at training time vs. test time), modify these two lines:
     train_transform = initialize_transform(
-        transform_name=config.train_transform,
+        transform_name=config.transform,
         config=config,
-        dataset=full_dataset)
+        dataset=full_dataset,
+        is_training=True)
     eval_transform = initialize_transform(
-        transform_name=config.eval_transform,
+        transform_name=config.transform,
         config=config,
-        dataset=full_dataset)
-        
+        dataset=full_dataset,
+        is_training=False)
+
     train_grouper = CombinatorialGrouper(
         dataset=full_dataset,
         groupby_fields=config.groupby_fields)
@@ -269,12 +281,15 @@ def main():
             epoch = best_epoch
         else:
             epoch = config.eval_epoch
+        if epoch == best_epoch:
+            is_best = True
         evaluate(
             algorithm=algorithm,
             datasets=datasets,
             epoch=epoch,
             general_logger=logger,
-            config=config)
+            config=config,
+            is_best=is_best)
 
     logger.close()
     for split in datasets:
