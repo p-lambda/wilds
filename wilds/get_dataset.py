@@ -78,6 +78,10 @@ def get_dataset(dataset, version=None, **dataset_kwargs):
         from wilds.datasets.sqf_dataset import SQFDataset
         return SQFDataset(version=version, **dataset_kwargs)
 
+    elif dataset == 'encode':
+        from wilds.datasets.encode_dataset import EncodeDataset
+        return EncodeDataset(version=version, **dataset_kwargs)
+
     elif dataset == 'rxrx1':
         from wilds.datasets.rxrx1_dataset import RxRx1Dataset
         return RxRx1Dataset(version=version, **dataset_kwargs)

@@ -113,12 +113,12 @@ def main():
     parser.add_argument('--progress_bar', type=parse_bool, const=True, nargs='?', default=False)
     parser.add_argument('--resume', type=parse_bool, const=True, nargs='?', default=False)
 
-    config = parser.parse_args()    
+    config = parser.parse_args()
     config = populate_defaults(config)
 
     # For the GlobalWheat detection dataset,
     # we need to change the multiprocessing strategy or there will be
-    # too many open file descriptors.    
+    # too many open file descriptors.
     if config.dataset == 'globalwheat':
         torch.multiprocessing.set_sharing_strategy('file_system')
 

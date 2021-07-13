@@ -61,6 +61,52 @@ class MultiTaskAccuracy(MultiTaskMetric):
     def worst(self, metrics):
         return minimum(metrics)
 
+class MultiTaskAveragePrecision(MultiTaskMetric):
+    def __init__(self, prediction_fn=None, name=None, average='macro'):
+        self.prediction_fn = prediction_fn
+        if name is None:
+            name = f'avgprec'
+            if average is not None:
+                name+=f'-{average}'
+        self.average = average
+        super().__init__(name=name)
+
+    def _compute_flattened(self, flattened_y_pred, flattened_y_true):
+        if self.prediction_fn is not None:
+            flattened_y_pred = self.prediction_fn(flattened_y_pred)
+        ytr = np.array(flattened_y_true.squeeze().detach().cpu().numpy() > 0)
+        ypr = flattened_y_pred.squeeze().detach().cpu().numpy()
+        score = sklearn.metrics.average_precision_score(
+            ytr,
+            ypr,
+            average=self.average
+        )
+        to_ret = torch.tensor(score).to(flattened_y_pred.device)
+        return to_ret
+
+    def _compute_group_wise(self, y_pred, y_true, g, n_groups):
+        group_metrics = []
+        group_counts = get_counts(g, n_groups)
+        for group_idx in range(n_groups):
+            if group_counts[group_idx]==0:
+                group_metrics.append(torch.tensor(0., device=g.device))
+            else:
+                flattened_metrics, _ = self.compute_flattened(
+                    y_pred[g == group_idx],
+                    y_true[g == group_idx],
+                    return_dict=False)
+                group_metrics.append(flattened_metrics)
+        group_metrics = torch.stack(group_metrics)
+        worst_group_metric = self.worst(group_metrics[group_counts>0])
+
+        return group_metrics, group_counts, worst_group_metric
+
+    # def _compute(self, y_pred, y_true):
+    #     return self._compute_flattened(y_pred, y_true)
+
+    def worst(self, metrics):
+        return minimum(metrics)
+
 class Recall(Metric):
     def __init__(self, prediction_fn=None, name=None, average='binary'):
         self.prediction_fn = prediction_fn

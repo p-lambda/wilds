@@ -45,7 +45,7 @@ class Algorithm(nn.Module):
         Switch to train mode
         """
         self.is_training = mode
-        super().train(mode)        
+        super().train(mode)
         self.reset_log()
 
     @property
