@@ -102,6 +102,10 @@ class EncodeDataset(WILDSDataset):
     ENCODE dataset of transcription factor binding sites.
     This is a subset of the dataset from the ENCODE-DREAM in vivo Transcription Factor Binding Site Prediction Challenge.
 
+    Note: The first time this dataset is used, it will run some one-off preprocessing scripts that will take some additional time.
+    These scripts might cause a race condition if multiple jobs are started in parallel,
+    so we recommend running a single job the first time you use this dataset. 
+
     Input (x):
         12800-base-pair regions of sequence with a quantified chromatin accessibility readout.
 
@@ -121,7 +125,7 @@ class EncodeDataset(WILDSDataset):
     _versions_dict = {
         '1.0': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x9c282b6e9082440f9dcd61bb605c1eab/contents/blob/',
-            'compressed_size': None}}
+            'compressed_size': 7_692_640_256}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
         itime = time.time()
@@ -393,8 +397,8 @@ class EncodeDataset(WILDSDataset):
         self._metric = MultiTaskAveragePrecision()
 
         super().__init__(root_dir, download, split_scheme)
-    
-    
+
+
     def get_input(self, idx, window_size=12800):
         """
         Returns x for a given idx in metadata_array, which has been filtered to only take windows with the desired stride.
@@ -415,8 +419,8 @@ class EncodeDataset(WILDSDataset):
             [seq_this,
              dnase_this]
         ).T)
-    
-    
+
+
     def eval(self, y_pred, y_true, metadata):
         return self.standard_group_eval(
             self._metric,
