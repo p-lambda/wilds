@@ -10,7 +10,7 @@ dataset_defaults = {
         'lr': 1e-5,
         'weight_decay': 0.01,
         'n_epochs': 3,
-        'n_groups_per_batch': 4,
+        'n_groups_per_batch': 2,
         'irm_lambda': 1.0,
         'coral_penalty_weight': 1.0,
         'loader_kwargs': {
@@ -113,7 +113,7 @@ dataset_defaults = {
         'val_metric_decreasing': False,
         'optimizer': 'Adam',
         'scheduler': 'MultiStepLR',
-        'scheduler_kwargs': {'milestones':[3,6], 'gamma': 0.1}, 
+        'scheduler_kwargs': {'milestones':[3,6], 'gamma': 0.1},
         'batch_size': 128,
         'lr': 1e-3,
         'weight_decay': 1e-4,
