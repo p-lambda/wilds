@@ -5,13 +5,15 @@
 
 #### Instructions to create Codalab bundle
 
+All file paths are taken to be relative to `<bundle root directory>` in the code.
+
 1. Download the human genome sequence (hg19 assembly) in FASTA format from http://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.fa.gz and extract it into `SEQUENCE_PATH`.
 
-2. Run `python prep_sequence.py --seq_path SEQUENCE_PATH --output_dir OUTPUT_DIR` to write the fasta file found in `SEQUENCE_PATH` to a numpy array archive in `OUTPUT_DIR`.
+2. Run `python prep_sequence.py --seq_path SEQUENCE_PATH --output_dir OUTPUT_DIR` to write the fasta file found in `SEQUENCE_PATH` to a numpy array archive in `OUTPUT_DIR`. `OUTPUT_DIR` is taken to be `sequence.npz` in the code.
 
-3. Download the DNase accessibility data. This consists of whole-genome DNase files in bigwig format from https://guanfiles.dcmb.med.umich.edu/Leopard/dnase_bigwig/. These are saved with filename `DNASE.<celltype>.fc.signal.bigwig`.
+3. Download the DNase accessibility data. This consists of whole-genome DNase files in bigwig format from https://guanfiles.dcmb.med.umich.edu/Leopard/dnase_bigwig/. These are saved with filename `DNASE.<celltype>.fc.signal.bigwig` in the code.
 
-4. Run `python prep_accessibility.py`.
+4. Run `python prep_accessibility.py`. This writes quantile-normalized samples of each bigwig file to `qn.<celltype>.npy`.
 
 5. Download the labels from the challenge into a label directory `labels/` created for this purpose:
   - The training chromosome labels for the challenge's training cell types from https://www.synapse.org/#!Synapse:syn7413983 for the relevant transcription factor ( https://www.synapse.org/#!Synapse:syn7415202 for the TF MAX, , downloaded as MAX.train.labels.tsv.gz ).
