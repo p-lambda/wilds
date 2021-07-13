@@ -131,19 +131,6 @@ def dnase_normalize(
 
 if __name__ == '__main__':
     train_chroms = ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr10', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr22', 'chrX']
-    ch_train_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878']
-    ch_val_celltype = ['HepG2']
-    ch_test_celltype = ['liver']
-    ref_celltypes = ch_train_celltypes
-    all_celltypes = ch_train_celltypes + ch_val_celltype + ch_test_celltype
+    all_celltypes = ['H1-hESC', 'HCT116', 'HeLa-S3', 'K562', 'A549', 'GM12878', 'HepG2', 'liver']
     for ct in all_celltypes:
         qn_sample_to_array([ct], input_chroms=train_chroms)
-
-    """
-    # Create normalized bigwigs for OOD validation split.
-    for ct in all_celltypes:
-        dnase_normalize(ct, ref_celltypes)
-    # Create normalized bigwig for ID validation split.
-    for ct in ch_test_celltype:
-        dnase_normalize(ct, ch_test_celltype, out_fname = 'norm_id')
-    """
