@@ -49,6 +49,9 @@ model_defaults = {
         'target_resolution': (224, 224),
     },
     'logistic_regression': {},
+    'unet-seq': {
+        'optimizer': 'Adam'
+    },
     'fasterrcnn': {
         'model_kwargs': {
             'pretrained_model': True,

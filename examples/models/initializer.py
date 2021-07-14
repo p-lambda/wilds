@@ -76,6 +76,14 @@ def initialize_model(config, d_out, is_featurizer=False):
     elif config.model == 'logistic_regression':
         assert not is_featurizer, "Featurizer not supported for logistic regression"
         model = nn.Linear(out_features=d_out, **config.model_kwargs)
+    elif config.model == 'unet-seq':
+        from models.CNN_genome import UNet
+        if is_featurizer:
+            featurizer = UNet(num_tasks=None, **config.model_kwargs)
+            classifier = nn.Linear(featurizer.d_out, d_out)
+            model = (featurizer, classifier)
+        else:
+            model = UNet(num_tasks=d_out, **config.model_kwargs)
 
     elif config.model == 'fasterrcnn':
         if is_featurizer: # TODO
