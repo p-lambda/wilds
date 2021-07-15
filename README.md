@@ -103,7 +103,9 @@ These are the sizes of each of our datasets, as well as their approximate time t
 |-----------------|----------|--------------------|-------------------|-------------------------|
 | iwildcam        | Image    | 11                 | 25                | 7                       |
 | camelyon17      | Image    | 10                 | 15                | 2                       |
+| rxrx1           | Image    | 6.9                | 7.4               | 11                      |
 | ogb-molpcba     | Graph    | 0.04               | 2                 | 15                      |
+| globalwheat     | Image    | 9.7                | 10.4              | 2                       |
 | civilcomments   | Text     | 0.1                | 0.3               | 4.5                     |
 | fmow            | Image    | 50                 | 55                | 6                       |
 | poverty         | Image    | 12                 | 14                | 5                       |
