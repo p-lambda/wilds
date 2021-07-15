@@ -104,7 +104,11 @@ class EncodeDataset(WILDSDataset):
 
     Note: The first time this dataset is used, it will run some one-off preprocessing scripts that will take some additional time.
     These scripts might cause a race condition if multiple jobs are started in parallel,
-    so we recommend running a single job the first time you use this dataset. 
+    so we recommend running a single job the first time you use this dataset.
+
+    Supported `split_scheme`:
+        - 'official'
+        - 'test-to-test'
 
     Input (x):
         12800-base-pair regions of sequence with a quantified chromatin accessibility readout.
@@ -197,7 +201,7 @@ class EncodeDataset(WILDSDataset):
                 'id_val': 'Validation (ID)',
                 'id_test': 'Test (ID)',
             }
-        elif self._split_scheme == 'in-dist':
+        elif self._split_scheme == 'test-to-test':
             splits = {
                 'train': {
                     'chroms': train_chroms,

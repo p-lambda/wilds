@@ -183,7 +183,7 @@ class WILDSDataset:
     def split_scheme(self):
         """
         A string identifier of how the split is constructed,
-        e.g., 'standard', 'in-dist', 'user', etc.
+        e.g., 'standard', 'mixed-to-test', 'user', etc.
         """
         return self._split_scheme
 

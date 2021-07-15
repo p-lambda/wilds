@@ -18,7 +18,8 @@ class RxRx1Dataset(WILDSDataset):
     This is a modified version of the original RxRx1 dataset.
 
     Supported `split_scheme`:
-        'official' or 'in-dist'
+        - 'official'
+        - 'mixed-to-test'
 
     Input (x):
         3-channel fluorescent microscopy images of cells
@@ -65,7 +66,7 @@ class RxRx1Dataset(WILDSDataset):
 
         self._version = version
         self._split_scheme = split_scheme
-        if self._split_scheme not in ['official', 'in-dist']:
+        if self._split_scheme not in ['official', 'mixed-to-test']:
             raise ValueError(f'Split scheme {self._split_scheme} not recognized')
 
         # path
@@ -98,7 +99,7 @@ class RxRx1Dataset(WILDSDataset):
             mask = ((df.dataset == 'train') & (df.site == 2)).values
             self._split_array[mask] = self.split_dict['id_test']
 
-        elif split_scheme == 'in-dist':
+        elif split_scheme == 'mixed-to-test':
             # Training:   33 experiments total, 1 site per experiment (site 1)
             #             = 19 experiments from the orig training set (site 1)
             #             + 14 experiments from the orig test set (site 1)

@@ -17,6 +17,8 @@ class IWildCamDataset(WILDSDataset):
     """
         The iWildCam2020 dataset.
         This is a modified version of the original iWildCam2020 competition dataset.
+        Supported `split_scheme`:
+            - 'official'
         Input (x):
             RGB images from camera traps
         Label (y):

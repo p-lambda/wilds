@@ -13,7 +13,7 @@ class OGBPCBADataset(WILDSDataset):
     This dataset is directly adopted from Open Graph Benchmark, and originally curated by MoleculeNet.
 
     Supported `split_scheme`:
-        'official' or 'scaffold', which are equivalent
+        - 'official' or 'scaffold', which are equivalent
 
     Input (x):
         Molecular graphs represented as Pytorch Geometric data objects
@@ -108,7 +108,7 @@ class OGBPCBADataset(WILDSDataset):
             - y_pred (FloatTensor): Binary logits from a model
             - y_true (LongTensor): Ground-truth labels
             - metadata (Tensor): Metadata
-            - prediction_fn (function): A function that turns y_pred into predicted labels. 
+            - prediction_fn (function): A function that turns y_pred into predicted labels.
                                         Only None is supported because OGB Evaluators accept binary logits
         Output:
             - results (dictionary): Dictionary of evaluation metrics
