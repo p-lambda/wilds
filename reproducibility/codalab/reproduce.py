@@ -35,7 +35,7 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_deepcoral_tune
   
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --random --coarse --unlabeled-split test_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_deepcoral_coarse_tune
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x5eebc93ea19b4dd99aa68871d18d7cb2 --datasets fmow --experiment fmow_dann_coarse_valunlabeled_tune	
 
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm DANN --random --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_dann_tune
@@ -43,7 +43,7 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --random --unlabeled-split val_unlabeled
     
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm DANN --random --coarse --unlabeled-split test_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_dann_coarse_tune
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x5eebc93ea19b4dd99aa68871d18d7cb2 --datasets fmow --experiment fmow_dann_coarse_trainunlabeled_tune
     
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0xdc42650973ef4c4e9db3ed356de876ee --datasets amazon --experiment amazon_dann_coarse_tune
     
@@ -52,6 +52,7 @@ Example Usage:
     # To run experiments that tune hyperparameters for ID vs OOD val experiments
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x336bc32535484f3bbad55c88bf1b05d0 --datasets amazon camelyon17 iwildcam
     python reproducibility/codalab/reproduce.py --split id_val_eval --post-tune --worksheet-uuid 0x036017edb3c74b0692831fadfe8cbf1b --datasets iwildcam
+    
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0xa0b262fc173f43c297409a069a021496 --datasets globalwheat --experiment globalwheat_erm_grid
     
     # To output results for a specific run early stopped using OOD validation results
@@ -60,8 +61,9 @@ Example Usage:
      
     # To output full results of a experiment across multiple replicates
     python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x6eff199eaf61473291730321951dca7d --experiment fmow_dann_coarse_seed
-    python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x6eff199eaf61473291730321951dca7d --experiment fmow_dann_seed
+    python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x5eebc93ea19b4dd99aa68871d18d7cb2 --experiment fmow_dann_coarse_testunlabeled_seed
     python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --experiment fmow_deepcoral_tune1
+    python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0xa0b262fc173f43c297409a069a021496 --experiment globalwheat_erm_seed
     
     # DANN on domainnent
     python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x13ef64a3a90842d981b6b1f566b1cc78 --experiment domainnet_real-sketch

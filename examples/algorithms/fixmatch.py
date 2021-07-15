@@ -1,12 +1,12 @@
+from typing import Dict, List
+
 import torch
 import torch.nn.functional as F
+
 from models.initializer import initialize_model
-from algorithms.ERM import ERM
 from algorithms.single_model_algorithm import SingleModelAlgorithm
-from wilds.common.utils import split_into_groups
 from configs.supported import process_outputs_functions
-import copy
-from utils import load
+from optimizer import initialize_optimizer_with_model_params
 
 class FixMatch(SingleModelAlgorithm):
     """
@@ -29,8 +29,20 @@ class FixMatch(SingleModelAlgorithm):
             }
     """
     def __init__(self, config, d_out, grouper, loss, metric, n_train_steps):
-        model = initialize_model(config, d_out=d_out)
-        model = model.to(config.device)
+        featurizer, classifier = initialize_model(
+            config, d_out=d_out, is_featurizer=True
+        )
+        featurizer = featurizer.to(config.device)
+        classifier = classifier.to(config.device)
+        model = torch.nn.Sequential(featurizer, classifier).to(config.device)
+
+        # TODO: change this to featurizer and classifier lr -Tony
+        parameters_to_optimize: List[Dict] = [
+            {"params": featurizer.parameters(), "lr": config.dann_featurizer_lr},
+            {"params": classifier.parameters(), "lr": config.dann_classifier_lr},
+        ]
+        self.optimizer = initialize_optimizer_with_model_params(config, parameters_to_optimize)
+
         # initialize module
         super().__init__(
             config=config,
@@ -42,11 +54,14 @@ class FixMatch(SingleModelAlgorithm):
         )
         # algorithm hyperparameters
         self.fixmatch_lambda = config.fixmatch_lambda
-        self.confidence_threshold = config.fixmatch_threshold
+        self.confidence_threshold = config.fixmatch_confidence_threshold
         if config.process_outputs_function is not None: 
             self.process_outputs_function = process_outputs_functions[config.process_outputs_function]
-        # additional logging
-        # set model components
+
+        # Additional logging
+        self.logged_fields.append("pseudolabels_kept_frac")
+        self.logged_fields.append("classification_loss")
+        self.logged_fields.append("consistency_loss")
 
     def process_batch(self, labeled_batch, unlabeled_batch=None):
         """
@@ -102,13 +117,30 @@ class FixMatch(SingleModelAlgorithm):
 
     def objective(self, results):
         # Labeled loss
-        labeled_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
+        classification_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
+
         # Pseudolabeled loss
         if 'unlabeled_weak_y_pseudo' in results:
             mask = results['unlabeled_mask']
-            unlabeled_loss = self.loss.compute(
+            consistency_loss = self.loss.compute(
                 results['unlabeled_strong_y_pred'][mask], 
                 results['unlabeled_weak_y_pseudo'][mask], 
-                return_dict=False)
-        else: unlabeled_loss = 0
-        return labeled_loss + self.fixmatch_lambda * unlabeled_loss 
+                return_dict=False
+            )
+            pseudolabels_kept_frac = mask.count_nonzero().item() / mask.shape[0]
+        else:
+            consistency_loss = 0
+            pseudolabels_kept_frac = 0
+
+        # Add to results for additional logging
+        self.save_metric_for_logging(
+            results, "classification_loss", classification_loss
+        )
+        self.save_metric_for_logging(
+            results, "consistency_loss", consistency_loss
+        )
+        self.save_metric_for_logging(
+            results, "pseudolabels_kept_frac", pseudolabels_kept_frac
+        )
+
+        return classification_loss + self.fixmatch_lambda * consistency_loss

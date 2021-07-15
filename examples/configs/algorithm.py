@@ -37,8 +37,10 @@ algorithm_defaults = {
         'uniform_over_groups': False,
         'eval_loader': 'standard',
         'fixmatch_lambda': 1,
-        'fixmatch_threshold': 0.7,
+        'fixmatch_confidence_threshold': 0.7,
         'randaugment_n': 2,
         'randaugment_m': 10,
+        # TODO: this doesn't seem to make a difference but test it out with larger batch sizes -Tony
+        # 'scheduler': 'FixMatchLR',
     }
 }
