@@ -125,8 +125,7 @@ dataset_defaults = {
     },
     'fmow': {
         'split_scheme': 'official',
-        'dataset_kwargs': {
-            'oracle_training_set': False,
+        'dataset_kwargs': {            
             'seed': 111,
             'use_ood_val': True
         },
@@ -218,7 +217,6 @@ dataset_defaults = {
         'dataset_kwargs': {
             'no_nl': False,
             'fold': 'A',
-            'oracle_training_set': False,
             'use_ood_val': True
         },
         'model': 'resnet18_ms',
