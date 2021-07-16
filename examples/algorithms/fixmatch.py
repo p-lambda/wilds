@@ -32,9 +32,7 @@ class FixMatch(SingleModelAlgorithm):
         featurizer, classifier = initialize_model(
             config, d_out=d_out, is_featurizer=True
         )
-        featurizer = featurizer.to(config.device)
-        classifier = classifier.to(config.device)
-        model = torch.nn.Sequential(featurizer, classifier).to(config.device)
+        model = torch.nn.Sequential(featurizer, classifier)
 
         # TODO: change this to featurizer and classifier lr -Tony
         parameters_to_optimize: List[Dict] = [

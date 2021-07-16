@@ -115,7 +115,7 @@ def main():
     parser.add_argument('--eval_epoch', default=None, type=int, help='If eval_only is set, then eval_epoch allows you to specify evaluating at a particular epoch. By default, it evaluates the best epoch by validation performance.')
 
     # Misc
-    parser.add_argument('--device', type=int, default=0)
+    parser.add_argument('--device', type=int, nargs='+', default=[0])
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--log_dir', default='./logs')
     parser.add_argument('--log_every', default=50, type=int)
@@ -131,8 +131,17 @@ def main():
     config = parser.parse_args()
     config = populate_defaults(config)
 
-    # set device
-    config.device = torch.device("cuda:" + str(config.device)) if torch.cuda.is_available() else torch.device("cpu")
+    # Set device
+    if torch.cuda.is_available():
+        device_count = torch.cuda.device_count()
+        if len(config.device) > device_count:
+            raise ValueError(f"Specified {len(config.device)} devices, but only {device_count} devices found.")
+
+        config.use_data_parallel = len(config.device) > 1
+        device_str = ",".join(map(str, config.device))
+        config.device = torch.device(f"cuda:{device_str}")
+    else:
+        config.device = torch.device("cpu")
 
     ## Initialize logs
     if os.path.exists(config.log_dir) and config.resume:
