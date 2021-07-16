@@ -27,6 +27,7 @@ def load_unlabeled_df(root):
     """
     df = pd.read_csv(os.path.join(root, 'all_data.csv'))
     df = df.loc[(df['identity_annotator_count'] == 0), :]
+    df = df.dropna(axis=0, how='any', subset=['id', 'comment_text', 'article_id']) # make sure data is clean
     df = df.reset_index(drop=True)
     return df
 
