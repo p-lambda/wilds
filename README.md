@@ -131,13 +131,14 @@ Any dataset not in `<root_dir>` will be downloaded to `<root_dir>`.
 
 ### Reproducibility
 We have an [executable version](https://wilds.stanford.edu/codalab) of our paper on CodaLab that contains the exact commands, code, and data for the experiments reported in our paper, which rely on these scripts. Trained model weights for all datasets can also be found there.
-
+All configurations and hyperparameters can also be found in the `examples/configs` folder of this repo, and dataset-specific parameters are in `examples/configs/datasets.py`.
 
 ## Using the WILDS package
-### Data loading
+### Data
 
 The WILDS package provides a simple, standardized interface for all datasets in the benchmark.
 This short Python snippet covers all of the steps of getting started with a WILDS dataset, including dataset download and initialization, accessing various splits, and preparing a user-customizable data loader.
+We discuss data loading in more detail in [#Data loading](#data-loading).
 
 ```py
 >>> from wilds import get_dataset
@@ -163,10 +164,10 @@ This short Python snippet covers all of the steps of getting started with a WILD
 The `metadata` contains information like the domain identity, e.g., which camera a photo was taken from, or which hospital the patient's data came from, etc.
 
 ### Domain information
-To allow algorithms to leverage domain annotations as well as other
-groupings over the available metadata, the WILDS package provides `Grouper` objects.
-These `Grouper` objects extract group annotations from metadata, allowing users to
-specify the grouping scheme in a flexible fashion.
+To allow algorithms to leverage domain annotations as well as other groupings over the available metadata, the WILDS package provides `Grouper` objects.
+These `Grouper` objects are helper objects that extract group annotations from metadata, allowing users to specify the grouping scheme in a flexible fashion.
+They are used to initialize group-aware data loaders and to implement algorithms that rely on domain annotations (e.g., Group DRO).
+In the following code snippet, we initialize and use a `Grouper` that extracts the domain annotations on the iWildCam dataset, where the domain is location.
 
 ```py
 >>> from wilds.common.grouper import CombinatorialGrouper
@@ -181,9 +182,20 @@ specify the grouping scheme in a flexible fashion.
 ...   ...
 ```
 
-The `Grouper` can be used to prepare a group-aware data loader that, for each minibatch, first samples a specified number of groups, then samples examples from those groups.
-This allows our data loaders to accommodate a wide array of training algorithms,
-some of which require specific data loading schemes.
+### Data loading
+
+For training, the WILDS package provides two types of data loaders.
+The standard data loader samples examples uniformly at random from the training set, and are used for algorithms such as empirical risk minimization (ERM).
+```py
+>>> from wilds.common.data_loaders import get_train_loader
+
+# Prepare the standard data loader
+>>> train_loader = get_train_loader('standard', train_data, batch_size=16)
+```
+
+To support other algorithms that rely on specific data loading schemes, we also provide the group data loader.
+In each minibatch, it first samples a specified number of groups uniformly at random (and therefore upweights minority groups), and then samples a fixed number of examples from each of those groups.
+We initialize group loaders as follows, using `Grouper` that specifies the grouping scheme.
 
 ```py
 # Prepare a group data loader that samples from user-specified groups
@@ -191,6 +203,20 @@ some of which require specific data loading schemes.
 ...                                 grouper=grouper,
 ...                                 n_groups_per_batch=2,
 ...                                 batch_size=16)
+```
+
+Lastly, we also provide a data loader for evaluation, which loads examples without shuffling unlike the training loaders.
+
+```py
+>>> from wilds.common.data_loaders import get_eval_loader
+
+# Get the test set
+>>> test_data = dataset.get_subset('test',
+...                                 transform=transforms.Compose([transforms.Resize((224,224)),
+...                                                               transforms.ToTensor()]))
+
+# Prepare the evaluation data loader
+>>> test_loader = get_eval_loader('standard', test_data, batch_size=16)
 ```
 
 ### Evaluators
