@@ -43,7 +43,7 @@ class CivilCommentsUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name: str = "civilcomments_unlabeled"
     _versions_dict: Dict[str, Dict[str, Union[str, int]]] = {
         "1.0": {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x84d185add4134775b0b4d3ce7614dd20/contents/blob/',
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x1c471f23448e4518b000fe47aa7724e0/contents/blob/',
             'compressed_size': 254_142_009
         },
     }
