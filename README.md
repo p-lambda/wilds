@@ -161,12 +161,12 @@ We discuss data loading in more detail in [#Data loading](#data-loading).
 ...   ...
 ```
 
-The `metadata` contains information like the domain identity, e.g., which camera a photo was taken from, or which hospital the patient's data came from, etc.
+The `metadata` contains information like the domain identity, e.g., which camera a photo was taken from, or which hospital the patient's data came from, etc., as well as other metadata.
 
 ### Domain information
 To allow algorithms to leverage domain annotations as well as other groupings over the available metadata, the WILDS package provides `Grouper` objects.
 These `Grouper` objects are helper objects that extract group annotations from metadata, allowing users to specify the grouping scheme in a flexible fashion.
-They are used to initialize group-aware data loaders and to implement algorithms that rely on domain annotations (e.g., Group DRO).
+They are used to initialize group-aware data loaders (as discussed in [#Data loading](#data-loading)) and to implement algorithms that rely on domain annotations (e.g., Group DRO).
 In the following code snippet, we initialize and use a `Grouper` that extracts the domain annotations on the iWildCam dataset, where the domain is location.
 
 ```py
@@ -185,7 +185,7 @@ In the following code snippet, we initialize and use a `Grouper` that extracts t
 ### Data loading
 
 For training, the WILDS package provides two types of data loaders.
-The standard data loader samples examples uniformly at random from the training set, and are used for algorithms such as empirical risk minimization (ERM).
+The standard data loader shuffles examples in the training set, and is used for the standard approach of empirical risk minimization (ERM), where we minimize the average loss.
 ```py
 >>> from wilds.common.data_loaders import get_train_loader
 
@@ -194,7 +194,7 @@ The standard data loader samples examples uniformly at random from the training 
 ```
 
 To support other algorithms that rely on specific data loading schemes, we also provide the group data loader.
-In each minibatch, it first samples a specified number of groups uniformly at random (and therefore upweights minority groups), and then samples a fixed number of examples from each of those groups.
+In each minibatch, the group loader first samples a specified number of groups uniformly at random  (upweighting minority groups as a result), and then samples a fixed number of examples from each of those groups.
 We initialize group loaders as follows, using `Grouper` that specifies the grouping scheme.
 
 ```py
