@@ -103,13 +103,13 @@ These are the sizes of each of our datasets, as well as their approximate time t
 |-----------------|----------|--------------------|-------------------|-------------------------|
 | iwildcam        | Image    | 11                 | 25                | 7                       |
 | camelyon17      | Image    | 10                 | 15                | 2                       |
-| rxrx1           | Image    | 6.9                | 7.4               | 11                      |
+| rxrx1           | Image    | 7                  | 7                 | 11                      |
 | ogb-molpcba     | Graph    | 0.04               | 2                 | 15                      |
-| globalwheat     | Image    | 9.7                | 10.4              | 2                       |
+| globalwheat     | Image    | 10                 | 10                | 2                       |
 | civilcomments   | Text     | 0.1                | 0.3               | 4.5                     |
 | fmow            | Image    | 50                 | 55                | 6                       |
 | poverty         | Image    | 12                 | 14                | 5                       |
-| amazon          | Text     | 6.6                | 7                 | 5                       |
+| amazon          | Text     | 7                  | 7                 | 5                       |
 | py150           | Text     | 0.1                | 0.8               | 9.5                     |
 
 While the `camelyon17` dataset is small and fast to train on, we advise against using it as the only dataset to prototype methods on, as the test performance of models trained on this dataset tend to exhibit a large degree of variability over random seeds.
