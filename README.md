@@ -194,7 +194,8 @@ The standard data loader shuffles examples in the training set, and is used for 
 ```
 
 To support other algorithms that rely on specific data loading schemes, we also provide the group data loader.
-In each minibatch, the group loader first samples a specified number of groups uniformly at random  (upweighting minority groups as a result), and then samples a fixed number of examples from each of those groups.
+In each minibatch, the group loader first samples a specified number of groups, and then samples a fixed number of examples from each of those groups.
+(By default, the groups are sampled uniformly at random, which upweights minority groups as a result. This can be toggled by the `uniform_over_groups` parameter.)
 We initialize group loaders as follows, using `Grouper` that specifies the grouping scheme.
 
 ```py
@@ -205,7 +206,7 @@ We initialize group loaders as follows, using `Grouper` that specifies the group
 ...                                 batch_size=16)
 ```
 
-Lastly, we also provide a data loader for evaluation, which loads examples without shuffling unlike the training loaders.
+Lastly, we also provide a data loader for evaluation, which loads examples without shuffling (unlike the training loaders).
 
 ```py
 >>> from wilds.common.data_loaders import get_eval_loader
