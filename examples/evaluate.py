@@ -3,7 +3,6 @@ import json
 import os
 import urllib.request
 from ast import literal_eval
-from operator import itemgetter
 from typing import Dict, List
 from urllib.parse import urlparse
 
