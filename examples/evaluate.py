@@ -204,7 +204,7 @@ def evaluate_replicate_for_globalwheat(
     predicted_labels = torch.load(path_to_predictions)
     subset: WILDSSubset = dataset.get_subset(split)
     metadata: torch.Tensor = subset.metadata_array
-    true_labels = list(itemgetter(*subset.indices)(subset.dataset.y_array))
+    true_labels = [subset.dataset.y_array[idx] for idx in subset.indices]
     return dataset.eval(predicted_labels, true_labels, metadata)[0]
 
 
