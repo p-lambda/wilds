@@ -65,7 +65,7 @@ git clone git@github.com:p-lambda/wilds.git
 
 To run these scripts, you will need to install these additional dependencies:
 
-- torchvision>=0.8.1
+- torchvision>=0.8.2
 - transformers>=3.5.0
 
 All baseline experiments in the paper were run on Python 3.8.5 and CUDA 10.1.
