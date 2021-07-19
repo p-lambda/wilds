@@ -58,14 +58,13 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
             "equivalent_dataset": "fmow_v1.1",}
     }
 
-    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official', oracle_training_set=False, seed=111, use_ood_val=True):
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official', seed=111):
         self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
         if split_scheme=='official':
             split_scheme='time_after_2016'
         self._split_scheme = split_scheme
-        self.oracle_training_set = oracle_training_set
 
         self.root = Path(self._data_dir)
         self.seed = int(seed)
