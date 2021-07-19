@@ -50,7 +50,7 @@ pip install -e .
 - torch>=1.7.0
 - torch-scatter>=2.0.5
 - torch-geometric>=1.6.1
-- tqdm>=4.53.0 
+- tqdm>=4.53.0
 
 Running `pip install wilds` or `pip install -e .` will automatically check for and install all of these requirements
 except for the `torch-scatter` and `torch-geometric` packages, which require a [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
@@ -83,6 +83,7 @@ python examples/run_expt.py --dataset civilcomments --algorithm groupDRO --root_
 
 The scripts are set up to facilitate general-purpose algorithm development: new algorithms can be added to `examples/algorithms` and then run on all of the WILDS datasets using the default models.
 
+### Downloading and training on the WILDS datasets
 The first time you run these scripts, you might need to download the datasets. You can do so with the `--download` argument, for example:
 ```
 python examples/run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data --download
@@ -102,25 +103,42 @@ These are the sizes of each of our datasets, as well as their approximate time t
 |-----------------|----------|--------------------|-------------------|-------------------------|
 | iwildcam        | Image    | 11                 | 25                | 7                       |
 | camelyon17      | Image    | 10                 | 15                | 2                       |
+| rxrx1           | Image    | 7                  | 7                 | 11                      |
 | ogb-molpcba     | Graph    | 0.04               | 2                 | 15                      |
+| globalwheat     | Image    | 10                 | 10                | 2                       |
 | civilcomments   | Text     | 0.1                | 0.3               | 4.5                     |
 | fmow            | Image    | 50                 | 55                | 6                       |
 | poverty         | Image    | 12                 | 14                | 5                       |
-| amazon          | Text     | 6.6                | 7                 | 5                       |
+| amazon          | Text     | 7                  | 7                 | 5                       |
 | py150           | Text     | 0.1                | 0.8               | 9.5                     |
 
 While the `camelyon17` dataset is small and fast to train on, we advise against using it as the only dataset to prototype methods on, as the test performance of models trained on this dataset tend to exhibit a large degree of variability over random seeds.
 
 The image datasets (`iwildcam`, `camelyon17`, `fmow`, and `poverty`) tend to have high disk I/O usage. If training time is much slower for you than the approximate times listed above, consider checking if I/O is a bottleneck (e.g., by moving to a local disk if you are using a network drive, or by increasing the number of data loader workers). To speed up training, you could also disable evaluation at each epoch or for all splits by toggling `--evaluate_all_splits` and related arguments.
 
-We have an [executable version](https://wilds.stanford.edu/codalab) of our paper on CodaLab that contains the exact commands, code, and data for the experiments reported in our paper, which rely on these scripts. Trained model weights for all datasets can also be found there.
+### Evaluating trained models
+We also provide an evaluation script that aggregates prediction CSV files for different replicates and reports on their combined evaluation. To use this, run:
 
+```bash
+python examples/evaluate.py <predictions_dir> <output_dir> --root-dir <root_dir>
+```
+
+where `<predictions_dir>` is the path to your predictions directory, `<output_dir>` is where the results JSON will be writte, and `<root_dir>` is the dataset root directory.
+The predictions directory should have a subdirectory for each dataset
+(e.g. `iwildcam`) containing prediction CSV files to evaluate; see our [submission guidelines](https://wilds.stanford.edu/submit/) for the format.
+The evaluation script will skip over any datasets that has missing prediction files.
+Any dataset not in `<root_dir>` will be downloaded to `<root_dir>`.
+
+### Reproducibility
+We have an [executable version](https://wilds.stanford.edu/codalab) of our paper on CodaLab that contains the exact commands, code, and data for the experiments reported in our paper, which rely on these scripts. Trained model weights for all datasets can also be found there.
+All configurations and hyperparameters can also be found in the `examples/configs` folder of this repo, and dataset-specific parameters are in `examples/configs/datasets.py`.
 
 ## Using the WILDS package
-### Data loading
+### Data
 
 The WILDS package provides a simple, standardized interface for all datasets in the benchmark.
 This short Python snippet covers all of the steps of getting started with a WILDS dataset, including dataset download and initialization, accessing various splits, and preparing a user-customizable data loader.
+We discuss data loading in more detail in [#Data loading](#data-loading).
 
 ```py
 >>> from wilds import get_dataset
@@ -143,13 +161,13 @@ This short Python snippet covers all of the steps of getting started with a WILD
 ...   ...
 ```
 
-The `metadata` contains information like the domain identity, e.g., which camera a photo was taken from, or which hospital the patient's data came from, etc.
+The `metadata` contains information like the domain identity, e.g., which camera a photo was taken from, or which hospital the patient's data came from, etc., as well as other metadata.
 
 ### Domain information
-To allow algorithms to leverage domain annotations as well as other
-groupings over the available metadata, the WILDS package provides `Grouper` objects.
-These `Grouper` objects extract group annotations from metadata, allowing users to
-specify the grouping scheme in a flexible fashion.
+To allow algorithms to leverage domain annotations as well as other groupings over the available metadata, the WILDS package provides `Grouper` objects.
+These `Grouper` objects are helper objects that extract group annotations from metadata, allowing users to specify the grouping scheme in a flexible fashion.
+They are used to initialize group-aware data loaders (as discussed in [#Data loading](#data-loading)) and to implement algorithms that rely on domain annotations (e.g., Group DRO).
+In the following code snippet, we initialize and use a `Grouper` that extracts the domain annotations on the iWildCam dataset, where the domain is location.
 
 ```py
 >>> from wilds.common.grouper import CombinatorialGrouper
@@ -164,9 +182,21 @@ specify the grouping scheme in a flexible fashion.
 ...   ...
 ```
 
-The `Grouper` can be used to prepare a group-aware data loader that, for each minibatch, first samples a specified number of groups, then samples examples from those groups.
-This allows our data loaders to accommodate a wide array of training algorithms,
-some of which require specific data loading schemes.
+### Data loading
+
+For training, the WILDS package provides two types of data loaders.
+The standard data loader shuffles examples in the training set, and is used for the standard approach of empirical risk minimization (ERM), where we minimize the average loss.
+```py
+>>> from wilds.common.data_loaders import get_train_loader
+
+# Prepare the standard data loader
+>>> train_loader = get_train_loader('standard', train_data, batch_size=16)
+```
+
+To support other algorithms that rely on specific data loading schemes, we also provide the group data loader.
+In each minibatch, the group loader first samples a specified number of groups, and then samples a fixed number of examples from each of those groups.
+(By default, the groups are sampled uniformly at random, which upweights minority groups as a result. This can be toggled by the `uniform_over_groups` parameter.)
+We initialize group loaders as follows, using `Grouper` that specifies the grouping scheme.
 
 ```py
 # Prepare a group data loader that samples from user-specified groups
@@ -174,6 +204,20 @@ some of which require specific data loading schemes.
 ...                                 grouper=grouper,
 ...                                 n_groups_per_batch=2,
 ...                                 batch_size=16)
+```
+
+Lastly, we also provide a data loader for evaluation, which loads examples without shuffling (unlike the training loaders).
+
+```py
+>>> from wilds.common.data_loaders import get_eval_loader
+
+# Get the test set
+>>> test_data = dataset.get_subset('test',
+...                                 transform=transforms.Compose([transforms.Resize((224,224)),
+...                                                               transforms.ToTensor()]))
+
+# Prepare the evaluation data loader
+>>> test_loader = get_eval_loader('standard', test_data, batch_size=16)
 ```
 
 ### Evaluators

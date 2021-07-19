@@ -1,5 +1,6 @@
-from transformers import get_linear_schedule_with_warmup
-from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
+from transformers import (get_linear_schedule_with_warmup,
+                          get_cosine_schedule_with_warmup)
+from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, MultiStepLR
 
 def initialize_scheduler(config, optimizer, n_train_steps):
     # construct schedulers
@@ -7,6 +8,13 @@ def initialize_scheduler(config, optimizer, n_train_steps):
         return None
     elif config.scheduler=='linear_schedule_with_warmup':
         scheduler = get_linear_schedule_with_warmup(
+            optimizer,
+            num_training_steps=n_train_steps,
+            **config.scheduler_kwargs)
+        step_every_batch = True
+        use_metric = False
+    elif config.scheduler == 'cosine_schedule_with_warmup':
+        scheduler = get_cosine_schedule_with_warmup(
             optimizer,
             num_training_steps=n_train_steps,
             **config.scheduler_kwargs)
@@ -23,9 +31,13 @@ def initialize_scheduler(config, optimizer, n_train_steps):
         scheduler = StepLR(optimizer, **config.scheduler_kwargs)
         step_every_batch = False
         use_metric = False
+    elif config.scheduler == 'MultiStepLR':
+        scheduler = MultiStepLR(optimizer, **config.scheduler_kwargs)
+        step_every_batch = False
+        use_metric = False
     else:
         raise ValueError('Scheduler not recognized.')
-    # add an step_every_batch field
+    # add a step_every_batch field
     scheduler.step_every_batch = step_every_batch
     scheduler.use_metric = use_metric
     return scheduler
