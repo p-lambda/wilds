@@ -51,9 +51,9 @@ class FixMatch(SingleModelAlgorithm):
             n_train_steps=n_train_steps,
         )
         # algorithm hyperparameters
-        self.fixmatch_lambda = config.fixmatch_lambda
-        self.confidence_threshold = config.fixmatch_confidence_threshold
-        if config.process_outputs_function is not None: 
+        self.fixmatch_lambda = config.self_training_lambda
+        self.confidence_threshold = config.self_training_threshold
+        if config.process_outputs_function is not None:
             self.process_outputs_function = process_outputs_functions[config.process_outputs_function]
 
         # Additional logging
@@ -65,7 +65,7 @@ class FixMatch(SingleModelAlgorithm):
         """
         Args:
             - labeled_batch: examples (x, y, m) where x is weakly augmented
-            - unlabeled_batch: examples (x, m) where x is unaugmented
+            - unlabeled_batch: examples ((x_weak, x_strong), m) where x_weak is weakly augmented but x_strong is strongly augmented
         Returns: results, a dict containing keys:
             - 'g': groups for the labeled batch
             - 'y_true': true labels for the labeled batch

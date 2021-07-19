@@ -36,10 +36,23 @@ algorithm_defaults = {
         'train_loader': 'standard',
         'uniform_over_groups': False,
         'eval_loader': 'standard',
-        'fixmatch_lambda': 1,
-        'fixmatch_confidence_threshold': 0.7,
+        'self_training_lambda': 1,
+        'self_training_threshold': 0.7,
+        'scheduler': 'FixMatchLR',
         'randaugment_n': 2,
         'randaugment_m': 10,
-        'scheduler': 'FixMatchLR',
+    },
+    'PseudoLabel': {
+        'train_loader': 'standard',
+        'uniform_over_groups': False,
+        'eval_loader': 'standard',
+        'self_training_lambda': 1,
+        'self_training_threshold': 0.7,
+    },
+    'noisy_student': {
+        'train_loader': 'standard',
+        'uniform_over_groups': False,
+        'eval_loader': 'standard',
+        'dropout_rate': 0.5,
     }
 }
