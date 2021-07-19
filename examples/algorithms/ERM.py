@@ -5,7 +5,7 @@ from models.initializer import initialize_model
 class ERM(SingleModelAlgorithm):
     def __init__(self, config, d_out, grouper, loss,
             metric, n_train_steps):
-        model = initialize_model(config, d_out).to(config.device)
+        model = initialize_model(config, d_out)
         # initialize module
         super().__init__(
             config=config,

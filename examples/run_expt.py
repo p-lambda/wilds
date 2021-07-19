@@ -141,6 +141,7 @@ def main():
         device_str = ",".join(map(str, config.device))
         config.device = torch.device(f"cuda:{device_str}")
     else:
+        config.use_data_parallel = False
         config.device = torch.device("cpu")
 
     ## Initialize logs

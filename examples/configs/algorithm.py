@@ -40,7 +40,6 @@ algorithm_defaults = {
         'fixmatch_confidence_threshold': 0.7,
         'randaugment_n': 2,
         'randaugment_m': 10,
-        # TODO: this doesn't seem to make a difference but test it out with larger batch sizes -Tony
-        # 'scheduler': 'FixMatchLR',
+        'scheduler': 'FixMatchLR',
     }
 }
