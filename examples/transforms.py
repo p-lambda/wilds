@@ -175,9 +175,6 @@ def add_fixmatch_transform(config, dataset, base_transform_steps, normalization)
             transforms.RandomHorizontalFlip(),
             transforms.RandomCrop(
                 size=target_resolution,
-                # TODO: double check the importance of this. There are different implementations of this. -Tony
-                # padding=int(target_resolution[0] * 0.125),
-                # padding_mode="reflect",
             ),
             transforms.ToTensor(),
             normalization,
@@ -190,8 +187,6 @@ def add_fixmatch_transform(config, dataset, base_transform_steps, normalization)
             transforms.RandomHorizontalFlip(),
             transforms.RandomCrop(
                 size=target_resolution,
-                # padding=int(target_resolution[0] * 0.125),
-                # padding_mode="reflect",
             ),
             RandAugment(
                 n=config.randaugment_n,
