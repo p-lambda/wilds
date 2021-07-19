@@ -74,17 +74,13 @@ class PovertyMapUnlabeledDataset(WILDSUnlabeledDataset):
             # TODO change the URL and compressed_size
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0xfc0aa86ad9af4eb08c42dfc40eacf094/contents/blob/',
             'compressed_size': 13_091_823_616,
-            # TODO do we need equivalent dataset here?
-            }
         }
+    }
 
     def __init__(self, version=None, root_dir='data', download=False,
                  split_scheme='official', no_nl=False, fold='A'):
         self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
-
-        self._split_dict = {'train': 0, 'id_val': 1, 'id_test': 2, 'val': 3, 'test': 4}
-        self._split_names = {'train': 'Train', 'id_val': 'ID Val', 'id_test': 'ID Test', 'val': 'OOD Val', 'test': 'OOD Test'}
 
         if split_scheme=='official':
             split_scheme = 'countries'
