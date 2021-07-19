@@ -31,6 +31,5 @@ algorithm_defaults = {
         'uniform_over_groups': True,
         'distinct_groups': True,
         'eval_loader': 'standard',
-        'dann_gamma': 10.,  # Ganin et al. set this value to 10 for all their experiments
     },
 }

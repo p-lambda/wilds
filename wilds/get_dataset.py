@@ -47,12 +47,24 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
             from wilds.datasets.civilcomments_dataset import CivilCommentsDataset
             return CivilCommentsDataset(version=version, **dataset_kwargs)
 
-    elif dataset == 'iwildcam':
-        if version == '1.0':
-            from wilds.datasets.archive.iwildcam_v1_0_dataset import IWildCamDataset
+    elif dataset == 'domainnet':
+        if unlabeled:
+            from wilds.datasets.unlabeled.domainnet_unlabeled_dataset import DomainNetUnlabeledDataset
+            return DomainNetUnlabeledDataset(version=version, **dataset_kwargs)
         else:
-            from wilds.datasets.iwildcam_dataset import IWildCamDataset # type:ignore
-        return IWildCamDataset(version=version, **dataset_kwargs)
+            from wilds.datasets.domainnet_dataset import DomainNetDataset
+            return DomainNetDataset(version=version, **dataset_kwargs)
+
+    elif dataset == 'iwildcam':
+        if unlabeled:
+            from wilds.datasets.unlabeled.iwildcam_unlabeled_dataset import IWildCamUnlabeledDataset
+            return IWildCamUnlabeledDataset(version=version, **dataset_kwargs)
+        else:
+            if version == '1.0':
+                from wilds.datasets.archive.iwildcam_v1_0_dataset import IWildCamDataset
+            else:
+                from wilds.datasets.iwildcam_dataset import IWildCamDataset # type:ignore
+            return IWildCamDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'waterbirds':
         from wilds.datasets.waterbirds_dataset import WaterbirdsDataset
