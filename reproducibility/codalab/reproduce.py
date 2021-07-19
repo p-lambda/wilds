@@ -34,7 +34,7 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --random --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_deepcoral_tune
   
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --random --coarse --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets civilcomments --algorithm deepCORAL --random --coarse --unlabeled-split extra_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x5eebc93ea19b4dd99aa68871d18d7cb2 --datasets fmow --experiment fmow_dann_coarse_valunlabeled_tune	
 
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm DANN --random --unlabeled-split test_unlabeled --dry-run
@@ -61,9 +61,7 @@ Example Usage:
      
     # To output full results of a experiment across multiple replicates
     python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x6eff199eaf61473291730321951dca7d --experiment fmow_dann_coarse_seed
-    python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x5eebc93ea19b4dd99aa68871d18d7cb2 --experiment fmow_dann_coarse_testunlabeled_seed
-    python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --experiment fmow_deepcoral_tune1
-    python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0xa0b262fc173f43c297409a069a021496 --experiment globalwheat_erm_seed
+    python3 reproducibility/codalab/reproduce.py --output --local --path /u/scr/nlp/dro/fixmatch_domainnet_logs --experiment domainnet_nlp_runs
     
     # DANN on domainnent
     python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x13ef64a3a90842d981b6b1f566b1cc78 --experiment domainnet_real-sketch
@@ -93,12 +91,13 @@ class CodaLabReproducibility:
     }
     _HAS_SEPARATE_UNLABELED_BUNDLE = ["civilcomments", "iwildcam"]
 
-    def __init__(self, wilds_version, all_datasets=False):
+    def __init__(self, wilds_version, all_datasets=False, local=False):
         self._wilds_version = wilds_version
         self._all_datasets = all_datasets
 
         # Run experiments on the main instance - https://worksheets.codalab.org
-        self._run(["cl", "work", "https://worksheets.codalab.org::"])
+        if not local:
+            self._run(["cl", "work", "https://worksheets.codalab.org::"])
 
     # TODO: remove this later if not needed -Tony
     def analyze(self, in_distribution=False):
@@ -470,6 +469,35 @@ class CodaLabReproducibility:
         )
         print("\n")
 
+    def output_full_results_local(
+        self, experiment, path, in_distribution_val=False
+    ):
+        """
+        Output the full results for an experiment using experiments stored locally.
+
+        Parameters:
+            experiment(str): Name of the experiment (e.g. amazonv2.0_irm)
+            path(str): path to results stored locally
+            in_distribution_val(bool): If true, use ID validation set for early stopping.
+        """
+        dataset = self._get_dataset_name(experiment_name=experiment)
+        results_dfs = load_results(
+            path,
+            splits=["val", "test"],
+            include_in_distribution=True,
+        )
+        results = {"Result": [results_dfs]}
+        print(f"in_distribution_val={in_distribution_val}")
+        print(
+            json.dumps(
+                compile_results(
+                    dataset, results, in_distribution_val=in_distribution_val
+                ),
+                indent=4,
+            )
+        )
+        print("\n")
+
     def get_result(self, uuid, split="val_eval"):
         """
         Output the results of a single run bundle.
@@ -641,7 +669,7 @@ class CodaLabReproducibility:
 def main():
     print(args)
 
-    reproducibility = CodaLabReproducibility(args.version, args.all_datasets)
+    reproducibility = CodaLabReproducibility(args.version, args.all_datasets, args.local)
     if args.tune_hyperparameters:
         if args.random_search:
             reproducibility.tune_hyperparameters_random(
@@ -663,9 +691,14 @@ def main():
     elif args.repair:
         reproducibility.repair(worksheet_uuid=args.worksheet_uuid)
     elif args.output_results:
-        reproducibility.output_full_results(
-            args.worksheet_uuid, args.experiment, args.id_val
-        )
+        if args.local:
+            reproducibility.output_full_results_local(
+                args.experiment, args.path, args.id_val
+            )
+        else:
+            reproducibility.output_full_results(
+                args.worksheet_uuid, args.experiment, args.id_val
+            )
     elif args.time:
         reproducibility.time(args.uuid)
     elif args.uuid:
@@ -769,6 +802,16 @@ if __name__ == "__main__":
         "--dry-run",
         action="store_true",
         help="Whether to just print CodaLab commands instead of running the commands for debugging (defaults to false).",
+    )
+    parser.add_argument(
+        "--local",
+        action="store_true",
+        help="Whether to run locally instead of through worksheets.codalab.org (defaults to false).",
+    )
+    parser.add_argument(
+        "--path",
+        type=str,
+        help="Local path",
     )
 
     # Parse args and run this script
