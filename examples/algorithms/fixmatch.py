@@ -34,10 +34,9 @@ class FixMatch(SingleModelAlgorithm):
         )
         model = torch.nn.Sequential(featurizer, classifier)
 
-        # TODO: change this to featurizer and classifier lr -Tony
         parameters_to_optimize: List[Dict] = [
-            {"params": featurizer.parameters(), "lr": config.dann_featurizer_lr},
-            {"params": classifier.parameters(), "lr": config.dann_classifier_lr},
+            {"params": featurizer.parameters(), "lr": config.fixmatch_featurizer_lr},
+            {"params": classifier.parameters(), "lr": config.fixmatch_classifier_lr},
         ]
         self.optimizer = initialize_optimizer_with_model_params(config, parameters_to_optimize)
 

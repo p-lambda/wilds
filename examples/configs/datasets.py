@@ -125,6 +125,7 @@ dataset_defaults = {
         },
         'process_outputs_function': 'multiclass_logits_to_pred',
     },
+    # TODO: was used for DANN. Not sure how to cleanly differentiate the two sets of config. -Tony
     # 'domainnet': {
     #     'split_scheme': 'official',
     #     'dataset_kwargs': {
@@ -199,6 +200,8 @@ dataset_defaults = {
         'dann_featurizer_lr': 0.001,
         'dann_classifier_lr': 0.01,
         'dann_discriminator_lr': 0.01,
+        'fixmatch_classifier_lr': 0.01,
+        'fixmatch_featurizer_lr': 0.001,
         'algo_log_metric': 'accuracy',
         'process_outputs_function': 'multiclass_logits_to_pred',
         'loader_kwargs': {
