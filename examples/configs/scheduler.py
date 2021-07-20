@@ -14,5 +14,10 @@ scheduler_defaults = {
     },
     'FixMatchLR': {
         'scheduler_kwargs': {},
+    },
+    'CosineLR': {
+        'scheduler_kwargs': {
+            'min_lr': 0 
+        },
     }
 }

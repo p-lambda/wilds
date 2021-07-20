@@ -208,6 +208,10 @@ dataset_defaults = {
             'num_workers': 2,
             'pin_memory': True,
         },
+        'scheduler': 'CosineLR',
+        'scheduler_kwargs': {
+            'min_lr': 0 
+        },
     },
     'fmow': {
         'split_scheme': 'official',
