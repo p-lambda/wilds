@@ -23,6 +23,13 @@ def initialize_scheduler(config, optimizer, n_train_steps):
         scheduler = StepLR(optimizer, **config.scheduler_kwargs)
         step_every_batch = False
         use_metric = False
+    elif config.scheduler == 'FixMatchLR':
+        scheduler = LambdaLR(
+            optimizer,
+            lambda x: (1.0 + 10 * float(x) / n_train_steps) ** -0.75
+        )
+        step_every_batch = True
+        use_metric = False
     else:
         raise ValueError(f'Scheduler: {config.scheduler} not supported.')
 

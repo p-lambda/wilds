@@ -3,6 +3,7 @@ import torch
 from algorithms.group_algorithm import GroupAlgorithm
 from scheduler import initialize_scheduler
 from optimizer import initialize_optimizer
+from torch.nn import DataParallel
 from torch.nn.utils import clip_grad_norm_
 
 class SingleModelAlgorithm(GroupAlgorithm):
@@ -24,6 +25,11 @@ class SingleModelAlgorithm(GroupAlgorithm):
             self.optimizer = initialize_optimizer(config, model)
         self.max_grad_norm = config.max_grad_norm
         scheduler = initialize_scheduler(config, self.optimizer, n_train_steps)
+
+        if config.use_data_parallel:
+            model = DataParallel(model)
+        model.to(config.device)
+
         # initialize the module
         super().__init__(
             device=config.device,

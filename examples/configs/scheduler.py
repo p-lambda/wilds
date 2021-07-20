@@ -12,4 +12,7 @@ scheduler_defaults = {
             'step_size': 1,
         }
     },
+    'FixMatchLR': {
+        'scheduler_kwargs': {},
+    }
 }

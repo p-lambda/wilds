@@ -38,6 +38,7 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'self_training_lambda': 1,
         'self_training_threshold': 0.7,
+        'scheduler': 'FixMatchLR',
         'randaugment_n': 2,
         'randaugment_m': 10,
     },
@@ -53,7 +54,5 @@ algorithm_defaults = {
         'uniform_over_groups': False,
         'eval_loader': 'standard',
         'dropout_rate': 0.5,
-        'randaugment_n': 2,
-        'randaugment_m': 10,
     }
 }

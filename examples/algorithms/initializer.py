@@ -17,7 +17,10 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
     d_out = infer_d_out(train_dataset)
 
     # Other config
-    n_train_steps = len(train_loader) * config.n_epochs
+    n_train_steps = (
+        len(unlabeled_dataset['loader']) if unlabeled_dataset and len(unlabeled_dataset['loader']) < len(train_loader)
+        else len(train_loader)
+    ) * config.n_epochs
     loss = losses[config.loss_function]
     metric = algo_log_metrics[config.algo_log_metric]
 
