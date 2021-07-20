@@ -210,7 +210,7 @@ dataset_defaults = {
         },
         'scheduler': 'CosineLR',
         'scheduler_kwargs': {
-            'min_lr': 0 
+            'min_lr': 0.25
         },
     },
     'fmow': {

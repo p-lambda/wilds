@@ -34,7 +34,7 @@ def initialize_scheduler(config, optimizer, n_train_steps):
         scheduler = CosineAnnealingLR(
             optimizer,
             n_train_steps,
-            config.scheduler_kwargs['min_lr']
+            config.scheduler_kwargs['min_lr'] * config.lr
         )
         step_every_batch = True
         use_metric = False
