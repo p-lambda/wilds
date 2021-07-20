@@ -71,6 +71,9 @@ class NoisyStudent(SingleModelAlgorithm):
         # auxiliary information
         *_, last_layer = featurizer.named_children()
         self.last_layer_name = last_layer[0]
+        # additional logging
+        self.logged_fields.append("classification_loss")
+        self.logged_fields.append("consistency_loss")
 
     def state_dict(self):
         """
@@ -113,8 +116,25 @@ class NoisyStudent(SingleModelAlgorithm):
         return results
 
     def objective(self, results):
-        labeled_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
+        # Labeled loss
+        classification_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
+
+        # Pseudolabel loss
         if 'unlabeled_y_pred' in results: 
-            unlabeled_loss = self.loss.compute(results['unlabeled_y_pred'], results['unlabeled_y_pseudo'], return_dict=False)
-        else: unlabeled_loss = 0
-        return labeled_loss + unlabeled_loss 
+            consistency_loss = self.loss.compute(
+                results['unlabeled_y_pred'], 
+                results['unlabeled_y_pseudo'], 
+                return_dict=False
+            )
+        else: 
+            consistency_loss = 0
+
+        # Add to results for additional logging
+        self.save_metric_for_logging(
+            results, "classification_loss", classification_loss
+        )
+        self.save_metric_for_logging(
+            results, "consistency_loss", consistency_loss
+        )
+
+        return classification_loss + consistency_loss 
