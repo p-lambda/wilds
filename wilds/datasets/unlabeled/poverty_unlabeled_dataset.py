@@ -71,8 +71,8 @@ class PovertyMapUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name = 'poverty_unlabeled'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x5ea7af4eb2fc41ee9b7bffe9531e6975/contents/blob/',
-            'compressed_size': 164_740_020_000,
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x817987f286744e848759ecf9537d0770/contents/blob/',
+            'compressed_size': 172_742_430_134,
         }
     }
 
