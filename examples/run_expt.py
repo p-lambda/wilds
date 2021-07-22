@@ -259,7 +259,7 @@ def main():
                 transform=unlabeled_train_transform
             )
         else:
-            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=train_transform)
+            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=unlabeled_train_transform)
 
         unlabeled_dataset = {
             'split': split,

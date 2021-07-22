@@ -38,7 +38,8 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'self_training_lambda': 1,
         'self_training_threshold': 0.7,
-        'scheduler': 'FixMatchLR',
+        # TODO: this is not working as intended -Tony
+        # 'scheduler': 'FixMatchLR',
         'randaugment_n': 2,
         'randaugment_m': 10,
     },
@@ -56,5 +57,9 @@ algorithm_defaults = {
         'dropout_rate': 0.5,
         'randaugment_n': 2,
         'randaugment_m': 10,
+        'scheduler': 'CosineLR',
+        'scheduler_kwargs': {
+            'min_lr': 0.25
+        },
     }
 }
