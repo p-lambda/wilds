@@ -231,6 +231,7 @@ def main():
         if config.algorithm == "noisy_student": 
             # For Noisy Student, we need to first generate pseudolabels using the teacher
             # and then prep the unlabeled dataset to return these pseudolabels in __getitem__
+            print("Inferring teacher pseudolabels for Noisy Student")
             assert config.teacher_model_path is not None
             d_out = infer_d_out(full_dataset)
             teacher_model = initialize_model(config, d_out).to(config.device)
