@@ -253,11 +253,10 @@ def main():
             teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
             teacher_outputs = teacher_outputs.to(torch.device("cpu"))
             teacher_model = teacher_model.to(torch.device("cpu"))
-            strong_transform = train_transform # TODO: replace with randaugment
             unlabeled_split_dataset = WILDSPseudolabeledSubset(
                 reference_subset=unlabeled_split_dataset,
                 pseudolabels=teacher_outputs, 
-                transform=strong_transform
+                transform=unlabeled_train_transform
             )
         else:
             unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=train_transform)

@@ -78,6 +78,9 @@ def load(module, path, device=None):
     else:
         prev_epoch, best_val_metric = None, None
 
+    # TODO: this is a hacky fix to load fixmatch-trained models into noisy student teachers
+    state = {re.sub('module.0.', '', k): v for k,v in state.items() if 'module.0.' in k}
+
     if module_type == state_type: # alg-alg / mod-mod
         module.load_state_dict(state)
     elif module_type == "algorithm": # alg-mod
