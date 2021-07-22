@@ -145,9 +145,14 @@ def main():
 
         config.use_data_parallel = len(config.device) > 1
         try: 
+            # TODO: cuda:0,1 should be a valid device str but the following line throws an error:
+            #       Invalid device string: 'cuda:0,1'
+            # The workaround is to just pass in "cuda", which will add all available devices.
+            # config.device = torch.device(f"cuda:{device_str}")
             device_str = ",".join(map(str, config.device))
             config.device = torch.device(f"cuda:{device_str}")
-        except:
+        except RuntimeError as e:
+            print(f"Failed to initialize CUDA. Using torch.device('cuda') instead. Error: {str(e)}")
             config.device = torch.device("cuda")
     else:
         config.use_data_parallel = False
