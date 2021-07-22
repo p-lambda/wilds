@@ -54,5 +54,7 @@ algorithm_defaults = {
         'uniform_over_groups': False,
         'eval_loader': 'standard',
         'dropout_rate': 0.5,
+        'randaugment_n': 2,
+        'randaugment_m': 10,
     }
 }
