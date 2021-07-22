@@ -144,13 +144,16 @@ def main():
             raise ValueError(f"Specified {len(config.device)} devices, but only {device_count} devices found.")
 
         config.use_data_parallel = len(config.device) > 1
-        device_str = ",".join(map(str, config.device))
-        
-        # TODO: cuda:0,1 should be a valid device str but the following line throws an error:
-        #       Invalid device string: 'cuda:0,1'
-        # The workaround is to just pass in "cuda", which will add all available devices.
-        # config.device = torch.device(f"cuda:{device_str}")
-        config.device = torch.device("cuda")
+        try: 
+            # TODO: cuda:0,1 should be a valid device str but the following line throws an error:
+            #       Invalid device string: 'cuda:0,1'
+            # The workaround is to just pass in "cuda", which will add all available devices.
+            # config.device = torch.device(f"cuda:{device_str}")
+            device_str = ",".join(map(str, config.device))
+            config.device = torch.device(f"cuda:{device_str}")
+        except RuntimeError as e:
+            print(f"Failed to initialize CUDA. Using torch.device('cuda') instead. Error: {str(e)}")
+            config.device = torch.device("cuda")
     else:
         config.use_data_parallel = False
         config.device = torch.device("cpu")
@@ -222,8 +225,6 @@ def main():
                 config.train_transform, config, full_unlabeled_dataset, additional_transform_name="fixmatch"
             )
         elif config.algorithm == "noisy_student":
-            import pdb 
-            pdb.set_trace()
             # For FixMatch, we need our loader to return batches in the form ((x_weak, x_strong), m)
             # We do this by initializing a special transform function
             unlabeled_train_transform = initialize_transform(
@@ -233,8 +234,6 @@ def main():
             unlabeled_train_transform = train_transform
         
         if config.algorithm == "noisy_student": 
-            import pdb 
-            pdb.set_trace()
             # For Noisy Student, we need to first generate pseudolabels using the teacher
             # and then prep the unlabeled dataset to return these pseudolabels in __getitem__
             assert config.teacher_model_path is not None
