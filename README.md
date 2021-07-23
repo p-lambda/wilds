@@ -29,7 +29,7 @@ pip install wilds
 If you have already installed it, please check that you have the latest version:
 ```bash
 python -c "import wilds; print(wilds.__version__)"
-# This should print "1.1.0". If it doesn't, update by running:
+# This should print "1.2.1". If it doesn't, update by running:
 pip install -U wilds
 ```
 
