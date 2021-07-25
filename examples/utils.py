@@ -9,8 +9,6 @@ import torch
 import pandas as pd
 import re
 
-from algorithms.algorithm import Algorithm
-
 try:
     import wandb
 except Exception as e:
@@ -69,27 +67,69 @@ def load(module, path, device=None):
     else:
         state = torch.load(path)
 
-    module_type = "algorithm" if isinstance(module, Algorithm) else "model"
-    state_type = "algorithm" if "algorithm" in state else "model"
-    if state_type == 'algorithm': 
+    if 'algorithm' in state: 
         prev_epoch = state['epoch']
         best_val_metric = state['best_val_metric']
         state = state['algorithm']
     else:
         prev_epoch, best_val_metric = None, None
 
-    # TODO: this is a hacky fix to load fixmatch-trained models into noisy student teachers
-    state = {re.sub('module.0.', '', k): v for k,v in state.items() if 'module.0.' in k}
+    # naive approach works if alg -> alg / mod -> mod
+    try: module.load_state_dict(state)
+    except: 
+        state = match_keys(state, list(module.state_dict().keys()))
+        module.load_state_dict(state, strict=False)
 
-    if module_type == state_type: # alg-alg / mod-mod
-        module.load_state_dict(state)
-    elif module_type == "algorithm": # alg-mod
-        module.model.load_state_dict(state)
-    else: # mod-alg
-        state = {re.sub('model.', '', k): v for k,v in state.items() if k.startswith('model')}
-        module.load_state_dict(state)
-    
+        # some algorithms (e.g. CORAL) save the clasifier separately in self.classifier
+        # thus the last layer params are saved with the key 'classifier._'
+        # need to correc this if our model is a resnet, which should have last layer name 'fc._'
+        fc_state = {re.sub('classifier.', 'fc.', k): v for k,v in state.items() if 'classifier' in k}      
+        module.load_state_dict(fc_state, strict=False)
+
+        # TODO: remove; debugging tool
+        print(f"Potentially not loaded -- parameters in module but not in state: {module.state_dict().keys()-state.keys()}")
     return prev_epoch, best_val_metric
+
+def match_keys(d, ref):
+    """
+    Matches the format of keys between d (a dict) and ref (a list of keys).
+    
+    Helper function for situations where two algorithms share the same model, and we'd like to warm-start one
+    algorithm with the model of another. Some algorithms (e.g. FixMatch) save the featurizer, classifier within a sequential,
+    and thus the featurizer keys may look like 'model.module.0._' 'model.0._' or 'model.module.model.0._',
+    and the classifier keys may look like 'model.module.1._' 'model.1._' or 'model.module.model.1._'
+    while simple algorithms (e.g. ERM) use no sequential 'model._'
+    """
+    # hard-coded exceptions
+    d = {re.sub('model.1.', 'model.classifier.', k): v for k,v in d.items()}
+
+    # probe the proper transformation from d.keys() -> reference
+    # do this by splitting d's first key on '.' until we get a string that is a strict substring of something in ref
+    success = False
+    probe = list(d.keys())[0].split('.')
+    for i in range(len(probe)):
+        probe_str = '.'.join(probe[i:])
+        matches = list(filter(lambda ref_k: len(ref_k) >= len(probe_str) and probe_str == ref_k[-len(probe_str):], ref))
+        matches = list(filter(lambda ref_k: not 'layer' in ref_k, matches)) # handle resnet probe being too simple, e.g. 'weight'
+        if len(matches) == 0: continue
+        else:
+            success = True
+            append = [m[:-len(probe_str)] for m in matches]
+            remove = '.'.join(probe[:i]) + '.'
+            break
+    if not success: raise Exception("These dictionaries have irreconcilable keys")
+    
+    return_d = {}
+    for a in append:
+        for k,v in d.items(): return_d[re.sub(remove, a, k)] = v
+    
+    # hard-coded exceptions
+    return_d = {re.sub('model.0.classifier.', 'model.1.', k): v for k,v in return_d.items()}
+    return_d = {re.sub('featurizer.classifier.', 'classifier.', k): v for k,v in return_d.items()}
+    if 'model.classifier.weight' in return_d:
+        return_d['classifier.weight'], return_d['clasifier.bias'] = return_d['model.classifier.weight'], return_d['model.classifier.bias']
+        return_d['model.1.weight'], return_d['model.1.bias'] = return_d['model.classifier.weight'], return_d['model.classifier.bias']
+    return return_d
 
 def log_group_data(datasets, grouper, logger):
     for k, dataset in datasets.items():
@@ -172,8 +212,8 @@ class BatchLogger:
         if self.use_wandb:
             results = {}
             for key in log_dict:
-                new_key = f'{self.split}/{key}'
-                results[new_key] = log_dict[key]
+                key = f'{self.split}/{key}'
+                results[key] = log_dict[key]
             wandb.log(results)
 
     def flush(self):

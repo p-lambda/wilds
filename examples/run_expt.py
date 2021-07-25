@@ -366,6 +366,7 @@ def main():
                 + (f'with previous val metric {best_val_metric} ' if best_val_metric else '')
             )
         except:
+            logger.write('Something went wrong loading the pretrained model.')
             pass
 
     # Resume from most recent model in log_dir

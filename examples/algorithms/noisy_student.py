@@ -67,26 +67,9 @@ class NoisyStudent(SingleModelAlgorithm):
             metric=metric,
             n_train_steps=n_train_steps,
         )
-        # algorithm hyperparameters
-        # auxiliary information
-        *_, last_layer = featurizer.named_children()
-        self.last_layer_name = last_layer[0]
         # additional logging
         self.logged_fields.append("classification_loss")
         self.logged_fields.append("consistency_loss")
-
-    def state_dict(self):
-        """
-        Overrides function called when saving the model. We want to be able to directly load the saved student into the teacher,
-        so we need to reformat the state dict to match the teacher's state dict.
-        """
-        def omit(k):
-            return k.startswith('featurizer') or k.startswith(self.last_layer_name)
-        def fmt(k):
-            return re.sub('featurizer.', '', k)            
-        state = super().state_dict()
-        state = { fmt(k):v for k,v in state.items() if not omit(k) }
-        return state
         
     def process_batch(self, labeled_batch, unlabeled_batch=None):
         # Labeled examples
