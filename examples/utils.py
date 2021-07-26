@@ -212,8 +212,8 @@ class BatchLogger:
         if self.use_wandb:
             results = {}
             for key in log_dict:
-                key = f'{self.split}/{key}'
-                results[key] = log_dict[key]
+                new_key = f'{self.split}/{key}'
+                results[new_key] = log_dict[key]
             wandb.log(results)
 
     def flush(self):
