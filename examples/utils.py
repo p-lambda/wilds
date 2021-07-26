@@ -14,6 +14,24 @@ try:
 except Exception as e:
     pass
 
+def cross_entropy_with_logits_loss(input, soft_target):
+    """
+    Implementation of CrossEntropy loss using a soft target. Extension of BCEWithLogitsLoss to MCE.
+    Normally, cross entropy loss is 
+        \sum_j 1{j == y} -log \frac{e^{s_j}}{\sum_k e^{s_k}} = -log \frac{e^{s_y}}{\sum_k e^{s_k}}
+    Here we use
+        \sum_j P_j *-log \frac{e^{s_j}}{\sum_k e^{s_k}}
+    where 0 <= P_j <= 1    
+    Does not support fancy nn.CrossEntropy options (e.g. weight, size_average, ignore_index, reductions, etc.)
+    
+    Args:
+    - input (N, k): logits
+    - soft_target (N, k): targets for softmax(input); likely want to use class probabilities
+    Returns:
+    - losses (N, 1)
+    """
+    return torch.sum(- soft_target * torch.nn.functional.log_softmax(input, 1), 1)
+
 def update_average(prev_avg, prev_counts, curr_avg, curr_counts):
     denom = prev_counts + curr_counts
     if isinstance(curr_counts, torch.Tensor):

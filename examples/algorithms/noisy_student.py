@@ -52,7 +52,7 @@ class NoisyStudent(SingleModelAlgorithm):
             year={2020}
             }
     """
-    def __init__(self, config, d_out, grouper, loss, metric, n_train_steps):
+    def __init__(self, config, d_out, grouper, loss, unlabeled_loss, metric, n_train_steps):
         # check that we had a teacher model (and thus computed pseudolabels in run_expt.py)
         assert config.teacher_model_path is not None
         # initialize student model with dropout before last layer
@@ -67,6 +67,7 @@ class NoisyStudent(SingleModelAlgorithm):
             metric=metric,
             n_train_steps=n_train_steps,
         )
+        self.unlabeled_loss = unlabeled_loss
         # additional logging
         self.logged_fields.append("classification_loss")
         self.logged_fields.append("consistency_loss")
@@ -104,7 +105,7 @@ class NoisyStudent(SingleModelAlgorithm):
 
         # Pseudolabel loss
         if 'unlabeled_y_pred' in results: 
-            consistency_loss = self.loss.compute(
+            consistency_loss = self.unlabeled_loss.compute(
                 results['unlabeled_y_pred'], 
                 results['unlabeled_y_pseudo'], 
                 return_dict=False

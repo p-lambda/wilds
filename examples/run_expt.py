@@ -93,6 +93,7 @@ def main():
     parser.add_argument('--irm_penalty_anneal_iters', type=int)
     parser.add_argument('--self_training_lambda', type=float)
     parser.add_argument('--self_training_threshold', type=float)
+    parser.add_argument('--soft_pseudolabels', default=False, type=parse_bool, const=True, nargs='?')
     parser.add_argument('--algo_log_metric')
 
     # Model selection
@@ -242,7 +243,7 @@ def main():
             teacher_model = initialize_model(config, d_out).to(config.device)
             load(teacher_model, config.teacher_model_path, device=config.device)
             # Infer teacher outputs on unlabeled examples in sequential order
-            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=train_transform)
+            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=train_transform, frac=config.frac)
             sequential_loader = get_eval_loader(
                 loader=config.eval_loader,
                 dataset=unlabeled_split_dataset,
@@ -259,7 +260,7 @@ def main():
                 transform=unlabeled_train_transform
             )
         else:
-            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=unlabeled_train_transform)
+            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=unlabeled_train_transform, frac=config.frac)
 
         unlabeled_dataset = {
             'split': split,

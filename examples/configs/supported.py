@@ -5,9 +5,11 @@ import sys, os
 # metrics
 from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
 from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE, multiclass_logits_to_pred, binary_logits_to_pred
+from utils import cross_entropy_with_logits_loss
 
 losses = {
     'cross_entropy': ElementwiseLoss(loss_fn=nn.CrossEntropyLoss(reduction='none')),
+    'cross_entropy_logits': ElementwiseLoss(loss_fn=cross_entropy_with_logits_loss),
     'lm_cross_entropy': MultiTaskLoss(loss_fn=nn.CrossEntropyLoss(reduction='none')),
     'mse': MSE(name='loss'),
     'multitask_bce': MultiTaskLoss(loss_fn=nn.BCEWithLogitsLoss(reduction='none')),

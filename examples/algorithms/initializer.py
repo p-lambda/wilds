@@ -104,11 +104,14 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
             metric=metric,
             n_train_steps=n_train_steps)
     elif config.algorithm=='noisy_student':
+        if config.soft_pseudolabels: unlabeled_loss = losses["cross_entropy_logits"]
+        else: unlabeled_loss = losses[config.loss_function]
         algorithm = NoisyStudent(
             config=config,
             d_out=d_out,
             grouper=train_grouper,
             loss=loss,
+            unlabeled_loss=unlabeled_loss,
             metric=metric,
             n_train_steps=n_train_steps)
     else:

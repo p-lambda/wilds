@@ -57,9 +57,6 @@ algorithm_defaults = {
         'dropout_rate': 0.5,
         'randaugment_n': 2,
         'randaugment_m': 10,
-        'scheduler': 'CosineLR',
-        'scheduler_kwargs': {
-            'min_lr': 0.25
-        },
+        'soft_pseudolabels': True
     }
 }

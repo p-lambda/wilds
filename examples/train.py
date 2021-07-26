@@ -182,8 +182,10 @@ def infer_predictions(model, loader, config):
         x = x.to(config.device)
         with torch.no_grad(): 
             output = model(x)
-            if config.process_outputs_function is not None:
+            if not config.soft_pseudolabels and config.process_outputs_function is not None:
                 output = process_outputs_functions[config.process_outputs_function](output)
+            elif config.soft_pseudolabels:
+                output = torch.nn.functional.softmax(output, dim=1)
         y_pred.append(output.clone().detach())
     return torch.cat(y_pred, 0)
 
