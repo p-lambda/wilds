@@ -53,8 +53,6 @@ class NoisyStudent(SingleModelAlgorithm):
             }
     """
     def __init__(self, config, d_out, grouper, loss, unlabeled_loss, metric, n_train_steps):
-        # check that we had a teacher model (and thus computed pseudolabels in run_expt.py)
-        assert config.teacher_model_path is not None
         # initialize student model with dropout before last layer
         featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
         student_model = DropoutModel(featurizer, classifier, config.dropout_rate).to(config.device)

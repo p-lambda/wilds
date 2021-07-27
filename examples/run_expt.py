@@ -195,6 +195,7 @@ def main():
         transform_name=config.train_transform,
         config=config,
         dataset=full_dataset,
+        additional_transform_name=("noisy_student" if config.algorithm == "noisy_student" else None)
     )
     eval_transform = initialize_transform(
         transform_name=config.eval_transform,
