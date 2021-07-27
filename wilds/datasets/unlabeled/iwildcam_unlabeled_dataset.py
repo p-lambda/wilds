@@ -131,7 +131,6 @@ class IWildCamUnlabeledDataset(WILDSUnlabeledDataset):
             "second",
             "y",
         ]
-        self._metadata_map = {}
 
         # eval grouper
         self._eval_grouper = CombinatorialGrouper(
