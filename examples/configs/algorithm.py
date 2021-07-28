@@ -56,7 +56,6 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'dropout_rate': 0.5,
         'randaugment_n': 2,
-        'randaugment_m': 10,
-        'soft_pseudolabels': True
+        'randaugment_m': 10
     }
 }
