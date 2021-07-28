@@ -98,7 +98,7 @@ def load(module, path, device=None):
         state = match_keys(state, list(module.state_dict().keys()))
         module.load_state_dict(state, strict=False)
 
-        # some algorithms (e.g. CORAL) save the clasifier separately in self.classifier
+        # some algorithms (e.g. CORAL) save the classifier separately in self.classifier
         # thus the last layer params are saved with the key 'classifier._'
         # need to correc this if our model is a resnet, which should have last layer name 'fc._'
         fc_state = {re.sub('classifier.', 'fc.', k): v for k,v in state.items() if 'classifier' in k}      
@@ -145,7 +145,7 @@ def match_keys(d, ref):
     return_d = {re.sub('model.0.classifier.', 'model.1.', k): v for k,v in return_d.items()}
     return_d = {re.sub('featurizer.classifier.', 'classifier.', k): v for k,v in return_d.items()}
     if 'model.classifier.weight' in return_d:
-        return_d['classifier.weight'], return_d['clasifier.bias'] = return_d['model.classifier.weight'], return_d['model.classifier.bias']
+        return_d['classifier.weight'], return_d['classifier.bias'] = return_d['model.classifier.weight'], return_d['model.classifier.bias']
         return_d['model.1.weight'], return_d['model.1.bias'] = return_d['model.classifier.weight'], return_d['model.classifier.bias']
     return return_d
 
