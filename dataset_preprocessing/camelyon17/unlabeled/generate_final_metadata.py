@@ -12,6 +12,7 @@ np.random.seed(0)
 _NUM_CENTERS = 5
 _NUM_PATCHES_TO_SUBSAMPLE = 6000
 _NUM_PATIENTS_PER_HOSPITAL = 20
+_TRAIN_UNLABELED_SPLIT = 10
 
 
 def generate_final_metadata(slide_root, output_root):
@@ -90,7 +91,7 @@ def generate_final_metadata(slide_root, output_root):
         )
         df_to_keep = df.loc[indices_to_keep, :].copy().reset_index(drop=True)
 
-    df_to_keep["split"] = 0
+    df_to_keep["split"] = _TRAIN_UNLABELED_SPLIT
     print_stats(df_to_keep)
     df_to_keep.to_csv(os.path.join(output_root, "metadata.csv"))
     print("Done.")
