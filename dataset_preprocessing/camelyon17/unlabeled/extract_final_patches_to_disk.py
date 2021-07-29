@@ -10,6 +10,7 @@ from generate_all_patch_coords import PATCH_LEVEL, CENTER_SIZE
 
 
 def write_patch_images_from_df(slide_root, output_root):
+    print("Writing patch images to disk...")
     read_df = pd.read_csv(
         os.path.join(output_root, "metadata.csv"), index_col=0, dtype={"patient": "str"}
     )
@@ -67,6 +68,7 @@ def write_patch_images_from_df(slide_root, output_root):
 
         patch = slide.read_region((x, y), 2, (patch_size, patch_size))
         patch.save(patch_path)
+        print("Done.")
 
 
 if __name__ == "__main__":

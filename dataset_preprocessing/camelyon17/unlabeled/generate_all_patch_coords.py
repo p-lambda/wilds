@@ -146,6 +146,7 @@ def generate_files(slide_root, output_root, center):
         centers = [center]
 
     for center in centers:
+        print(f"Generating patches for center {center}...")
         center_dir = os.path.join(slide_root, f"center_{center}")
         patient_dirs = os.listdir(center_dir)
 
@@ -190,7 +191,7 @@ if __name__ == "__main__":
         "--center",
         type=int,
         help="Which specific center to extract patches for. If a center is not specified, "
-             "patches will be extracted for all five centers.",
+        "patches will be extracted for all five centers.",
     )
     args = parser.parse_args()
 

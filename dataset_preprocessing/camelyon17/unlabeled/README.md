@@ -18,7 +18,7 @@ see [installation instructions](https://github.com/openslide/openslide-python).
    patches to eventually be written.
 
 3. Then run `python generate_final_metadata.py --slide_root SLIDE_ROOT --output_root OUTPUT_ROOT` 
-   to generate the metadata.csv file.
+   to generate the metadata.csv file for unlabeled Camelyon.
    
 4. Finally, run `python extract_final_patches_to_disk.py --slide_root SLIDE_ROOT --output_root OUTPUT_ROOT` to 
    extract the chosen patches from the WSIs and write them to disk.
