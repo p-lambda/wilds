@@ -5,6 +5,7 @@ import pandas as pd
 import torch
 from PIL import Image
 
+from wilds.datasets.camelyon17_dataset import TEST_CENTER, VAL_CENTER
 from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSUnlabeledDataset
 from wilds.common.grouper import CombinatorialGrouper
 
@@ -76,13 +77,6 @@ class Camelyon17UnlabeledDataset(WILDSUnlabeledDataset):
             ].itertuples(index=False, name=None)
         ]
 
-        # Extract splits
-        # Note that the hospital numbering here is different from what's in the paper,
-        # where to avoid confusing readers we used a 1-indexed scheme and just labeled the test hospital as 5.
-        # Here, the numbers are 0-indexed.
-        test_center = 2
-        val_center = 1
-
         self._split_scheme = split_scheme
         if self._split_scheme == "official":
             self._split_dict = {
@@ -98,15 +92,20 @@ class Camelyon17UnlabeledDataset(WILDSUnlabeledDataset):
         else:
             raise ValueError(f"Split scheme {self._split_scheme} not recognized")
 
+        # Extract splits
         centers = self._metadata_df["center"].values.astype("long")
         num_centers = int(np.max(centers)) + 1
-        val_center_mask = self._metadata_df["center"] == val_center
-        test_center_mask = self._metadata_df["center"] == test_center
-        self._metadata_df.loc[val_center_mask, "split"] = self.split_dict["val_unlabeled"]
-        self._metadata_df.loc[test_center_mask, "split"] = self.split_dict["test_unlabeled"]
+        val_center_mask = self._metadata_df["center"] == VAL_CENTER
+        test_center_mask = self._metadata_df["center"] == TEST_CENTER
+        self._metadata_df.loc[val_center_mask, "split"] = self.split_dict[
+            "val_unlabeled"
+        ]
+        self._metadata_df.loc[test_center_mask, "split"] = self.split_dict[
+            "test_unlabeled"
+        ]
         self._split_array = self._metadata_df["split"].values
 
-        self._y_array = torch.LongTensor(self._metadata_df['tumor'].values)
+        self._y_array = torch.LongTensor(self._metadata_df["tumor"].values)
         self._metadata_array = torch.stack(
             (
                 torch.LongTensor(centers),
