@@ -102,6 +102,7 @@ def load(module, path, device=None, tries=2):
             print(f"parameters in module but not in state: {module_keys-state.keys()}") # TODO: remove, testing code
             leftover_state = {k:v for k,v in state.items() if k in list(state.keys()-module_keys)}
             leftover_module_keys = module_keys - state.keys()
+            if len(leftover_state) == 0 or len(leftover_module_keys) == 0: break
             state, module_keys = leftover_state, leftover_module_keys
         print(f"Some module parameters could not be found in the loaded state: {module_keys-state.keys()}")
     return prev_epoch, best_val_metric
