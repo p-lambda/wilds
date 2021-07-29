@@ -1,30 +1,49 @@
+import argparse
+import os
+import pdb
+
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-import argparse
-import os,sys
-import numpy as np
-from tqdm import tqdm
-from collections import defaultdict
 
-def generate_final_metadata(output_root):
-    df = pd.read_csv(os.path.join(output_root, 'all_patch_coords.csv'),
-                     index_col=0,
-                     dtype={
-                        'patient': 'str',
-                        'tumor': 'int'
-                     })
+# Fix seed for reproducibility
+np.random.seed(0)
+
+_NUM_CENTERS = 5
+_NUM_PATCHES_TO_SUBSAMPLE = 6000
+_NUM_PATIENTS_PER_HOSPITAL = 20
+
+
+def generate_final_metadata(slide_root, output_root):
+    def print_stats(patches_df):
+        print(f"\nStatistics:\nTotal # of patches: {patches_df.shape[0]}")
+        for center in range(_NUM_CENTERS):
+            print(
+                f"Center {center}: {np.sum(patches_df['center'] == center):6d} patches"
+            )
+        print()
+
+    patches_path = os.path.join(output_root, "all_patch_coords.csv")
+    print(f"Importing patches from {patches_path}...")
+    df = pd.read_csv(
+        patches_path,
+        index_col=0,
+        dtype={"patient": "str", "tumor": "int"},
+    )
 
     # Assign slide numbers to patients + nodes
-    patient_node_list = list(set(df[['patient', 'node']].itertuples(index=False, name=None)))
+    patient_node_list = list(
+        set(df[["patient", "node"]].itertuples(index=False, name=None))
+    )
     patient_node_list.sort()
     patient_node_to_slide_map = {}
     for idx, (patient, node) in enumerate(patient_node_list):
         patient_node_to_slide_map[(patient, node)] = idx
 
     for (patient, node), slide_idx in patient_node_to_slide_map.items():
-        mask = (df['patient'] == patient) & (df['node'] == node)
-        df.loc[mask, 'slide'] = slide_idx
-    df['slide'] = df['slide'].astype('int')
+        mask = (df["patient"] == patient) & (df["node"] == node)
+        df.loc[mask, "slide"] = slide_idx
+    df["slide"] = df["slide"].astype("int")
 
     # The raw data has the following assignments:
     # Center 0: patients 0 to 19
@@ -32,86 +51,55 @@ def generate_final_metadata(output_root):
     # Center 2: patients 40 to 59
     # Center 3: patients 60 to 79
     # Center 4: patients 80 to 99
-    num_centers = 5
-    patients_per_center = 20
-    df['center'] = df['patient'].astype('int') // patients_per_center
-
-    for k in range(num_centers):
-        print(f"center {k}: "
-              f"{np.sum((df['center'] == k) & (df['tumor'] == 0)):6d} non-tumor, "
-              f"{np.sum((df['center'] == k) & (df['tumor'] == 1)):6d} tumor")
-
-    for center, slide in set(df[['center', 'slide']].itertuples(index=False, name=None)):
+    df["center"] = df["patient"].astype("int") // _NUM_PATIENTS_PER_HOSPITAL
+    print_stats(df)
+    for center, slide in set(
+        df[["center", "slide"]].itertuples(index=False, name=None)
+    ):
         assert center == slide // 10
 
-    # Keep all tumor patches, except if the slide has fewer normal than tumor patches
-    # (slide 096 in center 4)
-    # in which case we discard the excess tumor patches
+    # Remove patches from the original metadata.csv before subsampling.
+    # There are 50 XML files in the lesion_annotation folder, so 50 patient-node pairs were
+    # already used in the original WILDS Camelyon dataset.
+    print(
+        "Removing patches from slides that were used in the original Camelyon-WILDS dataset..."
+    )
+    for file in os.listdir(os.path.join(slide_root, "lesion_annotations")):
+        if file.endswith(".xml") and not file.startswith("._"):
+            prefix = file.split(".xml")[0]
+            patient = prefix.split("_")[1]
+            node = prefix.split("_")[3]
+
+            patient_mask = df["patient"] == patient
+            node_mask = df["node"] == int(node)
+            df = df[~(patient_mask & node_mask)]
+    print_stats(df)
+
+    # Original Camelyon-WILDS had 300,000 patches, so we need about 10x unlabeled or 3 million patches.
+    # Each hospital/center of the training set has 100 slides, so subsample 6000 patches from each slide,
+    # resulting in 600,000 patches total from each hospital/center.
+    print(f"Subsampling {_NUM_PATCHES_TO_SUBSAMPLE} patches from each slide...")
     indices_to_keep = []
-    np.random.seed(0)
-    tumor_mask = df['tumor'] == 1
-    for slide in set(df['slide']):
-        slide_mask = (df['slide'] == slide)
-        num_tumor = np.sum(slide_mask & tumor_mask)
-        num_non_tumor = np.sum(slide_mask & ~tumor_mask)
-        slide_indices_with_tumor = list(df.index[slide_mask & tumor_mask])
-        indices_to_keep += list(np.random.choice(
-            slide_indices_with_tumor,
-            size=min(num_tumor, num_non_tumor),
-            replace=False))
-
-    tumor_keep_mask = np.zeros(len(df))
-    tumor_keep_mask[df.index[indices_to_keep]] = 1
-
-    # Within each center and split, keep same number of normal patches as tumor patches
-    for center in range(num_centers):
-        print(f'Center {center}:')
-        center_mask = df['center'] == center
-        num_tumor = np.sum(center_mask & tumor_keep_mask)
-        print(f'  Num tumor: {num_tumor}')
-
-        num_non_tumor = np.sum(center_mask & ~tumor_mask)
-        center_indices_without_tumor = list(df.index[center_mask & ~tumor_mask])
-        indices_to_keep += list(np.random.choice(
-            center_indices_without_tumor,
-            size=min(num_tumor, num_non_tumor),
-            replace=False))
-
-        print(f'  Num non-tumor: {min(num_tumor, num_non_tumor)} out of {num_non_tumor} ({min(num_tumor, num_non_tumor) / num_non_tumor * 100:.1f}%)')
-
+    for slide in set(df["slide"]):
+        slide_mask = df["slide"] == slide
+        slide_indices = list(df.index[slide_mask])
+        indices_to_keep += list(
+            np.random.choice(
+                slide_indices, size=_NUM_PATCHES_TO_SUBSAMPLE, replace=False
+            )
+        )
         df_to_keep = df.loc[indices_to_keep, :].copy().reset_index(drop=True)
 
-    val_frac = 0.1
+    df_to_keep["split"] = 0
+    print_stats(df_to_keep)
+    df_to_keep.to_csv(os.path.join(output_root, "metadata.csv"))
+    print("Done.")
 
-    split_dict = {
-        'train': 0,
-        'val': 1,
-        'test': 2
-    }
 
-    df_to_keep['split'] = split_dict['train']
-
-    all_indices = list(df_to_keep.index)
-    val_indices = list(np.random.choice(
-        all_indices,
-        size=int(val_frac * len(all_indices)),
-        replace=False))
-    df_to_keep.loc[val_indices, 'split'] = split_dict['val']
-
-    print('Statistics by center:')
-    for center in range(num_centers):
-        tumor_mask = df_to_keep['tumor'] == 1
-        center_mask = df_to_keep['center'] == center
-        num_tumor = np.sum(center_mask & tumor_mask)
-        num_non_tumor = np.sum(center_mask & ~tumor_mask)
-
-        print(f'Center {center}')
-        print(f'  {num_tumor} / {num_tumor + num_non_tumor} ({num_tumor / (num_tumor + num_non_tumor) * 100:.1f}%) tumor')
-
-    df_to_keep.to_csv(os.path.join(output_root, 'metadata.csv'))
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output_root', required=True)
+    parser.add_argument("--slide_root", required=True)
+    parser.add_argument("--output_root", required=True)
     args = parser.parse_args()
-    generate_final_metadata(args.output_root)
+
+    generate_final_metadata(slide_root=args.slide_root, output_root=args.output_root)
