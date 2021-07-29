@@ -84,7 +84,7 @@ class CodaLabReproducibility:
     _MAX_BATCH_SIZES = {
         "amazon": 32,
         "civilcomments": 64,
-        "camelyon17": 32,
+        "camelyon17": 224,
         "iwildcam": 32,
         "fmow": 96,
         "poverty": 160,
