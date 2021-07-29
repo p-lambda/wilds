@@ -38,8 +38,7 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'self_training_lambda': 1,
         'self_training_threshold': 0.7,
-        # TODO: this is not working as intended -Tony
-        # 'scheduler': 'FixMatchLR',
+        'scheduler': 'FixMatchLR',
         'randaugment_n': 2,
         'randaugment_m': 10,
     },

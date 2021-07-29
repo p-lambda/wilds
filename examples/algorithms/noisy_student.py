@@ -58,11 +58,11 @@ class NoisyStudent(SingleModelAlgorithm):
         featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
         student_model = DropoutModel(featurizer, classifier, config.dropout_rate).to(config.device)
 
-        parameters_to_optimize: List[Dict] = [
-            {"params": featurizer.parameters(), "lr": config.featurizer_lr},
-            {"params": classifier.parameters(), "lr": config.classifier_lr},
-        ]
-        self.optimizer = initialize_optimizer_with_model_params(config, parameters_to_optimize)
+        # parameters_to_optimize: List[Dict] = [
+        #     {"params": featurizer.parameters(), "lr": config.featurizer_lr},
+        #     {"params": classifier.parameters(), "lr": config.classifier_lr},
+        # ]
+        # self.optimizer = initialize_optimizer_with_model_params(config, parameters_to_optimize)
 
         # initialize module
         super().__init__(
