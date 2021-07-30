@@ -38,7 +38,6 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'self_training_lambda': 1,
         'self_training_threshold': 0.7,
-        'scheduler': 'FixMatchLR',
         'randaugment_n': 2,
     },
     'PseudoLabel': {
