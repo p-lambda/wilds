@@ -433,11 +433,16 @@ class WILDSDataset:
 
 
 class WILDSSubset(WILDSDataset):
-    def __init__(self, dataset, indices, transform):
+    def __init__(self, dataset, indices, transform, do_transform_y=False):
         """
-        This acts like torch.utils.data.Subset, but on WILDSDatasets.
-        We pass in transform explicitly because it can potentially vary at
-        training vs. test time, if we're using data augmentation.
+        This acts like `torch.utils.data.Subset`, but on `WILDSDatasets`.
+        We pass in `transform` (which is used for data augmentation) explicitly
+        because it can potentially vary on the training vs. test subsets.
+
+        `do_transform_y` (bool): When this is false (the default),
+                                 `self.transform ` acts only on  `x`.
+                                 Set this to true if `self.transform` should
+                                 operate on `(x,y)` instead of just `x`.
         """
         self.dataset = dataset
         self.indices = indices
@@ -449,11 +454,15 @@ class WILDSSubset(WILDSDataset):
             if hasattr(dataset, attr_name):
                 setattr(self, attr_name, getattr(dataset, attr_name))
         self.transform = transform
+        self.do_transform_y = do_transform_y
 
     def __getitem__(self, idx):
         x, y, metadata = self.dataset[self.indices[idx]]
         if self.transform is not None:
-            x, y = self.transform(x, y)
+            if self.do_transform_y:
+                x, y = self.transform(x, y)
+            else:
+                x = self.transform(x)
         return x, y, metadata
 
     def __len__(self):
