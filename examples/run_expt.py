@@ -73,8 +73,6 @@ def main():
     parser.add_argument('--resize_scale', type=float)
     parser.add_argument('--max_token_length', type=int)
     parser.add_argument('--randaugment_n', type=int, help='N parameter of RandAugment - the number of transformations to apply.')
-    parser.add_argument('--randaugment_m', type=int,
-        help='M parameter of RandAugment - the magnitude of the transformation. Values range from 1 to 10, where 10 indicates the maximum scale for a transformation.')
 
     # Objective
     parser.add_argument('--loss_function', choices = supported.losses)

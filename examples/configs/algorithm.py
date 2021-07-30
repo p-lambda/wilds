@@ -40,7 +40,6 @@ algorithm_defaults = {
         'self_training_threshold': 0.7,
         'scheduler': 'FixMatchLR',
         'randaugment_n': 2,
-        'randaugment_m': 10,
     },
     'PseudoLabel': {
         'train_loader': 'standard',
@@ -55,7 +54,6 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'dropout_rate': 0.5,
         'randaugment_n': 2,
-        'randaugment_m': 10,
         'scheduler': 'CosineLR',
         'scheduler_kwargs': {
             'min_lr': 0.25

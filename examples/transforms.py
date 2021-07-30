@@ -190,7 +190,6 @@ def add_fixmatch_transform(config, dataset, base_transform_steps, normalization)
             ),
             RandAugment(
                 n=config.randaugment_n,
-                m=config.randaugment_m,
                 augmentation_pool=FIX_MATCH_AUGMENTATION_POOL,
             ),
             transforms.ToTensor(),
@@ -212,7 +211,6 @@ def add_noisy_student_transform(config, dataset, base_transform_steps, normaliza
             ),
             RandAugment(
                 n=config.randaugment_n,
-                m=config.randaugment_m,
                 augmentation_pool=FIX_MATCH_AUGMENTATION_POOL,
             ),
             transforms.ToTensor(),
