@@ -195,7 +195,7 @@ def main():
         transform_name=config.train_transform,
         config=config,
         dataset=full_dataset,
-        additional_transform_name=("noisy_student" if config.algorithm == "noisy_student" else None)
+        additional_transform_name=("noisy_student" if config.algorithm == "NoisyStudent" else None)
     )
     eval_transform = initialize_transform(
         transform_name=config.eval_transform,
@@ -226,16 +226,15 @@ def main():
             unlabeled_train_transform = initialize_transform(
                 config.train_transform, config, full_unlabeled_dataset, additional_transform_name="fixmatch"
             )
-        elif config.algorithm == "noisy_student":
-            # For FixMatch, we need our loader to return batches in the form ((x_weak, x_strong), m)
-            # We do this by initializing a special transform function
+        elif config.algorithm == "NoisyStudent":
+            # For NoisyStudent, we need our loader to apply a strong augmentation to examples
             unlabeled_train_transform = initialize_transform(
                 config.train_transform, config, full_unlabeled_dataset, additional_transform_name="noisy_student"
             )
         else:
             unlabeled_train_transform = train_transform
         
-        if config.algorithm == "noisy_student": 
+        if config.algorithm == "NoisyStudent": 
             # For Noisy Student, we need to first generate pseudolabels using the teacher
             # and then prep the unlabeled dataset to return these pseudolabels in __getitem__
             print("Inferring teacher pseudolabels for Noisy Student")
