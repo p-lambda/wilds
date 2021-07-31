@@ -1,10 +1,10 @@
+import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torchvision.ops.boxes import box_iou
 from torchvision.models.detection._utils import Matcher
 from torchvision.ops import nms, box_convert
-import numpy as np
-import torch.nn.functional as F
 from wilds.common.metrics.metric import Metric, ElementwiseMetric, MultiTaskMetric
 from wilds.common.metrics.loss import ElementwiseLoss
 from wilds.common.utils import avg_over_groups, minimum, maximum, get_counts
@@ -243,12 +243,17 @@ class DetectionAccuracy(ElementwiseMetric):
         total_pred = len(pred_boxes)
         if total_gt > 0 and total_pred > 0:
             # Define the matcher and distance matrix based on iou
-            matcher = Matcher(iou_threshold,iou_threshold,allow_low_quality_matches=False)
-            match_quality_matrix = box_iou(src_boxes,pred_boxes)
+            matcher = Matcher(
+                iou_threshold,
+                iou_threshold,
+                allow_low_quality_matches=False)
+            match_quality_matrix = box_iou(
+                src_boxes,
+                pred_boxes)
             results = matcher(match_quality_matrix)
             true_positive = torch.count_nonzero(results.unique() != -1)
             matched_elements = results[results > -1]
-            #in Matcher, a pred element can be matched only twice
+            # in Matcher, a pred element can be matched only twice
             false_positive = (
                 torch.count_nonzero(results == -1) +
                 (len(matched_elements) - len(matched_elements.unique()))

@@ -50,7 +50,10 @@ pip install -e .
 - torch>=1.7.0
 - torch-scatter>=2.0.5
 - torch-geometric>=1.6.1
+- torchvision>=0.8.2
 - tqdm>=4.53.0
+- scikit-learn>=0.20.0
+- scipy>=1.5.4
 
 Running `pip install wilds` or `pip install -e .` will automatically check for and install all of these requirements
 except for the `torch-scatter` and `torch-geometric` packages, which require a [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
@@ -63,9 +66,8 @@ These scripts are not part of the installed WILDS package. To use them, you shou
 git clone git@github.com:p-lambda/wilds.git
 ```
 
-To run these scripts, you will need to install these additional dependencies:
+To run these scripts, you will also need to install this additional dependency:
 
-- torchvision>=0.8.2
 - transformers>=3.5.0
 
 All baseline experiments in the paper were run on Python 3.8.5 and CUDA 10.1.
