@@ -27,10 +27,6 @@ def get_train_loader(loader, dataset, batch_size,
         - data loader (DataLoader): Data loader.
     """
     if loader == 'standard':
-        if n_groups_per_batch is not None:
-            raise ValueError("n_groups_per_batch cannot be specified if the data loader is 'standard'. Consider using a 'group' data loader instead.")
-        if distinct_groups is not None:
-            raise ValueError("distinct_groups cannot be specified if the data loader is 'standard'. Consider using a 'group' data loader instead.")
         if uniform_over_groups is None or not uniform_over_groups:
             return DataLoader(
                 dataset,
