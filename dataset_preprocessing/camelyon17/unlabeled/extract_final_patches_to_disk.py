@@ -68,7 +68,7 @@ def write_patch_images_from_df(slide_root, output_root):
 
         patch = slide.read_region((x, y), 2, (patch_size, patch_size))
         patch.save(patch_path)
-        print("Done.")
+    print("Done.")
 
 
 if __name__ == "__main__":
