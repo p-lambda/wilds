@@ -200,8 +200,8 @@ dataset_defaults = {
         'dann_featurizer_lr': 0.001,
         'dann_classifier_lr': 0.01,
         'dann_discriminator_lr': 0.01,
-        'classifier_lr': 0.01,
-        'featurizer_lr': 0.001,
+        'fixmatch_classifier_lr': 0.01,
+        'fixmatch_featurizer_lr': 0.001,
         'algo_log_metric': 'accuracy',
         'process_outputs_function': 'multiclass_logits_to_pred',
         'loader_kwargs': {
