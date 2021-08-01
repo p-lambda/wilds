@@ -12,7 +12,6 @@ np.random.seed(0)
 _NUM_CENTERS = 5
 _NUM_PATCHES_TO_SUBSAMPLE = 6000
 _NUM_PATIENTS_PER_HOSPITAL = 20
-_TRAIN_UNLABELED_SPLIT = 10
 
 
 def generate_final_metadata(slide_root, output_root):
@@ -24,7 +23,7 @@ def generate_final_metadata(slide_root, output_root):
             )
         print()
 
-    patches_path = os.path.join(output_root, "all_patch_coords.csv")
+    patches_path = os.path.join(output_root, "all_unlabeled_patch_coords.csv")
     print(f"Importing patches from {patches_path}...")
     df = pd.read_csv(
         patches_path,
@@ -57,7 +56,7 @@ def generate_final_metadata(slide_root, output_root):
     for center, slide in set(
         df[["center", "slide"]].itertuples(index=False, name=None)
     ):
-        assert center == slide // 10
+        assert center == slide // 100, "Expected 100 slides per center."
 
     # Remove patches from the original metadata.csv before subsampling.
     # There are 50 XML files in the lesion_annotation folder, so 50 patient-node pairs were
@@ -76,9 +75,9 @@ def generate_final_metadata(slide_root, output_root):
             df = df[~(patient_mask & node_mask)]
     print_stats(df)
 
-    # Original Camelyon-WILDS had 300,000 patches, so we need about 10x unlabeled or 3 million patches.
-    # Each hospital/center of the training set has 100 slides, so subsample 6000 patches from each slide,
-    # resulting in 600,000 patches total from each hospital/center.
+    # The labeled Camelyon-WILDS dataset has approximately ~300,000 patches. We want about 10x unlabeled data,
+    # which corresponds to ~3 million patches. Since each hospital of the original Camelyon17 training set
+    # has 100 slides, subsample 6000 patches from each slide, resulting in 600,000 patches total from each hospital.
     print(f"Subsampling {_NUM_PATCHES_TO_SUBSAMPLE} patches from each slide...")
     indices_to_keep = []
     for slide in set(df["slide"]):
@@ -91,7 +90,6 @@ def generate_final_metadata(slide_root, output_root):
         )
         df_to_keep = df.loc[indices_to_keep, :].copy().reset_index(drop=True)
 
-    df_to_keep["split"] = _TRAIN_UNLABELED_SPLIT
     print_stats(df_to_keep)
     df_to_keep.to_csv(os.path.join(output_root, "metadata.csv"))
     print("Done.")

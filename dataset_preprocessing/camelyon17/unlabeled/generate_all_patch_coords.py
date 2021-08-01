@@ -178,7 +178,7 @@ def generate_files(slide_root, output_root, center):
 
     # Coordinates of all potential patches
     aggregate_df = aggregate_df.reset_index(drop=True)
-    aggregate_df.to_csv(os.path.join(output_root, "all_patch_coords.csv"))
+    aggregate_df.to_csv(os.path.join(output_root, "all_unlabeled_patch_coords.csv"))
     return aggregate_df
 
 

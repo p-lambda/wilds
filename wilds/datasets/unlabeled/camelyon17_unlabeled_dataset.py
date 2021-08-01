@@ -13,8 +13,9 @@ from wilds.common.grouper import CombinatorialGrouper
 class Camelyon17UnlabeledDataset(WILDSUnlabeledDataset):
     """
     Unlabeled Camelyon17 dataset.
-    This is a modified version of the original CAMELYON17 dataset. We took the patches not in the
-    lesion annotations for unlabeled data.
+    This dataset contains patches from all of the slides in the original CAMELYON17 training data,
+    except for the slides that were labeled with lesion annotations and therefore used in the
+    labeled Camelyon17Dataset.
 
     Supported `split_scheme`:
         'official'
@@ -95,6 +96,9 @@ class Camelyon17UnlabeledDataset(WILDSUnlabeledDataset):
         # Extract splits
         centers = self._metadata_df["center"].values.astype("long")
         num_centers = int(np.max(centers)) + 1
+        self._metadata_df["split"] = self.split_dict[
+            "train_unlabeled"
+        ]
         val_center_mask = self._metadata_df["center"] == VAL_CENTER
         test_center_mask = self._metadata_df["center"] == TEST_CENTER
         self._metadata_df.loc[val_center_mask, "split"] = self.split_dict[
