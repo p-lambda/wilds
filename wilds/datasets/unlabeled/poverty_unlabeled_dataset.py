@@ -71,13 +71,16 @@ class PovertyMapUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name = 'poverty_unlabeled'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x5ea7af4eb2fc41ee9b7bffe9531e6975/contents/blob/',
-            'compressed_size': 164_740_020_000,
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xdfcf71b4f6164cc1a7edb0cbb7444c8c/contents/blob/',
+            'compressed_size': 172_742_430_134,
         }
     }
 
     def __init__(self, version=None, root_dir='data', download=False,
-                 split_scheme='official', no_nl=False, fold='A'):
+                 split_scheme='official',
+                 no_nl=False, fold='A', oracle_training_set=False,
+                 use_ood_val=True,
+                 cache_size=100):
         self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
