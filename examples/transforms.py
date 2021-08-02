@@ -5,7 +5,7 @@ import torchvision.transforms as transforms
 import torch
 from transformers import BertTokenizerFast, DistilBertTokenizerFast
 
-from data_augmentation.randaugment2 import FIX_MATCH_AUGMENTATION_POOL, RandAugment
+from data_augmentation.randaugment import FIX_MATCH_AUGMENTATION_POOL, RandAugment
 
 
 _DEFAULT_IMAGE_TENSOR_NORMALIZATION_MEAN = [0.485, 0.456, 0.406]
@@ -190,7 +190,6 @@ def add_fixmatch_transform(config, dataset, base_transform_steps, normalization)
             ),
             RandAugment(
                 n=config.randaugment_n,
-                m=config.randaugment_m,
                 augmentation_pool=FIX_MATCH_AUGMENTATION_POOL,
             ),
             transforms.ToTensor(),
@@ -212,7 +211,6 @@ def add_noisy_student_transform(config, dataset, base_transform_steps, normaliza
             ),
             RandAugment(
                 n=config.randaugment_n,
-                m=config.randaugment_m,
                 augmentation_pool=FIX_MATCH_AUGMENTATION_POOL,
             ),
             transforms.ToTensor(),
