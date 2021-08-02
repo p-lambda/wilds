@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from models.initializer import initialize_model
 from algorithms.ERM import ERM
 from algorithms.single_model_algorithm import SingleModelAlgorithm
+from optimizer import initialize_optimizer_with_model_params
 from wilds.common.utils import split_into_groups
 from configs.supported import process_outputs_functions
 import copy
@@ -52,12 +53,11 @@ class NoisyStudent(SingleModelAlgorithm):
             year={2020}
             }
     """
-    def __init__(self, config, d_out, grouper, loss, metric, n_train_steps):
-        # check that we had a teacher model (and thus computed pseudolabels in run_expt.py)
-        assert config.teacher_model_path is not None
+    def __init__(self, config, d_out, grouper, loss, unlabeled_loss, metric, n_train_steps):
         # initialize student model with dropout before last layer
         featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
         student_model = DropoutModel(featurizer, classifier, config.dropout_rate).to(config.device)
+        
         # initialize module
         super().__init__(
             config=config,
@@ -67,26 +67,10 @@ class NoisyStudent(SingleModelAlgorithm):
             metric=metric,
             n_train_steps=n_train_steps,
         )
-        # algorithm hyperparameters
-        # auxiliary information
-        *_, last_layer = featurizer.named_children()
-        self.last_layer_name = last_layer[0]
+        self.unlabeled_loss = unlabeled_loss
         # additional logging
         self.logged_fields.append("classification_loss")
         self.logged_fields.append("consistency_loss")
-
-    def state_dict(self):
-        """
-        Overrides function called when saving the model. We want to be able to directly load the saved student into the teacher,
-        so we need to reformat the state dict to match the teacher's state dict.
-        """
-        def omit(k):
-            return k.startswith('featurizer') or k.startswith(self.last_layer_name)
-        def fmt(k):
-            return re.sub('featurizer.', '', k)            
-        state = super().state_dict()
-        state = { fmt(k):v for k,v in state.items() if not omit(k) }
-        return state
         
     def process_batch(self, labeled_batch, unlabeled_batch=None):
         # Labeled examples
@@ -121,7 +105,7 @@ class NoisyStudent(SingleModelAlgorithm):
 
         # Pseudolabel loss
         if 'unlabeled_y_pred' in results: 
-            consistency_loss = self.loss.compute(
+            consistency_loss = self.unlabeled_loss.compute(
                 results['unlabeled_y_pred'], 
                 results['unlabeled_y_pseudo'], 
                 return_dict=False

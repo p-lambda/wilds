@@ -200,8 +200,8 @@ dataset_defaults = {
         'dann_featurizer_lr': 0.001,
         'dann_classifier_lr': 0.01,
         'dann_discriminator_lr': 0.01,
-        'fixmatch_featurizer_lr': 0.001,
         'fixmatch_classifier_lr': 0.01,
+        'fixmatch_featurizer_lr': 0.001,
         'algo_log_metric': 'accuracy',
         'process_outputs_function': 'multiclass_logits_to_pred',
         'loader_kwargs': {
@@ -212,9 +212,7 @@ dataset_defaults = {
     'fmow': {
         'split_scheme': 'official',
         'dataset_kwargs': {
-            'oracle_training_set': False,
-            'seed': 111,
-            'use_ood_val': True
+            'seed': 111
         },
         'model': 'densenet121',
         'model_kwargs': {'pretrained': True},
@@ -320,9 +318,7 @@ dataset_defaults = {
         'split_scheme': 'official',
         'dataset_kwargs': {
             'no_nl': False,
-            'fold': 'A',
-            'oracle_training_set': False,
-            'use_ood_val': True
+            'fold': 'A'
         },
         'model': 'resnet18_ms',
         'model_kwargs': {'num_channels': 8},

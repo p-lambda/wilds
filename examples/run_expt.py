@@ -91,6 +91,7 @@ def main():
     parser.add_argument('--irm_penalty_anneal_iters', type=int)
     parser.add_argument('--self_training_lambda', type=float)
     parser.add_argument('--self_training_threshold', type=float)
+    parser.add_argument('--soft_pseudolabels', default=False, type=parse_bool, const=True, nargs='?')
     parser.add_argument('--algo_log_metric')
 
     # Model selection
@@ -192,6 +193,7 @@ def main():
         transform_name=config.train_transform,
         config=config,
         dataset=full_dataset,
+        additional_transform_name=("noisy_student" if config.algorithm == "NoisyStudent" else None)
     )
     eval_transform = initialize_transform(
         transform_name=config.eval_transform,
@@ -222,16 +224,15 @@ def main():
             unlabeled_train_transform = initialize_transform(
                 config.train_transform, config, full_unlabeled_dataset, additional_transform_name="fixmatch"
             )
-        elif config.algorithm == "noisy_student":
-            # For FixMatch, we need our loader to return batches in the form ((x_weak, x_strong), m)
-            # We do this by initializing a special transform function
+        elif config.algorithm == "NoisyStudent":
+            # For NoisyStudent, we need our loader to apply a strong augmentation to examples
             unlabeled_train_transform = initialize_transform(
                 config.train_transform, config, full_unlabeled_dataset, additional_transform_name="noisy_student"
             )
         else:
             unlabeled_train_transform = train_transform
         
-        if config.algorithm == "noisy_student": 
+        if config.algorithm == "NoisyStudent": 
             # For Noisy Student, we need to first generate pseudolabels using the teacher
             # and then prep the unlabeled dataset to return these pseudolabels in __getitem__
             print("Inferring teacher pseudolabels for Noisy Student")
@@ -240,7 +241,7 @@ def main():
             teacher_model = initialize_model(config, d_out).to(config.device)
             load(teacher_model, config.teacher_model_path, device=config.device)
             # Infer teacher outputs on unlabeled examples in sequential order
-            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=train_transform)
+            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=train_transform, frac=config.frac)
             sequential_loader = get_eval_loader(
                 loader=config.eval_loader,
                 dataset=unlabeled_split_dataset,
@@ -257,7 +258,7 @@ def main():
                 transform=unlabeled_train_transform
             )
         else:
-            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=unlabeled_train_transform)
+            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=unlabeled_train_transform, frac=config.frac)
 
         unlabeled_dataset = {
             'split': split,
@@ -364,6 +365,7 @@ def main():
                 + (f'with previous val metric {best_val_metric} ' if best_val_metric else '')
             )
         except:
+            logger.write('Something went wrong loading the pretrained model.')
             pass
 
     # Resume from most recent model in log_dir
