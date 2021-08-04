@@ -33,6 +33,7 @@ class CustomSplitDataset(Dataset):
         for domain in dataset_kwargs['domains'].split(','):
             # do the domains separately
             # TODO: source and target need to be different domains for DomainNet
+            # discuss with kendrick how to pass in args for this
             ds = get_dataset(dataset=dataset_name, root_dir=root_dir, source_domain=domain, target_domain='quickdraw')
             train_ds = ds.get_subset('train')
             self.datasets.append(train_ds)
@@ -68,8 +69,6 @@ class CustomSplitMultiCropDataset(Dataset):
         return_index=False
     ):
         super().__init__()
-        
-        # TODO: add functionality for subsampling
 
         assert len(size_crops) == len(nmb_crops)
         assert len(min_scale_crops) == len(nmb_crops)

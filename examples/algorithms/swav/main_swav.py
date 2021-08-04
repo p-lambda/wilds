@@ -126,8 +126,6 @@ parser.add_argument("--dump_path", type=str, default=".",
                     help="experiment dump path for checkpoints and log")
 parser.add_argument("--seed", type=int, default=31, help="seed")
 
-# TODO check resnet50 thing
-
 def main():
     global args
     args = parser.parse_args()

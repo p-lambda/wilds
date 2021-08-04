@@ -15,9 +15,9 @@ queue_length=3840 # for an effective batch size of 256, this stores the previous
 epoch_queue_starts=500 # based on previous hyperparameter searches, it seems like the queue doesn't help for domainnet
 epochs=400
 
-# other stuff
+# first, make sure that the dump-path is named as we'd like, then create that directory (o.w. it will fail)
 dump_path=examples/algorithms/swav/checkpoints/domainnet-real-sketch
-dist_url="tcp://jagupard29:40003"
+dist_url="tcp://$SLURMD_NODENAME:40001" # TODO: this depends on the specific cluster
 
 # Use linear scaling for learning rate, based on batch size
 DEFAULT_LR=4.8
@@ -65,3 +65,15 @@ python examples/algorithms/swav/main_swav.py \
     --use_fp16 true \
     --sync_bn pytorch \
     --dump_path $dump_path
+
+
+# WARNING: below here hasn't been test before, pretrained checkpoint should be dynamically calculated
+python examples/algorithms/swav/eval_semisup.py \
+    --dataset domainnet \
+    --root_dir $root_dir \
+    --source real \
+    --target sketch \
+    --dump_path $dump_path \
+    --arch $arch \
+    --pretrained $dump_path/checkpoints/ckp-399.pth \
+    --dist_url $dist_url
