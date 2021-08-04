@@ -57,7 +57,7 @@ pip install -e .
 
 Running `pip install wilds` or `pip install -e .` will automatically check for and install all of these requirements
 except for the `torch-scatter` and `torch-geometric` packages, which require a [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
-
+We recommend torch<1.9.0 because of data loader warnings described [here](https://github.com/pytorch/pytorch/issues/57273).
 
 ### Default models
 After installing the WILDS package, you can use the scripts in `examples/` to train default models on the WILDS datasets.
