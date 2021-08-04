@@ -141,7 +141,6 @@ class GroupAlgorithm(Algorithm):
                 continue
             if (not is_epoch) and (not scheduler.step_every_batch):
                 continue
-            print(scheduler.get_last_lr())
             self._step_specific_scheduler(
                 scheduler=scheduler,
                 metric_name=metric_name,
