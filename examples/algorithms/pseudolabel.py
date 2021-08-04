@@ -41,6 +41,10 @@ class PseudoLabel(SingleModelAlgorithm):
         self.confidence_threshold = config.self_training_threshold
         if config.process_outputs_function is not None: 
             self.process_outputs_function = process_outputs_functions[config.process_outputs_function]
+        # Additional logging
+        self.logged_fields.append("pseudolabels_kept_frac")
+        self.logged_fields.append("classification_loss")
+        self.logged_fields.append("consistency_loss")
 
     def process_batch(self, labeled_batch, unlabeled_batch=None):
         """
@@ -93,13 +97,28 @@ class PseudoLabel(SingleModelAlgorithm):
 
     def objective(self, results):
         # Labeled loss
-        labeled_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
+        classification_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
         # Pseudolabeled loss
         if 'unlabeled_y_pseudo' in results:
             mask = results['unlabeled_mask']
-            unlabeled_loss = self.loss.compute(
+            consistency_loss = self.loss.compute(
                 results['unlabeled_y_pred'][mask], 
                 results['unlabeled_y_pseudo'][mask], 
                 return_dict=False)
-        else: unlabeled_loss = 0
-        return labeled_loss + self.pseudolabel_lambda * unlabeled_loss 
+            pseudolabels_kept_frac = mask.count_nonzero().item() / mask.shape[0]
+        else: 
+            consistency_loss = 0
+            pseudolabels_kept_frac = 0
+
+        # Add to results for additional logging
+        self.save_metric_for_logging(
+            results, "classification_loss", classification_loss
+        )
+        self.save_metric_for_logging(
+            results, "consistency_loss", consistency_loss
+        )
+        self.save_metric_for_logging(
+            results, "pseudolabels_kept_frac", pseudolabels_kept_frac
+        )
+
+        return classification_loss + self.pseudolabel_lambda * consistency_loss 
