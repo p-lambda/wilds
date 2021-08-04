@@ -16,7 +16,7 @@ def initialize_loss(config, d_out):
         return MultiTaskLoss(loss_fn=nn.BCEWithLogitsLoss(reduction='none'))
 
     elif config.loss_function == 'fasterrcnn_criterion':
-        from examples.models.detection.fasterrcnn import FasterRCNNLoss
+        from models.detection.fasterrcnn import FasterRCNNLoss
         return ElementwiseLoss(loss_fn=FasterRCNNLoss(config.device))
 
     else:
