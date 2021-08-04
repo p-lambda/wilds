@@ -155,8 +155,9 @@ def main():
         split_scheme=config.split_scheme,
         **config.dataset_kwargs)
 
-    # To implement data augmentation (i.e., have different transforms
-    # at training time vs. test time), modify these two lines:
+    # To modify data augmentation, modify the following code block.
+    # If you want to use transforms that modify both `x` and `y`,
+    # set `do_transform_y` to True when initializing the `WILDSSubset` below.
     train_transform = initialize_transform(
         transform_name=config.transform,
         config=config,

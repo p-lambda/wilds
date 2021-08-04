@@ -7,8 +7,9 @@ import torch
 
 def initialize_transform(transform_name, config, dataset, is_training):
     """
-    Transforms should take in a single (x, y)
-    and return (transformed_x, transformed_y).
+    By default, transforms should take in `x` and return `transformed_x`.
+    For transforms that take in `(x, y)` and return `(transformed_x, transformed_y)`,
+    set `do_transform_y` to True when initializing the WILDSSubset.    
     """
     if transform_name is None:
         return None
@@ -24,11 +25,6 @@ def initialize_transform(transform_name, config, dataset, is_training):
         return initialize_rxrx1_transform(is_training)
     else:
         raise ValueError(f"{transform_name} not recognized")
-
-def transform_input_only(input_transform):
-    def transform(x, y):
-        return input_transform(x), y
-    return transform
 
 def initialize_bert_transform(config):
     assert 'bert' in config.model
@@ -55,7 +51,7 @@ def initialize_bert_transform(config):
                 dim=2)
         x = torch.squeeze(x, dim=0) # First shape dim is always 1
         return x
-    return transform_input_only(transform)
+    return transform
 
 def getBertTokenizer(model):
     if model == 'bert-base-uncased':
@@ -79,7 +75,7 @@ def initialize_image_base_transform(config, dataset):
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]
     transform = transforms.Compose(transform_steps)
-    return transform_input_only(transform)
+    return transform
 
 def initialize_image_resize_and_center_crop_transform(config, dataset):
     """
@@ -98,7 +94,7 @@ def initialize_image_resize_and_center_crop_transform(config, dataset):
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
-    return transform_input_only(transform)
+    return transform
 
 def initialize_poverty_transform(is_training):
     if is_training:
@@ -115,7 +111,7 @@ def initialize_poverty_transform(is_training):
             img[:3] = rgb_transform(img[:3][[2,1,0]])[[2,1,0]]
             return img
         transform = transforms.Lambda(lambda x: transform_rgb(x))
-        return transform_input_only(transform)
+        return transform
     else:
         return None
 
@@ -148,4 +144,4 @@ def initialize_rxrx1_transform(is_training):
             t_standardize,
         ]
     transform = transforms.Compose(transforms_ls)
-    return transform_input_only(transform)
+    return transform

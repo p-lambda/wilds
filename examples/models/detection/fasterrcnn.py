@@ -27,7 +27,6 @@ from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.utils import load_state_dict_from_url
 from torchvision.ops import misc as misc_nn_ops
 from torchvision.ops import MultiScaleRoIAlign
-from torchvision.models.detection import _utils as det_utils
 from torchvision.models.detection.anchor_utils import AnchorGenerator
 from torchvision.models.detection.generalized_rcnn import GeneralizedRCNN
 from torchvision.models.detection.faster_rcnn import TwoMLPHead
@@ -127,11 +126,11 @@ class RegionProposalNetworkWILDS(RegionProposalNetwork):
             sampled_neg_inds = torch.where(torch.cat(sampled_neg_inds, dim=0))[0]
             sampled_inds = torch.cat([sampled_pos_inds, sampled_neg_inds], dim=0)
 
-            box_loss.append(det_utils.smooth_l1_loss(
+            box_loss.append(F.smooth_l1_loss(
                 pred_bbox_deltas_[sampled_pos_inds],
                 regression_targets_[sampled_pos_inds],
                 beta=1 / 9,
-                size_average=False,
+                reduction='sum',
             ) / (sampled_inds.numel()))
 
             objectness_loss.append(F.binary_cross_entropy_with_logits(
@@ -226,11 +225,11 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
 
         box_regression_ = box_regression_.reshape(N, -1, 4)
 
-        box_loss_ = det_utils.smooth_l1_loss(
+        box_loss_ = F.smooth_l1_loss(
             box_regression_[sampled_pos_inds_subset, labels_pos],
             regression_targets_[sampled_pos_inds_subset],
             beta=1 / 9,
-            size_average=False,
+            reduction='sum',
         )
         box_loss.append(box_loss_ / labels_.numel())
 
