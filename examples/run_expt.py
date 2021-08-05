@@ -130,9 +130,15 @@ def main():
     parser.add_argument('--save_last', type=parse_bool, const=True, nargs='?', default=True)
     parser.add_argument('--save_pred', type=parse_bool, const=True, nargs='?', default=True)
     parser.add_argument('--no_group_logging', type=parse_bool, const=True, nargs='?')
-    parser.add_argument('--use_wandb', type=parse_bool, const=True, nargs='?', default=False)
     parser.add_argument('--progress_bar', type=parse_bool, const=True, nargs='?', default=False)
     parser.add_argument('--resume', type=parse_bool, const=True, nargs='?', default=False, help='Whether to resume from the most recent saved model in the current log_dir.')
+
+    # Weights & Biases
+    parser.add_argument('--use_wandb', type=parse_bool, const=True, nargs='?', default=False)
+    parser.add_argument('--wandb_api_key_path', type=str,
+                        help="Path to Weights & Biases API Key. If use_wandb is set to True and this argument is not specified, user will be prompted to autheticate.")
+    parser.add_argument('--wandb_kwargs', nargs='*', action=ParseKwargs, default={},
+                        help="Will be passed directly into wandb.init().")
 
     config = parser.parse_args()
     config = populate_defaults(config)
@@ -325,9 +331,11 @@ def main():
 
         # Loggers
         datasets[split]['eval_logger'] = BatchLogger(
-            os.path.join(config.log_dir, f'{split}_eval.csv'), mode=mode, use_wandb=(config.use_wandb and verbose))
+            os.path.join(config.log_dir, f'{split}_eval.csv'), mode=mode, use_wandb=config.use_wandb
+        )
         datasets[split]['algo_logger'] = BatchLogger(
-            os.path.join(config.log_dir, f'{split}_algo.csv'), mode=mode, use_wandb=(config.use_wandb and verbose))
+            os.path.join(config.log_dir, f'{split}_algo.csv'), mode=mode, use_wandb=config.use_wandb
+        )
 
         if config.use_wandb:
             initialize_wandb(config)

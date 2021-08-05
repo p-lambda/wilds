@@ -252,9 +252,11 @@ def log_config(config, logger):
     logger.write('\n')
 
 def initialize_wandb(config):
-    name = config.dataset + '_' + config.algorithm + '_' + config.log_dir
-    wandb.init(name=name,
-               project=f"wilds")
+    if config.wandb_api_key_path is not None:
+        with open(config.wandb_api_key_path, "r") as f:
+            os.environ["WANDB_API_KEY"] = f.read().strip()
+
+    wandb.init(**config.wandb_kwargs)
     wandb.config.update(config)
 
 def save_pred(y_pred, csv_path):
