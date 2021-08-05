@@ -136,7 +136,7 @@ def main():
     # Weights & Biases
     parser.add_argument('--use_wandb', type=parse_bool, const=True, nargs='?', default=False)
     parser.add_argument('--wandb_api_key_path', type=str,
-                        help="Path to Weights & Biases API Key. If use_wandb is set to True and this argument is not specified, user will be prompted to autheticate.")
+                        help="Path to Weights & Biases API Key. If use_wandb is set to True and this argument is not specified, user will be prompted to authenticate.")
     parser.add_argument('--wandb_kwargs', nargs='*', action=ParseKwargs, default={},
                         help="Will be passed directly into wandb.init().")
 
