@@ -4,4 +4,5 @@ WORKDIR /app
 
 # Install additional dependencies
 RUN pip install efficientnet_pytorch && \
-    pip install scipy
+    pip install scipy && \
+    pip install wandb

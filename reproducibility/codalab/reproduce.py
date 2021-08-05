@@ -308,7 +308,7 @@ class CodaLabReproducibility:
             "run",
             f"--name={name}",
             f"--description={description}",
-            "--request-docker-image=pangwei/wilds_src:1.0",
+            "--request-docker-image=codalabrunner/wilds_unlabeled:1.1",
             "--request-network",
             "--request-cpus=4",
             "--request-gpus=1",
