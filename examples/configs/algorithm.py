@@ -3,6 +3,7 @@ algorithm_defaults = {
         'train_loader': 'standard',
         'uniform_over_groups': False,
         'eval_loader': 'standard',
+        'randaugment_n': 2,     # If we are running ERM + data augmentation
     },
     'groupDRO': {
         'train_loader': 'standard',
@@ -39,7 +40,6 @@ algorithm_defaults = {
         'self_training_lambda': 1,
         'self_training_threshold': 0.7,
         'scheduler': 'FixMatchLR',
-        'scheduler_kwargs': {},
         'randaugment_n': 2,
     },
     'PseudoLabel': {
@@ -55,5 +55,6 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'dropout_rate': 0.5,
         'randaugment_n': 2,
+        'additional_train_transform': 'noisy_student'
     }
 }

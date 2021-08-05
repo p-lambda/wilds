@@ -34,6 +34,12 @@ def populate_defaults(config):
             "and dann_discriminator_lr are valid learning rate parameters."
         )
 
+    if config.additional_train_transform is not None:
+        if config.algorithm in ["NoisyStudent", "FixMatch"]:
+            raise ValueError(
+                "Cannot pass in a value for additional_train_transform, NoisyStudent "
+                "and FixMatch already have default transformations for the training data."
+            )
 
     # implied defaults from choice of dataset
     config = populate_config(

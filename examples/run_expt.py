@@ -68,6 +68,7 @@ def main():
 
     # Transforms
     parser.add_argument('--train_transform', choices=supported.transforms)
+    parser.add_argument('--additional_train_transform', choices=supported.additional_transforms)
     parser.add_argument('--eval_transform', choices=supported.transforms)
     parser.add_argument('--target_resolution', nargs='+', type=int, help='The input resolution that images will be resized to before being passed into the model. For example, use --target_resolution 224 224 for a standard ResNet.')
     parser.add_argument('--resize_scale', type=float)
@@ -193,7 +194,7 @@ def main():
         transform_name=config.train_transform,
         config=config,
         dataset=full_dataset,
-        additional_transform_name=("noisy_student" if config.algorithm == "NoisyStudent" else None)
+        additional_transform_name=config.additional_train_transform,
     )
     eval_transform = initialize_transform(
         transform_name=config.eval_transform,

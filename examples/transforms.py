@@ -46,13 +46,13 @@ def initialize_transform(
         _DEFAULT_IMAGE_TENSOR_NORMALIZATION_MEAN,
         _DEFAULT_IMAGE_TENSOR_NORMALIZATION_STD,
     )
-    if additional_transform_name == "fixmatch": # additionally layer on weak and strong (randaugment)
+    if additional_transform_name == "fixmatch": # additionally layer on weak and strong augmentation (randaugment)
         transformations = add_fixmatch_transform(
             config, dataset, transform_steps, default_normalization
         )
         transform = MultipleTransforms(transformations)
-    elif additional_transform_name == 'noisy_student': # additionally layer on randaugment
-        transform = add_noisy_student_transform(
+    elif additional_transform_name in ["randaugment", "noisy_student"]: # additionally layer on randaugment
+        transform = add_rand_augment_transform(
             config, dataset, transform_steps, default_normalization
         )
     else:
@@ -167,7 +167,7 @@ def apply_rgb_transform(transform):
 
 
 def add_fixmatch_transform(config, dataset, base_transform_steps, normalization):
-    # Adapted from https://github.com/kekmodel/FixMatch-pytorch
+    # Adapted from https://github.com/YBZh/Bridging_UDA_SSL
     target_resolution = _get_target_resolution(config, dataset)
     weak_transform_steps = copy.deepcopy(base_transform_steps)
     weak_transform_steps.extend(
@@ -180,34 +180,20 @@ def add_fixmatch_transform(config, dataset, base_transform_steps, normalization)
             normalization,
         ]
     )
-
-    strong_transform_steps = copy.deepcopy(base_transform_steps)
-    strong_transform_steps.extend(
-        [
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomCrop(
-                size=target_resolution,
-            ),
-            RandAugment(
-                n=config.randaugment_n,
-                augmentation_pool=FIX_MATCH_AUGMENTATION_POOL,
-            ),
-            transforms.ToTensor(),
-            normalization,
-        ]
+    return (
+        transforms.Compose(weak_transform_steps),
+        add_rand_augment_transform(config, dataset, base_transform_steps, normalization)
     )
-    return transforms.Compose(weak_transform_steps), transforms.Compose(strong_transform_steps)
 
-def add_noisy_student_transform(config, dataset, base_transform_steps, normalization):
+def add_rand_augment_transform(config, dataset, base_transform_steps, normalization):
+    # Adapted from https://github.com/YBZh/Bridging_UDA_SSL
     target_resolution = _get_target_resolution(config, dataset)
     strong_transform_steps = copy.deepcopy(base_transform_steps)
     strong_transform_steps.extend(
         [
             transforms.RandomHorizontalFlip(),
             transforms.RandomCrop(
-                size=target_resolution,
-                padding=int(target_resolution[0] * 0.125),
-                padding_mode="reflect",
+                size=target_resolution
             ),
             RandAugment(
                 n=config.randaugment_n,
