@@ -46,13 +46,17 @@ def initialize_transform(
         _DEFAULT_IMAGE_TENSOR_NORMALIZATION_MEAN,
         _DEFAULT_IMAGE_TENSOR_NORMALIZATION_STD,
     )
-    if additional_transform_name == "fixmatch": # additionally layer on weak and strong augmentation (randaugment)
+    if additional_transform_name == "fixmatch":
         transformations = add_fixmatch_transform(
             config, dataset, transform_steps, default_normalization
         )
         transform = MultipleTransforms(transformations)
-    elif additional_transform_name in ["randaugment", "noisy_student"]: # additionally layer on randaugment
+    elif additional_transform_name in ["randaugment", "noisy_student"]:
         transform = add_rand_augment_transform(
+            config, dataset, transform_steps, default_normalization
+        )
+    elif additional_transform_name == "weak":
+        transform = add_weak_transform(
             config, dataset, transform_steps, default_normalization
         )
     else:
@@ -167,6 +171,12 @@ def apply_rgb_transform(transform):
 
 
 def add_fixmatch_transform(config, dataset, base_transform_steps, normalization):
+    return (
+        add_weak_transform(config, dataset, base_transform_steps, normalization),
+        add_rand_augment_transform(config, dataset, base_transform_steps, normalization)
+    )
+
+def add_weak_transform(config, dataset, base_transform_steps, normalization):
     # Adapted from https://github.com/YBZh/Bridging_UDA_SSL
     target_resolution = _get_target_resolution(config, dataset)
     weak_transform_steps = copy.deepcopy(base_transform_steps)
@@ -180,10 +190,7 @@ def add_fixmatch_transform(config, dataset, base_transform_steps, normalization)
             normalization,
         ]
     )
-    return (
-        transforms.Compose(weak_transform_steps),
-        add_rand_augment_transform(config, dataset, base_transform_steps, normalization)
-    )
+    return transforms.Compose(weak_transform_steps)
 
 def add_rand_augment_transform(config, dataset, base_transform_steps, normalization):
     # Adapted from https://github.com/YBZh/Bridging_UDA_SSL
