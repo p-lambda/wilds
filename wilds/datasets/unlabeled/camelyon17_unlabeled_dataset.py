@@ -48,11 +48,10 @@ class Camelyon17UnlabeledDataset(WILDSUnlabeledDataset):
     """
 
     _dataset_name = "camelyon17_unlabeled"
-    # TODO: update with the final dataset bundle uuid and size -Tony
     _versions_dict = {
         "1.0": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0xe45e15f39fb54e9d9e919556af67aabe/contents/blob/",
-            "compressed_size": 10_658_709_504,
+            "download_url": "https://worksheets.codalab.org/rest/bundles/0xa78be8a88a00487a92006936514967d2/contents/blob/",
+            "compressed_size": 69_442_379_933,
         }
     }
 
