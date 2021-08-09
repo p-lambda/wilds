@@ -77,7 +77,10 @@ class PovertyMapUnlabeledDataset(WILDSUnlabeledDataset):
     }
 
     def __init__(self, version=None, root_dir='data', download=False,
-                 split_scheme='official', no_nl=False, fold='A'):
+                 split_scheme='official',
+                 no_nl=False, fold='A', oracle_training_set=False,
+                 use_ood_val=True,
+                 cache_size=100):
         self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
