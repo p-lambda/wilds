@@ -89,7 +89,7 @@ class CodaLabReproducibility:
         "groupDRO_groupby-y",
         "groupDRO_groupby-black-y",
     ]
-    _HAS_SEPARATE_UNLABELED_BUNDLE = ["civilcomments", "iwildcam"]
+    _HAS_SEPARATE_UNLABELED_BUNDLE = ["camelyon17", "civilcomments", "iwildcam"]
 
     def __init__(self, wilds_version, all_datasets=False, local=False):
         self._wilds_version = wilds_version
@@ -121,13 +121,16 @@ class CodaLabReproducibility:
             search_space = self._get_hyperparameter_search_space(algorithm)
 
             hyperparameters = search_space[dataset].keys()
-            for hyperparameter_values in get_grid(search_space[dataset].values()):
+            for i, hyperparameter_values in enumerate(
+                get_grid(search_space[dataset].values())
+            ):
                 hyperparameter_config = dict()
                 for i, hyperparameter in enumerate(hyperparameters):
                     hyperparameter_config[hyperparameter] = hyperparameter_values[i]
 
+                experiment_name = f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}_tune{i}"
                 self._run_experiment(
-                    name=f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}_tune",
+                    name=experiment_name,
                     description=f"{str(hyperparameter_config)}",
                     dependencies={
                         "wilds": wilds_src_uuid,
@@ -135,6 +138,7 @@ class CodaLabReproducibility:
                     },
                     command=self._construct_command(
                         dataset,
+                        experiment_name,
                         algorithm=algorithm,
                         seed=0,
                         hyperparameters=hyperparameter_config,
@@ -155,6 +159,7 @@ class CodaLabReproducibility:
         self._set_worksheet(worksheet_uuid)
         datasets_uuids = self._get_datasets_uuids(worksheet_uuid, datasets)
         wilds_src_uuid = self._get_bundle_uuid("wilds-unlabeled", worksheet_uuid)
+        wandb_api_key_uuid = self._get_bundle_uuid("wandb_api_key.txt", worksheet_uuid)
 
         self._add_header(
             f"Hyperparameter tuning: algorithm={algorithm}, coarse={coarse}",
@@ -178,7 +183,7 @@ class CodaLabReproducibility:
                 unlabeled_dataset_uuid = None
                 unlabeled_dataset_fullname = None
 
-            for _ in range(num_of_samples):
+            for i in range(num_of_samples):
                 hyperparameter_config = dict()
                 for hyperparameter, values in search_space[dataset].items():
                     if hyperparameter == "unlabeled_batch_size_frac":
@@ -208,6 +213,7 @@ class CodaLabReproducibility:
                 dependencies = {
                     "wilds": wilds_src_uuid,
                     dataset_fullname: dataset_uuid,
+                    "wandb_api_key.txt": wandb_api_key_uuid,
                 }
                 if unlabeled_dataset_uuid:
                     dependencies[unlabeled_dataset_fullname] = unlabeled_dataset_uuid
@@ -217,13 +223,14 @@ class CodaLabReproducibility:
                 )
                 if unlabeled_split:
                     experiment_name += f"_{unlabeled_split.replace('_', '')}"
-                experiment_name += "_tune"
+                experiment_name += f"_tune{i}"
                 self._run_experiment(
                     name=experiment_name,
                     description=f"{str(hyperparameter_config)}",
                     dependencies=dependencies,
                     command=self._construct_command(
                         dataset,
+                        experiment_name,
                         algorithm="ERM" if algorithm == "ERMAugment" else algorithm,
                         seed=0,
                         hyperparameters=hyperparameter_config,
@@ -458,6 +465,7 @@ class CodaLabReproducibility:
     def _construct_command(
         self,
         dataset_name,
+        experiment_name,
         algorithm,
         seed,
         hyperparameters,
@@ -465,7 +473,7 @@ class CodaLabReproducibility:
         unlabeled_split=None,
     ):
         command = (
-            "python wilds/examples/run_expt.py --root_dir $HOME --log_dir $HOME "
+            "python -Wi wilds/examples/run_expt.py --root_dir $HOME --log_dir $HOME "
             f"--dataset {dataset_name} --algorithm {algorithm} --seed {seed}"
         )
         if unlabeled_split:
@@ -474,6 +482,10 @@ class CodaLabReproducibility:
             command += " --groupby_fields from_source_domain"
         for hyperparameter, value in hyperparameters.items():
             command += f" --{hyperparameter} {value}"
+        command += (
+            f"--use_wandb --wandb_api_key_path wandb_api_key.txt --wandb_kwargs"
+            f" entity=wilds project={algorithm}-{dataset_name} group={experiment_name}"
+        )
         return command
 
     def _get_dataset_name(self, experiment_name):
