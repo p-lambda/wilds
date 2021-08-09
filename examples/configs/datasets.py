@@ -189,7 +189,7 @@ dataset_defaults = {
             'momentum': 0.9,
             'nesterov': True,
         },
-        'lr': 0.01,
+        'lr': 0.001,
         'weight_decay': 1e-4,
         'n_epochs': 60,
         'n_groups_per_batch': 4,
@@ -200,8 +200,6 @@ dataset_defaults = {
         'dann_featurizer_lr': 0.001,
         'dann_classifier_lr': 0.01,
         'dann_discriminator_lr': 0.01,
-        'fixmatch_classifier_lr': 0.01,
-        'fixmatch_featurizer_lr': 0.001,
         'algo_log_metric': 'accuracy',
         'process_outputs_function': 'multiclass_logits_to_pred',
         'loader_kwargs': {
