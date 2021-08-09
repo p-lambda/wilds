@@ -1,3 +1,86 @@
+MAX_BATCH_SIZES = {
+    "amazon": 32,
+    "civilcomments": 64,
+    "camelyon17": 224,
+    "iwildcam": 32,
+    "fmow": 96,
+    "poverty": 160,
+}
+
+ERM_HYPERPARAMETER_SEARCH_SPACE = {
+    "datasets": {
+        "amazon": {
+            "batch_size": [MAX_BATCH_SIZES["amazon"]],
+            "lr": [-6, -4],
+            "weight_decay": [-3, -1],
+        },
+        "civilcomments": {
+            "batch_size": [MAX_BATCH_SIZES["civilcomments"]],
+            "lr": [-6, -4],
+        },
+        "camelyon17": {
+            "batch_size": [MAX_BATCH_SIZES["camelyon17"]],
+            "lr": [-4, -1],
+            "weight_decay": [-4, -1],
+        },
+        "iwildcam": {
+            "batch_size": [MAX_BATCH_SIZES["iwildcam"]],
+            "lr": [-5, -3],
+            "weight_decay": [-4, -1],
+        },
+        "fmow": {
+            "batch_size": [MAX_BATCH_SIZES["fmow"]],
+            "lr": [-5, -1],
+            "weight_decay": [-5, 0],
+        },
+        "poverty": {
+            "batch_size": [MAX_BATCH_SIZES["poverty"]],
+            "lr": [-5, -1],
+            "weight_decay": [-4, 0],
+        },
+    },
+}
+
+ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE = {
+    "datasets": {
+        "amazon": {
+            "batch_size": [MAX_BATCH_SIZES["amazon"]],
+            "lr": [-6, -4],
+            "weight_decay": [-3, -1],
+            "additional_train_transform": ["randaugment"],
+        },
+        "civilcomments": {
+            "batch_size": [MAX_BATCH_SIZES["civilcomments"]],
+            "lr": [-6, -4],
+            "additional_train_transform": ["randaugment"],
+        },
+        "camelyon17": {
+            "batch_size": [MAX_BATCH_SIZES["camelyon17"]],
+            "lr": [-4, -1],
+            "weight_decay": [-4, -1],
+            "additional_train_transform": ["randaugment"],
+        },
+        "iwildcam": {
+            "batch_size": [MAX_BATCH_SIZES["iwildcam"]],
+            "lr": [-5, -3],
+            "weight_decay": [-4, -1],
+            "additional_train_transform": ["randaugment"],
+        },
+        "fmow": {
+            "batch_size": [MAX_BATCH_SIZES["fmow"]],
+            "lr": [-5, -1],
+            "weight_decay": [-5, 0],
+            "additional_train_transform": ["randaugment"],
+        },
+        "poverty": {
+            "batch_size": [MAX_BATCH_SIZES["poverty"]],
+            "lr": [-5, -1],
+            "weight_decay": [-4, 0],
+            "additional_train_transform": ["randaugment"],
+        },
+    },
+}
+
 CORAL_HYPERPARAMETER_SEARCH_SPACE = {
     "datasets": {
         "amazon": {
