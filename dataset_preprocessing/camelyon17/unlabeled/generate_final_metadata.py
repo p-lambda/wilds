@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 np.random.seed(0)
 
 _NUM_CENTERS = 5
-_NUM_PATCHES_TO_SUBSAMPLE = 6000
+_NUM_PATCHES_TO_SUBSAMPLE = 6667
 _NUM_PATIENTS_PER_HOSPITAL = 20
 
 
@@ -83,11 +83,18 @@ def generate_final_metadata(slide_root, output_root):
     for slide in set(df["slide"]):
         slide_mask = df["slide"] == slide
         slide_indices = list(df.index[slide_mask])
-        indices_to_keep += list(
-            np.random.choice(
-                slide_indices, size=_NUM_PATCHES_TO_SUBSAMPLE, replace=False
-            )
+        print(
+            f"slide={slide}, choosing {_NUM_PATCHES_TO_SUBSAMPLE} patches from {len(slide_indices)} patches"
         )
+        if _NUM_PATCHES_TO_SUBSAMPLE < len(slide_indices):
+            indices_to_keep += list(
+                np.random.choice(
+                    slide_indices, size=_NUM_PATCHES_TO_SUBSAMPLE, replace=False
+                )
+            )
+        else:
+            print("Adding all slides...")
+            indices_to_keep += slide_indices
         df_to_keep = df.loc[indices_to_keep, :].copy().reset_index(drop=True)
 
     print_stats(df_to_keep)
