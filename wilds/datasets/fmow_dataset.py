@@ -28,9 +28,10 @@ class FMoWDataset(WILDSDataset):
     The Functional Map of the World land use / building classification dataset.
     This is a processed version of the Functional Map of the World dataset originally sourced from https://github.com/fMoW/dataset.
 
-    Support `split_scheme`
-        'official': official split, which is equivalent to 'time_after_2016'
-        `time_after_{YEAR}` for YEAR between 2002--2018
+    Supported `split_scheme`:
+        - 'official': official split, which is equivalent to 'time_after_2016'
+        - 'mixed-to-test'
+        - 'time_after_{YEAR}' for YEAR between 2002--2018
 
     Input (x):
         224 x 224 x 3 RGB satellite image.
@@ -63,17 +64,20 @@ class FMoWDataset(WILDSDataset):
             'compressed_size': 53_893_324_800}
     }
 
-    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official', oracle_training_set=False, seed=111, use_ood_val=True):
+    def __init__(self, version=None, root_dir='data', download=False, split_scheme='official', seed=111, use_ood_val=True):
         self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
 
         self._split_dict = {'train': 0, 'id_val': 1, 'id_test': 2, 'val': 3, 'test': 4}
         self._split_names = {'train': 'Train', 'id_val': 'ID Val', 'id_test': 'ID Test', 'val': 'OOD Val', 'test': 'OOD Test'}
         self._source_domain_splits = [0, 1, 2]
-        if split_scheme=='official':
-            split_scheme='time_after_2016'
+        self.oracle_training_set = False
+        if split_scheme == 'official':
+            split_scheme = 'time_after_2016'
+        elif split_scheme == 'mixed-to-test':
+            split_scheme = 'time_after_2016'
+            self.oracle_training_set = True
         self._split_scheme = split_scheme
-        self.oracle_training_set = oracle_training_set
 
         self.root = Path(self._data_dir)
         self.seed = int(seed)
