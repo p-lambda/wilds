@@ -8,6 +8,11 @@ import torchvision
 import sys
 from collections import defaultdict
 
+try:
+    import wandb
+except Exception as e:
+    pass
+
 # TODO: This is needed to test the WILDS package locally. Remove later -Tony
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
@@ -425,6 +430,8 @@ def main():
             general_logger=logger,
             config=config)
 
+    if config.use_wandb:
+        wandb.finish()
     logger.close()
     for split in datasets:
         datasets[split]['eval_logger'].close()

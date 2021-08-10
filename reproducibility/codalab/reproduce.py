@@ -34,10 +34,10 @@ Usage:
     
 Example Usage:
     # To tune for ERM runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm ERM --random --dry-run
-    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_erm_tune 
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm ERMAugment --random --dry-run
-    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_ermaugment_tune
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm ERM --random --dry-run
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_erm_tune 
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm ERMAugment --random --dry-run
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
 
     # To tune for multi-gpu runs
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 4 --dry-run
@@ -87,7 +87,7 @@ Example Usage:
 
 
 class CodaLabReproducibility:
-    _HAS_SEPARATE_UNLABELED_BUNDLE = ["camelyon17", "civilcomments", "iwildcam"]
+    _HAS_SEPARATE_UNLABELED_BUNDLE = ["camelyon17", "civilcomments", "iwildcam", "poverty"]
 
     def __init__(self, local=False):
         # Run experiments on the main instance - https://worksheets.codalab.org
@@ -532,9 +532,9 @@ class CodaLabReproducibility:
             f"Could not find the corresponding dataset for experiment {experiment_name}"
         )
 
-    def _get_datasets_uuids(self, worksheet_uuid, datasets):
+    def _get_datasets_uuids(self, worksheet_uuid, datasets, unlabeled=False):
         return {
-            dataset: self._get_bundle_uuid(f"{dataset}", worksheet_uuid)
+            dataset: self._get_bundle_uuid(f"{dataset}_unlabeled" if unlabeled else f"{dataset}_v", worksheet_uuid)
             for dataset in datasets
         }
 
