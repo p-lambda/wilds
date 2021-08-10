@@ -109,7 +109,8 @@ class PovertyMapDataset(WILDSDataset):
     and processed DHS survey metadata obtained from https://github.com/sustainlab-group/africa_poverty and originally from `https://dhsprogram.com/data/available-datasets.cfm`.
 
     Supported `split_scheme`:
-        'official' and `countries`, which are equivalent
+        - 'official' and `countries`, which are equivalent
+        - 'mixed-to-test'
 
     Input (x):
         224 x 224 x 8 satellite image, with 7 channels from LandSat and 1 nighttime light channel from DMSP/VIIRS. Already mean/std normalized.
@@ -149,7 +150,7 @@ class PovertyMapDataset(WILDSDataset):
 
     def __init__(self, version=None, root_dir='data', download=False,
                  split_scheme='official',
-                 no_nl=False, fold='A', oracle_training_set=False,
+                 no_nl=False, fold='A',
                  use_ood_val=True,
                  cache_size=100):
         self._version = version
@@ -158,13 +159,16 @@ class PovertyMapDataset(WILDSDataset):
         self._split_dict = {'train': 0, 'id_val': 1, 'id_test': 2, 'val': 3, 'test': 4}
         self._split_names = {'train': 'Train', 'id_val': 'ID Val', 'id_test': 'ID Test', 'val': 'OOD Val', 'test': 'OOD Test'}
 
-        if split_scheme=='official':
+        if split_scheme == 'official':
             split_scheme = 'countries'
-        self._split_scheme = split_scheme
-        if self._split_scheme != 'countries':
-            raise ValueError("Split scheme not recognized")
 
-        self.oracle_training_set = oracle_training_set
+        if split_scheme == 'mixed-to-test':
+            self.oracle_training_set = True
+        elif split_scheme in ['official', 'countries']:
+            self.oracle_training_set = False
+        else:
+            raise ValueError("Split scheme not recognized")
+        self._split_scheme = split_scheme
 
         self.no_nl = no_nl
         if fold not in {'A', 'B', 'C', 'D', 'E'}:
@@ -191,11 +195,9 @@ class PovertyMapDataset(WILDSDataset):
             else:
                 idxs = idxs_id
                 num_eval = 2000
-                # if oracle, do 50-50 split between OOD and ID
+                # if oracle, sample from all countries
                 if split == 'train' and self.oracle_training_set:
                     idxs = subsample_idxs(incountry_folds_split, num=len(idxs_id), seed=ord(fold))[num_eval:]
-                elif split != 'train' and self.oracle_training_set:
-                    eval_idxs = subsample_idxs(incountry_folds_split, num=len(idxs_id), seed=ord(fold))[:num_eval]
                 elif split == 'train':
                     idxs = subsample_idxs(idxs, take_rest=True, num=num_eval, seed=ord(fold))
                 else:

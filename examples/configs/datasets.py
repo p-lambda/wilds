@@ -210,7 +210,8 @@ dataset_defaults = {
     'fmow': {
         'split_scheme': 'official',
         'dataset_kwargs': {
-            'seed': 111
+            'seed': 111,
+            'use_ood_val': True
         },
         'model': 'densenet121',
         'model_kwargs': {'pretrained': True},
@@ -316,7 +317,8 @@ dataset_defaults = {
         'split_scheme': 'official',
         'dataset_kwargs': {
             'no_nl': False,
-            'fold': 'A'
+            'fold': 'A',
+            'use_ood_val': True
         },
         'model': 'resnet18_ms',
         'model_kwargs': {'num_channels': 8},
