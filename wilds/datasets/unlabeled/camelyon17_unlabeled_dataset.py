@@ -95,9 +95,7 @@ class Camelyon17UnlabeledDataset(WILDSUnlabeledDataset):
         # Extract splits
         centers = self._metadata_df["center"].values.astype("long")
         num_centers = int(np.max(centers)) + 1
-        self._metadata_df["split"] = self.split_dict[
-            "train_unlabeled"
-        ]
+        self._metadata_df["split"] = self.split_dict["train_unlabeled"]
         val_center_mask = self._metadata_df["center"] == VAL_CENTER
         test_center_mask = self._metadata_df["center"] == TEST_CENTER
         self._metadata_df.loc[val_center_mask, "split"] = self.split_dict[
@@ -106,6 +104,13 @@ class Camelyon17UnlabeledDataset(WILDSUnlabeledDataset):
         self._metadata_df.loc[test_center_mask, "split"] = self.split_dict[
             "test_unlabeled"
         ]
+        # Centers 1 and 2 have 600,030 labeled examples each.
+        # The rest of the unlabeled data is used for the train_unlabeled split (1,799,247 total).
+        assert self._metadata_df.loc[val_center_mask].shape[0] == 600_030
+        assert self._metadata_df.loc[test_center_mask].shape[0] == 600_030
+        train_center_mask = ~self._metadata_df["center"].isin([VAL_CENTER, TEST_CENTER])
+        assert self._metadata_df.loc[train_center_mask].shape[0] == 1_799_247
+
         self._split_array = self._metadata_df["split"].values
 
         self._y_array = torch.LongTensor(self._metadata_df["tumor"].values)
