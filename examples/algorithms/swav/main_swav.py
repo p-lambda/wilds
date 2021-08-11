@@ -22,6 +22,7 @@ import torch.optim
 import apex
 from apex.parallel.LARC import LARC
 
+import wilds
 from src.utils import (
     bool_flag,
     initialize_exp,
@@ -41,7 +42,7 @@ parser = argparse.ArgumentParser(description="Implementation of SwAV")
 #########################
 ##### dataset params ####
 #########################
-parser.add_argument('-d', '--dataset', required=True) # TODO add choices=wilds.supported_datasets
+parser.add_argument('-d', '--dataset', required=True, choices=wilds.unlabeled_datasets)
 parser.add_argument('--root_dir', required=True,
                     help='The directory where [dataset]/data can be found (or should be downloaded to, if it does not exist).')
 parser.add_argument('--dataset_kwargs', nargs='*', action=ParseKwargs, default={})
