@@ -271,7 +271,7 @@ class CodaLabReproducibility:
             "--request-priority=20",
         ]
         if gpus > 1:
-            commands.append("--request-queue multigpu")
+            commands.append("--request-queue=multigpu")
 
         for key, uuid in dependencies.items():
             commands.append(f"{key}:{uuid}")
@@ -508,9 +508,8 @@ class CodaLabReproducibility:
         # Configure Multi-GPU
         if gpus > 1:
             gpu_indices = [str(gpu) for gpu in range(gpus)]
-            command = (
-                f"CUDA_VISIBLE_DEVICES={','.join(gpu_indices)} {command} --device {' '.join(gpu_indices)} "
-                f"--loader_kwargs num_workers={gpus * 2} pin_memory=True"
+            command += (
+                f" --device {' '.join(gpu_indices)} --loader_kwargs num_workers={gpus * 2} pin_memory=True"
             )
 
         # Configure wandb
@@ -606,7 +605,10 @@ class CodaLabReproducibility:
             universal_newlines=True,
         )
         if print_output:
-            print(process.stdout)
+            if process.stdout:
+                print(process.stdout)
+            if process.stderr:
+                print(process.stderr)
         return clean_output(process.stdout) if clean else process.stdout
 
     def time(self, uuid):
