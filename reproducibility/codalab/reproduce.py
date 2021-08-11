@@ -510,13 +510,13 @@ class CodaLabReproducibility:
             gpu_indices = [str(gpu) for gpu in range(gpus)]
             command = (
                 f"CUDA_VISIBLE_DEVICES={','.join(gpu_indices)} {command} --device {' '.join(gpu_indices)} "
-                f"--loader_kwargs num_workers={gpus * 2} pin_memory=True "
+                f"--loader_kwargs num_workers={gpus * 2} pin_memory=True"
             )
 
         # Configure wandb
         command += (
             f" --use_wandb --wandb_api_key_path wandb_api_key.txt --wandb_kwargs"
-            f" entity=wilds project={algorithm}-{dataset_name} group={experiment_name}"
+            f" entity=wilds project={algorithm.lower()}-{dataset_name.lower()} group={experiment_name}"
         )
         return command
 
