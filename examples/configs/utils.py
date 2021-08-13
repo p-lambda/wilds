@@ -2,7 +2,7 @@ from configs.algorithm import algorithm_defaults
 from configs.model import model_defaults
 from configs.scheduler import scheduler_defaults
 from configs.data_loader import loader_defaults
-from configs.datasets import dataset_defaults, split_defaults
+from configs.datasets import dataset_defaults, split_defaults, swav_dataset_defaults
 
 def populate_defaults(config):
     """Populates hyperparameters with defaults implied by choices
@@ -83,6 +83,27 @@ def populate_defaults(config):
         ] 
     for field in required_fields:
         assert getattr(config, field) is not None, f"Must manually specify {field} for this setup."
+
+    return config
+
+def populate_defaults_for_swav(config):
+    """
+    Populate defaults for SwAV pretraining.
+    """
+    assert config.dataset is not None, 'dataset must be specified'
+
+    if config.final_lr is None and config.lr:
+        # TODO: double check is it okay to hardcode? -Tony
+        config.final_lr = config.lr / 1000.
+
+    config = populate_config(
+        config,
+        swav_dataset_defaults[config.dataset]
+    )
+
+    # Sanity checks
+    assert config.warmup_epochs < config.n_epochs, \
+        f'The number of warmup_epochs ({config.warmup_epochs}) cannot be greater than n_epochs ({config.n_epochs}).'
 
     return config
 

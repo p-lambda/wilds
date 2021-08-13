@@ -8,6 +8,7 @@ import argparse
 import math
 import os
 import shutil
+import sys
 import time
 from logging import getLogger
 
@@ -19,8 +20,11 @@ import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 import torch.optim
-import apex
-from apex.parallel.LARC import LARC
+try:
+    import apex
+    from apex.parallel.LARC import LARC
+except ImportError as e:
+    print("Apex not found. Proceeding without it...")
 
 import wilds
 from src.utils import (
@@ -36,6 +40,11 @@ from src.utils import (
 from src.multicropdataset import CustomSplitMultiCropDataset
 import src.resnet50 as resnet_models
 
+# TODO: This is needed to test the WILDS package locally. Remove later -Tony
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
+
+from examples.configs.utils import populate_defaults_for_swav
+
 logger = getLogger()
 parser = argparse.ArgumentParser(description="Implementation of SwAV")
 
@@ -46,6 +55,8 @@ parser.add_argument('-d', '--dataset', required=True, choices=wilds.unlabeled_da
 parser.add_argument('--root_dir', required=True,
                     help='The directory where [dataset]/data can be found (or should be downloaded to, if it does not exist).')
 parser.add_argument('--dataset_kwargs', nargs='*', action=ParseKwargs, default={})
+parser.add_argument('--loader_kwargs', nargs='*', action=ParseKwargs, default={})
+parser.add_argument('--splits', nargs='+', default=["test_unlabeled"])
 
 #########################
 #### data aug params ####
@@ -82,16 +93,16 @@ parser.add_argument("--epoch_queue_starts", type=int, default=15,
 #########################
 #### optim parameters ###
 #########################
-parser.add_argument("--epochs", default=100, type=int,
+parser.add_argument("--n_epochs", default=100, type=int,
                     help="number of total epochs to run")
+parser.add_argument("--warmup_epochs", default=10, type=int, help="number of warmup epochs")
 parser.add_argument("--batch_size", default=64, type=int,
                     help="batch size per gpu, i.e. how many unique instances per gpu")
-parser.add_argument("--base_lr", default=4.8, type=float, help="base learning rate")
+parser.add_argument("--lr", default=4.8, type=float, help="base learning rate")
 parser.add_argument("--final_lr", type=float, default=0, help="final learning rate")
 parser.add_argument("--freeze_prototypes_niters", default=313, type=int,
                     help="freeze the prototypes during this many iterations from the start")
-parser.add_argument("--wd", default=1e-6, type=float, help="weight decay")
-parser.add_argument("--warmup_epochs", default=10, type=int, help="number of warmup epochs")
+parser.add_argument("--weight_decay", default=1e-6, type=float, help="weight decay")
 parser.add_argument("--start_warmup", default=0, type=float,
                     help="initial warmup learning rate")
 
@@ -111,11 +122,11 @@ parser.add_argument("--local_rank", default=0, type=int,
 #########################
 #### other parameters ###
 #########################
-parser.add_argument("--arch", default="resnet50", type=str, help="convnet architecture")
+parser.add_argument("--model", default="resnet50", type=str, help="convnet architecture")
+parser.add_argument('--model_kwargs', nargs='*', action=ParseKwargs, default={},
+                    help='keyword arguments for model initialization passed as key1=value1 key2=value2')
 parser.add_argument("--hidden_mlp", default=2048, type=int,
                     help="hidden layer dimension in projection head")
-parser.add_argument("--workers", default=10, type=int,
-                    help="number of data loading workers")
 parser.add_argument("--checkpoint_freq", type=int, default=25,
                     help="Save the model periodically")
 parser.add_argument("--use_fp16", type=bool_flag, default=True,
@@ -123,16 +134,21 @@ parser.add_argument("--use_fp16", type=bool_flag, default=True,
 parser.add_argument("--sync_bn", type=str, default="pytorch", help="synchronize bn")
 parser.add_argument("--syncbn_process_group_size", type=int, default=8, help=""" see
                     https://github.com/NVIDIA/apex/blob/master/apex/parallel/__init__.py#L58-L67""")
-parser.add_argument("--dump_path", type=str, default=".",
+parser.add_argument("--log_dir", type=str, default=".",
                     help="experiment dump path for checkpoints and log")
-parser.add_argument("--seed", type=int, default=31, help="seed")
+parser.add_argument("--seed", type=int, default=0, help="seed")
+parser.add_argument("--is_not_slurm_job", type=bool_flag, default=True, help="Set to true if not running in Slurm.")
+parser.add_argument("--cpu_only", type=bool_flag, default=False,
+                    help="Set to true to run experiment on CPUs instead of GPUs (for debugging).")
 
 def main():
     global args
     args = parser.parse_args()
-    args.is_not_slurm_job = False
+    populate_defaults_for_swav(args)
     init_distributed_mode(args)
     fix_random_seeds(args.seed)
+    if not os.path.exists(args.log_dir):
+        os.makedirs(args.log_dir)
     logger, training_stats = initialize_exp(args, "epoch", "loss")
 
     train_dataset = CustomSplitMultiCropDataset(
@@ -142,7 +158,7 @@ def main():
         args.nmb_crops,
         args.min_scale_crops,
         args.max_scale_crops,
-        args.dataset_kwargs
+        args,
     )
 
     sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -150,14 +166,13 @@ def main():
         train_dataset,
         sampler=sampler,
         batch_size=args.batch_size,
-        num_workers=args.workers,
-        pin_memory=True,
-        drop_last=True
+        **args.loader_kwargs,
     )
     logger.info("Building data done with {} images loaded.".format(len(train_dataset)))
 
     # build model
-    model = resnet_models.__dict__[args.arch](
+    # TODO: use WILDS models? -Tony
+    model = resnet_models.__dict__[args.model](
         normalize=True,
         hidden_mlp=args.hidden_mlp,
         output_dim=args.feat_dim,
@@ -178,17 +193,18 @@ def main():
     logger.info("Building model done.")
 
     # build optimizer
+    # TODO: should we use WILDS default optimizer and schedulers or SGD is fine? -Tony
     optimizer = torch.optim.SGD(
         model.parameters(),
-        lr=args.base_lr,
+        lr=args.lr,
         momentum=0.9,
-        weight_decay=args.wd,
+        weight_decay=args.weight_decay,
     )
     optimizer = LARC(optimizer=optimizer, trust_coefficient=0.001, clip=False)
-    warmup_lr_schedule = np.linspace(args.start_warmup, args.base_lr, len(train_loader) * args.warmup_epochs)
-    iters = np.arange(len(train_loader) * (args.epochs - args.warmup_epochs))
-    cosine_lr_schedule = np.array([args.final_lr + 0.5 * (args.base_lr - args.final_lr) * (1 + \
-                         math.cos(math.pi * t / (len(train_loader) * (args.epochs - args.warmup_epochs)))) for t in iters])
+    warmup_lr_schedule = np.linspace(args.start_warmup, args.lr, len(train_loader) * args.warmup_epochs)
+    iters = np.arange(len(train_loader) * (args.n_epochs - args.warmup_epochs))
+    cosine_lr_schedule = np.array([args.final_lr + 0.5 * (args.lr - args.final_lr) * (1 + \
+                         math.cos(math.pi * t / (len(train_loader) * (args.n_epochs - args.warmup_epochs)))) for t in iters])
     lr_schedule = np.concatenate((warmup_lr_schedule, cosine_lr_schedule))
     logger.info("Building optimizer done.")
 
@@ -206,7 +222,7 @@ def main():
     # optionally resume from a checkpoint
     to_restore = {"epoch": 0}
     restart_from_checkpoint(
-        os.path.join(args.dump_path, "checkpoint.pth.tar"),
+        os.path.join(args.log_dir, "checkpoint.pth.tar"),
         run_variables=to_restore,
         state_dict=model,
         optimizer=optimizer,
@@ -216,7 +232,7 @@ def main():
 
     # build the queue
     queue = None
-    queue_path = os.path.join(args.dump_path, "queue" + str(args.rank) + ".pth")
+    queue_path = os.path.join(args.log_dir, "queue" + str(args.rank) + ".pth")
     if os.path.isfile(queue_path):
         queue = torch.load(queue_path)["queue"]
     # the queue needs to be divisible by the batch size
@@ -224,8 +240,7 @@ def main():
 
     cudnn.benchmark = True
 
-    for epoch in range(start_epoch, args.epochs):
-
+    for epoch in range(start_epoch, args.n_epochs):
         # train the network for one epoch
         logger.info("============ Starting epoch %i ... ============" % epoch)
 
@@ -255,18 +270,18 @@ def main():
                 save_dict["amp"] = apex.amp.state_dict()
             torch.save(
                 save_dict,
-                os.path.join(args.dump_path, "checkpoint.pth.tar"),
+                os.path.join(args.log_dir, "checkpoint.pth.tar"),
             )
-            if epoch % args.checkpoint_freq == 0 or epoch == args.epochs - 1:
+            if epoch % args.checkpoint_freq == 0 or epoch == args.n_epochs - 1:
                 shutil.copyfile(
-                    os.path.join(args.dump_path, "checkpoint.pth.tar"),
+                    os.path.join(args.log_dir, "checkpoint.pth.tar"),
                     os.path.join(args.dump_checkpoints, "ckp-" + str(epoch) + ".pth"),
                 )
         if queue is not None:
             torch.save({"queue": queue}, queue_path)
 
     if args.rank == 0:
-        plot_experiment(args.dump_path)
+        plot_experiment(args.log_dir)
 
 
 def train(train_loader, model, optimizer, epoch, lr_schedule, queue):

@@ -48,6 +48,8 @@ def init_distributed_mode(args):
         - world_size
         - rank
     """
+    if args.cpu_only:
+        return
 
     if args.is_not_slurm_job:
         args.is_slurm_job = False
@@ -90,27 +92,27 @@ def initialize_exp(params, *args, dump_params=True):
 
     # dump parameters
     if dump_params:
-        pickle.dump(params, open(os.path.join(params.dump_path, "params.pkl"), "wb"))
+        pickle.dump(params, open(os.path.join(params.log_dir, "params.pkl"), "wb"))
 
     # create repo to store checkpoints
-    params.dump_checkpoints = os.path.join(params.dump_path, "checkpoints")
+    params.dump_checkpoints = os.path.join(params.log_dir, "checkpoints")
     if not params.rank and not os.path.isdir(params.dump_checkpoints):
         os.mkdir(params.dump_checkpoints)
 
     # create a panda object to log loss and acc
     training_stats = PD_Stats(
-        os.path.join(params.dump_path, "stats" + str(params.rank) + ".pkl"), args
+        os.path.join(params.log_dir, "stats" + str(params.rank) + ".pkl"), args
     )
 
     # create a logger
     logger = create_logger(
-        os.path.join(params.dump_path, "train.log"), rank=params.rank
+        os.path.join(params.log_dir, "train.log"), rank=params.rank
     )
     logger.info("============ Initialized logger ============")
     logger.info(
         "\n".join("%s: %s" % (k, str(v)) for k, v in sorted(dict(vars(params)).items()))
     )
-    logger.info("The experiment will be stored in %s\n" % params.dump_path)
+    logger.info("The experiment will be stored in %s\n" % params.log_dir)
     logger.info("")
     return logger, training_stats
 
@@ -249,19 +251,19 @@ def save_plot(df, key_name, plot_name, save_folder):
         ax.get_figure().savefig(pathlib.Path(save_folder) / filename)
 
 
-def plot_experiment(dump_path):
+def plot_experiment(log_dir):
     '''
     Plots some statistics from the specified experiment and saves the plots.
 
     Parameters
     ----------
-    dump_path : Union[str, pathlib.Path]
+    log_dir : Union[str, pathlib.Path]
         Path containing the results of the experiment. Should have files of the
         form stats*.pkl.
     '''
-    dump_path = pathlib.Path(dump_path)
+    log_dir = pathlib.Path(log_dir)
     df_list = []
-    for filepath in dump_path.iterdir():
+    for filepath in log_dir.iterdir():
         filename = str(filepath.name)
         if filename.startswith('stats') and filename.endswith('.pkl'):
             with open(filepath, 'rb') as open_file:
@@ -275,5 +277,5 @@ def plot_experiment(dump_path):
         ('prec1_tgt', 'Target Accuracy')
     ]
     for stat in STAT_NAMES:
-        save_plot(avg_df, stat[0], stat[1], dump_path)
+        save_plot(avg_df, stat[0], stat[1], log_dir)
         plt.close()

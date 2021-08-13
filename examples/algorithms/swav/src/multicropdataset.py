@@ -6,16 +6,14 @@
 #
 import random
 from logging import getLogger
-import os
 
 from PIL import ImageFilter, Image
 import numpy as np
-import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 
 from wilds import get_dataset
-
+from examples.transforms import initialize_transform
 
 logger = getLogger()
 
@@ -25,18 +23,26 @@ class CustomSplitDataset(Dataset):
         self,
         dataset_name,
         root_dir,
-        dataset_kwargs
+        config,
     ):
         super().__init__()
 
         self.datasets = []
-        for domain in dataset_kwargs['domains'].split(','):
-            # do the domains separately
-            # TODO: source and target need to be different domains for DomainNet
-            # discuss with kendrick how to pass in args for this
-            ds = get_dataset(dataset=dataset_name, root_dir=root_dir, source_domain=domain, target_domain='quickdraw')
-            train_ds = ds.get_subset('train')
-            self.datasets.append(train_ds)
+        dataset = get_dataset(
+            dataset=dataset_name,
+            root_dir=root_dir,
+            unlabeled=True,
+            download=True,
+            **config.dataset_kwargs
+        )
+        train_transform = initialize_transform(
+            transform_name=config.train_transform,
+            config=config,
+            dataset=dataset,
+        )
+        for split in config.splits:
+            subset = dataset.get_subset(split, transform=train_transform)
+            self.datasets.append(subset)
         self.dataset_lengths = [len(d) for d in self.datasets]
 
     def __len__(self):
@@ -65,7 +71,7 @@ class CustomSplitMultiCropDataset(Dataset):
         nmb_crops,
         min_scale_crops,
         max_scale_crops,
-        dataset_kwargs={},
+        config,
         return_index=False
     ):
         super().__init__()
@@ -75,7 +81,7 @@ class CustomSplitMultiCropDataset(Dataset):
         assert len(max_scale_crops) == len(nmb_crops)
         self.return_index = return_index
 
-        self.ds = CustomSplitDataset(dataset_name, root_dir, dataset_kwargs)
+        self.ds = CustomSplitDataset(dataset_name, root_dir, config)
         color_transform = [get_color_distortion(), PILRandomGaussianBlur()]
         trans = []
         means = [0.485, 0.456, 0.406]
