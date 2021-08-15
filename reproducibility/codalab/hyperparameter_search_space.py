@@ -21,7 +21,7 @@ ERM_HYPERPARAMETER_SEARCH_SPACE = {
             "lr": [-6, -4],
         },
         "camelyon17": {
-            "batch_size": 32,
+            "batch_size": [32],
             "lr": [-4, -2],
             "weight_decay": [-3, -1],
         },
@@ -31,7 +31,7 @@ ERM_HYPERPARAMETER_SEARCH_SPACE = {
             "weight_decay": [-4, -1],
         },
         "fmow": {
-            "batch_size": 96,
+            "batch_size": [96],
             "lr": [-5, -3],
             "weight_decay": [-5, -3],
         },
@@ -57,7 +57,7 @@ ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE = {
             "additional_train_transform": ["randaugment"],
         },
         "camelyon17": {
-            "batch_size": 32,
+            "batch_size": [32],
             "lr": [-4, -2],
             "weight_decay": [-3, -1],
             "additional_train_transform": ["randaugment"],
@@ -69,7 +69,7 @@ ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE = {
             "additional_train_transform": ["randaugment"],
         },
         "fmow": {
-            "batch_size": 96,
+            "batch_size": [96],
             "lr": [-5, -3],
             "weight_decay": [-5, -3],
             "additional_train_transform": ["randaugment"],
