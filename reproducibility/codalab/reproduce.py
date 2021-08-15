@@ -334,8 +334,9 @@ class CodaLabReproducibility:
                 test_result_df = get_early_stopped_row(
                     results_dfs["test_eval"], results_dfs["val_eval"], metric
                 )
+                bundle_description = self._get_field_value(uuid, "description")
                 print(
-                    f"uuid={uuid}, validation={val_result_df[metric]}, test={test_result_df[metric]}"
+                    f"uuid={uuid}, validation={val_result_df[metric]}, test={test_result_df[metric]}, description={bundle_description}"
                 )
                 if val_result_df[metric] > best_metric_value:
                     print(

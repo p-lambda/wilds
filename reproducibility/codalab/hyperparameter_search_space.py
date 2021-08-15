@@ -21,9 +21,9 @@ ERM_HYPERPARAMETER_SEARCH_SPACE = {
             "lr": [-6, -4],
         },
         "camelyon17": {
-            "batch_size": [MAX_BATCH_SIZES["camelyon17"]],
-            "lr": [-4, -1],
-            "weight_decay": [-4, -1],
+            "batch_size": 32,
+            "lr": [-4, -2],
+            "weight_decay": [-3, -1],
         },
         "iwildcam": {
             "batch_size": [MAX_BATCH_SIZES["iwildcam"]],
@@ -31,9 +31,9 @@ ERM_HYPERPARAMETER_SEARCH_SPACE = {
             "weight_decay": [-4, -1],
         },
         "fmow": {
-            "batch_size": [MAX_BATCH_SIZES["fmow"]],
-            "lr": [-5, -1],
-            "weight_decay": [-5, 0],
+            "batch_size": 96,
+            "lr": [-5, -3],
+            "weight_decay": [-5, -3],
         },
         "poverty": {
             "batch_size": [MAX_BATCH_SIZES["poverty"]],
@@ -57,9 +57,9 @@ ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE = {
             "additional_train_transform": ["randaugment"],
         },
         "camelyon17": {
-            "batch_size": [MAX_BATCH_SIZES["camelyon17"]],
-            "lr": [-4, -1],
-            "weight_decay": [-4, -1],
+            "batch_size": 32,
+            "lr": [-4, -2],
+            "weight_decay": [-3, -1],
             "additional_train_transform": ["randaugment"],
         },
         "iwildcam": {
@@ -69,9 +69,9 @@ ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE = {
             "additional_train_transform": ["randaugment"],
         },
         "fmow": {
-            "batch_size": [MAX_BATCH_SIZES["fmow"]],
-            "lr": [-5, -1],
-            "weight_decay": [-5, 0],
+            "batch_size": 96,
+            "lr": [-5, -3],
+            "weight_decay": [-5, -3],
             "additional_train_transform": ["randaugment"],
         },
         "poverty": {
