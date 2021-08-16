@@ -35,12 +35,13 @@ Usage:
 Example Usage:
     # To tune for ERM runs
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm ERM --random --dry-run
-    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_erm_tune 
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --experiment fmow_erm_tune 
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm ERMAugment --random --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
 
     # To tune for multi-gpu runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 4 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_fixmatch_tune 
 
     # To tune model hyperparameters for Unlabeled WILDS
@@ -332,7 +333,7 @@ class CodaLabReproducibility:
                     results_dfs[split], results_dfs[split], metrics
                 )
                 test_result_df = get_early_stopped_row(
-                    results_dfs["test_eval"], results_dfs["val_eval"], metric
+                    results_dfs["test_eval"], results_dfs["val_eval"], metric, log=True,
                 )
                 bundle_description = self._get_field_value(uuid, "description")
                 print(
@@ -510,7 +511,7 @@ class CodaLabReproducibility:
         if gpus > 1:
             gpu_indices = [str(gpu) for gpu in range(gpus)]
             command += (
-                f" --device {' '.join(gpu_indices)} --loader_kwargs num_workers={gpus * 2} pin_memory=True"
+                f" --device {' '.join(gpu_indices)} --loader_kwargs num_workers={gpus * 4} pin_memory=True"
             )
 
         # Configure wandb
