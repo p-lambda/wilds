@@ -12,5 +12,3 @@
 1. Epsilon. We used 0.03 throughout, as suggested in the "common issues" section of SwAV's README. We didn't tweak it afterwards, so it's unclear whether this helped.
 2. Number of epochs. We kept it at 400 epochs, since there are diminished benefits of running for 800 epochs.
 
-### Other notes
-There is a change in the SwAV implementation of ResNets: it is extra padding, and I have opened an issue here (https://github.com/facebookresearch/swav/issues/81) to ask whether this padding should be extended to DenseNet. The author is pretty responsive, and other than that, the DenseNet code should be good to go.
