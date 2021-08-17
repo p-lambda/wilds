@@ -1,3 +1,6 @@
+# version from Github
+# @Tony @Kendrick use this as a comparison for resnet.py to see what was changed
+
 import torch
 import torch.nn as nn
 
@@ -124,30 +127,22 @@ class Bottleneck(nn.Module):
 
 class ResNet(nn.Module):
     def __init__(
-            self,
-            block,
-            layers,
-            zero_init_residual=False,
-            groups=1,
-            widen=1,
-            width_per_group=64,
-            replace_stride_with_dilation=None,
-            norm_layer=None,
-            normalize=False,
-            output_dim=0,
-            hidden_mlp=0,
-            nmb_prototypes=0,
-            eval_mode=False,
+        self,
+        block,
+        layers,
+        num_classes=1000,
+        zero_init_residual=False,
+        groups=1,
+        width_per_group=64,
+        replace_stride_with_dilation=None,
+        norm_layer=None,
     ):
         super(ResNet, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
 
-        self.eval_mode = eval_mode
-        self.padding = nn.ConstantPad2d(1, 0.0)
-
-        self.inplanes = width_per_group * widen
+        self.inplanes = 64
         self.dilation = 1
         if replace_stride_with_dilation is None:
             # each element in the tuple indicates if we should replace
@@ -160,51 +155,24 @@ class ResNet(nn.Module):
             )
         self.groups = groups
         self.base_width = width_per_group
-        # change padding 3 -> 2 compared to original torchvision code because added a padding layer
-        num_out_filters = width_per_group * widen
         self.conv1 = nn.Conv2d(
-            3, num_out_filters, kernel_size=7, stride=2, padding=2, bias=False
+            3, self.inplanes, kernel_size=7, stride=2, padding=3, bias=False
         )
-        self.bn1 = norm_layer(num_out_filters)
+        self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, num_out_filters, layers[0])
-        num_out_filters *= 2
+        self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(
-            block, num_out_filters, layers[1], stride=2, dilate=replace_stride_with_dilation[0]
+            block, 128, layers[1], stride=2, dilate=replace_stride_with_dilation[0]
         )
-        num_out_filters *= 2
         self.layer3 = self._make_layer(
-            block, num_out_filters, layers[2], stride=2, dilate=replace_stride_with_dilation[1]
+            block, 256, layers[2], stride=2, dilate=replace_stride_with_dilation[1]
         )
-        num_out_filters *= 2
         self.layer4 = self._make_layer(
-            block, num_out_filters, layers[3], stride=2, dilate=replace_stride_with_dilation[2]
+            block, 512, layers[3], stride=2, dilate=replace_stride_with_dilation[2]
         )
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-
-        # normalize output features
-        self.l2norm = normalize
-
-        # projection head
-        if output_dim == 0:
-            self.projection_head = None
-        elif hidden_mlp == 0:
-            self.projection_head = nn.Linear(num_out_filters * block.expansion, output_dim)
-        else:
-            self.projection_head = nn.Sequential(
-                nn.Linear(num_out_filters * block.expansion, hidden_mlp),
-                nn.BatchNorm1d(hidden_mlp),
-                nn.ReLU(inplace=True),
-                nn.Linear(hidden_mlp, output_dim),
-            )
-
-        # prototype layer
-        self.prototypes = None
-        if isinstance(nmb_prototypes, list):
-            self.prototypes = MultiPrototypes(output_dim, nmb_prototypes)
-        elif nmb_prototypes > 0:
-            self.prototypes = nn.Linear(output_dim, nmb_prototypes, bias=False)
+        self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -264,9 +232,8 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward_backbone(self, x):
-        x = self.padding(x)
-
+    def _forward_impl(self, x):
+        # See note [TorchScript super()]
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
@@ -276,80 +243,13 @@ class ResNet(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
 
-        if self.eval_mode:
-            return x
-
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
+        x = self.fc(x)
 
         return x
-
-    def forward_head(self, x):
-        if self.projection_head is not None:
-            x = self.projection_head(x)
-
-        if self.l2norm:
-            x = nn.functional.normalize(x, dim=1, p=2)
-
-        if self.prototypes is not None:
-            return x, self.prototypes(x)
-        return x
-
-    def forward(self, inputs):
-        if not isinstance(inputs, list):
-            inputs = [inputs]
-        idx_crops = torch.cumsum(torch.unique_consecutive(
-            torch.tensor([inp.shape[-1] for inp in inputs]),
-            return_counts=True,
-        )[1], 0)
-        start_idx = 0
-        for end_idx in idx_crops:
-            _out = self.forward_backbone(torch.cat(inputs[start_idx: end_idx]).cuda(non_blocking=True))
-            if start_idx == 0:
-                output = _out
-            else:
-                output = torch.cat((output, _out))
-            start_idx = end_idx
-        return self.forward_head(output)
-
-class MultiPrototypes(nn.Module):
-    def __init__(self, output_dim, nmb_prototypes):
-        super(MultiPrototypes, self).__init__()
-        self.nmb_heads = len(nmb_prototypes)
-        for i, k in enumerate(nmb_prototypes):
-            self.add_module("prototypes" + str(i), nn.Linear(output_dim, k, bias=False))
 
     def forward(self, x):
-        out = []
-        for i in range(self.nmb_heads):
-            out.append(getattr(self, "prototypes" + str(i))(x))
-        return out
+        return self._forward_impl(x)
 
 
-def resnet18(**kwargs):
-    return ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
-
-
-def resnet34(**kwargs):
-    return ResNet(BasicBlock, [3, 4, 6, 3], **kwargs)
-
-
-def resnet50(**kwargs):
-    return ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
-
-
-def resnet101(**kwargs):
-    return ResNet(Bottleneck, [3, 4, 23, 3], **kwargs)
-
-
-# default wide ResNet is 2x widening
-def wideresnet50(**kwargs):
-    return ResNet(Bottleneck, [3, 4, 6, 3], widen=2, **kwargs)
-
-
-def wideresnet50_4(**kwargs):
-    return ResNet(Bottleneck, [3, 4, 6, 3], widen=4, **kwargs)
-
-
-def wideresnet50_5(**kwargs):
-    return ResNet(Bottleneck, [3, 4, 6, 3], widen=5, **kwargs)

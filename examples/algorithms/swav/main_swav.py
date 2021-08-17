@@ -38,7 +38,7 @@ from src.utils import (
     plot_experiment
 )
 from src.multicropdataset import CustomSplitMultiCropDataset
-import src.resnet50 as resnet_models
+import src.model as model_builder
 
 # TODO: This is needed to test the WILDS package locally. Remove later -Tony
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
@@ -170,14 +170,11 @@ def main():
     )
     logger.info("Building data done with {} images loaded.".format(len(train_dataset)))
 
-    # build model
-    # TODO: use WILDS models? -Tony
-    model = resnet_models.__dict__[args.model](
-        normalize=True,
-        hidden_mlp=args.hidden_mlp,
-        output_dim=args.feat_dim,
-        nmb_prototypes=args.nmb_prototypes,
+    model = model_builder.get_model(
+        args.model, normalize=True, hidden_mlp=args.hidden_mlp,
+        output_dim=args.feat_dim, nmb_prototypes=args.nmb_prototypes
     )
+    
     # synchronize batch norm layers
     if args.sync_bn == "pytorch":
         model = nn.SyncBatchNorm.convert_sync_batchnorm(model)
