@@ -145,7 +145,6 @@ class ResNet(nn.Module):
         self._norm_layer = norm_layer
 
         self.eval_mode = eval_mode
-        self.padding = nn.ConstantPad2d(1, 0.0)
 
         self.inplanes = width_per_group * widen
         self.dilation = 1
@@ -160,10 +159,9 @@ class ResNet(nn.Module):
             )
         self.groups = groups
         self.base_width = width_per_group
-        # change padding 3 -> 2 compared to original torchvision code because added a padding layer
         num_out_filters = width_per_group * widen
         self.conv1 = nn.Conv2d(
-            3, num_out_filters, kernel_size=7, stride=2, padding=2, bias=False
+            3, num_out_filters, kernel_size=7, stride=2, padding=3, bias=False
         )
         self.bn1 = norm_layer(num_out_filters)
         self.relu = nn.ReLU(inplace=True)
@@ -265,8 +263,6 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward_backbone(self, x):
-        x = self.padding(x)
-
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
