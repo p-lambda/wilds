@@ -17,14 +17,25 @@ batch_size=128 # this is per-GPU batch size
 # remove batch-normalization layer from the projection head
 # reduce the difficulty of the problem (less crops or softer data augmentation)
 
+# Batch size 256
+# Epochs 400
+# number of prototypes = uniform(10, 20) x number of classes
+# epoch_queue_starts = uniform(60, 200)
+# 4096 = queue_length + batch size = 3840 + 256
+# base_lr=0.6
+# Use checkpoint from epoch 399
+# Use default for LR, weight decay and pretty much everything else
+
+# Fine tuning
+# Train with best default hyperparameters from ERM
+# Tune LR and weight decay for ERM with the best SwAV hyperparameters
+
 # hyperparameters to be tuned
-epsilon=0.03
+epsilon=0.03  # use throughout
 nmb_prototypes=3000 # should be 10x the number of classes, this is approx. the number of subpopulations
 queue_length=3840 # for an effective batch size of 256, this stores the previous 15 batches
 epoch_queue_starts=500 # based on previous hyperparameter searches, it seems like the queue doesn't help for domainnet
 epochs=400
-# TODO: what about LR and weight decay? -Tony
-# What about cropping? -Tony
 
 dist_url="tcp://$SLURMD_NODENAME:40001" # TODO: this depends on the specific cluster
 
