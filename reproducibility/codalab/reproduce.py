@@ -15,6 +15,8 @@ from reproducibility.codalab.hyperparameter_search_space import (
     CORAL_HYPERPARAMETER_SEARCH_SPACE,
     DANN_HYPERPARAMETER_SEARCH_SPACE,
     FIXMATCH_HYPERPARAMETER_SEARCH_SPACE,
+    PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE,
+    NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE,
 )
 from reproducibility.codalab.util.analysis_utils import (
     compile_results,
@@ -40,9 +42,9 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
 
     # To tune for multi-gpu runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_fixmatch_tune 
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm PseudoLabel --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_pseudolabel_tune 
 
     # To tune model hyperparameters for Unlabeled WILDS
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --random --unlabeled-split test_unlabeled --dry-run
@@ -88,7 +90,12 @@ Example Usage:
 
 
 class CodaLabReproducibility:
-    _HAS_SEPARATE_UNLABELED_BUNDLE = ["camelyon17", "civilcomments", "iwildcam", "poverty"]
+    _HAS_SEPARATE_UNLABELED_BUNDLE = [
+        "camelyon17",
+        "civilcomments",
+        "iwildcam",
+        "poverty",
+    ]
 
     def __init__(self, local=False):
         # Run experiments on the main instance - https://worksheets.codalab.org
@@ -127,6 +134,7 @@ class CodaLabReproducibility:
                 experiment_name = f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}_tune{i}"
                 self._run_experiment(
                     name=experiment_name,
+                    dataset=dataset,
                     description=f"{str(hyperparameter_config)}",
                     dependencies={
                         "wilds": wilds_src_uuid,
@@ -232,6 +240,7 @@ class CodaLabReproducibility:
                 experiment_name += f"_tune{i}"
                 self._run_experiment(
                     name=experiment_name,
+                    dataset=dataset,
                     description=f"{str(hyperparameter_config)}",
                     dependencies=dependencies,
                     command=self._construct_command(
@@ -249,14 +258,14 @@ class CodaLabReproducibility:
                 )
 
     def _run_experiment(
-        self, name, description, dependencies, command, gpus=1, dry_run=False
+        self, name, dataset, description, dependencies, command, gpus=1, dry_run=False
     ):
         if gpus == 1:
-            cpus = 4
+            cpus = 5
             memory_gb = 19
         else:
             cpus = 15
-            memory_gb = 50
+            memory_gb = 90
 
         commands = [
             "cl",
@@ -270,9 +279,8 @@ class CodaLabReproducibility:
             "--request-disk=10g",
             f"--request-memory={memory_gb}g",
             "--request-priority=20",
+            f"--request-queue={f'multigpu{dataset}' if gpus > 1 else f'singlegpu{dataset}'}",
         ]
-        if gpus > 1:
-            commands.append("--request-queue=multigpu")
 
         for key, uuid in dependencies.items():
             commands.append(f"{key}:{uuid}")
@@ -290,6 +298,10 @@ class CodaLabReproducibility:
             search_space = DANN_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         elif algorithm == "FixMatch":
             search_space = FIXMATCH_HYPERPARAMETER_SEARCH_SPACE["datasets"]
+        elif algorithm == "PseudoLabel":
+            search_space = PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE["datasets"]
+        elif algorithm == "NoisyStudent":
+            search_space = NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         else:
             raise ValueError(
                 f"Hyperparameter tuning for {algorithm} is not yet supported."
@@ -333,7 +345,10 @@ class CodaLabReproducibility:
                     results_dfs[split], results_dfs[split], metrics
                 )
                 test_result_df = get_early_stopped_row(
-                    results_dfs["test_eval"], results_dfs["val_eval"], metric, log=True,
+                    results_dfs["test_eval"],
+                    results_dfs["val_eval"],
+                    metric,
+                    log=True,
                 )
                 bundle_description = self._get_field_value(uuid, "description")
                 print(
@@ -496,8 +511,13 @@ class CodaLabReproducibility:
         unlabeled_split=None,
         gpus=1,
     ):
+        executable = (
+            "wilds/examples/noisy_student_wrapper.py 3"  # we run for 3 iterations for the paper
+            if algorithm == "NoisyStudent"
+            else "wilds/examples/run_expt.py"
+        )
         command = (
-            "python -Wi wilds/examples/run_expt.py --root_dir $HOME --log_dir $HOME "
+            f"python -Wi {executable} --root_dir $HOME --log_dir $HOME "
             f"--dataset {dataset_name} --algorithm {algorithm} --seed {seed}"
         )
         if unlabeled_split:
@@ -510,9 +530,7 @@ class CodaLabReproducibility:
         # Configure Multi-GPU
         if gpus > 1:
             gpu_indices = [str(gpu) for gpu in range(gpus)]
-            command += (
-                f" --device {' '.join(gpu_indices)} --loader_kwargs num_workers={gpus * 4} pin_memory=True"
-            )
+            command += f" --device {' '.join(gpu_indices)} --loader_kwargs num_workers={gpus * 2} pin_memory=True"
 
         # Configure wandb
         command += (
@@ -535,7 +553,9 @@ class CodaLabReproducibility:
 
     def _get_datasets_uuids(self, worksheet_uuid, datasets, unlabeled=False):
         return {
-            dataset: self._get_bundle_uuid(f"{dataset}_unlabeled" if unlabeled else f"{dataset}_v", worksheet_uuid)
+            dataset: self._get_bundle_uuid(
+                f"{dataset}_unlabeled" if unlabeled else f"{dataset}_v", worksheet_uuid
+            )
             for dataset in datasets
         }
 

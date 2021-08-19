@@ -31,7 +31,7 @@ ERM_HYPERPARAMETER_SEARCH_SPACE = {
             "weight_decay": [-4, -1],
         },
         "fmow": {
-            "batch_size": [96],
+            "batch_size": [MAX_BATCH_SIZES["fmow"]],
             "lr": [-5, -3],
             "weight_decay": [-5, -3],
         },
@@ -69,7 +69,7 @@ ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE = {
             "additional_train_transform": ["randaugment"],
         },
         "fmow": {
-            "batch_size": [96],
+            "batch_size": [MAX_BATCH_SIZES["fmow"]],
             "lr": [-5, -3],
             "weight_decay": [-5, -3],
             "additional_train_transform": ["randaugment"],
@@ -187,7 +187,7 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "scheduler": ["FixMatchLR"],
         },
         "camelyon17": {
-            "n_epochs": [25],
+            "n_epochs": [20],
             "lr": [-4, -2],
             "weight_decay": [-3, -1],
             "self_training_lambda": [-1, 1],
@@ -196,6 +196,7 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "scheduler": ["FixMatchLR"],
         },
         "iwildcam": {
+            "n_epochs": [20],
             "weight_decay": [-4, -1],
             "lr": [-5, -3],
             "self_training_lambda": [-1, 1],
@@ -218,6 +219,97 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
             "scheduler": ["FixMatchLR"],
+        },
+    },
+}
+
+PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
+    "datasets": {
+        "amazon": {
+            "weight_decay": [-3, -1],
+            "lr": [-6, -4],
+            "self_training_lambda": [-1, 1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+            "scheduler": ["FixMatchLR"],
+        },
+        "civilcomments": {
+            "lr": [-6, -4],
+            "self_training_lambda": [-1, 1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+            "scheduler": ["FixMatchLR"],
+        },
+        "camelyon17": {
+            "n_epochs": [20],
+            "lr": [-4, -2],
+            "weight_decay": [-3, -1],
+            "self_training_lambda": [-1, 1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+            "scheduler": ["FixMatchLR"],
+        },
+        "iwildcam": {
+            "n_epochs": [20],
+            "weight_decay": [-4, -1],
+            "lr": [-5, -3],
+            "self_training_lambda": [-1, 1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+        },
+        "fmow": {
+            "n_epochs": [75],
+            "lr": [-5, -3],
+            "weight_decay": [-5, -3],
+            "self_training_lambda": [-1, 1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+            "scheduler": ["FixMatchLR"],
+        },
+        "poverty": {
+            "weight_decay": [-4, 0],
+            "lr": [-5, -1],
+            "self_training_lambda": [-1, 1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+            "scheduler": ["FixMatchLR"],
+        },
+    },
+}
+
+NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE = {
+    "datasets": {
+        "amazon": {
+            "weight_decay": [-3, -1],
+            "lr": [-6, -4],
+            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+        },
+        "civilcomments": {
+            "lr": [-6, -4],
+            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+        },
+        "camelyon17": {
+            "n_epochs": [20],
+            "lr": [-4, -2],
+            "weight_decay": [-3, -1],
+            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+        },
+        "iwildcam": {
+            "n_epochs": [20],
+            "weight_decay": [-4, -1],
+            "lr": [-5, -3],
+            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+        },
+        "fmow": {
+            "n_epochs": [75],
+            "lr": [-5, -3],
+            "weight_decay": [-5, -3],
+            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+        },
+        "poverty": {
+            "weight_decay": [-4, 0],
+            "lr": [-5, -1],
+            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
         },
     },
 }
