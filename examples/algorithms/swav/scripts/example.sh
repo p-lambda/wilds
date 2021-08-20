@@ -30,7 +30,7 @@ log_dir="/u/scr/nlp/dro/swav/test_run"
 dataset="fmow"
 
 epochs=400
-batch_size=128 # this is per-GPU batch size
+batch_size=64 # this is per-GPU batch size
 epsilon=0.03  # use throughout
 queue_length=3840 # for an effective batch size of 256, this stores the previous 15 batches
 
@@ -82,7 +82,7 @@ python examples/algorithms/swav/main_swav.py \
     --loader_kwargs num_workers=4 pin_memory=True drop_last=True \
     --dist_url $dist_url \
     --sync_bn pytorch \
-    --is_not_slurm_job false \
+    --is_not_slurm_job true \
     --use_fp16 true \
     --cpu_only false
 
