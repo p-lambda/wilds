@@ -122,7 +122,7 @@ parser.add_argument("--local_rank", default=0, type=int,
 #########################
 #### other parameters ###
 #########################
-parser.add_argument("--model", default="resnet50", type=str, help="convnet architecture")
+parser.add_argument("--model", type=str, help="convnet architecture. If not set, uses default model specified in WILDS.")
 parser.add_argument('--model_kwargs', nargs='*', action=ParseKwargs, default={},
                     help='keyword arguments for model initialization passed as key1=value1 key2=value2')
 parser.add_argument("--hidden_mlp", default=2048, type=int,
@@ -150,6 +150,7 @@ def main():
     if not os.path.exists(args.log_dir):
         os.makedirs(args.log_dir)
     logger, training_stats = initialize_exp(args, "epoch", "loss")
+    logger.info(f"Initialized distributed mode and applied WILDS default...\n{args}")
 
     train_dataset = CustomSplitMultiCropDataset(
         args.dataset,
@@ -169,7 +170,6 @@ def main():
         **args.loader_kwargs,
     )
     logger.info("Building data done with {} images loaded.".format(len(train_dataset)))
-
     model = model_builder.get_model(
         args.model, normalize=True, hidden_mlp=args.hidden_mlp,
         output_dim=args.feat_dim, nmb_prototypes=args.nmb_prototypes
@@ -190,7 +190,6 @@ def main():
     logger.info("Building model done.")
 
     # build optimizer
-    # TODO: should we use WILDS default optimizer and schedulers or SGD is fine? -Tony
     optimizer = torch.optim.SGD(
         model.parameters(),
         lr=args.lr,

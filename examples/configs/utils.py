@@ -93,7 +93,6 @@ def populate_defaults_for_swav(config):
     assert config.dataset is not None, 'dataset must be specified'
 
     if config.final_lr is None and config.lr:
-        # TODO: double check is it okay to hardcode? -Tony
         config.final_lr = config.lr / 1000.
 
     config = populate_config(
