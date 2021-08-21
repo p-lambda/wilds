@@ -27,8 +27,8 @@ ERM_HYPERPARAMETER_SEARCH_SPACE = {
         },
         "iwildcam": {
             "batch_size": [MAX_BATCH_SIZES["iwildcam"]],
-            "lr": [-5, -3],
-            "weight_decay": [-4, -1],
+            "lr": [-6, -4],
+            "weight_decay": [-4, -2],
         },
         "fmow": {
             "batch_size": [MAX_BATCH_SIZES["fmow"]],
@@ -64,8 +64,8 @@ ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE = {
         },
         "iwildcam": {
             "batch_size": [MAX_BATCH_SIZES["iwildcam"]],
-            "lr": [-5, -3],
-            "weight_decay": [-4, -1],
+            "lr": [-6, -4],
+            "weight_decay": [-4, -2],
             "additional_train_transform": ["randaugment"],
         },
         "fmow": {
@@ -103,8 +103,8 @@ CORAL_HYPERPARAMETER_SEARCH_SPACE = {
             "unlabeled_batch_size_frac": [0.5, 0.9],
         },
         "iwildcam": {
-            "lr": [-5, -3],
-            "weight_decay": [-4, -1],
+            "lr": [-6, -4],
+            "weight_decay": [-4, -2],
             "coral_penalty_weight": [-1, 1],
             "unlabeled_batch_size_frac": [0.5, 0.9],
         },
@@ -146,9 +146,9 @@ DANN_HYPERPARAMETER_SEARCH_SPACE = {
             "unlabeled_batch_size_frac": [0.5, 0.9],
         },
         "iwildcam": {
-            "weight_decay": [-4, -1],
-            "dann_classifier_lr": [-5, -3],
-            "dann_discriminator_lr": [-5, -3],
+            "weight_decay": [-4, -2],
+            "dann_classifier_lr": [-6, -4],
+            "dann_discriminator_lr": [-6, -4],
             "dann_penalty_weight": [-1, 1],
             "unlabeled_batch_size_frac": [0.5, 0.9],
         },
@@ -197,8 +197,8 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
         },
         "iwildcam": {
             "n_epochs": [20],
-            "weight_decay": [-4, -1],
-            "lr": [-5, -3],
+            "lr": [-6, -4],
+            "weight_decay": [-4, -2],
             "self_training_lambda": [-1, 1],
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
@@ -251,8 +251,8 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
         },
         "iwildcam": {
             "n_epochs": [20],
-            "weight_decay": [-4, -1],
-            "lr": [-5, -3],
+            "lr": [-6, -4],
+            "weight_decay": [-4, -2],
             "self_training_lambda": [-1, 1],
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
