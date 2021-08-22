@@ -231,14 +231,12 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
             "self_training_lambda": [-1, 1],
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
-            "scheduler": ["FixMatchLR"],
         },
         "civilcomments": {
             "lr": [-6, -4],
             "self_training_lambda": [-1, 1],
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
-            "scheduler": ["FixMatchLR"],
         },
         "camelyon17": {
             "n_epochs": [20],
@@ -247,7 +245,6 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
             "self_training_lambda": [-1, 1],
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
-            "scheduler": ["FixMatchLR"],
         },
         "iwildcam": {
             "n_epochs": [20],
@@ -264,7 +261,6 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
             "self_training_lambda": [-1, 1],
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
-            "scheduler": ["FixMatchLR"],
         },
         "poverty": {
             "weight_decay": [-4, 0],
@@ -272,7 +268,6 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
             "self_training_lambda": [-1, 1],
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
-            "scheduler": ["FixMatchLR"],
         },
     },
 }
