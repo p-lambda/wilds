@@ -359,6 +359,7 @@ DOMAIN_NET_CATEGORIES = [
     "zigzag",
 ]
 DOMAIN_NET_DOMAINS = ["clipart", "infograph", "painting", "quickdraw", "real", "sketch"]
+SENTRY_DOMAINS = ["clipart", "painting", "real", "sketch"]
 
 
 class DomainNetDataset(WILDSDataset):
@@ -392,6 +393,15 @@ class DomainNetDataset(WILDSDataset):
           year={2019}
         }
 
+    SENTRY publication:
+
+        @article{prabhu2020sentry
+           author = {Prabhu, Viraj and Khare, Shivam and Kartik, Deeksha and Hoffman, Judy},
+           title = {SENTRY: Selective Entropy Optimization via Committee Consistency for Unsupervised Domain Adaptation},
+           year = {2020},
+           journal = {arXiv preprint: 2012.11460},
+        }
+
     Fair Use Notice:
         "This dataset contains some copyrighted material whose use has not been specifically authorized by the copyright owners.
         In an effort to advance scientific research, we make this material available for academic research. We believe this
@@ -405,8 +415,8 @@ class DomainNetDataset(WILDSDataset):
     _dataset_name: str = "domainnet"
     _versions_dict: Dict[str, Dict[str, Union[str, int]]] = {
         "1.0": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0x174472c9b54243dba40850eb3e247797/contents/blob/",
-            "compressed_size": 17_438_390_000,
+            "download_url": "https://worksheets.codalab.org/rest/bundles/0x0b8ca76eef384b98b879d0c8c4681a32/contents/blob/",
+            "compressed_size": 19_255_770_459,
         },
     }
 
@@ -418,6 +428,7 @@ class DomainNetDataset(WILDSDataset):
         split_scheme: str = "official",
         source_domain: str = "sketch",
         target_domain: str = "real",
+        use_sentry: bool = False,
     ):
         # Dataset information
         self._version: Optional[str] = version
@@ -425,13 +436,22 @@ class DomainNetDataset(WILDSDataset):
         self._original_resolution = (224, 224)
         self._y_type: str = "long"
         self._y_size: int = 1
-        # The dataset contains 345 categories
-        self._n_classes: int = 345
         # Path of the dataset
         self._data_dir: str = self.initialize_data_dir(root_dir, download)
 
+        # The original dataset contains 345 categories. The SENTRY version contains 40 categories.
+        if use_sentry:
+            assert source_domain in SENTRY_DOMAINS
+            assert target_domain in SENTRY_DOMAINS
+            print("Using the SENTRY version of DomainNet...")
+            metadata_filename = "sentry_metadata.csv"
+            self._n_classes = 40
+        else:
+            metadata_filename = "metadata.csv"
+            self._n_classes = 345
+
         metadata_df: pd.DataFrame = pd.read_csv(
-            os.path.join(self.data_dir, "metadata.csv"),
+            os.path.join(self.data_dir, metadata_filename),
             dtype={
                 "image_path": str,
                 "domain": str,
