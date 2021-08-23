@@ -76,7 +76,7 @@ def main(sentry_splits_path):
         assert len(categories) == NUM_OF_CATEGORIES
         return count
 
-    print("Generating sentry_metadata.csv for DomainNet (SENTRY splits)...")
+    print("Generating sentry_metadata.csv for DomainNet (SENTRY version)...")
 
     metadata_dict = {column: [] for column in METADATA_COLUMNS}
     for domain in DOMAINS:
@@ -106,7 +106,7 @@ def main(sentry_splits_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Generate a CSV with the metadata for DomainNet."
+        description="Generate a CSV with the metadata for DomainNet (SENTRY version)."
     )
     parser.add_argument(
         "path",
