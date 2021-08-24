@@ -93,6 +93,7 @@ parser.add_argument("--epoch_queue_starts", type=int, default=15,
 #########################
 #### optim parameters ###
 #########################
+parser.add_argument('--optimizer_kwargs', nargs='*', action=ParseKwargs, default={})
 parser.add_argument("--n_epochs", default=100, type=int,
                     help="number of total epochs to run")
 parser.add_argument("--warmup_epochs", default=10, type=int, help="number of warmup epochs")
