@@ -43,9 +43,9 @@ Example Usage:
 
     # To tune for multi-gpu runs
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm DANN --random --gpus 1 --coarse --unlabeled-split test_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm deepCORAL --random --gpus 1 --coarse --unlabeled-split test_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm PseudoLabel --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_pseudolabel_tune 
 
     # To tune model hyperparameters for Unlabeled WILDS
@@ -158,7 +158,7 @@ class CodaLabReproducibility:
         datasets,
         algorithm="DANN",
         coarse=False,
-        num_of_samples=20,
+        num_of_samples=10,
         unlabeled_split=None,
         dry_run=False,
         gpus=1,
@@ -280,7 +280,7 @@ class CodaLabReproducibility:
             f"--request-gpus={gpus}",
             "--request-disk=10g",
             f"--request-memory={memory_gb}g",
-            "--request-priority=20",
+            "--request-priority=30",
             f"--request-queue={f'multigpu{dataset}' if gpus > 1 else f'singlegpu{dataset}'}",
         ]
 

@@ -185,7 +185,6 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "scheduler": ["FixMatchLR"],
         },
         "camelyon17": {
-            "n_epochs": [20],
             "lr": [-4, -2],
             "weight_decay": [-3, -1],
             "self_training_lambda": [-1, 1],
@@ -194,7 +193,6 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "scheduler": ["FixMatchLR"],
         },
         "iwildcam": {
-            "n_epochs": [20],
             "lr": [-6, -4],
             "weight_decay": [-4, -2],
             "self_training_lambda": [-1, 1],
@@ -202,7 +200,6 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
         },
         "fmow": {
-            "n_epochs": [75],
             "lr": [-5, -3],
             "weight_decay": [-5, -3],
             "self_training_lambda": [-1, 1],
@@ -237,7 +234,6 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
         },
         "camelyon17": {
-            "n_epochs": [20],
             "lr": [-4, -2],
             "weight_decay": [-3, -1],
             "self_training_lambda": [-1, 1],
@@ -245,7 +241,6 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
         },
         "iwildcam": {
-            "n_epochs": [20],
             "lr": [-6, -4],
             "weight_decay": [-4, -2],
             "self_training_lambda": [-1, 1],
@@ -253,7 +248,6 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
         },
         "fmow": {
-            "n_epochs": [75],
             "lr": [-5, -3],
             "weight_decay": [-5, -3],
             "self_training_lambda": [-1, 1],
