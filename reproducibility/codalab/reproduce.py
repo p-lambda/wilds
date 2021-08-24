@@ -539,7 +539,7 @@ class CodaLabReproducibility:
         # Configure wandb
         command += (
             f" --use_wandb --wandb_api_key_path wandb_api_key.txt --wandb_kwargs"
-            f" entity=wilds project={algorithm.lower()}-{dataset_name.lower()} group={experiment_name}"
+            f" entity=wilds project={algorithm.lower()}-{dataset_name.lower()} group={experiment_name}_gpus{gpus}"
         )
         return command
 
