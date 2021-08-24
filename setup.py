@@ -25,7 +25,7 @@ setuptools.setup(
         'pandas>=1.1.0',
         'scikit-learn>=0.20.0',
         'pillow>=7.2.0',
-        'torch>=1.7.0',
+        'torch==1.8.1+cu111',
         'ogb>=1.2.6',
         'tqdm>=4.53.0',
         'outdated>=0.2.0',

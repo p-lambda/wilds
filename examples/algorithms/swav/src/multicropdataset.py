@@ -13,6 +13,9 @@ import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 
 from wilds import get_dataset
+# In order to get the examples module in the path
+import sys
+sys.path.insert(0, sys.path[0] + '/../../..')
 from examples.transforms import initialize_transform
 
 logger = getLogger()
