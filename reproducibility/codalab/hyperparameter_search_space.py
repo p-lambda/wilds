@@ -43,17 +43,6 @@ ERM_HYPERPARAMETER_SEARCH_SPACE = {
 
 ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE = {
     "datasets": {
-        "amazon": {
-            "batch_size": [MAX_BATCH_SIZES["amazon"]],
-            "lr": [-6, -4],
-            "weight_decay": [-3, -1],
-            "additional_train_transform": ["randaugment"],
-        },
-        "civilcomments": {
-            "batch_size": [MAX_BATCH_SIZES["civilcomments"]],
-            "lr": [-6, -4],
-            "additional_train_transform": ["randaugment"],
-        },
         "camelyon17": {
             "batch_size": [32],
             "lr": [-4, -2],
@@ -169,21 +158,6 @@ DANN_HYPERPARAMETER_SEARCH_SPACE = {
 
 FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
     "datasets": {
-        "amazon": {
-            "weight_decay": [-3, -1],
-            "lr": [-6, -4],
-            "self_training_lambda": [-1, 1],
-            "self_training_threshold": [0.7, 0.95],
-            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
-            "scheduler": ["FixMatchLR"],
-        },
-        "civilcomments": {
-            "lr": [-6, -4],
-            "self_training_lambda": [-1, 1],
-            "self_training_threshold": [0.7, 0.95],
-            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
-            "scheduler": ["FixMatchLR"],
-        },
         "camelyon17": {
             "lr": [-4, -2],
             "weight_decay": [-3, -1],
@@ -266,15 +240,6 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
 
 NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE = {
     "datasets": {
-        "amazon": {
-            "weight_decay": [-3, -1],
-            "lr": [-6, -4],
-            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
-        },
-        "civilcomments": {
-            "lr": [-6, -4],
-            "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
-        },
         "camelyon17": {
             "lr": [-4, -2],
             "weight_decay": [-3, -1],
