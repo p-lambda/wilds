@@ -5,9 +5,11 @@ import sys, os
 # metrics
 from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
 from wilds.common.metrics.all_metrics import Accuracy, MultiTaskAccuracy, MSE, multiclass_logits_to_pred, binary_logits_to_pred
+from utils import cross_entropy_with_logits_loss
 
 losses = {
     'cross_entropy': ElementwiseLoss(loss_fn=nn.CrossEntropyLoss(reduction='none')),
+    'cross_entropy_logits': ElementwiseLoss(loss_fn=cross_entropy_with_logits_loss),
     'lm_cross_entropy': MultiTaskLoss(loss_fn=nn.CrossEntropyLoss(reduction='none')),
     'mse': MSE(name='loss'),
     'multitask_bce': MultiTaskLoss(loss_fn=nn.BCEWithLogitsLoss(reduction='none')),
@@ -28,10 +30,12 @@ process_outputs_functions = {
 }
 
 # see initialize_*() functions for correspondence
-transforms = ['bert', 'image_base', 'image_resize_and_center_crop', 'poverty_train']
+transforms = ['bert', 'image_base', 'image_resize', 'image_resize_and_center_crop', 'poverty_train']
+additional_transforms = ['randaugment']
 models = ['resnet18_ms', 'resnet34', 'resnet50', 'resnet101', 'wideresnet50',
          'densenet121', 'bert-base-uncased', 'distilbert-base-uncased',
-         'gin-virtual', 'logistic_regression', 'code-gpt-py']
-algorithms = ['ERM', 'groupDRO', 'deepCORAL', 'IRM', 'DANN']
+         'gin-virtual', 'logistic_regression', 'code-gpt-py',
+         'efficientnet-b0', 'efficientnet-b1', 'efficientnet-b2', 'efficientnet-b3']
+algorithms = ['ERM', 'groupDRO', 'deepCORAL', 'IRM', 'DANN', 'FixMatch', 'PseudoLabel', 'NoisyStudent']
 optimizers = ['SGD', 'Adam', 'AdamW']
-schedulers = ['linear_schedule_with_warmup', 'ReduceLROnPlateau', 'StepLR']
+schedulers = ['linear_schedule_with_warmup', 'ReduceLROnPlateau', 'StepLR', 'CosineLR', 'FixMatchLR']

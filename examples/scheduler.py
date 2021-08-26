@@ -1,5 +1,5 @@
 from transformers import get_linear_schedule_with_warmup
-from torch.optim.lr_scheduler import LambdaLR, ReduceLROnPlateau, StepLR
+from torch.optim.lr_scheduler import LambdaLR, ReduceLROnPlateau, StepLR, CosineAnnealingLR
 
 def initialize_scheduler(config, optimizer, n_train_steps):
     # construct schedulers
@@ -22,6 +22,21 @@ def initialize_scheduler(config, optimizer, n_train_steps):
     elif config.scheduler == 'StepLR':
         scheduler = StepLR(optimizer, **config.scheduler_kwargs)
         step_every_batch = False
+        use_metric = False
+    elif config.scheduler == 'FixMatchLR':
+        scheduler = LambdaLR(
+            optimizer,
+            lambda x: (1.0 + 10 * float(x) / n_train_steps) ** -0.75
+        )
+        step_every_batch = True
+        use_metric = False
+    elif config.scheduler == 'CosineLR':
+        scheduler = CosineAnnealingLR(
+            optimizer,
+            n_train_steps,
+            config.scheduler_kwargs['min_lr'] * config.lr
+        )
+        step_every_batch = True
         use_metric = False
     else:
         raise ValueError(f'Scheduler: {config.scheduler} not supported.')

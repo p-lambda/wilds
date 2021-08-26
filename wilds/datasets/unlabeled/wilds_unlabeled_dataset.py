@@ -194,3 +194,43 @@ class WILDSUnlabeledSubset(WILDSUnlabeledDataset):
     @property
     def metadata_array(self):
         return self.dataset.metadata_array[self.indices]
+
+class WILDSPseudolabeledSubset(WILDSUnlabeledDataset):
+    """Pseudolabeled subset initialized from an unlabeled subset"""
+    def __init__(self, reference_subset, pseudolabels, transform):
+        assert len(reference_subset) == len(pseudolabels)
+        self.pseudolabels = pseudolabels
+        copied_attrs = [
+            "dataset",
+            "indices",
+            "_dataset_name",
+            "_data_dir",
+            "_collate",
+            "_split_scheme",
+            "_split_dict",
+            "_split_names",
+            "_metadata_fields",
+            "_metadata_map",
+        ]
+        for attr_name in copied_attrs:
+            if hasattr(reference_subset, attr_name):
+                setattr(self, attr_name, getattr(reference_subset, attr_name))
+        self.transform = transform
+
+    def __getitem__(self, idx):
+        x, metadata = self.dataset[self.indices[idx]]
+        y_pseudo = self.pseudolabels[idx]
+        if self.transform is not None:
+            x = self.transform(x)
+        return x, y_pseudo, metadata
+
+    def __len__(self):
+        return len(self.indices)
+
+    @property
+    def split_array(self):
+        return self.dataset._split_array[self.indices]
+
+    @property
+    def metadata_array(self):
+        return self.dataset.metadata_array[self.indices]

@@ -3,6 +3,7 @@ algorithm_defaults = {
         'train_loader': 'standard',
         'uniform_over_groups': False,
         'eval_loader': 'standard',
+        'randaugment_n': 2,     # If we are running ERM + data augmentation
     },
     'groupDRO': {
         'train_loader': 'standard',
