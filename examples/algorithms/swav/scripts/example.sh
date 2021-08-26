@@ -18,6 +18,7 @@ set -x
 #   queue_length=3840
 #   base_lr=0.6
 #   Use default for LR, weight decay and pretty much everything else
+#   Update --size_crops 224 96 according to the target resolution
 
 # Fine-tuning
 #   Run ERM using the last checkpoint from pre-training (epoch 399)
@@ -27,7 +28,7 @@ set -x
 # Example script to run on the cluster
 root_dir="/u/scr/nlp/dro"
 log_dir="/u/scr/nlp/dro/swav/test_run"
-dataset="fmow"
+dataset="domainnet"
 
 epochs=400
 batch_size=64 # this is per-GPU batch size
@@ -35,7 +36,7 @@ epsilon=0.03  # use throughout
 queue_length=3840 # for an effective batch size of 256, this stores the previous 15 batches
 
 # hyperparameters to be tuned
-nmb_prototypes=3000 # should be 10x the number of classes, this is approx. the number of subpopulations
+nmb_prototypes=400 # should be 10x the number of classes, this is approx. the number of subpopulations
 epoch_queue_starts=500 # based on previous hyperparameter searches, it seems like the queue doesn't help for domainnet
 
 dist_url="tcp://$SLURMD_NODENAME:40001" # TODO: this depends on the specific cluster
@@ -59,6 +60,7 @@ fi
 # python -m torch.distributed.launch --nproc_per_node=$NUM_GPUS examples/algorithms/swav/main_swav.py \
 python examples/algorithms/swav/main_swav.py \
     --dataset $dataset \
+    --dataset_kwargs use_sentry=True source_domain=sketch target_domain=real \
     --root_dir $root_dir \
     --log_dir $log_dir \
     --nmb_crops 2 6 \
@@ -82,12 +84,6 @@ python examples/algorithms/swav/main_swav.py \
     --loader_kwargs num_workers=4 pin_memory=True drop_last=True \
     --dist_url $dist_url \
     --sync_bn pytorch \
-    --is_not_slurm_job true \
+    --is_not_slurm_job false \
     --use_fp16 true \
     --cpu_only false
-
-python examples/run_expt.py \
-    --dataset $dataset \
-    --root_dir $root_dir \
-    --log_dir $log_dir/finetuned \
-    --pretrained_model_path $log_dir

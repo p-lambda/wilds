@@ -44,7 +44,7 @@ class CustomSplitDataset(Dataset):
             dataset=dataset,
         )
         for split in config.splits:
-            subset = dataset.get_subset(split, transform=train_transform)
+            subset = dataset.get_subset(split, transform=None)
             self.datasets.append(subset)
         self.dataset_lengths = [len(d) for d in self.datasets]
 
@@ -61,7 +61,7 @@ class CustomSplitDataset(Dataset):
             ds_idx += 1
         # ds_idx now stores the correct dataset, and index stores
         # the correct position within that dataset
-        x, _, _ = self.datasets[ds_idx][index] # discard metadata
+        x, _ = self.datasets[ds_idx][index] # discard metadata
         return x
 
 
