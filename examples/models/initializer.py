@@ -77,6 +77,10 @@ def initialize_model(config, d_out, is_featurizer=False):
     return model
 
 def initialize_bert_based_model(config, d_out, is_featurizer=False):
+    if 'state_dict' in config.model_kwargs:
+        print ('loading state_dict from', config.model_kwargs['state_dict'])
+        config.model_kwargs['state_dict'] = torch.load(config.model_kwargs['state_dict'])
+
     if config.model == 'bert-base-uncased':
         if is_featurizer:
             model = BertFeaturizer.from_pretrained(config.model, **config.model_kwargs)
