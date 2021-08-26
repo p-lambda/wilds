@@ -7,10 +7,10 @@
 ## Usage
 1. Format the unlabeled text data in the hugging-face format
 ```
-python3 mlm_pretrain/src/c001__get_data.py
+python3 mlm_pretrain/src/get_data.py
 ```
 
-2. Run the command in `mlm_pretrain/src/c002__run_pretrain.sh` to start masked LM pre-training
+2. Run the command in `mlm_pretrain/src/run_pretrain.sh` to start masked LM pre-training
 
 3. Use the pre-trained model in WILDS fine-tuning, e.g.
 ```
