@@ -51,7 +51,7 @@ algorithm_defaults = {
         'self_training_threshold': 0.7,
         'self_training_lambda_schedule_kwargs': {
             'num_warmup_steps': 0, 
-            'threshold_step': 1,'
+            'threshold_step': 1,
         }
     },
     'NoisyStudent': {
