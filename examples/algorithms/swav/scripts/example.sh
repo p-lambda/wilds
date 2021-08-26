@@ -86,4 +86,5 @@ python examples/algorithms/swav/main_swav.py \
     --sync_bn pytorch \
     --is_not_slurm_job false \
     --use_fp16 true \
-    --cpu_only false
+    --cpu_only false \
+    --seed 31
