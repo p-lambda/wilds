@@ -79,8 +79,8 @@ class LinearScheduleWithWarmupAndThreshold():
         self.step_every_batch = step_every_batch
         self.use_metric = False
 
-    def step():
-        print("Called step")
+    def step(self):
+        print("Called step", self.current_step)
         if self.current_step < self.T1:
             self.value = 0
         elif self.current_step < self.T2:
