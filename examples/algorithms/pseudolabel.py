@@ -41,7 +41,7 @@ class PseudoLabel(SingleModelAlgorithm):
         self.lambda_scheduler = LinearScheduleWithWarmupAndThreshold(
             max_value=config.self_training_lambda,
             step_every_batch=False, # step on epochs
-            **config.self_training_lambda_schedule_kwargs
+            **config.pseudolabel_lambda_scheduler_kwargs
         ) 
         self.schedulers.append(self.lambda_scheduler)
         self.scheduler_metric_names.append(None)

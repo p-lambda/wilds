@@ -47,7 +47,6 @@ def initialize_scheduler(config, optimizer, n_train_steps):
     return scheduler
 
 def step_scheduler(scheduler, metric=None):
-    print(scheduler, isinstance(scheduler, ReduceLROnPlateau))
     if isinstance(scheduler, ReduceLROnPlateau):
         assert metric is not None
         scheduler.step(metric)
@@ -61,13 +60,13 @@ class LinearScheduleWithWarmupAndThreshold():
     at some max value after T2.
     Designed to be called by step_scheduler() above and used within Algorithm class.
     Args:
-        - num_warmup_steps: aka T1. for steps [0, T1) keep param = 0
+        - last_warmup_step: aka T1. for steps [0, T1) keep param = 0
         - threshold_step: aka T2. step over period [T1, T2) to reach param = max value 
         - max value: end value of the param
     """
-    def __init__(self, max_value, num_warmup_steps=0, threshold_step=1, step_every_batch=False):
+    def __init__(self, max_value, last_warmup_step=0, threshold_step=1, step_every_batch=False):
         self.max_value = max_value
-        self.T1 = num_warmup_steps
+        self.T1 = last_warmup_step
         self.T2 = threshold_step
         assert (0 <= self.T1) and (self.T1 < self.T2)
 
@@ -80,11 +79,11 @@ class LinearScheduleWithWarmupAndThreshold():
         self.use_metric = False
 
     def step(self):
-        print("Called step", self.current_step)
+        """This function is first called AFTER step 0, so increment first to set value for next step"""
+        self.current_step += 1
         if self.current_step < self.T1:
             self.value = 0
         elif self.current_step < self.T2:
             self.value += (self.current_step - self.T1) / (self.T2 - self.T1) * self.max_value
         else:
             self.value = self.max_value
-        self.current_step += 1
