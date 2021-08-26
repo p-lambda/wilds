@@ -40,10 +40,10 @@ class PseudoLabel(SingleModelAlgorithm):
         # algorithm hyperparameters
         self.lambda_scheduler = LinearScheduleWithWarmupAndThreshold(
             max_value=config.self_training_lambda,
-            step_every_batch=False # step on epochs,
-            **config.
+            step_every_batch=False, # step on epochs
+            **config.self_training_lambda_schedule_kwargs
         ) 
-        self.schedulers.append(lambda_scheduler)
+        self.schedulers.append(self.lambda_scheduler)
         self.confidence_threshold = config.self_training_threshold
         if config.process_outputs_function is not None: 
             self.process_outputs_function = process_outputs_functions[config.process_outputs_function]
@@ -127,4 +127,5 @@ class PseudoLabel(SingleModelAlgorithm):
             results, "pseudolabels_kept_frac", pseudolabels_kept_frac
         )
 
+        print(self.lambda_scheduler.value) # TODO: REMOVE
         return classification_loss + self.lambda_scheduler.value * consistency_loss 
