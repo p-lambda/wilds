@@ -135,7 +135,6 @@ class GroupAlgorithm(Algorithm):
                                  (self.log_dict)
         """
         for scheduler, metric_name in zip(self.schedulers, self.scheduler_metric_names):
-            print(scheduler)
             if scheduler is None:
                 continue
             if is_epoch and scheduler.step_every_batch:
