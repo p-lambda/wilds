@@ -240,6 +240,12 @@ def main():
             # and then prep the unlabeled dataset to return these pseudolabels in __getitem__
             print("Inferring teacher pseudolabels for Noisy Student")
             assert config.teacher_model_path is not None
+            if not config.teacher_model_path.endswith(".pth"):
+                # Use the best model
+                config.teacher_model_path = os.path.join(
+                    config.teacher_model_path,  f"{config.dataset}_seed:{config.seed}_epoch:best_model.pth"
+                )
+
             d_out = infer_d_out(full_dataset)
             teacher_model = initialize_model(config, d_out).to(config.device)
             load(teacher_model, config.teacher_model_path, device=config.device)

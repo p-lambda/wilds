@@ -42,7 +42,7 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
 
     # To tune for multi-gpu runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm NoisyStudent --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm NoisyStudent --random --gpus 2 --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm FixMatch --random --gpus 2 --unlabeled-split extra_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets civilcomments --algorithm PseudoLabel --random --gpus 2 --unlabeled-split extra_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
@@ -262,6 +262,10 @@ class CodaLabReproducibility:
     def _run_experiment(
         self, name, dataset, description, dependencies, command, gpus=1, dry_run=False
     ):
+        if "noisystudent" in name:
+            # Training the teacher requires only a single gpu
+            gpus = 1
+
         if gpus == 1:
             cpus = 4
             memory_gb = 30
@@ -281,7 +285,8 @@ class CodaLabReproducibility:
             "--request-disk=10g",
             f"--request-memory={memory_gb}g",
             "--request-priority=30",
-            f"--request-queue={f'multigpu{dataset}' if gpus > 1 else f'singlegpu{dataset}'}",
+            # f"--request-queue={f'multigpu{dataset}' if gpus > 1 else f'singlegpu{dataset}'}",
+            f"--request-queue=quick",
         ]
 
         for key, uuid in dependencies.items():
@@ -513,13 +518,8 @@ class CodaLabReproducibility:
         unlabeled_split=None,
         gpus=1,
     ):
-        executable = (
-            "wilds/examples/noisy_student_wrapper.py 2"  # we run for 2 iterations for the paper
-            if algorithm == "NoisyStudent"
-            else "wilds/examples/run_expt.py"
-        )
         command = (
-            f"python -Wi {executable} --root_dir $HOME --log_dir $HOME "
+            f"python -Wi wilds/examples/run_expt.py --root_dir $HOME --log_dir $HOME "
             f"--dataset {dataset_name} --algorithm {algorithm} --seed {seed}"
         )
         if unlabeled_split:
@@ -530,7 +530,7 @@ class CodaLabReproducibility:
             command += f" --{hyperparameter} {value}"
 
         # Configure Multi-GPU
-        if gpus > 1:
+        if gpus > 1 and algorithm != "NoisyStudent":
             gpu_indices = [str(gpu) for gpu in range(gpus)]
             command += f" --device {' '.join(gpu_indices)} --loader_kwargs num_workers={gpus * 2} pin_memory=True"
         else:
