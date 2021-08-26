@@ -32,4 +32,33 @@ algorithm_defaults = {
         'distinct_groups': True,
         'eval_loader': 'standard',
     },
+    'FixMatch': {
+        'train_loader': 'standard',
+        'uniform_over_groups': False,
+        'eval_loader': 'standard',
+        'self_training_lambda': 1,
+        'self_training_threshold': 0.7,
+        'scheduler': 'FixMatchLR',
+        'randaugment_n': 2,
+        'additional_train_transform': 'weak',   # Apply weak augmentation to labeled examples
+    },
+    'PseudoLabel': {
+        'train_loader': 'standard',
+        'uniform_over_groups': False,
+        'eval_loader': 'standard',
+        'self_training_lambda': 1,
+        'self_training_threshold': 0.7,
+        'self_training_lambda_schedule_kwargs': {
+            'num_warmup_steps': 0, 
+            'threshold_step': 1,'
+        }
+    },
+    'NoisyStudent': {
+        'train_loader': 'standard',
+        'uniform_over_groups': False,
+        'eval_loader': 'standard',
+        'dropout_rate': 0.5,
+        'randaugment_n': 2,
+        'additional_train_transform': 'noisy_student'
+    }
 }

@@ -100,6 +100,7 @@ def main():
     parser.add_argument('--scheduler_kwargs', nargs='*', action=ParseKwargs, default={})
     parser.add_argument('--scheduler_metric_split', choices=['train', 'val'], default='val')
     parser.add_argument('--scheduler_metric_name')
+    parser.add_argument('--self_training_lambda_schedule_kwargs', nargs='*', action=ParseKwargs, default={})
 
     # Evaluation
     parser.add_argument('--process_outputs_function', choices = supported.process_outputs_functions)
