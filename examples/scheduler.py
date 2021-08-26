@@ -84,6 +84,6 @@ class LinearScheduleWithWarmupAndThreshold():
         if self.current_step < self.T1:
             self.value = 0
         elif self.current_step < self.T2:
-            self.value += (self.current_step - self.T1) / (self.T2 - self.T1) * self.max_value
+            self.value = (self.current_step - self.T1) / (self.T2 - self.T1) * self.max_value
         else:
             self.value = self.max_value
