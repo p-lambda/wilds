@@ -128,5 +128,4 @@ class PseudoLabel(SingleModelAlgorithm):
             results, "pseudolabels_kept_frac", pseudolabels_kept_frac
         )
 
-        print(self.lambda_scheduler.value) # TODO: REMOVE
         return classification_loss + self.lambda_scheduler.value * consistency_loss 
