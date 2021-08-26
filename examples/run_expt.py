@@ -225,12 +225,7 @@ def main():
             # For FixMatch, we need our loader to return batches in the form ((x_weak, x_strong), m)
             # We do this by initializing a special transform function
             unlabeled_train_transform = initialize_transform(
-                config.train_transform, config, full_unlabeled_dataset, additional_transform_name="fixmatch"
-            )
-        elif config.algorithm == "NoisyStudent":
-            # For NoisyStudent, we need our loader to apply a strong augmentation to examples
-            unlabeled_train_transform = initialize_transform(
-                config.train_transform, config, full_unlabeled_dataset, additional_transform_name="noisy_student"
+                config.train_transform, config, full_dataset, additional_transform_name="fixmatch"
             )
         else:
             unlabeled_train_transform = train_transform
@@ -243,8 +238,14 @@ def main():
             d_out = infer_d_out(full_dataset)
             teacher_model = initialize_model(config, d_out).to(config.device)
             load(teacher_model, config.teacher_model_path, device=config.device)
-            # Infer teacher outputs on unlabeled examples in sequential order
-            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=train_transform, frac=config.frac)
+            # Infer teacher outputs on weakly augmented unlabeled examples in sequential order
+            weak_transform = initialize_transform(
+                transform_name=config.train_transform,
+                config=config,
+                dataset=full_dataset,
+                additional_transform_name="weak"
+            )
+            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=weak_transform, frac=config.frac)
             sequential_loader = get_eval_loader(
                 loader=config.eval_loader,
                 dataset=unlabeled_split_dataset,

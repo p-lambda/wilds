@@ -56,6 +56,6 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'dropout_rate': 0.5,
         'randaugment_n': 2,
-        'additional_train_transform': 'noisy_student'
+        'additional_train_transform': 'randaugment' # Apply strong augmentation
     }
 }

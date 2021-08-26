@@ -51,7 +51,7 @@ def initialize_transform(
             config, dataset, transform_steps, default_normalization
         )
         transform = MultipleTransforms(transformations)
-    elif additional_transform_name in ["randaugment", "noisy_student"]:
+    elif additional_transform_name == "randaugment":
         transform = add_rand_augment_transform(
             config, dataset, transform_steps, default_normalization
         )
