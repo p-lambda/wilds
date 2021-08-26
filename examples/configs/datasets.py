@@ -130,6 +130,7 @@ dataset_defaults = {
         'dataset_kwargs': {
             'source_domain': 'real',
             'target_domain': 'sketch',
+            'use_sentry': False,
         },
         'model': 'resnet50',
         'model_kwargs': {'pretrained': True},
