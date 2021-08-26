@@ -47,6 +47,7 @@ def initialize_scheduler(config, optimizer, n_train_steps):
     return scheduler
 
 def step_scheduler(scheduler, metric=None):
+    print(scheduler, isinstance(scheduler, ReduceLROnPlateau))
     if isinstance(scheduler, ReduceLROnPlateau):
         assert metric is not None
         scheduler.step(metric)

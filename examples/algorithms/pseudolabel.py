@@ -44,6 +44,7 @@ class PseudoLabel(SingleModelAlgorithm):
             **config.self_training_lambda_schedule_kwargs
         ) 
         self.schedulers.append(self.lambda_scheduler)
+        self.scheduler_metric_names.append(None)
         self.confidence_threshold = config.self_training_threshold
         if config.process_outputs_function is not None: 
             self.process_outputs_function = process_outputs_functions[config.process_outputs_function]
