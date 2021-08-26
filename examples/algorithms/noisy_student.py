@@ -42,6 +42,8 @@ class NoisyStudent(SingleModelAlgorithm):
         - Single dropout layer before final classifier (fc) layer
         - TODO: stochastic depth with linearly decaying survival probability from last to first
 
+    Pseudolabels are generated in run_expt.py on unlabeled images that have only been randomly cropped and flipped ("weak" transform).
+
     This code only supports hard pseudolabeling and a teacher that is the same class as the student (e.g. both densenet121s)
 
     Original paper:
