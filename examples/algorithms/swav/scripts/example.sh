@@ -31,7 +31,7 @@ log_dir="/u/scr/nlp/dro/swav/test_run"
 dataset="domainnet"
 
 epochs=400
-batch_size=64 # this is per-GPU batch size
+batch_size=128 # this is per-GPU batch size
 epsilon=0.03  # use throughout
 queue_length=3840 # for an effective batch size of 256, this stores the previous 15 batches
 
