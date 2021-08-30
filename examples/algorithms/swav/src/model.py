@@ -45,8 +45,9 @@ class SwAVModel(nn.Module):
             self.prototypes = MultiPrototypes(output_dim, nmb_prototypes)
         elif nmb_prototypes > 0:
             self.prototypes = nn.Linear(output_dim, nmb_prototypes, bias=False)
-        
+
         self.forward_backbone = get_forward_backbone(base_model)
+        remove_final_layer(base_model)
 
     def forward_head(self, x):
         if self.projection_head is not None:
@@ -131,3 +132,12 @@ def get_forward_backbone(model):
     if isinstance(model, resnet_ms.ResNet):
         raise NotImplementedError()
     raise NotImplementedError('Supported model classes are ResNets and DenseNets.')
+
+def remove_final_layer(model):
+    if isinstance(model, models.ResNet) or isinstance(model, resnet_ms.ResNet):
+        last_layer_name = 'fc'
+    elif isinstance(model, models.DenseNet):
+        last_layer_name = 'classifier'
+    else:
+        raise NotImplementedError('Supported model classes are ResNets and DenseNets.')
+    setattr(model, last_layer_name, None)
