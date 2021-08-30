@@ -7,16 +7,12 @@
 import random
 from logging import getLogger
 
-from PIL import ImageFilter, Image
+from PIL import ImageFilter
 import numpy as np
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 
 from wilds import get_dataset
-# In order to get the examples module in the path
-import sys
-sys.path.insert(0, sys.path[0] + '/../../..')
-from examples.transforms import initialize_transform
 
 logger = getLogger()
 
@@ -37,11 +33,6 @@ class CustomSplitDataset(Dataset):
             unlabeled=True,
             download=True,
             **config.dataset_kwargs
-        )
-        train_transform = initialize_transform(
-            transform_name=config.train_transform,
-            config=config,
-            dataset=dataset,
         )
         for split in config.splits:
             subset = dataset.get_subset(split, transform=None)

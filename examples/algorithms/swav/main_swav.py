@@ -38,12 +38,13 @@ from src.utils import (
     plot_experiment
 )
 from src.multicropdataset import CustomSplitMultiCropDataset
-import src.model as model_builder
+from src.model import SwAVModel
 
 # TODO: This is needed to test the WILDS package locally. Remove later -Tony
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 
 from examples.configs.utils import populate_defaults_for_swav
+from examples.models.initializer import initialize_model
 
 logger = getLogger()
 parser = argparse.ArgumentParser(description="Implementation of SwAV")
@@ -171,11 +172,14 @@ def main():
         **args.loader_kwargs,
     )
     logger.info("Building data done with {} images loaded.".format(len(train_dataset)))
-    model = model_builder.get_model(
-        args.model, normalize=True, hidden_mlp=args.hidden_mlp,
-        output_dim=args.feat_dim, nmb_prototypes=args.nmb_prototypes
+
+    d_out = 1 # this can be arbitrary; final layer is discarded for SwAVModel
+    base_model = initialize_model(args, d_out, **args.model_kwargs)
+    model = SwAVModel(
+        base_model, normalize=True, output_dim=args.feat_dim,
+        hidden_mlp=args.hidden_mlp, nmb_prototypes=args.nmb_prototypes
     )
-    
+
     # synchronize batch norm layers
     if args.sync_bn == "pytorch":
         model = nn.SyncBatchNorm.convert_sync_batchnorm(model)

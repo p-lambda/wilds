@@ -470,7 +470,6 @@ swav_dataset_defaults = {
     'camelyon17': {
         'split_scheme': 'official',
         'model': 'densenet121',
-        'model_kwargs': {'pretrained': False},
         'train_transform': 'image_base',
         'eval_transform': 'image_base',
         'target_resolution': (96, 96),
@@ -503,7 +502,6 @@ swav_dataset_defaults = {
             'target_domain': 'real',
         },
         'model': 'resnet50',
-        'model_kwargs': {'pretrained': False},
         'train_transform': None,
         'eval_transform': None,
         'resize_scale': 256.0 / 224.0,
@@ -536,7 +534,6 @@ swav_dataset_defaults = {
             'use_ood_val': True
         },
         'model': 'densenet121',
-        'model_kwargs': {'pretrained': False},
         'target_resolution': (224, 224),
         'train_transform': 'image_base',
         'eval_transform': 'image_base',
@@ -566,7 +563,6 @@ swav_dataset_defaults = {
     'iwildcam': {
         'loss_function': 'cross_entropy',
         'val_metric': 'F1-macro_all',
-        'model_kwargs': {'pretrained': False},
         'train_transform': 'image_base',
         'eval_transform': 'image_base',
         'target_resolution': (448, 448),
@@ -601,7 +597,7 @@ swav_dataset_defaults = {
             'use_ood_val': True
         },
         'model': 'resnet18_ms',
-        'model_kwargs': {'num_channels': 8, 'pretrained': False},
+        'model_kwargs': {'num_channels': 8},
         'train_transform': 'poverty_train',
         'eval_transform': None,
         'target_resolution': (224, 224),
