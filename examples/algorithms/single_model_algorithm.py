@@ -4,6 +4,7 @@ from algorithms.group_algorithm import GroupAlgorithm
 from scheduler import initialize_scheduler
 from optimizer import initialize_optimizer
 from torch.nn.utils import clip_grad_norm_
+from utils import move_to
 
 class SingleModelAlgorithm(GroupAlgorithm):
     """
@@ -51,11 +52,19 @@ class SingleModelAlgorithm(GroupAlgorithm):
                 - y_true
         """
         x, y_true, metadata = batch
-        x = x.to(self.device)
-        y_true = y_true.to(self.device)
-        g = self.grouper.metadata_to_group(metadata).to(self.device)
-        outputs = self.model(x)
+        x = move_to(x, self.device)
+        y_true = move_to(y_true, self.device)
+        g = move_to(self.grouper.metadata_to_group(metadata), self.device)
 
+
+        if self.model.needs_y:
+            if self.training:
+                outputs = self.model(x, y_true)
+            else:
+                outputs = self.model(x, None)
+        else:
+            outputs = self.model(x)
+            
         results = {
             'g': g,
             'y_true': y_true,
