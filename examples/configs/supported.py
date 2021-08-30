@@ -16,8 +16,10 @@ process_outputs_functions = {
     None: None,
 }
 
-# See models/initializer.py
+# See transforms.py
 transforms = ['bert', 'image_base', 'image_resize_and_center_crop', 'poverty', 'rxrx1']
+
+# See models/initializer.py
 models = ['resnet18_ms', 'resnet50', 'resnet34', 'resnet18', 'wideresnet50',
          'densenet121', 'bert-base-uncased', 'distilbert-base-uncased',
          'gin-virtual', 'logistic_regression', 'code-gpt-py',
@@ -31,9 +33,6 @@ optimizers = ['SGD', 'Adam', 'AdamW']
 
 # See scheduler.py
 schedulers = ['linear_schedule_with_warmup', 'cosine_schedule_with_warmup', 'ReduceLROnPlateau', 'StepLR', 'MultiStepLR']
-
-# See transforms.py
-transforms = ['bert', 'image_base', 'image_resize_and_center_crop', 'poverty_train']
 
 # See losses.py
 losses = ['cross_entropy', 'lm_cross_entropy', 'MSE', 'multitask_bce', 'fasterrcnn_criterion']
