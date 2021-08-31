@@ -116,8 +116,8 @@ class WILDSDataset:
         assert 'train' in self.split_dict
         assert 'val' in self.split_dict
 
-        # Check that required arrays are Tensors
-        assert isinstance(self.y_array, torch.Tensor), 'y_array must be a torch.Tensor'
+        # Check the form of the required arrays
+        assert (isinstance(self.y_array, torch.Tensor) or isinstance(self.y_array, list))
         assert isinstance(self.metadata_array, torch.Tensor), 'metadata_array must be a torch.Tensor'
 
         # Check that dimensions match
@@ -127,6 +127,10 @@ class WILDSDataset:
         # Check metadata
         assert len(self.metadata_array.shape) == 2
         assert len(self.metadata_fields) == self.metadata_array.shape[1]
+
+        # Check that it is not both classification and detection
+        assert not (self.is_classification and self.is_detection)
+
         # For convenience, include y in metadata_fields if y_size == 1
         if self.y_size == 1:
             assert 'y' in self.metadata_fields
@@ -200,7 +204,7 @@ class WILDSDataset:
     def split_scheme(self):
         """
         A string identifier of how the split is constructed,
-        e.g., 'standard', 'in-dist', 'user', etc.
+        e.g., 'standard', 'mixed-to-test', 'user', etc.
         """
         return self._split_scheme
 
@@ -270,9 +274,15 @@ class WILDSDataset:
     def is_classification(self):
         """
         Boolean. True if the task is classification, and false otherwise.
-        Used for logging purposes.
         """
-        return (self.n_classes is not None)
+        return getattr(self, '_is_classification', (self.n_classes is not None))
+
+    @property
+    def is_detection(self):
+        """
+        Boolean. True if the task is detection, and false otherwise.
+        """
+        return getattr(self, '_is_detection', False)
 
     @property
     def metadata_fields(self):
@@ -461,11 +471,16 @@ class WILDSDataset:
 
 
 class WILDSSubset(WILDSDataset):
-    def __init__(self, dataset, indices, transform):
+    def __init__(self, dataset, indices, transform, do_transform_y=False):
         """
-        This acts like torch.utils.data.Subset, but on WILDSDatasets.
-        We pass in transform explicitly because it can potentially vary at
-        training vs. test time, if we're using data augmentation.
+        This acts like `torch.utils.data.Subset`, but on `WILDSDatasets`.
+        We pass in `transform` (which is used for data augmentation) explicitly
+        because it can potentially vary on the training vs. test subsets.
+
+        `do_transform_y` (bool): When this is false (the default),
+                                 `self.transform ` acts only on  `x`.
+                                 Set this to true if `self.transform` should
+                                 operate on `(x,y)` instead of just `x`.
         """
         self.dataset = dataset
         self.indices = indices
@@ -477,11 +492,15 @@ class WILDSSubset(WILDSDataset):
             if hasattr(dataset, attr_name):
                 setattr(self, attr_name, getattr(dataset, attr_name))
         self.transform = transform
+        self.do_transform_y = do_transform_y
 
     def __getitem__(self, idx):
         x, y, metadata = self.dataset[self.indices[idx]]
         if self.transform is not None:
-            x = self.transform(x)
+            if self.do_transform_y:
+                x, y = self.transform(x, y)
+            else:
+                x = self.transform(x)
         return x, y, metadata
 
     def __len__(self):

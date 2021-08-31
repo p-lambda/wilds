@@ -1,10 +1,9 @@
 import argparse
 import json
 import os
-import sys
 import urllib.request
 from ast import literal_eval
-from typing import Any, Dict, List
+from typing import Dict, List
 from urllib.parse import urlparse
 
 import numpy as np
@@ -83,10 +82,12 @@ def evaluate_benchmark(
     ) -> str:
         run_id = f"{dataset_name}_split:{split}_{replicate}"
         for file in os.listdir(predictions_dir):
-            if file.startswith(run_id) and file.endswith(".csv"):
+            if file.startswith(run_id) and (
+                file.endswith(".csv") or file.endswith(".pth")
+            ):
                 return file
         raise FileNotFoundError(
-            f"Could not find CSV prediction file that starts with {run_id}."
+            f"Could not find CSV or pth prediction file that starts with {run_id}."
         )
 
     def get_metrics(dataset_name: str) -> List[str]:
@@ -106,6 +107,10 @@ def evaluate_benchmark(
             return ["r_wg", "r_all"]
         elif "py150" == dataset_name:
             return ["acc", "Acc (Overall)"]
+        elif "globalwheat" == dataset_name:
+            return ["detection_acc_avg_dom"]
+        elif "rxrx1" == dataset_name:
+            return ["acc_avg"]
         else:
             raise ValueError(f"Invalid dataset: {dataset_name}")
 
@@ -135,13 +140,17 @@ def evaluate_benchmark(
                 f"Processing split={split}, replicate={replicate}, predictions_file={predictions_file}..."
             )
             full_path = os.path.join(predictions_dir, predictions_file)
-            predicted_labels: List[Any] = get_predictions(full_path)
-            predicted_labels_tensor: torch.Tensor = torch.from_numpy(
-                np.array(predicted_labels)
-            )
-            metric_results: Dict[str, float] = evaluate_replicate(
-                wilds_dataset, split, predicted_labels_tensor
-            )
+
+            # GlobalWheat's predictions are a list of dictionaries, so it has to be handled separately
+            if dataset_name == "globalwheat":
+                metric_results: Dict[str, float] = evaluate_replicate_for_globalwheat(
+                    wilds_dataset, split, full_path
+                )
+            else:
+                predicted_labels: torch.Tensor = get_predictions(full_path)
+                metric_results = evaluate_replicate(
+                    wilds_dataset, split, predicted_labels
+                )
             for metric in metrics:
                 replicates_results[split][metric].append(metric_results[metric])
 
@@ -181,15 +190,24 @@ def evaluate_replicate(
     """
     # Dataset will only be downloaded if it does not exist
     subset: WILDSSubset = dataset.get_subset(split)
-    true_labels: torch.Tensor = subset.y_array
     metadata: torch.Tensor = subset.metadata_array
-    # predicted_labels.resize_(true_labels.shape)
+    true_labels = subset.y_array
     if predicted_labels.shape != true_labels.shape:
         predicted_labels.unsqueeze_(-1)
     return dataset.eval(predicted_labels, true_labels, metadata)[0]
 
 
-def get_predictions(path: str) -> List[Any]:
+def evaluate_replicate_for_globalwheat(
+    dataset: WILDSDataset, split: str, path_to_predictions: str
+) -> Dict[str, float]:
+    predicted_labels = torch.load(path_to_predictions)
+    subset: WILDSSubset = dataset.get_subset(split)
+    metadata: torch.Tensor = subset.metadata_array
+    true_labels = [subset.dataset.y_array[idx] for idx in subset.indices]
+    return dataset.eval(predicted_labels, true_labels, metadata)[0]
+
+
+def get_predictions(path: str) -> torch.Tensor:
     """
     Extract out the predictions from the file at path.
 
@@ -197,7 +215,7 @@ def get_predictions(path: str) -> List[Any]:
         path (str): Path to the file that has the predicted labels. Can be a URL.
 
     Return:
-        List of predictions.
+        Tensor representing predictions
     """
     if is_path_url(path):
         data = urllib.request.urlopen(path)
@@ -207,7 +225,7 @@ def get_predictions(path: str) -> List[Any]:
         file.close()
 
     predicted_labels = [literal_eval(line.rstrip()) for line in data if line.rstrip()]
-    return predicted_labels
+    return torch.from_numpy(np.array(predicted_labels))
 
 
 def is_path_url(path: str) -> bool:
@@ -239,7 +257,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "predictions_dir",
         type=str,
-        help="Path to prediction CSV files.",
+        help="Path to prediction CSV or pth files.",
     )
     parser.add_argument(
         "output_dir",

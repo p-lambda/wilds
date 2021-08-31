@@ -122,13 +122,31 @@ class WaterbirdsDataset(WILDSDataset):
                                are predicted labels.
             - y_true (LongTensor): Ground-truth labels
             - metadata (Tensor): Metadata
-            - prediction_fn (function): A function that turns y_pred into predicted labels 
+            - prediction_fn (function): A function that turns y_pred into predicted labels
         Output:
             - results (dictionary): Dictionary of evaluation metrics
             - results_str (str): String summarizing the evaluation metrics
         """
         metric = Accuracy(prediction_fn=prediction_fn)
-        return self.standard_group_eval(
+
+        results, results_str = self.standard_group_eval(
             metric,
             self._eval_grouper,
             y_pred, y_true, metadata)
+
+        # For Waterbirds, the validation and test sets are constructed to be more balanced
+        # compared to the training set.
+        # To compute the actual average accuracy over the empirical (training) distribution,
+        # we therefore weight each groups according to their frequency in the training set.
+
+        results['adj_acc_avg'] = (
+            (results['acc_y:landbird_background:land'] * 3498
+            + results['acc_y:landbird_background:water'] * 184
+            + results['acc_y:waterbird_background:land'] * 56
+            + results['acc_y:waterbird_background:water'] * 1057) /
+            (3498 + 184 + 56 + 1057))
+
+        del results['acc_avg']
+        results_str = f"Adjusted average acc: {results['adj_acc_avg']:.3f}\n" + '\n'.join(results_str.split('\n')[1:])
+
+        return results, results_str
