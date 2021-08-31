@@ -1,8 +1,10 @@
 import argparse
+import os
+import pickle
+
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-import pickle
-import os
+
 
 MAX_ITERS = 200
 
@@ -40,24 +42,23 @@ def test_log_reg_warm_starting(source, target, num_reg_values):
     return id_accs, ood_accs
 
 def main():
-    parser = argparse.ArgumentParser(description='Train logistic regression model on features.')
-    parser.add_argument('--source_feat_path', required=True,
-                        help='Pickle file of features of train domain')
-    parser.add_argument('--target_feat_path', required=True,
-                        help='Pickle file of features of test domain')
-    parser.add_argument('--save_path', required=True,
-                        help='Where to save the results')
-    parser.add_argument('--num_reg_values', type=int, default=50,
-                        help='Number of regularization values to sweep over.')
-    args = parser.parse_args()
-
     source_feat = pickle.load(open(args.source_feat_path, 'rb'))
     target_feat = pickle.load(open(args.target_feat_path, 'rb'))
     normalize_features(source_feat, target_feat)
     accs = test_log_reg_warm_starting(source_feat, target_feat, args.num_reg_values)
 
-    with open(args.save_path, 'wb') as f:
+    with open(os.path.join(args.log_dir, "linear_probe_eval.txt"), 'wb') as f:
         pickle.dump(accs, f)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Train logistic regression model on features.')
+    parser.add_argument('--source_feat_path', required=True,
+                        help='Pickle file of features of train domain')
+    parser.add_argument('--target_feat_path', required=True,
+                        help='Pickle file of features of test domain')
+    parser.add_argument('--log_dir', default='.',
+                        help='Where to save the results')
+    parser.add_argument('--num_reg_values', type=int, default=50,
+                        help='Number of regularization values to sweep over.')
+    args = parser.parse_args()
     main()

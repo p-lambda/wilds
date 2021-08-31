@@ -35,7 +35,8 @@ from src.utils import (
     AverageMeter,
     init_distributed_mode,
     ParseKwargs,
-    plot_experiment
+    plot_experiment,
+    populate_defaults_for_swav
 )
 from src.multicropdataset import CustomSplitMultiCropDataset
 from src.model import SwAVModel
@@ -43,7 +44,6 @@ from src.model import SwAVModel
 # TODO: This is needed to test the WILDS package locally. Remove later -Tony
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 
-from examples.configs.utils import populate_defaults_for_swav
 from examples.models.initializer import initialize_model
 
 logger = getLogger()

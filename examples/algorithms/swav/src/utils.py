@@ -22,6 +22,10 @@ from .logger import create_logger, PD_Stats
 
 import torch.distributed as dist
 
+from examples.algorithms.swav.src.config import DATASET_DEFAULTS
+from examples.configs.utils import populate_config
+
+
 matplotlib.use('Agg')
 
 FALSY_STRINGS = {"off", "false", "0"}
@@ -281,3 +285,17 @@ def plot_experiment(log_dir):
     for stat in STAT_NAMES:
         save_plot(avg_df, stat[0], stat[1], log_dir)
         plt.close()
+
+
+def populate_defaults_for_swav(config):
+    """
+    Populate defaults for SwAV pretraining.
+    """
+    assert config.dataset is not None, 'dataset must be specified'
+    config = populate_config(config, DATASET_DEFAULTS[config.dataset])
+
+    # Sanity checks
+    assert config.warmup_epochs < config.n_epochs, \
+        f'The number of warmup_epochs ({config.warmup_epochs}) cannot be greater than n_epochs ({config.n_epochs}).'
+
+    return config
