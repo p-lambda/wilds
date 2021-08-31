@@ -13,7 +13,8 @@ torch.multiprocessing.set_sharing_strategy("file_system")
 import wilds
 from wilds.common.data_loaders import get_train_loader, get_eval_loader
 
-sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
+print(sys.path)
 
 from examples.algorithms.swav.src.model import SwAVModel
 from examples.algorithms.swav.src.utils import ParseKwargs, populate_defaults_for_swav
@@ -31,8 +32,7 @@ def get_model(config):
     )
     state_dict = checkpoint["state_dict"]
     state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
-    missing_keys, _ = model.load_state_dict(state_dict, strict=False)
-    pdb.set_trace()
+    missing_keys, _ = model.base_model.load_state_dict(state_dict, strict=False)
     assert len(missing_keys) == 0, f'Was unable to match keys: {",".join(missing_keys)}'
     return model.eval().cuda()
 
