@@ -34,7 +34,10 @@ def get_model(config):
     state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
     missing_keys, _ = model.base_model.load_state_dict(state_dict, strict=False)
     assert len(missing_keys) == 0, f'Was unable to match keys: {",".join(missing_keys)}'
-    return model.eval().cuda()
+    model = model.eval()
+    if not config.cpu:
+        model = model.cuda()
+    return model
 
 
 def get_data_loaders(config):
@@ -63,13 +66,14 @@ def get_data_loaders(config):
     return train_loader, test_loader
 
 
-def get_features(model, data_loaders):
+def get_features(config, model, data_loaders):
     feats = []
     for loader in data_loaders:
         features_list, labels_list = [], []
         with torch.no_grad():
             for x, y, _ in loader:
-                x = x.cuda()
+                if not config.cpu:
+                    x = x.cuda()
                 features = model(x)
                 features_list.append(features.detach().cpu().numpy())
                 labels_list.append(y.detach().numpy())
@@ -83,7 +87,7 @@ def main():
     config = populate_defaults_for_swav(args)
     model = get_model(config)
     data_loaders = get_data_loaders(config)
-    features = get_features(model, data_loaders)
+    features = get_features(config, model, data_loaders)
 
     # Save extracted features to log_dir
     os.makedirs(config.log_dir, exist_ok=True)
@@ -147,6 +151,11 @@ if __name__ == "__main__":
         type=str,
         default=".",
         help="The directory where to save the extracted features to.",
+    )
+    parser.add_argument(
+        "--cpu",
+        action="store_true",
+        help="Whether to extract features with the CPU (defaults to false).",
     )
 
     # Parse args and run this script
