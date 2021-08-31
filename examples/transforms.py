@@ -1,5 +1,3 @@
-import random
-
 import torchvision.transforms as transforms
 import torchvision.transforms.functional as TF
 from transformers import BertTokenizerFast, DistilBertTokenizerFast
