@@ -2,7 +2,7 @@ import torch
 from tqdm import tqdm
 
 from configs.supported import process_outputs_functions
-from utils import save_model, save_pred, get_pred_prefix, get_model_prefix
+from utils import save_model, save_pred, get_pred_prefix, get_model_prefix, InfiniteDataIterator
 
 def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabeled_dataset=None):
     if dataset['verbose']:
@@ -25,25 +25,25 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
     if unlabeled_dataset:
         assert 'loader' in unlabeled_dataset, "A data loader must be defined for the dataset."
 
-    batches = (
-        zip(dataset['loader'], unlabeled_dataset['loader']) if unlabeled_dataset
-        else dataset['loader']
-    )
+    batches = dataset['loader']
     if config.progress_bar:
         batches = tqdm(batches)
+
+    if unlabeled_dataset:
+        unlabeled_data_iterator = InfiniteDataIterator(unlabeled_dataset['loader'])
 
     # Using enumerate(iterator) can sometimes leak memory in some environments (!)
     # so we manually increment batch_idx
     batch_idx = 0
-    for batch in batches:
+    for labeled_batch in batches:
         if train:
             if unlabeled_dataset:
-                labeled_batch, unlabeled_batch = batch
+                unlabeled_batch = next(unlabeled_data_iterator)
                 batch_results = algorithm.update(labeled_batch, unlabeled_batch)
             else:
-                batch_results = algorithm.update(batch)
+                batch_results = algorithm.update(labeled_batch)
         else:
-            batch_results = algorithm.evaluate(batch)
+            batch_results = algorithm.evaluate(labeled_batch)
 
         # These tensors are already detached, but we need to clone them again
         # Otherwise they don't get garbage collected properly in some versions

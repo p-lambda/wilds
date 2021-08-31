@@ -1,10 +1,11 @@
+# Maximum batch size that fits on a 12GB GPU
 MAX_BATCH_SIZES = {
-    "amazon": 32,
-    "civilcomments": 64,
-    "camelyon17": 224,
-    "iwildcam": 32,
-    "fmow": 96,
-    "poverty": 160,
+    "amazon": 24,
+    "civilcomments": 48,
+    "camelyon17": 168,
+    "iwildcam": 24,
+    "fmow": 72,
+    "poverty": 120,
 }
 
 ERM_HYPERPARAMETER_SEARCH_SPACE = {
