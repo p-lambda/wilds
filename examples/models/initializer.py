@@ -32,14 +32,6 @@ def initialize_model(config, d_out, is_featurizer=False):
                 d_out=d_out,
                 **config.model_kwargs)
 
-    elif 'efficientnet' in config.model:
-        if is_featurizer:
-            featurizer = initialize_efficientnet_model(config, d_out, is_featurizer)
-            classifier = nn.Linear(featurizer.d_out, d_out)
-            model = (featurizer, classifier)
-        else:
-            model = initialize_efficientnet_model(config, d_out)
-
     elif 'bert' in config.model:
         if is_featurizer:
             featurizer = initialize_bert_based_model(config, d_out, is_featurizer)
@@ -174,17 +166,6 @@ def initialize_torchvision_model(name, d_out, **kwargs):
         last_layer = nn.Linear(d_features, d_out)
         model.d_out = d_out
     setattr(model, last_layer_name, last_layer)
-    return model
-
-def initialize_efficientnet_model(config, d_out, is_featurizer=False):
-    from efficientnet_pytorch import EfficientNet
-
-    model = EfficientNet.from_pretrained(config.model, num_classes=d_out)
-    if is_featurizer: # want a featurizer, so set _fc layer to identity
-        d_features = getattr(model, '_fc').in_features
-        last_layer = Identity(d_features)
-        model.d_out = d_features
-        setattr(model, '_fc', last_layer)
     return model
 
 def initialize_fasterrcnn_model(config, d_out):
