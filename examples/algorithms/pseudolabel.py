@@ -42,7 +42,7 @@ class PseudoLabel(SingleModelAlgorithm):
             max_value=config.self_training_lambda,
             step_every_batch=True, # step per batch
             last_warmup_step=0,
-            threshold_step=config.pseudolabel_lambda_warmup*n_train_steps
+            threshold_step=config.pseudolabel_lambda_threshold*n_train_steps
         ) 
         self.schedulers.append(self.lambda_scheduler)
         self.scheduler_metric_names.append(None)
