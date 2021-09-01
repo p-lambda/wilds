@@ -278,6 +278,7 @@ def main():
             teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
             teacher_outputs = teacher_outputs.to(torch.device("cpu"))
             teacher_model = teacher_model.to(torch.device("cpu"))
+            del teacher_model
             unlabeled_split_dataset = WILDSPseudolabeledSubset(
                 reference_subset=unlabeled_split_dataset,
                 pseudolabels=teacher_outputs, 
