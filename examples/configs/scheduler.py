@@ -20,11 +20,6 @@ scheduler_defaults = {
     'FixMatchLR': {
         'scheduler_kwargs': {},
     },
-    'CosineLR': {
-        'scheduler_kwargs': {
-            'min_lr': 0 
-        },
-    },
     'MultiStepLR': {
         'scheduler_kwargs':{
             'gamma': 0.1,
