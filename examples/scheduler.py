@@ -37,13 +37,6 @@ def initialize_scheduler(config, optimizer, n_train_steps):
         )
         step_every_batch = True
         use_metric = False
-    elif config.scheduler == 'CosineLR':
-        scheduler = CosineAnnealingLR(
-            optimizer,
-            n_train_steps,
-            config.scheduler_kwargs['min_lr'] * config.lr
-        )
-        step_every_batch = True
     elif config.scheduler == 'MultiStepLR':
         scheduler = MultiStepLR(optimizer, **config.scheduler_kwargs)
         step_every_batch = False

@@ -34,14 +34,13 @@ additional_transforms = ['randaugment']
 models = ['resnet18_ms', 'resnet18', 'resnet34', 'resnet50', 'resnet101', 'wideresnet50',
          'densenet121', 'bert-base-uncased', 'distilbert-base-uncased',
          'gin-virtual', 'logistic_regression', 'code-gpt-py',
-         'fasterrcnn', 'unet-seq',
-         'efficientnet-b0', 'efficientnet-b1', 'efficientnet-b2', 'efficientnet-b3']
+         'fasterrcnn', 'unet-seq']
 
 # See optimizer.py
 optimizers = ['SGD', 'Adam', 'AdamW']
 
 # See scheduler.py
-schedulers = ['linear_schedule_with_warmup', 'cosine_schedule_with_warmup', 'ReduceLROnPlateau', 'StepLR', 'CosineLR', 'FixMatchLR', 'MultiStepLR']
+schedulers = ['linear_schedule_with_warmup', 'cosine_schedule_with_warmup', 'ReduceLROnPlateau', 'StepLR', 'FixMatchLR', 'MultiStepLR']
 
 # See losses.py
 losses = ['cross_entropy', 'lm_cross_entropy', 'MSE', 'multitask_bce', 'fasterrcnn_criterion', 'cross_entropy_logits']

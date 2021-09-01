@@ -54,10 +54,6 @@ model_defaults = {
     'resnet18_ms': {
         'target_resolution': (224, 224),
     },
-    'efficientnet-b0': {},
-    'efficientnet-b1': {},
-    'efficientnet-b2': {},
-    'efficientnet-b3': {},
     'logistic_regression': {},
     'unet-seq': {
         'optimizer': 'Adam'
