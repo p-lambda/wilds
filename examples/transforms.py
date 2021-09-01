@@ -1,8 +1,9 @@
 import copy
 from typing import List
 
-import torchvision.transforms as transforms
 import torch
+import torchvision.transforms as transforms
+import torchvision.transforms.functional as TF
 from transformers import BertTokenizerFast, DistilBertTokenizerFast
 
 from data_augmentation.randaugment import FIX_MATCH_AUGMENTATION_POOL, RandAugment
@@ -13,12 +14,19 @@ _DEFAULT_IMAGE_TENSOR_NORMALIZATION_STD = [0.229, 0.224, 0.225]
 
 
 def initialize_transform(
-    transform_name, config, dataset, additional_transform_name=None
+    transform_name, config, dataset, is_training, additional_transform_name=None
 ):
+    """
+    By default, transforms should take in `x` and return `transformed_x`.
+    For transforms that take in `(x, y)` and return `(transformed_x, transformed_y)`,
+    set `do_transform_y` to True when initializing the WILDSSubset.    
+    """
     if transform_name is None:
         return None
     elif transform_name == "bert":
         return initialize_bert_transform(config)
+    elif transform_name == 'rxrx1':
+        return initialize_rxrx1_transform(is_training)
 
     # For images
     should_rgb_transform = False
@@ -35,7 +43,9 @@ def initialize_transform(
         transform_steps = get_image_resize_and_center_crop_transform_steps(
             config, dataset
         )
-    elif transform_name == "poverty_train":
+    elif transform_name == "poverty":
+        if not is_training:
+            return None
         normalize = False
         should_rgb_transform = True
         transform_steps = get_poverty_train_transform_steps()
@@ -109,6 +119,36 @@ def initialize_bert_transform(config):
 
     return transform
 
+def initialize_rxrx1_transform(is_training):
+    def standardize(x: torch.Tensor) -> torch.Tensor:
+        mean = x.mean(dim=(1, 2))
+        std = x.std(dim=(1, 2))
+        std[std == 0.] = 1.
+        return TF.normalize(x, mean, std)
+    t_standardize = transforms.Lambda(lambda x: standardize(x))
+
+    angles = [0, 90, 180, 270]
+    def random_rotation(x: torch.Tensor) -> torch.Tensor:
+        angle = angles[torch.randint(low=0, high=len(angles), size=(1,))]
+        if angle > 0:
+            x = TF.rotate(x, angle)
+        return x
+    t_random_rotation = transforms.Lambda(lambda x: random_rotation(x))
+
+    if is_training:
+        transforms_ls = [
+            t_random_rotation,
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            t_standardize,
+        ]
+    else:
+        transforms_ls = [
+            transforms.ToTensor(),
+            t_standardize,
+        ]
+    transform = transforms.Compose(transforms_ls)
+    return transform
 
 def get_image_base_transform_steps(config, dataset) -> List:
     transform_steps = []
@@ -143,13 +183,32 @@ def get_image_resize_transform_steps(config, dataset) -> List:
     """
     assert dataset.original_resolution is not None
     assert config.resize_scale is not None
-
     scaled_resolution = tuple(
         int(res * config.resize_scale) for res in dataset.original_resolution
     )
     return [
         transforms.Resize(scaled_resolution)
     ]
+
+
+def initialize_poverty_transform(is_training):
+    if is_training:
+        transforms_ls = [
+            transforms.ToPILImage(),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
+            transforms.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.1),
+            transforms.ToTensor()]
+        rgb_transform = transforms.Compose(transforms_ls)
+
+        def transform_rgb(img):
+            # bgr to rgb and back to bgr
+            img[:3] = rgb_transform(img[:3][[2,1,0]])[[2,1,0]]
+            return img
+        transform = transforms.Lambda(lambda x: transform_rgb(x))
+        return transform
+    else:
+        return None
 
 
 def get_poverty_train_transform_steps() -> List:

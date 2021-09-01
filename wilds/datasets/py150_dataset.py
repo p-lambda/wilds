@@ -13,7 +13,9 @@ from transformers import GPT2Tokenizer
 class Py150Dataset(WILDSDataset):
     """
         The Py150 dataset.
-        This is a modified version of the original Py150 dataset.
+        This is a modified version of the original Py150 dataset.        
+        Supported `split_scheme`:
+            - 'official'
         Input (x):
             A Python code snippet (a sequence of tokens)
         Label (y):

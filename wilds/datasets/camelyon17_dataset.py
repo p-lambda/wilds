@@ -16,11 +16,12 @@ VAL_CENTER = 1
 
 class Camelyon17Dataset(WILDSDataset):
     """
-    The CAMELYON17-wilds histopathology dataset.
+    The CAMELYON17-WILDS histopathology dataset.
     This is a modified version of the original CAMELYON17 dataset.
 
     Supported `split_scheme`:
-        'official' or 'in-dist'
+        - 'official'
+        - 'mixed-to-test'
 
     Input (x):
         96x96 image patches extracted from histopathology slides.
@@ -104,8 +105,8 @@ class Camelyon17Dataset(WILDSDataset):
         self._split_scheme = split_scheme
         if self._split_scheme == 'official':
             pass
-        elif self._split_scheme == 'in-dist':
-            # For the in-distribution oracle,
+        elif self._split_scheme == 'mixed-to-test':
+            # For the mixed-to-test setting,
             # we move slide 23 (corresponding to patient 042, node 3 in the original dataset)
             # from the test set to the training set
             slide_mask = (self._metadata_df['slide'] == 23)
@@ -146,7 +147,7 @@ class Camelyon17Dataset(WILDSDataset):
                                are predicted labels.
             - y_true (LongTensor): Ground-truth labels
             - metadata (Tensor): Metadata
-            - prediction_fn (function): A function that turns y_pred into predicted labels 
+            - prediction_fn (function): A function that turns y_pred into predicted labels
         Output:
             - results (dictionary): Dictionary of evaluation metrics
             - results_str (str): String summarizing the evaluation metrics

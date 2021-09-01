@@ -29,8 +29,11 @@ from models.initializer import initialize_model
 from configs.utils import populate_defaults
 import configs.supported as supported
 
+import torch.multiprocessing
+
 def main():
-    ''' set default hyperparams in default_hyperparams.py '''
+
+    ''' to see default hyperparams for each dataset/model, look at configs/ '''
     parser = argparse.ArgumentParser()
 
     # Required arguments
@@ -72,9 +75,8 @@ def main():
     parser.add_argument('--dropout_rate', type=float)
 
     # Transforms
-    parser.add_argument('--train_transform', choices=supported.transforms)
+    parser.add_argument('--transform', choices=supported.transforms)
     parser.add_argument('--additional_train_transform', choices=supported.additional_transforms)
-    parser.add_argument('--eval_transform', choices=supported.transforms)
     parser.add_argument('--target_resolution', nargs='+', type=int, help='The input resolution that images will be resized to before being passed into the model. For example, use --target_resolution 224 224 for a standard ResNet.')
     parser.add_argument('--resize_scale', type=float)
     parser.add_argument('--max_token_length', type=int)
@@ -82,6 +84,8 @@ def main():
 
     # Objective
     parser.add_argument('--loss_function', choices = supported.losses)
+    parser.add_argument('--loss_kwargs', nargs='*', action=ParseKwargs, default={},
+        help='keyword arguments for loss initialization passed as key1=value1 key2=value2')
 
     # Algorithm
     parser.add_argument('--groupby_fields', nargs='+')
@@ -146,6 +150,12 @@ def main():
     config = parser.parse_args()
     config = populate_defaults(config)
 
+    # For the GlobalWheat detection dataset,
+    # we need to change the multiprocessing strategy or there will be
+    # too many open file descriptors.
+    if config.dataset == 'globalwheat':
+        torch.multiprocessing.set_sharing_strategy('file_system')
+
     # Set device
     if torch.cuda.is_available():
         device_count = torch.cuda.device_count()
@@ -160,7 +170,7 @@ def main():
         config.use_data_parallel = False
         config.device = torch.device("cpu")
 
-    ## Initialize logs
+    # Initialize logs
     if os.path.exists(config.log_dir) and config.resume:
         resume=True
         mode='a'
@@ -190,19 +200,20 @@ def main():
         split_scheme=config.split_scheme,
         **config.dataset_kwargs)
 
-    # To implement data augmentation (i.e., have different transforms
-    # at training time vs. test time), modify these two lines:
+    # To modify data augmentation, modify the following code block.
+    # If you want to use transforms that modify both `x` and `y`,
+    # set `do_transform_y` to True when initializing the `WILDSSubset` below.
     train_transform = initialize_transform(
-        transform_name=config.train_transform,
+        transform_name=config.transform,
         config=config,
         dataset=full_dataset,
         additional_transform_name=config.additional_train_transform,
-    )
+        is_training=True)
     eval_transform = initialize_transform(
-        transform_name=config.eval_transform,
+        transform_name=config.transform,
         config=config,
-        dataset=full_dataset
-    )
+        dataset=full_dataset,
+        is_training=False)
 
     # Configure unlabeled datasets
     unlabeled_dataset = None
@@ -225,7 +236,7 @@ def main():
             # For FixMatch, we need our loader to return batches in the form ((x_weak, x_strong), m)
             # We do this by initializing a special transform function
             unlabeled_train_transform = initialize_transform(
-                config.train_transform, config, full_dataset, additional_transform_name="fixmatch"
+                config.transform, config, full_dataset, is_training=True, additional_transform_name="fixmatch"
             )
         else:
             unlabeled_train_transform = train_transform
@@ -246,9 +257,10 @@ def main():
             load(teacher_model, config.teacher_model_path, device=config.device)
             # Infer teacher outputs on weakly augmented unlabeled examples in sequential order
             weak_transform = initialize_transform(
-                transform_name=config.train_transform,
+                transform_name=config.transform,
                 config=config,
                 dataset=full_dataset,
+                is_training=True,
                 additional_transform_name="weak"
             )
             unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=weak_transform, frac=config.frac)
@@ -423,12 +435,15 @@ def main():
             epoch = best_epoch
         else:
             epoch = config.eval_epoch
+        if epoch == best_epoch:
+            is_best = True
         evaluate(
             algorithm=algorithm,
             datasets=datasets,
             epoch=epoch,
             general_logger=logger,
-            config=config)
+            config=config,
+            is_best=is_best)
 
     if config.use_wandb:
         wandb.finish()
