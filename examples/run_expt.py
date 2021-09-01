@@ -95,6 +95,7 @@ def main():
     parser.add_argument('--irm_penalty_anneal_iters', type=int)
     parser.add_argument('--self_training_lambda', type=float)
     parser.add_argument('--self_training_threshold', type=float)
+    parser.add_argument('--pseudolabel_lambda_warmup', type=float, help='Percentage of total iterations at which to end warmup')
     parser.add_argument('--soft_pseudolabels', default=False, type=parse_bool, const=True, nargs='?')
     parser.add_argument('--algo_log_metric')
 
@@ -115,7 +116,6 @@ def main():
     parser.add_argument('--scheduler_kwargs', nargs='*', action=ParseKwargs, default={})
     parser.add_argument('--scheduler_metric_split', choices=['train', 'val'], default='val')
     parser.add_argument('--scheduler_metric_name')
-    parser.add_argument('--pseudolabel_lambda_scheduler_kwargs', nargs='*', action=ParseKwargs, default={})
 
     # Evaluation
     parser.add_argument('--process_outputs_function', choices = supported.process_outputs_functions)
