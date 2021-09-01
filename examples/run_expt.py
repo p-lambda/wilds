@@ -238,6 +238,10 @@ def main():
             unlabeled_train_transform = initialize_transform(
                 config.transform, config, full_dataset, is_training=True, additional_transform_name="fixmatch"
             )
+        elif config.algorithm in ["deepCORAL", "DANN", "PseudoLabel"]:
+            unlabeled_train_transform = initialize_transform(
+                config.transform, config, full_dataset, is_training=True, additional_transform_name="randaugment"
+            )
         else:
             unlabeled_train_transform = train_transform
         

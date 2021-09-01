@@ -18,6 +18,8 @@ algorithm_defaults = {
         'distinct_groups': True,
         'eval_loader': 'standard',
         'coral_penalty_weight': 1.,
+        'randaugment_n': 2,
+        'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled examples
     },
     'IRM': {
         'train_loader': 'group',
@@ -32,6 +34,8 @@ algorithm_defaults = {
         'uniform_over_groups': True,
         'distinct_groups': True,
         'eval_loader': 'standard',
+        'randaugment_n': 2,
+        'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled examples
     },
     'FixMatch': {
         'train_loader': 'standard',
@@ -41,7 +45,7 @@ algorithm_defaults = {
         'self_training_threshold': 0.7,
         'scheduler': 'FixMatchLR',
         'randaugment_n': 2,
-        'additional_train_transform': 'weak',   # Apply weak augmentation to labeled examples
+        'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled examples
     },
     'PseudoLabel': {
         'train_loader': 'standard',
@@ -49,6 +53,8 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'self_training_lambda': 1,
         'self_training_threshold': 0.7,
+        'randaugment_n': 2,
+        'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled examples
     },
     'NoisyStudent': {
         'train_loader': 'standard',
@@ -56,6 +62,5 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'dropout_rate': 0.5,
         'randaugment_n': 2,
-        'additional_train_transform': 'randaugment' # Apply strong augmentation
     }
 }
