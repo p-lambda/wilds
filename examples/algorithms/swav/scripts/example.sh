@@ -27,7 +27,7 @@ set -x
 
 # Example script to run on the cluster
 root_dir="/u/scr/nlp/dro"
-log_dir="/u/scr/nlp/dro/swav/test_run"
+log_dir="/u/scr/nlp/dro/swav/test_run_worldsizefix"
 dataset="domainnet"
 
 epochs=400
