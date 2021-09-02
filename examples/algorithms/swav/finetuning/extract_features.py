@@ -61,11 +61,12 @@ def get_data_loaders(config):
         is_training=False,
     )
     test_data = dataset.get_subset(config.eval_split, transform=eval_transform)
+    loader_kwargs = {'num_workers': 4, 'pin_memory': True}
     train_loader = get_train_loader(
-        "standard", train_data, batch_size=config.batch_size, **config.loader_kwargs
+        "standard", train_data, batch_size=config.batch_size, **loader_kwargs
     )
     test_loader = get_eval_loader(
-        "standard", test_data, batch_size=config.batch_size, **config.loader_kwargs
+        "standard", test_data, batch_size=config.batch_size, **loader_kwargs
     )
     return train_loader, test_loader
 
