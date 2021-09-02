@@ -72,6 +72,10 @@ def init_distributed_mode(args):
         args.rank = int(os.environ["RANK"])
         args.world_size = int(os.environ["WORLD_SIZE"])
 
+    logger.info("\n" + "=" * 50)
+    logger.info(f"rank={args.rank}, world_size={args.world_size}")
+    logger.info("=" * 50)
+
     # prepare distributed
     dist.init_process_group(
         backend="nccl",

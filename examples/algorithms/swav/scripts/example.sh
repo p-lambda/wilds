@@ -57,8 +57,8 @@ else
 fi
 
 # If we are not using Slurm, we need to launch with torch.distributed.launch:
-# python -m torch.distributed.launch --nproc_per_node=$NUM_GPUS examples/algorithms/swav/main_swav.py \
-python examples/algorithms/swav/main_swav.py \
+# python examples/algorithms/swav/main_swav.py \
+python -m torch.distributed.launch --nproc_per_node=$NUM_GPUS examples/algorithms/swav/main_swav.py \
     --dataset $dataset \
     --dataset_kwargs use_sentry=True source_domain=sketch target_domain=real \
     --root_dir $root_dir \
@@ -84,7 +84,7 @@ python examples/algorithms/swav/main_swav.py \
     --loader_kwargs num_workers=4 pin_memory=True drop_last=True \
     --dist_url $dist_url \
     --sync_bn pytorch \
-    --is_not_slurm_job false \
+    --is_not_slurm_job true \
     --use_fp16 true \
     --cpu_only false \
     --seed 31
