@@ -181,6 +181,7 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
             "scheduler": ["FixMatchLR"],
+            "n_epochs": [38, 17, 8],
         },
         "poverty": {
             "lr": [-4, -2],

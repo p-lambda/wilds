@@ -36,14 +36,14 @@ Usage:
     
 Example Usage:
     # To tune for ERM runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets civilcomments --algorithm ERM --random --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm ERMAugment --random --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --experiment fmow_erm_tune 
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwiildcam --algorithm ERMAugment --random --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
 
     # To tune for multi-gpu runs
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm NoisyStudent --random --gpus 2 --dry-run
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm FixMatch --random --gpus 2 --unlabeled-split extra_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets civilcomments --algorithm PseudoLabel --random --gpus 2 --unlabeled-split extra_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_pseudolabel_tune 
@@ -193,23 +193,23 @@ class CodaLabReproducibility:
             for i in range(num_of_samples):
                 hyperparameter_config = dict()
                 for hyperparameter, values in search_space[dataset].items():
+                    if hyperparameter == "n_epochs":
+                        continue
+
                     if hyperparameter == "unlabeled_batch_size_frac":
                         max_batch_size = MAX_BATCH_SIZES[dataset] * gpus
-                        if len(values) > 2:
-                            unlabeled_batch_size = int(
-                                np.random.choice(values) * max_batch_size
-                            )
-                        else:
-                            unlabeled_batch_size = math.ceil(
-                                np.random.uniform(low=values[0], high=values[-1])
-                                * max_batch_size
-                            )
+                        index = np.random.choice(range(len(values)))
+                        unlabeled_frac = values[index]
+                        unlabeled_batch_size = int(
+                            unlabeled_frac * max_batch_size
+                        )
                         hyperparameter_config[
                             "unlabeled_batch_size"
                         ] = unlabeled_batch_size
                         hyperparameter_config["batch_size"] = (
                             max_batch_size - unlabeled_batch_size
                         )
+                        hyperparameter_config["n_epochs"] = search_space[dataset]['n_epochs'][index]
                     else:
                         if len(values) == 1:
                             hyperparameter_config[hyperparameter] = values[0]
@@ -268,10 +268,10 @@ class CodaLabReproducibility:
 
         if gpus == 1:
             cpus = 4
-            memory_gb = 30
+            memory_gb = 16
         else:
-            cpus = 15
-            memory_gb = 90
+            cpus = 8
+            memory_gb = 32
 
         commands = [
             "cl",
@@ -286,8 +286,9 @@ class CodaLabReproducibility:
             f"--request-memory={memory_gb}g",
             "--request-priority=30",
             # f"--request-queue={f'multigpu{dataset}' if gpus > 1 else f'singlegpu{dataset}'}",
-            f"--request-queue=quick",
         ]
+        if gpus > 1:
+            commands.append("--request-queue=multi")
 
         for key, uuid in dependencies.items():
             commands.append(f"{key}:{uuid}")
