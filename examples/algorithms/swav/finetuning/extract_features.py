@@ -100,7 +100,9 @@ def main():
     output_file_path = os.path.join(
         config.log_dir, f"features_and_labels_{config.ckpt_epoch}.pickle"
     )
+    print(f"Writing out the features to {output_file_path}...")
     pickle.dump(features, open(output_file_path, "wb"))
+    print("Done.")
 
 
 if __name__ == "__main__":
@@ -132,7 +134,7 @@ if __name__ == "__main__":
         required=True,
         help="The directory where [dataset]/data can be found (or should be downloaded to, if it does not exist).",
     )
-    parser.add_argument("--batch_size", type=int, default=4, help="Batch size")
+    parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
     parser.add_argument(
         "--eval_split",
         default="val",
