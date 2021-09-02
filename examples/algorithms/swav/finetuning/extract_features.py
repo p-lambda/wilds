@@ -3,6 +3,7 @@ import os
 import pdb
 import pickle
 import sys
+from tqdm import tqdm
 
 import torch
 import numpy as np
@@ -61,7 +62,7 @@ def get_data_loaders(config):
         is_training=False,
     )
     test_data = dataset.get_subset(config.eval_split, transform=eval_transform)
-    loader_kwargs = {'num_workers': 4, 'pin_memory': True}
+    loader_kwargs = {'num_workers': 2, 'pin_memory': True}
     train_loader = get_train_loader(
         "standard", train_data, batch_size=config.batch_size, **loader_kwargs
     )
@@ -76,7 +77,7 @@ def get_features(config, model, data_loaders):
     for loader in data_loaders:
         features_list, labels_list = [], []
         with torch.no_grad():
-            for x, y, _ in loader:
+            for x, y, _ in tqdm(loader):
                 if not config.cpu:
                     x = x.cuda()
                 features = model(x)
@@ -131,7 +132,7 @@ if __name__ == "__main__":
         required=True,
         help="The directory where [dataset]/data can be found (or should be downloaded to, if it does not exist).",
     )
-    parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
+    parser.add_argument("--batch_size", type=int, default=4, help="Batch size")
     parser.add_argument(
         "--eval_split",
         default="val",
