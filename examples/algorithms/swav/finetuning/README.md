@@ -11,3 +11,4 @@ Follow these steps:
    
 
 python3 examples/algorithms/swav/finetuning/extract_features.py -d domainnet --root_dir ../data --run_dir ../data/swav_domainnet_real --batch_size 32 --log_dir ..data/swav_domainnet_real_finetuning --cpu
+python3 examples/algorithms/swav/finetuning/extract_features.py -d domainnet --root_dir /u/scr/nlp/dro --run_dir /u/scr/nlp/dro/swav/test_run --batch_size 32 --log_dir /u/scr/nlp/dro/swav/finetuning

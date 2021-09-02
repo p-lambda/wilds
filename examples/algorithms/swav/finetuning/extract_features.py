@@ -48,13 +48,17 @@ def get_data_loaders(config):
         **config.dataset_kwargs,
     )
     train_transform = initialize_transform(
-        transform_name=config.train_transform, config=config, dataset=dataset
+        transform_name=config.transform,
+        config=config,
+        dataset=dataset,
+        is_training=True,
     )
     train_data = dataset.get_subset("train", transform=train_transform)
     eval_transform = initialize_transform(
-        transform_name=config.eval_transform,
+        transform_name=config.transform,
         config=config,
         dataset=dataset,
+        is_training=False,
     )
     test_data = dataset.get_subset(config.eval_split, transform=eval_transform)
     train_loader = get_train_loader(
@@ -131,6 +135,11 @@ if __name__ == "__main__":
         "--eval_split",
         default="val",
         help="The split of the WILDS dataset to use for evaluation.",
+    )
+    parser.add_argument(
+        "--transform",
+        default="image_base",
+        help="The transformation to apply.",
     )
     # Model args
     parser.add_argument(
