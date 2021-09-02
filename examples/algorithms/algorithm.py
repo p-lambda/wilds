@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from utils import move_to, detach_and_clone
 
 class Algorithm(nn.Module):
     def __init__(self, device):
@@ -39,14 +40,12 @@ class Algorithm(nn.Module):
         """
         raise NotImplementedError
 
-    # Taken from domainbed
     def train(self, mode=True):
         """
         Switch to train mode
         """
         self.is_training = mode
         super().train(mode)
-        torch.set_grad_enabled(mode)
         self.reset_log()
 
     @property
@@ -93,19 +92,13 @@ class Algorithm(nn.Module):
         Helper function that sanitizes dictionaries by:
             - moving to the specified output device
             - removing any gradient information
-            - turning any Tensor of size 1 to a simple number
+            - detaching and cloning the tensors
         Args:
             - in_dict (dictionary)
         Output:
             - out_dict (dictionary): sanitized version of in_dict
         """
-        out_dict = {}
-        for k, v in in_dict.items():
-            if isinstance(v, torch.Tensor):
-                v_out = v.detach().clone()
-                if to_out_device:
-                    v_out = v_out.to(self.out_device)
-            else:
-                v_out = v
-            out_dict[k] = v_out
+        out_dict = detach_and_clone(in_dict)
+        if to_out_device:
+            out_dict = move_to(out_dict, self.out_device)
         return out_dict

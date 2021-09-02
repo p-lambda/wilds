@@ -1,5 +1,5 @@
 import numpy as np
-from wilds.common.utils import avg_over_groups, get_counts
+from wilds.common.utils import avg_over_groups, get_counts, numel
 import torch
 
 class Metric:
@@ -82,7 +82,7 @@ class Metric:
         Output (return_dict=True):
             - results (dict): Dictionary of results, mapping metric.agg_metric_field to avg_metric
         """
-        if y_true.numel()==0:
+        if numel(y_true) == 0:
             agg_metric = torch.tensor(0., device=y_true.device)
         else:
             agg_metric = self._compute(y_pred, y_true)
@@ -133,6 +133,7 @@ class Metric:
                     self._compute(
                         y_pred[g == group_idx],
                         y_true[g == group_idx]))
+
         group_metrics = torch.stack(group_metrics)
         worst_group_metric = self.worst(group_metrics[group_counts>0])
 
