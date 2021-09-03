@@ -144,12 +144,11 @@ class SingleModelAlgorithm(GroupAlgorithm):
         # compute objective
         objective = self.objective(results)
         results['objective'] = objective.item()
-        # update
-        self.model.zero_grad()
         objective.backward()
 
         self.running_results = concatenate_results(self.running_results, results)
 
+        # update
         if (self.step + 1) % self.step_every == 0:
             if self.max_grad_norm:
                 clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
@@ -159,6 +158,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
                 metrics=self.running_results,
                 log_access=False)
             self.running_results = {}
+            self.model.zero_grad()
         self.step += 1
 
     def save_metric_for_logging(self, results, metric, value):
