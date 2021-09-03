@@ -422,6 +422,14 @@ def main():
             epoch_offset=0
             best_val_metric=None
 
+        # Log effective batch size
+        logger.write(
+            (f'\nUsing --step_every {config.step_every} means that ')
+            + (f'the effective labeled batch size is {config.batch_size * config.step_every} ')
+            + (f'and the effective unlabeled batch size is {config.unlabeled_batch_size * config.step_every}' if config.unlabeled_batch_size else '')
+            + ('\n')
+        )
+
         train(
             algorithm=algorithm,
             datasets=datasets,
