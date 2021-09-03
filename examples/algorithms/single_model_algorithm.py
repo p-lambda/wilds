@@ -31,6 +31,9 @@ class SingleModelAlgorithm(GroupAlgorithm):
             model = DataParallel(model)
         model.to(config.device)
 
+        self.step = 0
+        self.step_every = config.step_every
+
         # initialize the module
         super().__init__(
             device=config.device,
@@ -143,13 +146,23 @@ class SingleModelAlgorithm(GroupAlgorithm):
         # update
         self.model.zero_grad()
         objective.backward()
-        if self.max_grad_norm:
-            clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
-        self.optimizer.step()
-        self.step_schedulers(
-            is_epoch=False,
-            metrics=results,
-            log_access=False)
+
+        # TODO: what is results here? how do we pool results together to pass into the scheduler stepper without running out of memory?
+        import pdb
+        pdb.set_trace()
+
+        self.running_results += results
+
+        if self.step % self.step_every == 0:
+            if self.max_grad_norm:
+                clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
+            self.optimizer.step()
+            self.step_schedulers(
+                is_epoch=False,
+                metrics=self.running_results,
+                log_access=False)
+            self.running_results = {}
+        self.step += 1
 
     def save_metric_for_logging(self, results, metric, value):
         if isinstance(value, torch.Tensor):
