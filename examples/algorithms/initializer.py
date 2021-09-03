@@ -18,11 +18,6 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
     d_out = infer_d_out(train_dataset, config)
 
     # Other config
-
-    import pdb
-    pdb.set_trace()
-    # TODO: Check math here
-
     n_train_steps = math.ceil(len(train_loader)/config.step_every) * config.n_epochs
     loss = initialize_loss(config, d_out)
     metric = algo_log_metrics[config.algo_log_metric]
