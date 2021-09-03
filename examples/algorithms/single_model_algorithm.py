@@ -144,9 +144,14 @@ class SingleModelAlgorithm(GroupAlgorithm):
         # compute objective
         objective = self.objective(results)
         results['objective'] = objective.item()
-        objective.backward()
 
+        # accumulate current batch info
+        objective.backward()
         self.running_results = concatenate_results(self.running_results, results)
+
+        # TODO remove; check the state of things
+        print(torch.norm(list(self.parameters())[0].grad))
+        print([v for _,v in self.running_results.items() if torch.is_tensor(v)][0].shape[0])
 
         # update
         if (self.step + 1) % self.step_every == 0:
