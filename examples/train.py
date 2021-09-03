@@ -30,7 +30,8 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
     batches = dataset['loader']
     if config.progress_bar:
         batches = tqdm(batches)
-
+    last_batch_idx = len(batches)-1
+    
     if unlabeled_dataset:
         unlabeled_data_iterator = InfiniteDataIterator(unlabeled_dataset['loader'])
 
@@ -41,9 +42,9 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
         if train:
             if unlabeled_dataset:
                 unlabeled_batch = next(unlabeled_data_iterator)
-                batch_results = algorithm.update(labeled_batch, unlabeled_batch)
+                batch_results = algorithm.update(labeled_batch, unlabeled_batch, is_epoch_end=(batch_idx==last_batch_idx))
             else:
-                batch_results = algorithm.update(labeled_batch)
+                batch_results = algorithm.update(labeled_batch, is_epoch_end=(batch_idx==last_batch_idx))
         else:
             batch_results = algorithm.evaluate(labeled_batch)
 

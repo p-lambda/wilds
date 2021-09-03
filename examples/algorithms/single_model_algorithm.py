@@ -31,7 +31,8 @@ class SingleModelAlgorithm(GroupAlgorithm):
             model = DataParallel(model)
         model.to(config.device)
 
-        self.step = 0
+        self.batch_index = 0
+        self.is_epoch_end = False # If true, force optimizer to step
         self.step_every = config.step_every
         self.running_results = {}
 
@@ -65,7 +66,6 @@ class SingleModelAlgorithm(GroupAlgorithm):
         x = move_to(x, self.device)
         y_true = move_to(y_true, self.device)
         g = move_to(self.grouper.metadata_to_group(metadata), self.device)
-
 
         if self.model.needs_y:
             if self.training:
@@ -112,7 +112,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
         self.update_log(results)
         return self.sanitize_dict(results)
 
-    def update(self, batch, unlabeled_batch=None):
+    def update(self, batch, unlabeled_batch=None, is_epoch_end=False):
         """
         Process the batch, update the log, and update the model
         Args:
@@ -128,6 +128,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
                 - objective (float)
         """
         assert self.is_training
+        self.is_epoch_end = is_epoch_end
         # process batch
         results = self.process_batch(batch, unlabeled_batch)
         self._update(results)
@@ -148,13 +149,9 @@ class SingleModelAlgorithm(GroupAlgorithm):
         # accumulate current batch info
         objective.backward()
         self.running_results = concatenate_results(self.running_results, results)
-
-        # TODO remove; check the state of things
-        print(torch.norm(list(self.parameters())[0].grad))
-        print([v for _,v in self.running_results.items() if torch.is_tensor(v)][0].shape[0])
-
+        
         # update
-        if (self.step + 1) % self.step_every == 0:
+        if ((self.batch_index + 1) % self.step_every == 0) or (self.is_epoch_end):
             if self.max_grad_norm:
                 clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
             self.optimizer.step()
@@ -164,7 +161,12 @@ class SingleModelAlgorithm(GroupAlgorithm):
                 log_access=False)
             self.running_results = {}
             self.model.zero_grad()
-        self.step += 1
+
+        if self.is_epoch_end:
+            self.batch_index = 0
+            self._is_epoch_end = False
+        else:
+            self.batch_index += 1
 
     def save_metric_for_logging(self, results, metric, value):
         if isinstance(value, torch.Tensor):
