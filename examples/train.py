@@ -1,5 +1,6 @@
 import torch
 from tqdm import tqdm
+import math
 
 from configs.supported import process_outputs_functions
 from utils import save_model, save_pred, get_pred_prefix, get_model_prefix, collate_list, detach_and_clone, InfiniteDataIterator
@@ -59,8 +60,13 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
         epoch_y_pred.append(y_pred)
         epoch_metadata.append(detach_and_clone(batch_results['metadata']))
 
-        if train and (batch_idx+1) % config.log_every==0:
-            log_results(algorithm, dataset, general_logger, epoch, batch_idx)
+        if train: 
+            effective_batch_idx = math.floor(batch_idx / config.step_every)
+        else: 
+            effective_batch_idx = batch_idx
+
+        if train and (effective_batch_idx+1) % config.log_every==0:
+            log_results(algorithm, dataset, general_logger, epoch, effective_batch_idx)
 
         batch_idx += 1
 
@@ -80,7 +86,7 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
             log_access=(not train))
 
     # log after updating the scheduler in case it needs to access the internal logs
-    log_results(algorithm, dataset, general_logger, epoch, batch_idx)
+    log_results(algorithm, dataset, general_logger, epoch, effective_batch_idx)
 
     results['epoch'] = epoch
     dataset['eval_logger'].log(results)
@@ -193,11 +199,11 @@ def infer_predictions(model, loader, config):
         y_pred.append(output.clone().detach())
     return torch.cat(y_pred, 0)
 
-def log_results(algorithm, dataset, general_logger, epoch, batch_idx):
+def log_results(algorithm, dataset, general_logger, epoch, effective_batch_idx):
     if algorithm.has_log:
         log = algorithm.get_log()
         log['epoch'] = epoch
-        log['batch'] = batch_idx
+        log['batch'] = effective_batch_idx
         dataset['algo_logger'].log(log)
         if dataset['verbose']:
             general_logger.write(algorithm.get_pretty_log_str())
