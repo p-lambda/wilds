@@ -61,12 +61,12 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
         epoch_metadata.append(detach_and_clone(batch_results['metadata']))
 
         if train: 
-            effective_batch_idx = math.floor(batch_idx / config.step_every)
+            effective_batch_idx = (batch_idx + 1) / config.step_every
         else: 
-            effective_batch_idx = batch_idx
+            effective_batch_idx = batch_idx + 1
 
-        if train and (effective_batch_idx+1) % config.log_every==0:
-            log_results(algorithm, dataset, general_logger, epoch, effective_batch_idx)
+        if train and effective_batch_idx % config.log_every==0:
+            log_results(algorithm, dataset, general_logger, epoch, math.ceil(effective_batch_idx))
 
         batch_idx += 1
 
@@ -86,7 +86,7 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
             log_access=(not train))
 
     # log after updating the scheduler in case it needs to access the internal logs
-    log_results(algorithm, dataset, general_logger, epoch, effective_batch_idx)
+    log_results(algorithm, dataset, general_logger, epoch, math.ceil(effective_batch_idx))
 
     results['epoch'] = epoch
     dataset['eval_logger'].log(results)
