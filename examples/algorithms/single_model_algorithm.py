@@ -148,13 +148,9 @@ class SingleModelAlgorithm(GroupAlgorithm):
         self.model.zero_grad()
         objective.backward()
 
-        # TODO: what is results here? how do we pool results together to pass into the scheduler stepper without running out of memory?
-        import pdb
-        pdb.set_trace()
-
         self.running_results = concatenate_results(self.running_results, results)
 
-        if self.step % self.step_every == 0:
+        if (self.step + 1) % self.step_every == 0:
             if self.max_grad_norm:
                 clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
             self.optimizer.step()
