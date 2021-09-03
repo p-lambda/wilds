@@ -3,6 +3,7 @@ import os
 import pdb
 import pickle
 import sys
+from tqdm import tqdm
 
 import torch
 import numpy as np
@@ -52,17 +53,18 @@ def get_data_loaders(config):
     )
     train_data = dataset.get_subset("train", transform=train_transform)
     eval_transform = initialize_transform(
-        transform_name=config.eval_transform,
+        transform_name=config.transform,
         config=config,
         dataset=dataset,
         is_training=False
     )
     test_data = dataset.get_subset(config.eval_split, transform=eval_transform)
+    loader_kwargs = {'num_workers': 2, 'pin_memory': True}
     train_loader = get_train_loader(
-        "standard", train_data, batch_size=config.batch_size, **config.loader_kwargs
+        "standard", train_data, batch_size=config.batch_size, **loader_kwargs
     )
     test_loader = get_eval_loader(
-        "standard", test_data, batch_size=config.batch_size, **config.loader_kwargs
+        "standard", test_data, batch_size=config.batch_size, **loader_kwargs
     )
     return train_loader, test_loader
 
@@ -72,7 +74,7 @@ def get_features(config, model, data_loaders):
     for loader in data_loaders:
         features_list, labels_list = [], []
         with torch.no_grad():
-            for x, y, _ in loader:
+            for x, y, _ in tqdm(loader):
                 if not config.cpu:
                     x = x.cuda()
                 features = model(x)
@@ -95,7 +97,9 @@ def main():
     output_file_path = os.path.join(
         config.log_dir, f"features_and_labels_{config.ckpt_epoch}.pickle"
     )
+    print(f"Writing out the features to {output_file_path}...")
     pickle.dump(features, open(output_file_path, "wb"))
+    print("Done.")
 
 
 if __name__ == "__main__":
@@ -132,6 +136,11 @@ if __name__ == "__main__":
         "--eval_split",
         default="val",
         help="The split of the WILDS dataset to use for evaluation.",
+    )
+    parser.add_argument(
+        "--transform",
+        default="image_base",
+        help="The transformation to apply.",
     )
     # Model args
     parser.add_argument(
