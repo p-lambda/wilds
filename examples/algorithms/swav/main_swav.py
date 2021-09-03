@@ -3,7 +3,15 @@
 #
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
+# 
+# This file has been modified from the original repository's version in the following ways:
+# 1. The model loading logic uses a SwAVModel class that acts as a wrapper around WILDS-Unlabeled
+#    models.
+# 2. The data loading logic uses a CustomSplitMultiCropDataset class that is compatible with all
+#    WILDS-Unlabeled datasets.
+# More information about both of these classes can be found in the src/ directory.
 #
+
 import argparse
 import math
 import os
@@ -174,7 +182,7 @@ def main():
     logger.info("Building data done with {} images loaded.".format(len(train_dataset)))
 
     d_out = 1 # this can be arbitrary; final layer is discarded for SwAVModel
-    base_model = initialize_model(args, d_out, **args.model_kwargs)
+    base_model, _ = initialize_model(args, d_out, is_featurizer=True, **args.model_kwargs) # discard classifier
     model = SwAVModel(
         base_model, normalize=True, output_dim=args.feat_dim,
         hidden_mlp=args.hidden_mlp, nmb_prototypes=args.nmb_prototypes

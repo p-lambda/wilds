@@ -14,8 +14,6 @@ import wilds
 from wilds.common.data_loaders import get_train_loader, get_eval_loader
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
-print(sys.path)
-
 from examples.algorithms.swav.src.model import SwAVModel
 from examples.algorithms.swav.src.utils import ParseKwargs, populate_defaults_for_swav
 from examples.models.initializer import initialize_model
@@ -24,17 +22,16 @@ from examples.transforms import initialize_transform
 
 def get_model(config):
     d_out = 1  # this can be arbitrary; final layer is discarded for SwAVModel
-    base_model = initialize_model(config, d_out, **config.model_kwargs)
-    model = SwAVModel(base_model, output_dim=0, eval_mode=True)
+    base_model, _ = initialize_model(config, d_out, is_featurizer=True, **config.model_kwargs)
     checkpoint = torch.load(
         os.path.join(config.run_dir, "checkpoints", f"ckp-{config.ckpt_epoch}.pth"),
         map_location="cpu",
     )
     state_dict = checkpoint["state_dict"]
     state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
-    missing_keys, _ = model.base_model.load_state_dict(state_dict, strict=False)
+    missing_keys, _ = base_model.load_state_dict(state_dict, strict=False)
     assert len(missing_keys) == 0, f'Was unable to match keys: {",".join(missing_keys)}'
-    model = model.eval()
+    model = base_model.eval()
     if not config.cpu:
         model = model.cuda()
     return model
@@ -48,13 +45,17 @@ def get_data_loaders(config):
         **config.dataset_kwargs,
     )
     train_transform = initialize_transform(
-        transform_name=config.train_transform, config=config, dataset=dataset
+        transform_name=config.train_transform,
+        config=config,
+        dataset=dataset,
+        is_training=True
     )
     train_data = dataset.get_subset("train", transform=train_transform)
     eval_transform = initialize_transform(
         transform_name=config.eval_transform,
         config=config,
         dataset=dataset,
+        is_training=False
     )
     test_data = dataset.get_subset(config.eval_split, transform=eval_transform)
     train_loader = get_train_loader(

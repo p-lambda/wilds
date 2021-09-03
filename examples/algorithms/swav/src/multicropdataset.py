@@ -4,6 +4,11 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
+# This file has been modified from the original to include the CustomSplitDataset,
+# which acts as a wrapper for WILDS-Unlabeled datasets and allows for simultaneous SwAV
+# training of multiple datasets.
+#
+
 import random
 from logging import getLogger
 

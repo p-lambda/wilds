@@ -22,6 +22,9 @@ from .logger import create_logger, PD_Stats
 
 import torch.distributed as dist
 
+import sys
+sys.path.insert(1, os.path.join(sys.path[0], '../../..'))
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from examples.algorithms.swav.src.config import DATASET_DEFAULTS
 from examples.configs.utils import populate_config
 

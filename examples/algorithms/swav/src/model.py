@@ -1,3 +1,10 @@
+#
+# This file defines the SwAVModel class, a wrapper around WILDS-Unlabeled architectures
+# that implements the changes necessary to make the networks compatible with SwAV
+# training (e.g. prototypes, projection head, etc.). Currently, the supported architectures
+# are ResNets and DenseNets.
+#
+
 import os
 import sys
 
@@ -17,16 +24,14 @@ class SwAVModel(nn.Module):
         output_dim=0,
         hidden_mlp=0,
         nmb_prototypes=0,
-        eval_mode=False
     ):
         super(SwAVModel, self).__init__()
 
         self.base_model = base_model # base CNN architecture
-        self.eval_mode = eval_mode # whether to compute prototypes / codes
         self.l2norm = normalize # whether to normalize output features
 
         # projection head
-        last_dim = get_final_layer_dim(base_model)
+        last_dim = base_model.d_out # output dimensionality of final featurizer layer
         if output_dim == 0:
             self.projection_head = None
         elif hidden_mlp == 0:
@@ -45,9 +50,6 @@ class SwAVModel(nn.Module):
             self.prototypes = MultiPrototypes(output_dim, nmb_prototypes)
         elif nmb_prototypes > 0:
             self.prototypes = nn.Linear(output_dim, nmb_prototypes, bias=False)
-
-        self.forward_backbone = get_forward_backbone(base_model)
-        remove_final_layer(base_model)
 
     def forward_head(self, x):
         if self.projection_head is not None:
@@ -69,10 +71,8 @@ class SwAVModel(nn.Module):
         )[1], 0)
         start_idx = 0
         for end_idx in idx_crops:
-            _out = self.forward_backbone(
-                self.base_model,
-                torch.cat(inputs[start_idx: end_idx]).cuda(non_blocking=True),
-                self.eval_mode)
+            _out = self.base_model(
+                torch.cat(inputs[start_idx: end_idx]).cuda(non_blocking=True))
             if start_idx == 0:
                 output = _out
             else:
@@ -92,52 +92,3 @@ class MultiPrototypes(nn.Module):
         for i in range(self.nmb_heads):
             out.append(getattr(self, "prototypes" + str(i))(x))
         return out
-
-def get_final_layer_dim(model):
-    if isinstance(model, models.ResNet) or isinstance(model, resnet_ms.ResNet):
-        last_layer_name = 'fc'
-    elif isinstance(model, models.DenseNet):
-        last_layer_name = 'classifier'
-    else:
-        raise NotImplementedError('Supported model classes are ResNets and DenseNets.')
-    return getattr(model, last_layer_name).in_features
-
-def get_forward_backbone(model):
-    if isinstance(model, models.ResNet):
-        def func(model, x, eval_mode):
-            x = model.conv1(x)
-            x = model.bn1(x)
-            x = model.relu(x)
-            x = model.maxpool(x)
-            x = model.layer1(x)
-            x = model.layer2(x)
-            x = model.layer3(x)
-            x = model.layer4(x)
-            if eval_mode:
-                return x
-            x = model.avgpool(x)
-            x = torch.flatten(x, 1)
-            return x
-        return func
-    if isinstance(model, models.DenseNet):
-        def func(model, x, eval_mode):
-            features = model.features(x)
-            out = F.relu(features, inplace=True)
-            if eval_mode:
-                return features
-            out = F.adaptive_avg_pool2d(out, (1, 1))
-            out = torch.flatten(out, 1)
-            return out
-        return func
-    if isinstance(model, resnet_ms.ResNet):
-        raise NotImplementedError()
-    raise NotImplementedError('Supported model classes are ResNets and DenseNets.')
-
-def remove_final_layer(model):
-    if isinstance(model, models.ResNet) or isinstance(model, resnet_ms.ResNet):
-        last_layer_name = 'fc'
-    elif isinstance(model, models.DenseNet):
-        last_layer_name = 'classifier'
-    else:
-        raise NotImplementedError('Supported model classes are ResNets and DenseNets.')
-    setattr(model, last_layer_name, None)
