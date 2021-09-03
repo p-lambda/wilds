@@ -5,7 +5,7 @@ from scheduler import initialize_scheduler
 from optimizer import initialize_optimizer
 from torch.nn import DataParallel
 from torch.nn.utils import clip_grad_norm_
-from utils import move_to
+from utils import move_to, concatenate_results
 
 class SingleModelAlgorithm(GroupAlgorithm):
     """
@@ -33,6 +33,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
 
         self.step = 0
         self.step_every = config.step_every
+        self.running_results = {}
 
         # initialize the module
         super().__init__(
@@ -151,7 +152,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
         import pdb
         pdb.set_trace()
 
-        self.running_results += results
+        self.running_results = concatenate_results(self.running_results, results)
 
         if self.step % self.step_every == 0:
             if self.max_grad_norm:
