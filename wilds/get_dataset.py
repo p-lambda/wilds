@@ -79,8 +79,12 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
         return YelpDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'ogb-molpcba':
-        from wilds.datasets.ogbmolpcba_dataset import OGBPCBADataset
-        return OGBPCBADataset(version=version, **dataset_kwargs)
+        if unlabeled:
+            from wilds.datasets.unlabeled.ogbmolpcba_unlabeled_dataset import OGBPCBAUnlabeledDataset
+            return OGBPCBAUnlabeledDataset(version=version, **dataset_kwargs)
+        else:
+            from wilds.datasets.ogbmolpcba_dataset import OGBPCBADataset
+            return OGBPCBADataset(version=version, **dataset_kwargs)
 
     elif dataset == 'poverty':
         if unlabeled:
