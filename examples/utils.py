@@ -47,26 +47,6 @@ def update_average(prev_avg, prev_counts, curr_avg, curr_counts):
     curr_weight = curr_counts/denom
     return prev_weight*prev_avg + curr_weight*curr_avg
 
-def concatenate_results(prev_results: {}, curr_results: {}):
-    """Concatenates result dicts by concatenating vectors together and updating average of scalars
-    prev_results can be empty, but curr_results must be nonempty"""
-    if prev_results == {}:
-        prev_batch_size = 0
-    else: 
-        prev_batch_size = [v for _,v in prev_results.items() if torch.is_tensor(v)][0].shape[0]
-    curr_batch_size = [v for _,v in curr_results.items() if torch.is_tensor(v)][0].shape[0]
-
-    new_results = {}
-    for k in curr_results.keys():
-        if torch.is_tensor(curr_results[k]):
-            if prev_batch_size: new_results[k] = torch.cat((prev_results[k], curr_results[k]), axis=0)
-            else: new_results[k] = curr_results[k]
-        else:
-            if prev_batch_size: new_results[k] = update_average(prev_results[k], prev_batch_size, curr_results[k], curr_batch_size)
-            else: new_results[k] = curr_results[k]
-    return new_results
-
-
 # Taken from https://sumit-ghosh.com/articles/parsing-dictionary-key-value-pairs-kwargs-argparse-python/
 class ParseKwargs(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):

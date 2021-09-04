@@ -5,7 +5,7 @@ from scheduler import initialize_scheduler
 from optimizer import initialize_optimizer
 from torch.nn import DataParallel
 from torch.nn.utils import clip_grad_norm_
-from utils import move_to, concatenate_results
+from utils import move_to
 
 class SingleModelAlgorithm(GroupAlgorithm):
     """
@@ -33,7 +33,6 @@ class SingleModelAlgorithm(GroupAlgorithm):
 
         self.batch_idx = 0
         self.step_every = config.step_every
-        self.running_results = {}
 
         # initialize the module
         super().__init__(
@@ -156,10 +155,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
         # compute objective
         objective = self.objective(results)
         results['objective'] = objective.item()
-
-        # concatenate current batch results to effective batch results
         objective.backward()
-        self.running_results = concatenate_results(self.running_results, results)
         
         # update model and logs based on effective batch
         if should_step:
@@ -168,9 +164,8 @@ class SingleModelAlgorithm(GroupAlgorithm):
             self.optimizer.step()
             self.step_schedulers(
                 is_epoch=False,
-                metrics=self.running_results,
+                metrics=self.log_dict,
                 log_access=False)
-            self.running_results = {}
             self.model.zero_grad()
 
     def save_metric_for_logging(self, results, metric, value):
