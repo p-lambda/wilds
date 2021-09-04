@@ -49,7 +49,7 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'self_training_lambda': 1,
         'self_training_threshold': 0.7,
-        'pseudolabel_lambda_threshold': 0.4
+        'pseudolabel_T2': 0.4
     },
     'NoisyStudent': {
         'train_loader': 'standard',
