@@ -66,7 +66,7 @@ def main():
     parser.add_argument('--batch_size', type=int)
     parser.add_argument('--unlabeled_batch_size', type=int)
     parser.add_argument('--eval_loader', choices=['standard'], default='standard')
-    parser.add_argument('--step_every', type=int, default=1, help='Number of batches to process before stepping optimizer and/or schedulers. If > 1, we simulate having a larger effective batch size (though batchnorm behaves differently).')
+    parser.add_argument('--gradient_accumulation_steps', type=int, default=1, help='Number of batches to process before stepping optimizer and/or schedulers. If > 1, we simulate having a larger effective batch size (though batchnorm behaves differently).')
 
     # Model
     parser.add_argument('--model', choices=supported.models)
@@ -424,9 +424,9 @@ def main():
 
         # Log effective batch size
         logger.write(
-            (f'\nUsing step_every {config.step_every} means that')
-            + (f' the effective labeled batch size is {config.batch_size * config.step_every}')
-            + (f' and the effective unlabeled batch size is {config.unlabeled_batch_size * config.step_every}' if config.unlabeled_batch_size else '')
+            (f'\nUsing gradient_accumulation_steps {config.gradient_accumulation_steps} means that')
+            + (f' the effective labeled batch size is {config.batch_size * config.gradient_accumulation_steps}')
+            + (f' and the effective unlabeled batch size is {config.unlabeled_batch_size * config.gradient_accumulation_steps}' if config.unlabeled_batch_size else '')
             + ('. Updates behave as if torch loaders have drop_last=False\n')
         )
 

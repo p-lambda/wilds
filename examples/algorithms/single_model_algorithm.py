@@ -32,7 +32,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
         model.to(config.device)
 
         self.batch_idx = 0
-        self.step_every = config.step_every
+        self.gradient_accumulation_steps = config.gradient_accumulation_steps
 
         # initialize the module
         super().__init__(
@@ -133,7 +133,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
         # update running statistics and update model if we've reached end of effective batch
         self._update(
             results, 
-            should_step=(((self.batch_idx + 1) % self.step_every == 0) or (is_epoch_end))
+            should_step=(((self.batch_idx + 1) % self.gradient_accumulation_steps == 0) or (is_epoch_end))
         )
         self.update_log(results)
 

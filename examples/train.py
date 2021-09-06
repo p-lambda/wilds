@@ -61,7 +61,7 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
         epoch_metadata.append(detach_and_clone(batch_results['metadata']))
 
         if train: 
-            effective_batch_idx = (batch_idx + 1) / config.step_every
+            effective_batch_idx = (batch_idx + 1) / config.gradient_accumulation_steps
         else: 
             effective_batch_idx = batch_idx + 1
 
