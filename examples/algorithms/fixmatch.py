@@ -1,12 +1,10 @@
-from typing import Dict, List
-
 import torch
 import torch.nn.functional as F
 
 from models.initializer import initialize_model
 from algorithms.single_model_algorithm import SingleModelAlgorithm
 from configs.supported import process_outputs_functions
-from optimizer import initialize_optimizer_with_model_params
+
 
 class FixMatch(SingleModelAlgorithm):
     """

@@ -1,10 +1,11 @@
+# Maximum batch size that fits on a 12GB GPU
 MAX_BATCH_SIZES = {
-    "amazon": 32,
-    "civilcomments": 64,
-    "camelyon17": 224,
-    "iwildcam": 32,
-    "fmow": 96,
-    "poverty": 160,
+    "amazon": 24,
+    "civilcomments": 48,
+    "camelyon17": 168,
+    "iwildcam": 24,
+    "fmow": 72,
+    "poverty": 120,
 }
 
 ERM_HYPERPARAMETER_SEARCH_SPACE = {
@@ -180,6 +181,7 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
             "scheduler": ["FixMatchLR"],
+            "n_epochs": [38, 17, 8],
         },
         "poverty": {
             "lr": [-4, -2],

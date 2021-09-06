@@ -10,18 +10,16 @@ from algorithms.fixmatch import FixMatch
 from algorithms.pseudolabel import PseudoLabel
 from algorithms.noisy_student import NoisyStudent
 from configs.supported import algo_log_metrics, losses
+from losses import initialize_loss
 
 def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None):
     train_dataset = datasets['train']['dataset']
     train_loader = datasets['train']['loader']
-    d_out = infer_d_out(train_dataset)
+    d_out = infer_d_out(train_dataset, config)
 
     # Other config
-    n_train_steps = (
-        len(unlabeled_dataset['loader']) if unlabeled_dataset and len(unlabeled_dataset['loader']) < len(train_loader)
-        else len(train_loader)
-    ) * config.n_epochs
-    loss = losses[config.loss_function]
+    n_train_steps = len(train_loader) * config.n_epochs
+    loss = initialize_loss(config, d_out)
     metric = algo_log_metrics[config.algo_log_metric]
 
     if config.algorithm == 'ERM':
@@ -119,20 +117,26 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
 
     return algorithm
 
-def infer_d_out(train_dataset):
+def infer_d_out(train_dataset, config):
     # Configure the final layer of the networks used
     # The code below are defaults. Edit this if you need special config for your model.
-    if (train_dataset.is_classification) and (train_dataset.y_size == 1):
-        # For single-task classification, we have one output per class
+    if train_dataset.is_classification:
+        if train_dataset.y_size == 1:
+            # For single-task classification, we have one output per class
+            d_out = train_dataset.n_classes
+        elif train_dataset.y_size is None:
+            d_out = train_dataset.n_classes
+        elif (train_dataset.y_size > 1) and (train_dataset.n_classes == 2):
+            # For multi-task binary classification (each output is the logit for each binary class)
+            d_out = train_dataset.y_size
+        else:
+            raise RuntimeError('d_out not defined.')
+    elif train_dataset.is_detection:
+        # For detection, d_out is the number of classes
         d_out = train_dataset.n_classes
-    elif (train_dataset.is_classification) and (train_dataset.y_size is None):
-        d_out = train_dataset.n_classes
-    elif (train_dataset.is_classification) and (train_dataset.y_size > 1) and (train_dataset.n_classes == 2):
-        # For multi-task binary classification (each output is the logit for each binary class)
-        d_out = train_dataset.y_size
-    elif (not train_dataset.is_classification):
+        if config.algorithm in ['deepCORAL', 'IRM']:
+            raise ValueError(f'{config.algorithm} is not currently supported for detection datasets.')
+    else:
         # For regression, we have one output per target dimension
         d_out = train_dataset.y_size
-    else:
-        raise RuntimeError('d_out not defined.')
     return d_out

@@ -6,10 +6,6 @@ from algorithms.ERM import ERM
 from algorithms.single_model_algorithm import SingleModelAlgorithm
 from optimizer import initialize_optimizer_with_model_params
 from wilds.common.utils import split_into_groups
-from configs.supported import process_outputs_functions
-import copy
-from utils import load
-import re
 
 class DropoutModel(nn.Module):
     def __init__(self, featurizer, classifier, dropout_rate):
@@ -40,9 +36,12 @@ class NoisyStudent(SingleModelAlgorithm):
     The student is noised using:
         - Input images are augmented using RandAugment
         - Single dropout layer before final classifier (fc) layer
-        - TODO: stochastic depth with linearly decaying survival probability from last to first
+    We do not use stochastic depth.
 
-    This code only supports hard pseudolabeling and a teacher that is the same class as the student (e.g. both densenet121s)
+    Pseudolabels are generated in run_expt.py on unlabeled images that have only been randomly cropped and flipped ("weak" transform).
+    By default, we use hard pseudolabels; use the --soft_pseudolabels flag to add soft pseudolabels.
+
+    This code only supports a teacher that is the same class as the student (e.g. both densenet121s)
 
     Original paper:
         @inproceedings{xie2020self,

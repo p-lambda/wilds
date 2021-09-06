@@ -4,6 +4,11 @@ scheduler_defaults = {
             'num_warmup_steps': 0,
         },
     },
+    'cosine_schedule_with_warmup': {
+        'scheduler_kwargs':{
+            'num_warmup_steps': 0,
+        },
+    },
     'ReduceLROnPlateau': {
         'scheduler_kwargs':{},
     },
@@ -15,9 +20,9 @@ scheduler_defaults = {
     'FixMatchLR': {
         'scheduler_kwargs': {},
     },
-    'CosineLR': {
-        'scheduler_kwargs': {
-            'min_lr': 0 
-        },
-    }
+    'MultiStepLR': {
+        'scheduler_kwargs':{
+            'gamma': 0.1,
+        }
+    },
 }
