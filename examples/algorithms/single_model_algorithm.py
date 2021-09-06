@@ -116,6 +116,8 @@ class SingleModelAlgorithm(GroupAlgorithm):
         Args:
             - batch (tuple of Tensors): a batch of data yielded by data loaders
             - unlabeled_batch (tuple of Tensors or None): a batch of data yielded by unlabeled data loader
+            - is_epoch_end: whether this batch is the last batch of the epoch. if so, force optimizer to step,
+                regardless of whether this batch idx divides self.gradient_accumulation_steps evenly
         Output:
             - results (dictionary): information about the batch, such as:
                 - g (Tensor)
