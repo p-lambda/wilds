@@ -1,7 +1,9 @@
 import torch
 import torch.nn as nn
+import os
 
 from models.layers import Identity
+from utils import load
 
 def initialize_model(config, d_out, is_featurizer=False):
     """
@@ -17,10 +19,14 @@ def initialize_model(config, d_out, is_featurizer=False):
 
             If is_featurizer=False:
             - model: a model that is equivalent to nn.Sequential(featurizer, classifier)
+
+        Pretrained weights are loaded according to config.pretrained_model_path using either transformers.from_pretrained (for bert-based models)
+        or our own utils.load function (for torchvision models). There is currently no support for loading pretrained detection models.
     """
     if config.model in ('resnet18', 'resnet34', 'resnet50', 'resnet101', 'wideresnet50', 'densenet121'):
         if is_featurizer:
             featurizer = initialize_torchvision_model(
+                config=config,
                 name=config.model,
                 d_out=None,
                 **config.model_kwargs)
@@ -28,6 +34,7 @@ def initialize_model(config, d_out, is_featurizer=False):
             model = (featurizer, classifier)
         else:
             model = initialize_torchvision_model(
+                config=config,
                 name=config.model,
                 d_out=d_out,
                 **config.model_kwargs)
@@ -115,9 +122,9 @@ def initialize_bert_based_model(config, d_out, is_featurizer=False):
     from models.bert.bert import BertClassifier, BertFeaturizer
     from models.bert.distilbert import DistilBertClassifier, DistilBertFeaturizer
 
-    if 'state_dict' in config.model_kwargs:
-        print ('loading state_dict from', config.model_kwargs['state_dict'])
-        config.model_kwargs['state_dict'] = torch.load(config.model_kwargs['state_dict'])
+    if config.pretrained_model_path:
+        print(f'Initialized model with pretrained weights from {config.pretrained_model_path}')
+        config.model_kwargs['state_dict'] = torch.load(config.pretrained_model_path, map_location=config.device)
 
     if config.model == 'bert-base-uncased':
         if is_featurizer:
@@ -139,7 +146,7 @@ def initialize_bert_based_model(config, d_out, is_featurizer=False):
         raise ValueError(f'Model: {config.model} not recognized.')
     return model
 
-def initialize_torchvision_model(name, d_out, **kwargs):
+def initialize_torchvision_model(config, name, d_out, **kwargs):
     import torchvision
 
     # get constructor and last layer names
@@ -166,6 +173,22 @@ def initialize_torchvision_model(name, d_out, **kwargs):
         last_layer = nn.Linear(d_features, d_out)
         model.d_out = d_out
     setattr(model, last_layer_name, last_layer)
+
+    # Load pretrained weights if specified (these weights can be overriden by config.resume)
+    if config.pretrained_model_path and os.path.exists(config.pretrained_model_path):
+        # The full model name is expected to be specified, so just load.
+        try:
+            prev_epoch, best_val_metric = load(model, config.pretrained_model_path, device=config.device)
+            epoch_offset = 0
+            print(
+                (f'Initialized model with pretrained weights from {config.pretrained_model_path} ')
+                + (f'previously trained for {prev_epoch} epochs ' if prev_epoch else '')
+                + (f'with previous val metric {best_val_metric} ' if best_val_metric else '')
+            )
+        except:
+            print('Something went wrong loading the pretrained model.')
+            pass
+
     return model
 
 def initialize_fasterrcnn_model(config, d_out):
