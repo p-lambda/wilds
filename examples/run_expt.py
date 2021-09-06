@@ -374,28 +374,13 @@ def main():
     if unlabeled_dataset is not None:
         log_group_data({"unlabeled": unlabeled_dataset}, log_grouper, logger)
 
-    ## Initialize algorithm
+    ## Initialize algorithm & load pretrained weights if provided
     algorithm = initialize_algorithm(
         config=config,
         datasets=datasets,
         train_grouper=train_grouper,
         unlabeled_dataset=unlabeled_dataset,
     )
-
-    # Load pretrained weights if specified (this can be overriden by resume)
-    if config.pretrained_model_path is not None and os.path.exists(config.pretrained_model_path):
-        # The full model name is expected to be specified, so just load.
-        try:
-            prev_epoch, best_val_metric = load(algorithm, config.pretrained_model_path, device=config.device)
-            epoch_offset = 0
-            logger.write(
-                (f'Initialized algorithm with pretrained weights from {config.pretrained_model_path} ')
-                + (f'previously trained for {prev_epoch} epochs ' if prev_epoch else '')
-                + (f'with previous val metric {best_val_metric} ' if best_val_metric else '')
-            )
-        except:
-            logger.write('Something went wrong loading the pretrained model.')
-            pass
 
     # Resume from most recent model in log_dir
     model_prefix = get_model_prefix(datasets['train'], config)
