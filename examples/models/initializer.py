@@ -21,7 +21,8 @@ def initialize_model(config, d_out, is_featurizer=False):
             - model: a model that is equivalent to nn.Sequential(featurizer, classifier)
 
         Pretrained weights are loaded according to config.pretrained_model_path using either transformers.from_pretrained (for bert-based models)
-        or our own utils.load function (for torchvision models). There is currently no support for loading pretrained detection models.
+        or our own utils.load function (for torchvision models, resnet18-ms, and gin-virtual). 
+        There is currently no support for loading pretrained weights from disk for other models.
     """
     if config.model in ('resnet18', 'resnet34', 'resnet50', 'resnet101', 'wideresnet50', 'densenet121'):
         if is_featurizer:
@@ -115,6 +116,30 @@ def initialize_model(config, d_out, is_featurizer=False):
         else:
             model.needs_y = False
 
+    # Load pretrained weights from disk using our utils.load function
+    # This has only been tested on some models (mostly vision), so run this code iff we're sure it works
+    # We've already loaded pretrained weights for bert-based models using the transformers library 
+    if config.model not in ('code-gpt-py', 'logistic_regression', 'unet-seq', 'fasterrcnn') and 'bert' not in config.model:
+        if (config.pretrained_model_path and os.path.exists(config.pretrained_model_path): 
+            try:
+                if type(model) is tuple: 
+                    # load both featurizer and classifier
+                    prev_epoch, best_val_metric = load(
+                        nn.Sequential(*model), 
+                        config.pretrained_model_path, device=config.device
+                    )
+                else: 
+                    prev_epoch, best_val_metric = load(model, config.pretrained_model_path, device=config.device)
+
+                print(
+                    (f'Initialized model with pretrained weights from {config.pretrained_model_path} ')
+                    + (f'previously trained for {prev_epoch} epochs ' if prev_epoch else '')
+                    + (f'with previous val metric {best_val_metric} ' if best_val_metric else '')
+                )
+            except:
+                print('Something went wrong loading the pretrained model.')
+                pass
+
     return model
 
 
@@ -174,27 +199,12 @@ def initialize_torchvision_model(config, name, d_out, **kwargs):
         model.d_out = d_out
     setattr(model, last_layer_name, last_layer)
 
-    # Load pretrained weights if specified (these weights can be overriden by config.resume)
-    if config.pretrained_model_path and os.path.exists(config.pretrained_model_path):
-        # The full model name is expected to be specified, so just load.
-        try:
-            prev_epoch, best_val_metric = load(model, config.pretrained_model_path, device=config.device)
-            epoch_offset = 0
-            print(
-                (f'Initialized model with pretrained weights from {config.pretrained_model_path} ')
-                + (f'previously trained for {prev_epoch} epochs ' if prev_epoch else '')
-                + (f'with previous val metric {best_val_metric} ' if best_val_metric else '')
-            )
-        except:
-            print('Something went wrong loading the pretrained model.')
-            pass
-
     return model
 
 def initialize_fasterrcnn_model(config, d_out):
     from models.detection.fasterrcnn import fasterrcnn_resnet50_fpn
 
-    # load a model pre-trained pre-trained on COCO
+    # load a model pre-trained on COCO
     model = fasterrcnn_resnet50_fpn(
         pretrained=config.model_kwargs["pretrained_model"],
         pretrained_backbone=config.model_kwargs["pretrained_backbone"],
