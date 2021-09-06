@@ -55,3 +55,38 @@ def step_scheduler(scheduler, metric=None):
         scheduler.step(metric)
     else:
         scheduler.step()
+
+class LinearScheduleWithWarmupAndThreshold():
+    """
+    Linear scheduler with warmup and threshold for non lr parameters. 
+    Parameters is held at 0 until some T1, linearly increased until T2, and then held
+    at some max value after T2.
+    Designed to be called by step_scheduler() above and used within Algorithm class.
+    Args:
+        - last_warmup_step: aka T1. for steps [0, T1) keep param = 0
+        - threshold_step: aka T2. step over period [T1, T2) to reach param = max value 
+        - max value: end value of the param
+    """
+    def __init__(self, max_value, last_warmup_step=0, threshold_step=1, step_every_batch=False):
+        self.max_value = max_value
+        self.T1 = last_warmup_step
+        self.T2 = threshold_step
+        assert (0 <= self.T1) and (self.T1 < self.T2)
+
+        # internal tracker of which step we're on
+        self.current_step = 0
+        self.value = 0
+
+        # required fields called in Algorithm when stepping schedulers
+        self.step_every_batch = step_every_batch
+        self.use_metric = False
+
+    def step(self):
+        """This function is first called AFTER step 0, so increment first to set value for next step"""
+        self.current_step += 1
+        if self.current_step < self.T1:
+            self.value = 0
+        elif self.current_step < self.T2:
+            self.value = (self.current_step - self.T1) / (self.T2 - self.T1) * self.max_value
+        else:
+            self.value = self.max_value

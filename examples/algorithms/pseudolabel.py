@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from models.initializer import initialize_model
 from algorithms.ERM import ERM
 from algorithms.single_model_algorithm import SingleModelAlgorithm
+from scheduler import LinearScheduleWithWarmupAndThreshold
 from wilds.common.utils import split_into_groups
 from configs.supported import process_outputs_functions
 import copy
@@ -37,7 +38,14 @@ class PseudoLabel(SingleModelAlgorithm):
             n_train_steps=n_train_steps,
         )
         # algorithm hyperparameters
-        self.pseudolabel_lambda = config.self_training_lambda
+        self.lambda_scheduler = LinearScheduleWithWarmupAndThreshold(
+            max_value=config.self_training_lambda,
+            step_every_batch=True, # step per batch
+            last_warmup_step=0,
+            threshold_step=config.pseudolabel_T2 * n_train_steps
+        ) 
+        self.schedulers.append(self.lambda_scheduler)
+        self.scheduler_metric_names.append(None)
         self.confidence_threshold = config.self_training_threshold
         if config.process_outputs_function is not None: 
             self.process_outputs_function = process_outputs_functions[config.process_outputs_function]
@@ -121,4 +129,4 @@ class PseudoLabel(SingleModelAlgorithm):
             results, "pseudolabels_kept_frac", pseudolabels_kept_frac
         )
 
-        return classification_loss + self.pseudolabel_lambda * consistency_loss 
+        return classification_loss + self.lambda_scheduler.value * consistency_loss 
