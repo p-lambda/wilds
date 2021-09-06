@@ -2,7 +2,24 @@
 # SwAV-specific defaults for WILDS Datasets #
 #############################################
 
-# TODO: update these defaults. remove any we won't need for SwAV -Tony
+# Maximum batch size that fits on a 12GB GPU
+MAX_BATCH_SIZE_PER_GPU = {
+    "camelyon17": 168,
+    "iwildcam": 24,
+    "fmow": 72,
+    "poverty": 120,
+}
+
+def get_base_lr(dataset, gpus=2):
+    # base_lr= DEFAULT_LR / (DEFAULT_BATCH_SIZE / $effective_batch_size),
+    # where DEFAULT_LR=4.8, DEFAULT_BATCH_SIZE=4096 and effective_batch_size=batch size per gpu * $NUM_GPUS.
+    # base_lr= 4.8 / (4096 / $effective_batch_size).
+    batch_size_per_gpu = MAX_BATCH_SIZE_PER_GPU[dataset]
+    effective_batch_size = batch_size_per_gpu * gpus
+    return 4.8 / (4096. / effective_batch_size)
+
+
+# All the defaults are configured to run on 2 GPUs.
 DATASET_DEFAULTS = {
     'camelyon17': {
         'split_scheme': 'official',
@@ -15,12 +32,12 @@ DATASET_DEFAULTS = {
         'optimizer': 'SGD',
         'optimizer_kwargs': {'momentum': 0.9},
         'scheduler': None,
-        'batch_size': 32,
-        'lr': 0.001,
-        'final_lr': 0.001 / 1000.,
+        'batch_size': MAX_BATCH_SIZE_PER_GPU['camelyon17'],
+        'lr': get_base_lr('camelyon17'),
+        'final_lr': get_base_lr('camelyon17') / 1000.,
         'weight_decay': 0.01,
         'epsilon': 0.03,
-        'nmb_prototypes': 3000,
+        'nmb_prototypes': 20,
         'queue_length': 3840,
         'epoch_queue_starts': 500,
         'warmup_epochs': 0,
@@ -47,14 +64,13 @@ DATASET_DEFAULTS = {
         'resize_scale': 256.0 / 224.0,
         'target_resolution': (224, 224),
         'loss_function': 'cross_entropy',
-        'batch_size': 32,
-        'unlabeled_batch_size': 32,
+        'batch_size': 128,
         'optimizer': 'SGD',
-        'lr': 0.001,
-        'final_lr': 0.001 / 1000.,
+        'lr': 0.6,
+        'final_lr': 0.6 / 1000.,
         'weight_decay': 1e-3,
         'epsilon': 0.03,
-        'nmb_prototypes': 3000,
+        'nmb_prototypes': 400,
         'queue_length': 3840,
         'epoch_queue_starts': 500,
         'warmup_epochs': 0,
@@ -82,14 +98,13 @@ DATASET_DEFAULTS = {
         'optimizer': 'Adam',
         'scheduler': 'StepLR',
         'scheduler_kwargs': {'gamma': 0.96},
-        'batch_size': 32,
-        'unlabeled_batch_size': 32,
-        'lr': 0.0001,
-        'final_lr': 0.0001 / 1000.,
+        'batch_size': MAX_BATCH_SIZE_PER_GPU["fmow"],
+        'lr': get_base_lr('fmow'),
+        'final_lr': get_base_lr('fmow') / 1000.,
         'weight_decay': 0.0,
         'warmup_epochs': 0,
         'epsilon': 0.03,
-        'nmb_prototypes': 3000,
+        'nmb_prototypes': 620,
         'queue_length': 3840,
         'epoch_queue_starts': 500,
         'n_epochs': 50,
@@ -109,13 +124,13 @@ DATASET_DEFAULTS = {
         'target_resolution': (448, 448),
         'model': 'resnet50',
         'model_kwargs': {},
-        'lr': 3e-5,
-        'final_lr': 3e-5 / 1000.,
+        'lr': get_base_lr('iwildcam'),
+        'final_lr': get_base_lr('iwildcam') / 1000.,
         'weight_decay': 0.0,
-        'batch_size': 16,
+        'batch_size': MAX_BATCH_SIZE_PER_GPU["iwildcam"],
         'warmup_epochs': 0,
         'epsilon': 0.03,
-        'nmb_prototypes': 3000,
+        'nmb_prototypes': 1860,
         'queue_length': 3840,
         'epoch_queue_starts': 500,
         'n_epochs': 12,
@@ -147,9 +162,9 @@ DATASET_DEFAULTS = {
         'optimizer': 'Adam',
         'scheduler': 'StepLR',
         'scheduler_kwargs': {'gamma': 0.96},
-        'batch_size': 64,
-        'lr': 0.001,
-        'final_lr': 0.001 / 1000.,
+        'batch_size': MAX_BATCH_SIZE_PER_GPU["poverty"],
+        'lr': get_base_lr('poverty'),
+        'final_lr': get_base_lr('poverty') / 1000.,
         'weight_decay': 0.0,
         'epsilon': 0.03,
         'nmb_prototypes': 3000,

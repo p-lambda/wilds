@@ -50,6 +50,8 @@ def main():
     accs = test_log_reg_warm_starting(train, test, args.num_reg_values)
     with open(os.path.join(args.save_dir, "linear_probe_eval.txt"), 'wb') as f:
         pickle.dump(accs, f)
+    print(f"Maximum accuracy was {max(accs)}.")
+    print("Done.")
 
 if __name__ == "__main__":
     main()

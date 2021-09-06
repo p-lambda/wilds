@@ -12,10 +12,9 @@ import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy("file_system")
 
 import wilds
-from wilds.common.data_loaders import get_train_loader, get_eval_loader
+from wilds.common.data_loaders import get_eval_loader
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
-from examples.algorithms.swav.src.model import SwAVModel
 from examples.algorithms.swav.src.utils import ParseKwargs, populate_defaults_for_swav
 from examples.models.initializer import initialize_model
 from examples.transforms import initialize_transform
@@ -60,7 +59,7 @@ def get_data_loaders(config):
     )
     test_data = dataset.get_subset(config.eval_split, transform=eval_transform)
     loader_kwargs = {'num_workers': 2, 'pin_memory': True}
-    train_loader = get_train_loader(
+    train_loader = get_eval_loader(
         "standard", train_data, batch_size=config.batch_size, **loader_kwargs
     )
     test_loader = get_eval_loader(
@@ -155,12 +154,12 @@ if __name__ == "__main__":
         default={},
         help="Keyword arguments for model initialization passed as key1=value1 key2=value2",
     )
-    # Where to save extracted features
+    # Where to save the extracted features
     parser.add_argument(
         "--log_dir",
         type=str,
         default=".",
-        help="The directory where to save the extracted features to.",
+        help="The directory where the extracted features are outputted.",
     )
     parser.add_argument(
         "--cpu",
