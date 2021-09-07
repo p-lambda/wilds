@@ -87,6 +87,7 @@ def get_features(config, model, data_loaders):
 
 def main():
     config = populate_defaults_for_swav(args)
+    print(config)
     model = get_model(config)
     data_loaders = get_data_loaders(config)
     features = get_features(config, model, data_loaders)
