@@ -75,9 +75,11 @@ def generate_final_metadata(slide_root, output_root):
             df = df[~(patient_mask & node_mask)]
     print_stats(df)
 
-    # The labeled Camelyon-WILDS dataset has approximately ~300,000 patches. We want about 10x unlabeled data,
+    # The labeled Camelyon-WILDS dataset has approximately 300,000 patches. We want about 10x unlabeled data,
     # which corresponds to ~3 million patches. Since each hospital of the original Camelyon17 training set
-    # has 100 slides, subsample 6000 patches from each slide, resulting in 600,000 patches total from each hospital.
+    # has a 100 slides, we subsample 6,667 patches from each slide, resulting in 600,030 patches total from each
+    # hospital except for Center 0. Slide 38 of Center 0 only has 5,824 patches, so we instead subsample a total of
+    # 599,187 patches for Center 0. Therefore, there is a total of 2,999,307 unlabeled patches across the hospitals.
     print(f"Subsampling {_NUM_PATCHES_TO_SUBSAMPLE} patches from each slide...")
     indices_to_keep = []
     for slide in set(df["slide"]):
