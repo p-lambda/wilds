@@ -183,9 +183,8 @@ class CodaLabReproducibility:
                 unlabeled_dataset_uuid = self._get_bundle_uuid(
                     f"{dataset}_unlabeled", worksheet_uuid
                 )
-                unlabeled_dataset_fullname = self._get_field_value(
-                    unlabeled_dataset_uuid, "name"
-                )
+                self.value = self._get_field_value(unlabeled_dataset_uuid, "name")
+                unlabeled_dataset_fullname = self.value
             else:
                 unlabeled_dataset_uuid = None
                 unlabeled_dataset_fullname = None
@@ -534,9 +533,10 @@ class CodaLabReproducibility:
         # Configure Multi-GPU
         if gpus > 1 and algorithm != "NoisyStudent":
             gpu_indices = [str(gpu) for gpu in range(gpus)]
-            command += f" --device {' '.join(gpu_indices)} --loader_kwargs num_workers={gpus * 2} pin_memory=True"
+            command += f" --device {' '.join(gpu_indices)} --loader_kwargs num_workers=4 pin_memory=True"
+            command += f" --unlabeled_loader_kwargs num_workers=8 pin_memory=True"
         else:
-            command += f" --loader_kwargs num_workers=2 pin_memory=True"
+            command += f" --loader_kwargs num_workers=4 pin_memory=True"
 
         # Configure wandb
         command += (
