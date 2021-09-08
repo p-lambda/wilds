@@ -63,8 +63,8 @@ WHEAT_ALL_ACCURACY_METRICS = [
 ]
 
 FMOW_ALL_ACCURACY_METRICS = [
-    "acc_avg",
     "acc_worst_region",  # Keep "acc_worst_region" as the first element of the list!
+    "acc_avg",
     "acc_year:2017",
     "acc_worst_year",
     "acc_region:Asia",

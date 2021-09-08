@@ -1,6 +1,7 @@
 import torch.nn as nn
 from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
 from wilds.common.metrics.all_metrics import MSE
+from utils import cross_entropy_with_logits_loss
 
 def initialize_loss(config, d_out):
     if config.loss_function == 'cross_entropy':
@@ -18,6 +19,9 @@ def initialize_loss(config, d_out):
     elif config.loss_function == 'fasterrcnn_criterion':
         from models.detection.fasterrcnn import FasterRCNNLoss
         return ElementwiseLoss(loss_fn=FasterRCNNLoss(config.device))
+
+    elif config.loss_function == 'cross_entropy_logits':
+        return ElementwiseLoss(loss_fn=cross_entropy_with_logits_loss)
 
     else:
         raise ValueError(f'config.loss_function {config.loss_function} not recognized')

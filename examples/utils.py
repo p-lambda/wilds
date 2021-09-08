@@ -7,11 +7,32 @@ from pathlib import Path
 import numpy as np
 import torch
 import pandas as pd
+import re
+
+from torch.utils.data import DataLoader
 
 try:
     import wandb
 except Exception as e:
     pass
+
+def cross_entropy_with_logits_loss(input, soft_target):
+    """
+    Implementation of CrossEntropy loss using a soft target. Extension of BCEWithLogitsLoss to MCE.
+    Normally, cross entropy loss is 
+        \sum_j 1{j == y} -log \frac{e^{s_j}}{\sum_k e^{s_k}} = -log \frac{e^{s_y}}{\sum_k e^{s_k}}
+    Here we use
+        \sum_j P_j *-log \frac{e^{s_j}}{\sum_k e^{s_k}}
+    where 0 <= P_j <= 1    
+    Does not support fancy nn.CrossEntropy options (e.g. weight, size_average, ignore_index, reductions, etc.)
+    
+    Args:
+    - input (N, k): logits
+    - soft_target (N, k): targets for softmax(input); likely want to use class probabilities
+    Returns:
+    - losses (N, 1)
+    """
+    return torch.sum(- soft_target * torch.nn.functional.log_softmax(input, 1), 1)
 
 def update_average(prev_avg, prev_counts, curr_avg, curr_counts):
     denom = prev_counts + curr_counts
@@ -59,10 +80,72 @@ def save_model(algorithm, epoch, best_val_metric, path):
     state['best_val_metric'] = best_val_metric
     torch.save(state, path)
 
-def load(algorithm, path):
-    state = torch.load(path)
-    algorithm.load_state_dict(state['algorithm'])
-    return state['epoch'], state['best_val_metric']
+def load(module, path, device=None, tries=2):
+    """Handles loading weights saved from this repo/model into an algorithm/model."""
+    if device is not None:
+        state = torch.load(path, map_location=device)
+    else:
+        state = torch.load(path)
+
+    if 'algorithm' in state:
+        prev_epoch = state['epoch']
+        best_val_metric = state['best_val_metric']
+        state = state['algorithm']
+    else:
+        prev_epoch, best_val_metric = None, None
+
+    # naive approach works if alg -> alg / mod -> mod
+    try: module.load_state_dict(state)
+    except:
+        module_keys = module.state_dict().keys()
+        for _ in range(tries):
+            state = match_keys(state, list(module_keys))
+            module.load_state_dict(state, strict=False)
+            leftover_state = {k:v for k,v in state.items() if k in list(state.keys()-module_keys)}
+            leftover_module_keys = module_keys - state.keys()
+            if len(leftover_state) == 0 or len(leftover_module_keys) == 0: break
+            state, module_keys = leftover_state, leftover_module_keys
+        if len(module_keys-state.keys()) > 0: print(f"Some module parameters could not be found in the loaded state: {module_keys-state.keys()}")
+    return prev_epoch, best_val_metric
+
+def match_keys(d, ref):
+    """
+    Matches the format of keys between d (a dict) and ref (a list of keys).
+
+    Helper function for situations where two algorithms share the same model, and we'd like to warm-start one
+    algorithm with the model of another. Some algorithms (e.g. FixMatch) save the featurizer, classifier within a sequential,
+    and thus the featurizer keys may look like 'model.module.0._' 'model.0._' or 'model.module.model.0._',
+    and the classifier keys may look like 'model.module.1._' 'model.1._' or 'model.module.model.1._'
+    while simple algorithms (e.g. ERM) use no sequential 'model._'
+    """
+    # hard-coded exceptions
+    d = {re.sub('model.1.', 'model.classifier.', k): v for k,v in d.items()}
+    d = {k: v for k,v in d.items() if 'pre_classifier' not in k} # this causes errors
+
+    # probe the proper transformation from d.keys() -> reference
+    # do this by splitting d's first key on '.' until we get a string that is a strict substring of something in ref
+    success = False
+    probe = list(d.keys())[0].split('.')
+    for i in range(len(probe)):
+        probe_str = '.'.join(probe[i:])
+        matches = list(filter(lambda ref_k: len(ref_k) >= len(probe_str) and probe_str == ref_k[-len(probe_str):], ref))
+        matches = list(filter(lambda ref_k: not 'layer' in ref_k, matches)) # handle resnet probe being too simple, e.g. 'weight'
+        if len(matches) == 0: continue
+        else:
+            success = True
+            append = [m[:-len(probe_str)] for m in matches]
+            remove = '.'.join(probe[:i]) + '.'
+            break
+    if not success: raise Exception("These dictionaries have irreconcilable keys")
+
+    return_d = {}
+    for a in append:
+        for k,v in d.items(): return_d[re.sub(remove, a, k)] = v
+
+    # hard-coded exceptions
+    if 'model.classifier.weight' in return_d:
+       return_d['model.1.weight'], return_d['model.1.bias'] = return_d['model.classifier.weight'], return_d['model.classifier.bias']
+    return return_d
 
 def log_group_data(datasets, grouper, logger):
     for k, dataset in datasets.items():
@@ -171,9 +254,11 @@ def log_config(config, logger):
     logger.write('\n')
 
 def initialize_wandb(config):
-    name = config.dataset + '_' + config.algorithm + '_' + config.log_dir
-    wandb.init(name=name,
-               project=f"wilds")
+    if config.wandb_api_key_path is not None:
+        with open(config.wandb_api_key_path, "r") as f:
+            os.environ["WANDB_API_KEY"] = f.read().strip()
+
+    wandb.init(**config.wandb_kwargs)
     wandb.config.update(config)
 
 def save_pred(y_pred, path_prefix):
@@ -266,3 +351,26 @@ def remove_key(key):
             raise TypeError("remove_key must take in a dict")
         return {k: v for (k,v) in d.items() if k != key}
     return remove
+
+
+class InfiniteDataIterator:
+    """
+    Adapted from https://github.com/thuml/Transfer-Learning-Library
+
+    A data iterator that will never stop producing data
+    """
+    def __init__(self, data_loader: DataLoader):
+        self.data_loader = data_loader
+        self.iter = iter(self.data_loader)
+
+    def __next__(self):
+        try:
+            data = next(self.iter)
+        except StopIteration:
+            print("Reached the end, resetting data loader...")
+            self.iter = iter(self.data_loader)
+            data = next(self.iter)
+        return data
+
+    def __len__(self):
+        return len(self.data_loader)

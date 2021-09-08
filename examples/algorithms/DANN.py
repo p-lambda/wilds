@@ -36,9 +36,7 @@ class DANN(SingleModelAlgorithm):
         featurizer, classifier = initialize_model(
             config, d_out=d_out, is_featurizer=True
         )
-        model = DomainAdversarialNetwork(featurizer, classifier, n_domains).to(
-            config.device
-        )
+        model = DomainAdversarialNetwork(featurizer, classifier, n_domains)
         parameters_to_optimize: List[Dict] = model.get_parameters_with_lr(
             featurizer_lr=config.dann_featurizer_lr,
             classifier_lr=config.dann_classifier_lr,
