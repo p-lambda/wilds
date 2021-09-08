@@ -1,8 +1,8 @@
 import torch
 from tqdm import tqdm
 
-from utils import save_model, save_pred, get_pred_prefix, get_model_prefix, detach_and_clone, collate_list
 from configs.supported import process_outputs_functions
+from utils import save_model, save_pred, get_pred_prefix, get_model_prefix, collate_list, detach_and_clone, InfiniteDataIterator
 
 def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabeled_dataset=None):
     if dataset['verbose']:
@@ -27,25 +27,25 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
     if unlabeled_dataset:
         assert 'loader' in unlabeled_dataset, "A data loader must be defined for the dataset."
 
-    batches = (
-        zip(dataset['loader'], unlabeled_dataset['loader']) if unlabeled_dataset
-        else dataset['loader']
-    )
+    batches = dataset['loader']
     if config.progress_bar:
         batches = tqdm(batches)
+
+    if unlabeled_dataset:
+        unlabeled_data_iterator = InfiniteDataIterator(unlabeled_dataset['loader'])
 
     # Using enumerate(iterator) can sometimes leak memory in some environments (!)
     # so we manually increment batch_idx
     batch_idx = 0
-    for batch in batches:
+    for labeled_batch in batches:
         if train:
             if unlabeled_dataset:
-                labeled_batch, unlabeled_batch = batch
+                unlabeled_batch = next(unlabeled_data_iterator)
                 batch_results = algorithm.update(labeled_batch, unlabeled_batch)
             else:
-                batch_results = algorithm.update(batch)
+                batch_results = algorithm.update(labeled_batch)
         else:
-            batch_results = algorithm.evaluate(batch)
+            batch_results = algorithm.evaluate(labeled_batch)
 
         # These tensors are already detached, but we need to clone them again
         # Otherwise they don't get garbage collected properly in some versions
@@ -91,6 +91,14 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
 
 
 def train(algorithm, datasets, general_logger, config, epoch_offset, best_val_metric, unlabeled_dataset=None):
+    """
+    Train loop that, each epoch:
+        - Steps an algorithm on the datasets['train'] split and the unlabeled split
+        - Evaluates the algorithm on the datasets['val'] split
+        - Saves models / preds with frequency according to the configs
+        - Evaluates on any other specified splits in the configs
+    Assumes that the datasets dict contains labeled data.
+    """
     for epoch in range(epoch_offset, config.n_epochs):
         general_logger.write('\nEpoch [%d]:\n' % epoch)
 
@@ -164,6 +172,25 @@ def evaluate(algorithm, datasets, epoch, general_logger, config, is_best):
         if split != 'train':
             save_pred_if_needed(epoch_y_pred, dataset, epoch, config, is_best, force_save=True)
 
+def infer_predictions(model, loader, config):
+    """
+    Simple inference loop that performs inference using a model (not algorithm) and returns model outputs.
+    Compatible with both labeled and unlabeled WILDS datasets.
+    """
+    model.eval()
+    y_pred = []
+    iterator = tqdm(loader) if config.progress_bar else loader
+    for batch in iterator:
+        x = batch[0]
+        x = x.to(config.device)
+        with torch.no_grad(): 
+            output = model(x)
+            if not config.soft_pseudolabels and config.process_outputs_function is not None:
+                output = process_outputs_functions[config.process_outputs_function](output)
+            elif config.soft_pseudolabels:
+                output = torch.nn.functional.softmax(output, dim=1)
+        y_pred.append(output.clone().detach())
+    return torch.cat(y_pred, 0)
 
 def log_results(algorithm, dataset, general_logger, epoch, batch_idx):
     if algorithm.has_log:
