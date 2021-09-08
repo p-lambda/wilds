@@ -27,7 +27,6 @@ def initialize_model(config, d_out, is_featurizer=False):
     if config.model in ('resnet18', 'resnet34', 'resnet50', 'resnet101', 'wideresnet50', 'densenet121'):
         if is_featurizer:
             featurizer = initialize_torchvision_model(
-                config=config,
                 name=config.model,
                 d_out=None,
                 **config.model_kwargs)
@@ -35,7 +34,6 @@ def initialize_model(config, d_out, is_featurizer=False):
             model = (featurizer, classifier)
         else:
             model = initialize_torchvision_model(
-                config=config,
                 name=config.model,
                 d_out=d_out,
                 **config.model_kwargs)
@@ -120,7 +118,7 @@ def initialize_model(config, d_out, is_featurizer=False):
     # This has only been tested on some models (mostly vision), so run this code iff we're sure it works
     # We've already loaded pretrained weights for bert-based models using the transformers library 
     if config.model not in ('code-gpt-py', 'logistic_regression', 'unet-seq', 'fasterrcnn') and 'bert' not in config.model:
-        if (config.pretrained_model_path and os.path.exists(config.pretrained_model_path): 
+        if config.pretrained_model_path and os.path.exists(config.pretrained_model_path): 
             try:
                 if type(model) is tuple: 
                     # load both featurizer and classifier
@@ -171,7 +169,7 @@ def initialize_bert_based_model(config, d_out, is_featurizer=False):
         raise ValueError(f'Model: {config.model} not recognized.')
     return model
 
-def initialize_torchvision_model(config, name, d_out, **kwargs):
+def initialize_torchvision_model(name, d_out, **kwargs):
     import torchvision
 
     # get constructor and last layer names
