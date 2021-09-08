@@ -1,4 +1,4 @@
-import os, csv
+import os
 import time
 import argparse
 import pandas as pd
@@ -58,6 +58,7 @@ def main():
 
     # Loaders
     parser.add_argument('--loader_kwargs', nargs='*', action=ParseKwargs, default={})
+    parser.add_argument('--unlabeled_loader_kwargs', nargs='*', action=ParseKwargs, default={})
     parser.add_argument('--train_loader', choices=['standard', 'group'])
     parser.add_argument('--uniform_over_groups', type=parse_bool, const=True, nargs='?')
     parser.add_argument('--distinct_groups', type=parse_bool, const=True, nargs='?')
@@ -274,7 +275,7 @@ def main():
                 dataset=unlabeled_split_dataset,
                 grouper=train_grouper,
                 batch_size=config.unlabeled_batch_size,
-                **config.loader_kwargs
+                **config.unlabeled_loader_kwargs
             )
             teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
             teacher_outputs = teacher_outputs.to(torch.device("cpu"))
@@ -301,7 +302,7 @@ def main():
             grouper=train_grouper,
             distinct_groups=config.distinct_groups,
             n_groups_per_batch=config.unlabeled_n_groups_per_batch,
-            **config.loader_kwargs
+            **config.unlabeled_loader_kwargs
         )
     else:
         train_grouper = CombinatorialGrouper(
