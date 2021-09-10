@@ -10,7 +10,7 @@ MAX_BATCH_SIZE_PER_GPU = {
     "poverty": 120,
 }
 
-def get_base_lr(dataset, gpus=2):
+def get_base_lr(dataset, gpus=4):
     # base_lr= DEFAULT_LR / (DEFAULT_BATCH_SIZE / $effective_batch_size),
     # where DEFAULT_LR=4.8, DEFAULT_BATCH_SIZE=4096 and effective_batch_size=batch size per gpu * $NUM_GPUS.
     # base_lr= 4.8 / (4096 / $effective_batch_size).
@@ -19,7 +19,7 @@ def get_base_lr(dataset, gpus=2):
     return 4.8 / (4096. / effective_batch_size)
 
 
-# All the defaults are configured to run on 2 GPUs.
+# All the defaults are configured to run on 4 GPUs.
 DATASET_DEFAULTS = {
     'camelyon17': {
         'split_scheme': 'official',
@@ -38,10 +38,10 @@ DATASET_DEFAULTS = {
         'weight_decay': 0.01,
         'epsilon': 0.03,
         'nmb_prototypes': 20,
-        'queue_length': 3840,
+        'queue_length': 3840,   # TODO: we need to change this depending on the batch size
         'epoch_queue_starts': 500,
         'warmup_epochs': 0,
-        'n_epochs': 5,
+        'n_epochs': 400,
         'algo_log_metric': 'accuracy',
         'process_outputs_function': 'multiclass_logits_to_pred',
         'loader_kwargs': {
@@ -107,7 +107,7 @@ DATASET_DEFAULTS = {
         'nmb_prototypes': 620,
         'queue_length': 3840,
         'epoch_queue_starts': 500,
-        'n_epochs': 50,
+        'n_epochs': 400,
         'algo_log_metric': 'accuracy',
         'process_outputs_function': 'multiclass_logits_to_pred',
         'loader_kwargs': {
@@ -133,7 +133,7 @@ DATASET_DEFAULTS = {
         'nmb_prototypes': 1860,
         'queue_length': 3840,
         'epoch_queue_starts': 500,
-        'n_epochs': 12,
+        'n_epochs': 400,
         'optimizer': 'Adam',
         'split_scheme': 'official',
         'scheduler': None,
@@ -167,11 +167,11 @@ DATASET_DEFAULTS = {
         'final_lr': get_base_lr('poverty') / 1000.,
         'weight_decay': 0.0,
         'epsilon': 0.03,
-        'nmb_prototypes': 3000,
+        'nmb_prototypes': 10,
         'queue_length': 3840,
         'epoch_queue_starts': 500,
         'warmup_epochs': 0,
-        'n_epochs': 200,
+        'n_epochs': 400,
         'process_outputs_function': None,
         'loader_kwargs': {
             'num_workers': 8,

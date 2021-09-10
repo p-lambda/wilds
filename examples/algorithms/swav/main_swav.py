@@ -34,6 +34,10 @@ try:
 except ImportError as e:
     print("Apex not found. Proceeding without it...")
 
+# TODO: This is needed to test the WILDS package locally. Remove later -Tony
+sys.path.insert(1, os.path.join(sys.path[0], '../../..'))
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
+
 import wilds
 from src.utils import (
     bool_flag,
@@ -48,9 +52,6 @@ from src.utils import (
 )
 from src.multicropdataset import CustomSplitMultiCropDataset
 from src.model import SwAVModel
-
-# TODO: This is needed to test the WILDS package locally. Remove later -Tony
-sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 
 from examples.models.initializer import initialize_model
 

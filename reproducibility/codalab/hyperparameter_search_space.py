@@ -172,6 +172,7 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "weight_decay": [-4, -2],
             "self_training_lambda": [-1, 1],
             "self_training_threshold": [0.7, 0.95],
+            "scheduler": ["FixMatchLR"],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
         },
         "fmow": {
