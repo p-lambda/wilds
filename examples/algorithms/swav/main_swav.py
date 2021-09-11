@@ -151,6 +151,7 @@ parser.add_argument("--seed", type=int, default=0, help="seed")
 parser.add_argument("--is_not_slurm_job", type=bool_flag, default=True, help="Set to true if not running in Slurm.")
 parser.add_argument("--cpu_only", type=bool_flag, default=False,
                     help="Set to true to run experiment on CPUs instead of GPUs (for debugging).")
+parser.add_argument('--pretrained_model_path', default=None, type=str)
 
 def main():
     global args
