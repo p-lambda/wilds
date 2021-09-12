@@ -109,8 +109,10 @@ class PseudoLabel(SingleModelAlgorithm):
         # Pseudolabeled loss
         if 'unlabeled_y_pseudo' in results:
             mask = results['unlabeled_mask']
-            masked_loss_output = self.loss.loss_fn(
-                results['unlabeled_strong_y_pred'], results['unlabeled_weak_y_pseudo']
+            masked_loss_output = self.loss.compute_element_wise(
+                results['unlabeled_y_pred'],
+                results['unlabeled_y_pseudo'],
+                return_dict=False,
             ) * mask
             consistency_loss = masked_loss_output.mean()
             pseudolabels_kept_frac = mask.count_nonzero().item() / mask.shape[0]
