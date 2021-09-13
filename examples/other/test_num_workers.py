@@ -7,7 +7,7 @@ import time
 from tqdm import tqdm
 
 # TODO: This is needed to test the WILDS package locally. Remove later -Tony
-sys.path.insert(1, os.path.join(sys.path[0], ".."))
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from examples.utils import InfiniteDataIterator
 from examples.transforms import initialize_transform
