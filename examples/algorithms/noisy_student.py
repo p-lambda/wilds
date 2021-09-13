@@ -108,7 +108,7 @@ class NoisyStudent(SingleModelAlgorithm):
         classification_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
 
         # Pseudolabel loss
-        if 'unlabeled_y_pred' in results: 
+        if 'unlabeled_y_pseudo' in results: 
             consistency_loss = self.unlabeled_loss.compute(
                 results['unlabeled_y_pred'], 
                 results['unlabeled_y_pseudo'], 
