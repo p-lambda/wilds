@@ -3,25 +3,25 @@ from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
 from wilds.common.metrics.all_metrics import MSE
 from utils import cross_entropy_with_logits_loss
 
-def initialize_loss(config, d_out):
-    if config.loss_function == 'cross_entropy':
+def initialize_loss(loss, config, d_out):
+    if loss == 'cross_entropy':
         return ElementwiseLoss(loss_fn=nn.CrossEntropyLoss(reduction='none'))
 
-    elif config.loss_function == 'lm_cross_entropy':
+    elif loss == 'lm_cross_entropy':
         return MultiTaskLoss(loss_fn=nn.CrossEntropyLoss(reduction='none'))
 
-    elif config.loss_function == 'mse':
+    elif loss == 'mse':
         return MSE(name='loss')
 
-    elif config.loss_function == 'multitask_bce':
+    elif loss == 'multitask_bce':
         return MultiTaskLoss(loss_fn=nn.BCEWithLogitsLoss(reduction='none'))
 
-    elif config.loss_function == 'fasterrcnn_criterion':
+    elif loss == 'fasterrcnn_criterion':
         from models.detection.fasterrcnn import FasterRCNNLoss
         return ElementwiseLoss(loss_fn=FasterRCNNLoss(config.device))
 
-    elif config.loss_function == 'cross_entropy_logits':
+    elif loss == 'cross_entropy_logits':
         return ElementwiseLoss(loss_fn=cross_entropy_with_logits_loss)
 
     else:
-        raise ValueError(f'config.loss_function {config.loss_function} not recognized')
+        raise ValueError(f'loss {loss} not recognized')

@@ -95,7 +95,7 @@ class NoisyStudent(SingleModelAlgorithm):
             results['unlabeled_g'] = g
 
         # Concat and call forward
-        n_lab = x_lab.shape[0]
+        n_lab = x.shape[0]
         if unlabeled_batch is not None: x_concat = torch.cat((x, x_unlab), dim=0)
         else: x_concat = x
         outputs = self.model(x_concat)
