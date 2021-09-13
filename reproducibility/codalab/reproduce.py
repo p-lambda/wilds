@@ -544,10 +544,12 @@ class CodaLabReproducibility:
             command += f" --unlabeled_loader_kwargs num_workers=8 pin_memory=True"
 
         # Configure wandb
-        command += (
-            f" --use_wandb --wandb_api_key_path wandb_api_key.txt --wandb_kwargs"
-            f" entity=wilds project={algorithm.lower()}-{dataset_name.lower()} group={experiment_name}_gpus{gpus}"
-        )
+        # Disable pushing to WandB for Amazon - we're hitting retry loops when pushing metrics at the end of the run
+        if dataset_name != "amazon":
+            command += (
+                f" --use_wandb --wandb_api_key_path wandb_api_key.txt --wandb_kwargs"
+                f" entity=wilds project={algorithm.lower()}-{dataset_name.lower()} group={experiment_name}_gpus{gpus}"
+            )
         return command
 
     def _get_dataset_name(self, experiment_name):
