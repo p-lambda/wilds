@@ -15,6 +15,7 @@
 import argparse
 import math
 import os
+import pdb
 import shutil
 import sys
 import time
@@ -71,48 +72,47 @@ parser.add_argument('--splits', nargs='+', default=["test_unlabeled"])
 #########################
 #### data aug params ####
 #########################
-parser.add_argument("--nmb_crops", type=int, default=[2], nargs="+",
-                    help="list of number of crops (example: [2, 6])")
-parser.add_argument("--size_crops", type=int, default=[224], nargs="+",
-                    help="crops resolutions (example: [224, 96])")
-parser.add_argument("--min_scale_crops", type=float, default=[0.14], nargs="+",
-                    help="argument in RandomResizedCrop (example: [0.14, 0.05])")
-parser.add_argument("--max_scale_crops", type=float, default=[1], nargs="+",
-                    help="argument in RandomResizedCrop (example: [1., 0.14])")
+parser.add_argument("--nmb_crops", type=int, default=[2, 6], nargs="+",
+                    help="list of number of crops (default: [2, 6])")
+parser.add_argument("--size_crops", type=int, default=[224, 96], nargs="+",
+                    help="crops resolutions (default: [224, 96])")
+parser.add_argument("--min_scale_crops", type=float, default=[0.14, 0.05], nargs="+",
+                    help="argument in RandomResizedCrop (default: [0.14, 0.05])")
+parser.add_argument("--max_scale_crops", type=float, default=[1, 0.14], nargs="+",
+                    help="argument in RandomResizedCrop (default: [1., 0.14])")
 
 #########################
 ## swav specific params #
 #########################
 parser.add_argument("--crops_for_assign", type=int, nargs="+", default=[0, 1],
-                    help="list of crops id used for computing assignments")
+                    help="list of crops id used for computing assignments (default: [0, 1])")
 parser.add_argument("--temperature", default=0.1, type=float,
-                    help="temperature parameter in training loss")
-parser.add_argument("--epsilon", default=0.05, type=float,
-                    help="regularization parameter for Sinkhorn-Knopp algorithm")
+                    help="temperature parameter in training loss (default: 0.1)")
+parser.add_argument("--epsilon", default=0.03, type=float,
+                    help="regularization parameter for Sinkhorn-Knopp algorithm (default: 0.03)")
 parser.add_argument("--sinkhorn_iterations", default=3, type=int,
                     help="number of iterations in Sinkhorn-Knopp algorithm")
 parser.add_argument("--feat_dim", default=128, type=int,
                     help="feature dimension")
-parser.add_argument("--nmb_prototypes", default=3000, type=int,
-                    help="number of prototypes")
+parser.add_argument("--nmb_prototypes", type=int, help="number of prototypes")
 parser.add_argument("--queue_length", type=int, default=0,
                     help="length of the queue (0 for no queue)")
-parser.add_argument("--epoch_queue_starts", type=int, default=15,
+parser.add_argument("--epoch_queue_starts", type=int, default=500,
                     help="from this epoch, we start using a queue")
 
 #########################
 #### optim parameters ###
 #########################
 parser.add_argument('--optimizer_kwargs', nargs='*', action=ParseKwargs, default={})
-parser.add_argument("--n_epochs", default=100, type=int,
+parser.add_argument("--n_epochs", default=400, type=int,
                     help="number of total epochs to run")
-parser.add_argument("--warmup_epochs", default=10, type=int, help="number of warmup epochs")
-parser.add_argument("--batch_size", default=64, type=int,
+parser.add_argument("--warmup_epochs", default=0, type=int, help="number of warmup epochs (default: 0)")
+parser.add_argument("--batch_size", type=int,
                     help="batch size per gpu, i.e. how many unique instances per gpu")
-parser.add_argument("--lr", default=4.8, type=float, help="base learning rate")
-parser.add_argument("--final_lr", type=float, default=0, help="final learning rate")
-parser.add_argument("--freeze_prototypes_niters", default=313, type=int,
-                    help="freeze the prototypes during this many iterations from the start")
+parser.add_argument("--lr", type=float, help="base learning rate")
+parser.add_argument("--final_lr", type=float, help="final learning rate")
+parser.add_argument("--freeze_prototypes_niters", default=5005, type=int,
+                    help="freeze the prototypes during this many iterations from the start (default: 5005).")
 parser.add_argument("--weight_decay", default=1e-6, type=float, help="weight decay")
 parser.add_argument("--start_warmup", default=0, type=float,
                     help="initial warmup learning rate")
@@ -138,7 +138,7 @@ parser.add_argument('--model_kwargs', nargs='*', action=ParseKwargs, default={},
                     help='keyword arguments for model initialization passed as key1=value1 key2=value2')
 parser.add_argument("--hidden_mlp", default=2048, type=int,
                     help="hidden layer dimension in projection head")
-parser.add_argument("--checkpoint_freq", type=int, default=25,
+parser.add_argument("--checkpoint_freq", type=int, default=50,
                     help="Save the model periodically")
 parser.add_argument("--use_fp16", type=bool_flag, default=True,
                     help="whether to train with mixed precision or not")
@@ -156,7 +156,7 @@ parser.add_argument('--pretrained_model_path', default=None, type=str)
 def main():
     global args
     args = parser.parse_args()
-    populate_defaults_for_swav(args)
+    args = populate_defaults_for_swav(args)
     init_distributed_mode(args)
     fix_random_seeds(args.seed)
     if not os.path.exists(args.log_dir):
