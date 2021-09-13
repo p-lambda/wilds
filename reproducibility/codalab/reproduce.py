@@ -43,7 +43,7 @@ Example Usage:
 
     # To tune for multi-gpu runs
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm NoisyStudent --random --gpus 2 --dry-run
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets civilcomments --algorithm PseudoLabel --random --gpus 2 --unlabeled-split extra_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_pseudolabel_tune 
@@ -191,6 +191,9 @@ class CodaLabReproducibility:
 
             for i in range(num_of_samples):
                 hyperparameter_config = dict()
+                if gpus == 1:
+                    hyperparameter_config["gradient_accumulation_steps"] = 4
+
                 for hyperparameter, values in search_space[dataset].items():
                     if hyperparameter == "n_epochs":
                         continue
@@ -534,9 +537,11 @@ class CodaLabReproducibility:
         if gpus > 1 and algorithm != "NoisyStudent":
             gpu_indices = [str(gpu) for gpu in range(gpus)]
             command += f" --device {' '.join(gpu_indices)} --loader_kwargs num_workers=4 pin_memory=True"
-            command += f" --unlabeled_loader_kwargs num_workers=8 pin_memory=True"
         else:
             command += f" --loader_kwargs num_workers=4 pin_memory=True"
+
+        if unlabeled_split != None:
+            command += f" --unlabeled_loader_kwargs num_workers=8 pin_memory=True"
 
         # Configure wandb
         command += (
