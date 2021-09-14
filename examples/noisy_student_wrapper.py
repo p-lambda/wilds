@@ -27,6 +27,14 @@ args = parser.parse_args()
 
 prefix = pathlib.Path(__file__).parent.resolve()
 
+def remove_arg(args, arg_to_remove):
+    idx = args.cmd.index(f"--{arg_to_remove}")
+    value = args.cmd[idx + 1]
+    args.cmd = (
+        args.cmd[:idx] + args.cmd[idx + 2:]
+    )
+    return value
+
 # Parse out a few args that we need
 try:
     idx = args.cmd.index("--log_dir")
@@ -46,11 +54,10 @@ try:
 except:
     seed = 0  # default in run_expt.py
 
-idx = args.cmd.index("--unlabeled_split")
-unlabeled_split = args.cmd[idx + 1]
-args.cmd = (
-    args.cmd[:idx] + args.cmd[idx + 2 :]
-)  # will need to modify this between iters, so remove from args.cmd
+# Train the teacher model without unlabeled data and default values for gradient_accumulation_steps and n_epochs
+unlabeled_split = remove_arg(args, "unlabeled_split")
+gradient_accumulation_steps = remove_arg(args, "gradient_accumulation_steps")
+n_epochs = remove_arg(args, "n_epochs")
 
 # Run teacher
 cmd = f"python {prefix}/run_expt.py --algorithm NoisyStudent {' '.join(args.cmd)} --log_dir {log_dir}/teacher"
@@ -61,7 +68,8 @@ subprocess.Popen(cmd, shell=True).wait()
 for i in range(1, args.num_iters + 1):
     cmd = (
         f"python {prefix}/run_expt.py --algorithm NoisyStudent {' '.join(args.cmd)}"
-        f" --unlabeled_split {unlabeled_split} --log_dir {log_dir}/student{i}"
+        f" --unlabeled_split {unlabeled_split} --gradient_accumulation_steps {gradient_accumulation_steps}"
+        f" --n_epochs {n_epochs} --log_dir {log_dir}/student{i}"
         + f" --teacher_model_path {log_dir}/"
         + ("teacher" if i == 1 else f"student{i-1}")
         + f"/{dataset}_seed:{seed}_epoch:best_model.pth"

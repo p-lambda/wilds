@@ -282,21 +282,25 @@ NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE = {
             "lr": [-4, -2],
             "weight_decay": [-3, -1],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+            "n_epochs": get_epochs_unlabeled(DEFAULT_CAMELYON17_EPOCHS),
         },
         "iwildcam": {
             "lr": [-6, -4],
             "weight_decay": [-4, -2],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+            "n_epochs": get_epochs_unlabeled(DEFAULT_IWILDCAM_EPOCHS),
         },
         "fmow": {
             "lr": [-5, -3],
             "weight_decay": [-5, -3],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+            "n_epochs": get_epochs_unlabeled(DEFAULT_FMOW_EPOCHS),
         },
         "poverty": {
             "lr": [-4, -2],
             "weight_decay": [-5, -3],
             "unlabeled_batch_size_frac": [3 / 4, 7 / 8, 15 / 16],
+            "n_epochs": get_epochs_unlabeled(DEFAULT_POVERTY_EPOCHS),
         },
     },
 }

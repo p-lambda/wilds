@@ -42,7 +42,7 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
 
     # To tune for multi-gpu runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm NoisyStudent --random --gpus 2 --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
@@ -521,8 +521,9 @@ class CodaLabReproducibility:
         unlabeled_split=None,
         gpus=1,
     ):
+        executable = "noisy_student_wrapper.py 2" if algorithm == "NoisyStudent" else "run_expt.py"
         command = (
-            f"python -Wi wilds/examples/run_expt.py --root_dir $HOME --log_dir $HOME "
+            f"python -Wi wilds/examples/{executable} --root_dir $HOME --log_dir $HOME "
             f"--dataset {dataset_name} --algorithm {algorithm} --seed {seed}"
         )
         if unlabeled_split:
