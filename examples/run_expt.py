@@ -259,7 +259,7 @@ def main():
                     config.teacher_model_path,  f"{config.dataset}_seed:{config.seed}_epoch:best_model.pth"
                 )
 
-            d_out = infer_d_out(full_dataset)
+            d_out = infer_d_out(full_dataset, config)
             teacher_model = initialize_model(config, d_out).to(config.device)
             load(teacher_model, config.teacher_model_path, device=config.device)
             # Infer teacher outputs on weakly augmented unlabeled examples in sequential order

@@ -44,7 +44,7 @@ Example Usage:
     # To tune for multi-gpu runs
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets civilcomments --algorithm PseudoLabel --random --gpus 1 --unlabeled-split extra_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_pseudolabel_tune 
 
@@ -286,7 +286,7 @@ class CodaLabReproducibility:
             f"--request-gpus={gpus}",
             "--request-disk=10g",
             f"--request-memory={memory_gb}g",
-            "--request-priority=30",
+            "--request-priority=50",
             # f"--request-queue={f'multigpu{dataset}' if gpus > 1 else f'singlegpu{dataset}'}",
         ]
         if gpus > 1:
