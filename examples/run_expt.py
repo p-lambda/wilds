@@ -85,7 +85,7 @@ def main():
     parser.add_argument('--randaugment_n', type=int, help='N parameter of RandAugment - the number of transformations to apply.')
 
     # Objective
-    parser.add_argument('--loss_function', choices = supported.losses)
+    parser.add_argument('--loss_function', choices=supported.losses)
     parser.add_argument('--loss_kwargs', nargs='*', action=ParseKwargs, default={},
         help='keyword arguments for loss initialization passed as key1=value1 key2=value2')
 
