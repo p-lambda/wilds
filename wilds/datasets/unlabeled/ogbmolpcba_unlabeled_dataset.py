@@ -45,7 +45,7 @@ class OGBPCBAUnlabeledDataset(WILDSUnlabeledDataset):
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
         self._version = version
         if version is not None:
-            raise ValueError('Versioning for Unalabeled MolPCBA is handled through the OGB package. Please set version=none.')
+            raise ValueError('Versioning for Unlabeled MolPCBA is handled through the OGB package. Please set version=none.')
         # internally call ogb package
         
         ### Setting up meta-information for the dataset
