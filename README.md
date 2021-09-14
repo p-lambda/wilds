@@ -69,6 +69,7 @@ git clone git@github.com:p-lambda/wilds.git
 To run these scripts, you will also need to install this additional dependency:
 
 - transformers>=3.5.0
+- pytorch-scatter
 
 All baseline experiments in the paper were run on Python 3.8.5 and CUDA 10.1.
 
