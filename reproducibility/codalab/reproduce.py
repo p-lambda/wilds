@@ -44,7 +44,7 @@ Example Usage:
     # To tune for multi-gpu runs
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm NoisyStudent --random --gpus 2 --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets civilcomments --algorithm PseudoLabel --random --gpus 2 --unlabeled-split extra_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 2 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_pseudolabel_tune 
 
@@ -183,15 +183,14 @@ class CodaLabReproducibility:
                 unlabeled_dataset_uuid = self._get_bundle_uuid(
                     f"{dataset}_unlabeled", worksheet_uuid
                 )
-                self.value = self._get_field_value(unlabeled_dataset_uuid, "name")
-                unlabeled_dataset_fullname = self.value
+                unlabeled_dataset_fullname = self._get_field_value(unlabeled_dataset_uuid, "name")
             else:
                 unlabeled_dataset_uuid = None
                 unlabeled_dataset_fullname = None
 
             for i in range(num_of_samples):
                 hyperparameter_config = dict()
-                if gpus == 1:
+                if gpus == 1 and "ERM" not in algorithm:
                     hyperparameter_config["gradient_accumulation_steps"] = 4
 
                 for hyperparameter, values in search_space[dataset].items():
@@ -536,12 +535,12 @@ class CodaLabReproducibility:
         # Configure Multi-GPU
         if gpus > 1 and algorithm != "NoisyStudent":
             gpu_indices = [str(gpu) for gpu in range(gpus)]
-            command += f" --device {' '.join(gpu_indices)} --loader_kwargs num_workers=4 pin_memory=True"
-        else:
-            command += f" --loader_kwargs num_workers=4 pin_memory=True"
+            command += f" --device {' '.join(gpu_indices)}"
 
-        if unlabeled_split != None:
-            command += f" --unlabeled_loader_kwargs num_workers=8 pin_memory=True"
+        if dataset_name not in ["amazon", "civilcomments"]:
+            command += f" --loader_kwargs num_workers=4 pin_memory=True"
+            if unlabeled_split != None:
+                command += f" --unlabeled_loader_kwargs num_workers=8 pin_memory=True"
 
         # Configure wandb
         # Disable pushing to WandB for Amazon - we're hitting retry loops when pushing metrics at the end of the run
