@@ -6,7 +6,6 @@ from algorithms.ERM import ERM
 from algorithms.single_model_algorithm import SingleModelAlgorithm
 from optimizer import initialize_optimizer_with_model_params
 from wilds.common.utils import split_into_groups
-import torch.autograd.profiler as profiler
 
 class DropoutModel(nn.Module):
     def __init__(self, featurizer, classifier, dropout_rate):
@@ -71,46 +70,38 @@ class NoisyStudent(SingleModelAlgorithm):
         # additional logging
         self.logged_fields.append("classification_loss")
         self.logged_fields.append("consistency_loss")
-        
-        self.csv_path = f'{config.log_dir}/profile.csv'
 
     def process_batch(self, labeled_batch, unlabeled_batch=None):
-        with profiler.profile(use_cuda=True) as prof:
-            # Labeled examples
-            x, y_true, metadata = labeled_batch
-            x = x.to(self.device)
-            y_true = y_true.to(self.device)
-            g = self.grouper.metadata_to_group(metadata).to(self.device)
-            # package the results
-            results = {
-                'g': g,
-                'y_true': y_true,
-                'metadata': metadata
-            }
+        # Labeled examples
+        x, y_true, metadata = labeled_batch
+        x = x.to(self.device)
+        y_true = y_true.to(self.device)
+        g = self.grouper.metadata_to_group(metadata).to(self.device)
+        # package the results
+        results = {
+            'g': g,
+            'y_true': y_true,
+            'metadata': metadata
+        }
 
-            # Unlabeled examples with pseudolabels
-            if unlabeled_batch is not None:
-                x_unlab, y_pseudo, metadata = unlabeled_batch # x should be strongly augmented
-                x_unlab = x_unlab.to(self.device)
-                g = self.grouper.metadata_to_group(metadata).to(self.device)
-                y_pseudo = y_pseudo.to(self.device)
-                results['unlabeled_metadata'] = metadata
-                results['unlabeled_y_pseudo'] = y_pseudo 
-                results['unlabeled_g'] = g
-
-            # Concat and call forward
-            n_lab = x.shape[0]
-            if unlabeled_batch is not None: x_concat = torch.cat((x, x_unlab), dim=0)
-            else: x_concat = x
-            outputs = self.model(x_concat)
-            results['y_pred'] = outputs[:n_lab]
-            if unlabeled_batch is not None:
-                results['unlabeled_y_pred'] = outputs[n_lab:]
-
+        # Unlabeled examples with pseudolabels
         if unlabeled_batch is not None:
-            avgs=prof.key_averages()[0]
-            with open(self.csv_path,'a') as fd:
-                fd.write(f'{avgs.cpu_time_total},{avgs.cuda_time_total}\n')
+            x_unlab, y_pseudo, metadata = unlabeled_batch # x should be strongly augmented
+            x_unlab = x_unlab.to(self.device)
+            g = self.grouper.metadata_to_group(metadata).to(self.device)
+            y_pseudo = y_pseudo.to(self.device)
+            results['unlabeled_metadata'] = metadata
+            results['unlabeled_y_pseudo'] = y_pseudo 
+            results['unlabeled_g'] = g
+
+        # Concat and call forward
+        n_lab = x.shape[0]
+        if unlabeled_batch is not None: x_concat = torch.cat((x, x_unlab), dim=0)
+        else: x_concat = x
+        outputs = self.model(x_concat)
+        results['y_pred'] = outputs[:n_lab]
+        if unlabeled_batch is not None:
+            results['unlabeled_y_pred'] = outputs[n_lab:]
 
         return results
 
