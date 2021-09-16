@@ -75,7 +75,7 @@ class NoisyStudent(SingleModelAlgorithm):
         self.csv_path = f'{config.log_dir}/profile.csv'
 
     def process_batch(self, labeled_batch, unlabeled_batch=None):
-        with profiler.profile() as prof:
+        with profiler.profile(use_cuda=True) as prof:
             # Labeled examples
             x, y_true, metadata = labeled_batch
             x = x.to(self.device)
