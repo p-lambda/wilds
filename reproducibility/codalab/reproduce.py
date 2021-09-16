@@ -287,7 +287,7 @@ class CodaLabReproducibility:
             "--request-disk=10g",
             f"--request-memory={memory_gb}g",
             "--request-priority=50",
-            # f"--request-queue={f'multigpu{dataset}' if gpus > 1 else f'singlegpu{dataset}'}",
+            # "--request-queue=gcp",
         ]
         if gpus > 1:
             commands.append("--request-queue=multi")
