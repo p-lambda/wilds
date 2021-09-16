@@ -104,7 +104,8 @@ class NoisyStudent(SingleModelAlgorithm):
             else: x_concat = x
             outputs = self.model(x_concat)
             results['y_pred'] = outputs[:n_lab]
-            results['unlabeled_y_pred'] = outputs[n_lab:]
+            if unlabeled_batch is not None:
+                results['unlabeled_y_pred'] = outputs[n_lab:]
 
         if unlabeled_batch is not None:
             avgs=prof.key_averages()[0]
