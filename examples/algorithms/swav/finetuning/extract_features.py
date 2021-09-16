@@ -167,6 +167,7 @@ if __name__ == "__main__":
         action="store_true",
         help="Whether to extract features with the CPU (defaults to false).",
     )
+    parser.add_argument('--pretrained_model_path', default=None, type=str, help="Specify a path to a pretrained model's weights")
 
     # Parse args and run this script
     args = parser.parse_args()
