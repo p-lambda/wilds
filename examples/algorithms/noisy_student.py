@@ -70,32 +70,39 @@ class NoisyStudent(SingleModelAlgorithm):
         # additional logging
         self.logged_fields.append("classification_loss")
         self.logged_fields.append("consistency_loss")
-        
+
     def process_batch(self, labeled_batch, unlabeled_batch=None):
         # Labeled examples
         x, y_true, metadata = labeled_batch
         x = x.to(self.device)
         y_true = y_true.to(self.device)
         g = self.grouper.metadata_to_group(metadata).to(self.device)
-        outputs = self.model(x)
         # package the results
         results = {
             'g': g,
             'y_true': y_true,
-            'y_pred': outputs,
             'metadata': metadata
         }
-        # Unlabeled examples
+
+        # Unlabeled examples with pseudolabels
         if unlabeled_batch is not None:
-            x, y_pseudo, metadata = unlabeled_batch # x should be strongly augmented
-            x = x.to(self.device)
+            x_unlab, y_pseudo, metadata = unlabeled_batch # x should be strongly augmented
+            x_unlab = x_unlab.to(self.device)
             g = self.grouper.metadata_to_group(metadata).to(self.device)
             y_pseudo = y_pseudo.to(self.device)
-            outputs = self.model(x)
             results['unlabeled_metadata'] = metadata
             results['unlabeled_y_pseudo'] = y_pseudo 
-            results['unlabeled_y_pred'] = outputs
             results['unlabeled_g'] = g
+
+        # Concat and call forward
+        n_lab = x.shape[0]
+        if unlabeled_batch is not None: x_concat = torch.cat((x, x_unlab), dim=0)
+        else: x_concat = x
+        outputs = self.model(x_concat)
+        results['y_pred'] = outputs[:n_lab]
+        if unlabeled_batch is not None:
+            results['unlabeled_y_pred'] = outputs[n_lab:]
+
         return results
 
     def objective(self, results):
@@ -103,7 +110,7 @@ class NoisyStudent(SingleModelAlgorithm):
         classification_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
 
         # Pseudolabel loss
-        if 'unlabeled_y_pred' in results: 
+        if 'unlabeled_y_pseudo' in results: 
             consistency_loss = self.unlabeled_loss.compute(
                 results['unlabeled_y_pred'], 
                 results['unlabeled_y_pseudo'], 

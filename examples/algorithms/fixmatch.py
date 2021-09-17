@@ -74,18 +74,15 @@ class FixMatch(SingleModelAlgorithm):
         x = x.to(self.device)
         y_true = y_true.to(self.device)
         g = self.grouper.metadata_to_group(metadata).to(self.device)
-        outputs = self.model(x)
         # package the results
         results = {
             'g': g,
             'y_true': y_true,
-            'y_pred': outputs,
             'metadata': metadata
         }
         # Unlabeled examples
         if unlabeled_batch is not None:
-            x, metadata = unlabeled_batch
-            x_weak, x_strong = x
+            (x_weak, x_strong), metadata = unlabeled_batch
             x_weak = x_weak.to(self.device)
             x_strong = x_strong.to(self.device)
 
@@ -99,9 +96,16 @@ class FixMatch(SingleModelAlgorithm):
                 pseudolabels = self.process_outputs_function(outputs)
                 results['unlabeled_weak_y_pseudo'] = pseudolabels
                 results['unlabeled_mask'] = mask
-
-            outputs = self.model(x_strong)
-            results['unlabeled_strong_y_pred'] = outputs
+        
+        # Concat and call forward
+        n_lab = x.shape[0]
+        if unlabeled_batch is not None: x_concat = torch.cat((x, x_strong), dim=0)
+        else: x_concat = x
+        outputs = self.model(x_concat)
+        results['y_pred'] = outputs[:n_lab]
+        if unlabeled_batch is not None:
+            results['unlabeled_strong_y_pred'] = outputs[n_lab:]
+        
         return results
 
     def objective(self, results):

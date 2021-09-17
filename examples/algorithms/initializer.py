@@ -19,7 +19,7 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
 
     # Other config
     n_train_steps = math.ceil(len(train_loader)/config.gradient_accumulation_steps) * config.n_epochs
-    loss = initialize_loss(config, d_out)
+    loss = initialize_loss(config.loss_function, config, d_out)
     metric = algo_log_metrics[config.algo_log_metric]
 
     if config.algorithm == 'ERM':
@@ -102,8 +102,8 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
             metric=metric,
             n_train_steps=n_train_steps)
     elif config.algorithm=='NoisyStudent':
-        if config.soft_pseudolabels: unlabeled_loss = losses["cross_entropy_logits"]
-        else: unlabeled_loss = losses[config.loss_function]
+        if config.soft_pseudolabels: unlabeled_loss = initialize_loss("cross_entropy_logits", config, d_out)
+        else: unlabeled_loss = loss
         algorithm = NoisyStudent(
             config=config,
             d_out=d_out,
