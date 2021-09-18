@@ -36,9 +36,9 @@ Usage:
     
 Example Usage:
     # To tune for ERM runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets poverty --algorithm ERMAugment --random --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm ERM --random --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --experiment fmow_erm_tune 
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm ERMAugment --random --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm ERM --random --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
 
     # To tune for multi-gpu runs
@@ -287,7 +287,7 @@ class CodaLabReproducibility:
             "--request-disk=10g",
             f"--request-memory={memory_gb}g",
             "--request-priority=50",
-            # "--request-queue=gcp",
+            "--request-queue=cluster",
         ]
         if gpus > 1:
             commands.append("--request-queue=multi")
@@ -333,7 +333,7 @@ class CodaLabReproducibility:
                     "cl",
                     "search",
                     experiment_name,
-                    "state=ready",
+                    "state=ready,killed",
                     f"host_worksheet={worksheet_uuid}",
                     ".limit=100",
                     "--uuid-only",
@@ -429,7 +429,7 @@ class CodaLabReproducibility:
                 "cl",
                 "search",
                 experiment,
-                "state=ready",
+                "state=ready,killed",
                 "host_worksheet=%s" % worksheet_uuid,
                 ".limit=10",
                 "--uuid-only",
@@ -548,7 +548,7 @@ class CodaLabReproducibility:
         if dataset_name != "amazon":
             command += (
                 f" --use_wandb --wandb_api_key_path wandb_api_key.txt --wandb_kwargs"
-                f" entity=wilds project={algorithm.lower()}-{dataset_name.lower()} group={experiment_name}_gpus{gpus}"
+                f" entity=wilds project={algorithm.lower()}-{dataset_name.lower()} group={experiment_name}_gpus{gpus}_final"
             )
         return command
 
