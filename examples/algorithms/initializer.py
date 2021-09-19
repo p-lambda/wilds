@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 import torch
 import math
 from wilds.common.utils import get_counts
@@ -101,9 +102,11 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
             loss=loss,
             metric=metric,
             n_train_steps=n_train_steps)
-    elif config.algorithm=='NoisyStudent':
-        if config.soft_pseudolabels: unlabeled_loss = initialize_loss("cross_entropy_logits", config, d_out)
-        else: unlabeled_loss = loss
+    elif config.algorithm == 'NoisyStudent':
+        if config.soft_pseudolabels:
+            unlabeled_loss = initialize_loss("cross_entropy_logits", config, d_out)
+        else:
+            unlabeled_loss = loss
         algorithm = NoisyStudent(
             config=config,
             d_out=d_out,
