@@ -38,10 +38,10 @@ def populate_defaults(config):
         )
 
     if config.additional_train_transform is not None:
-        if config.algorithm in ["NoisyStudent", "FixMatch"]:
+        if config.algorithm == "NoisyStudent":
             raise ValueError(
                 "Cannot pass in a value for additional_train_transform, NoisyStudent "
-                "and FixMatch already have default transformations for the training data."
+                "already has a default transformation for the training data."
             )
 
     # implied defaults from choice of dataset
