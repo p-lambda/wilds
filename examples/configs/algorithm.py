@@ -45,7 +45,7 @@ algorithm_defaults = {
         'self_training_threshold': 0.7,
         'scheduler': 'FixMatchLR',
         'randaugment_n': 2,
-        'additional_train_transform': 'weak',           # Apply weak augmentation to labeled examples for FixMatch
+        'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled examples
     },
     'PseudoLabel': {
         'train_loader': 'standard',
