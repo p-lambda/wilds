@@ -1,4 +1,4 @@
-import os, csv
+import os
 import time
 import argparse
 import pandas as pd
@@ -58,6 +58,7 @@ def main():
 
     # Loaders
     parser.add_argument('--loader_kwargs', nargs='*', action=ParseKwargs, default={})
+    parser.add_argument('--unlabeled_loader_kwargs', nargs='*', action=ParseKwargs, default={})
     parser.add_argument('--train_loader', choices=['standard', 'group'])
     parser.add_argument('--uniform_over_groups', type=parse_bool, const=True, nargs='?')
     parser.add_argument('--distinct_groups', type=parse_bool, const=True, nargs='?')
@@ -84,7 +85,7 @@ def main():
     parser.add_argument('--randaugment_n', type=int, help='N parameter of RandAugment - the number of transformations to apply.')
 
     # Objective
-    parser.add_argument('--loss_function', choices = supported.losses)
+    parser.add_argument('--loss_function', choices=supported.losses)
     parser.add_argument('--loss_kwargs', nargs='*', action=ParseKwargs, default={},
         help='keyword arguments for loss initialization passed as key1=value1 key2=value2')
 
@@ -258,7 +259,7 @@ def main():
                     config.teacher_model_path,  f"{config.dataset}_seed:{config.seed}_epoch:best_model.pth"
                 )
 
-            d_out = infer_d_out(full_dataset)
+            d_out = infer_d_out(full_dataset, config)
             teacher_model = initialize_model(config, d_out).to(config.device)
             load(teacher_model, config.teacher_model_path, device=config.device)
             # Infer teacher outputs on weakly augmented unlabeled examples in sequential order
@@ -275,7 +276,7 @@ def main():
                 dataset=unlabeled_split_dataset,
                 grouper=train_grouper,
                 batch_size=config.unlabeled_batch_size,
-                **config.loader_kwargs
+                **config.unlabeled_loader_kwargs
             )
             teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
             teacher_outputs = teacher_outputs.to(torch.device("cpu"))
@@ -302,7 +303,7 @@ def main():
             grouper=train_grouper,
             distinct_groups=config.distinct_groups,
             n_groups_per_batch=config.unlabeled_n_groups_per_batch,
-            **config.loader_kwargs
+            **config.unlabeled_loader_kwargs
         )
     else:
         train_grouper = CombinatorialGrouper(
