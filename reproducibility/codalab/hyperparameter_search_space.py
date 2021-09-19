@@ -22,9 +22,9 @@ MAX_BATCH_SIZES = {
 DEFAULT_UNLABELED_FRAC = [3 / 4, 7 / 8, 15 / 16]
 
 
-def get_epochs_unlabeled(dataset, parts=[4, 8, 16]):
+def get_epochs_unlabeled(dataset, factor=1, parts=[4, 8, 16]):
     default_n_epochs = dataset_defaults[dataset]["n_epochs"]
-    return [math.ceil(default_n_epochs / part) for part in parts]
+    return [math.ceil((default_n_epochs * factor) / part) for part in parts]
 
 
 def get_lr_grid(dataset, grad_accumulation=1):
@@ -186,7 +186,7 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "scheduler": ["FixMatchLR"],
-            "n_epochs": get_epochs_unlabeled(CAMELYON17),
+            "n_epochs": get_epochs_unlabeled(CAMELYON17, factor=2),
         },
         IWILDCAM: {
             "lr": get_lr_grid(IWILDCAM, grad_accumulation=4),
@@ -194,7 +194,7 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "scheduler": ["FixMatchLR"],
-            "n_epochs": get_epochs_unlabeled(IWILDCAM),
+            "n_epochs": get_epochs_unlabeled(IWILDCAM, factor=2),
         },
         FMOW: {
             "lr": get_lr_grid(FMOW, grad_accumulation=4),
@@ -202,7 +202,7 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "scheduler": ["FixMatchLR"],
-            "n_epochs": get_epochs_unlabeled(FMOW),
+            "n_epochs": get_epochs_unlabeled(FMOW, factor=2),
         },
         POVERTY: {
             "lr": get_lr_grid(POVERTY, grad_accumulation=4),
@@ -210,7 +210,7 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "scheduler": ["FixMatchLR"],
-            "n_epochs": get_epochs_unlabeled(POVERTY),
+            "n_epochs": get_epochs_unlabeled(POVERTY, factor=2),
         },
     },
 }
@@ -222,42 +222,48 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
             "self_training_lambda": [1],
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
-            "n_epochs": get_epochs_unlabeled(AMAZON),
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(AMAZON, factor=2),
         },
         CIVIL_COMMENTS: {
             "lr": get_lr_grid(CIVIL_COMMENTS, grad_accumulation=4),
             "self_training_lambda": [1],
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
-            "n_epochs": get_epochs_unlabeled(CIVIL_COMMENTS),
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(CIVIL_COMMENTS, factor=2),
         },
         CAMELYON17: {
             "lr": get_lr_grid(CAMELYON17, grad_accumulation=4),
             "self_training_lambda": [1],
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
-            "n_epochs": get_epochs_unlabeled(CAMELYON17),
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(CAMELYON17, factor=2),
         },
         IWILDCAM: {
             "lr": get_lr_grid(IWILDCAM, grad_accumulation=4),
             "self_training_lambda": [1],
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
-            "n_epochs": get_epochs_unlabeled(IWILDCAM),
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(IWILDCAM, factor=2),
         },
         FMOW: {
             "lr": get_lr_grid(FMOW, grad_accumulation=4),
             "self_training_lambda": [1],
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
-            "n_epochs": get_epochs_unlabeled(FMOW),
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(FMOW, factor=2),
         },
         POVERTY: {
             "lr": get_lr_grid(POVERTY, grad_accumulation=4),
             "self_training_lambda": [1],
             "self_training_threshold": [0.7, 0.95],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
-            "n_epochs": get_epochs_unlabeled(POVERTY),
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(POVERTY, factor=2),
         },
     },
 }
