@@ -25,7 +25,7 @@ NOISY_STUDENT_TEACHERS = {
     CAMELYON17: "0x991cce12e08948fa9a441c5a12972bf7",
     IWILDCAM: "0x52f2dd8e448a4c7e802783fa35c269c6",
     FMOW: "",
-    POVERTY: "",
+    POVERTY: "",    # TODO: run Poverty + ERM DA
 }
 
 
