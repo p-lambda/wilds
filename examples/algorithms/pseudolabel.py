@@ -76,31 +76,37 @@ class PseudoLabel(SingleModelAlgorithm):
         x = x.to(self.device)
         y_true = y_true.to(self.device)
         g = self.grouper.metadata_to_group(metadata).to(self.device)
-        outputs = self.model(x)
         # package the results
         results = {
             'g': g,
             'y_true': y_true,
-            'y_pred': outputs,
             'metadata': metadata
         }
         # Unlabeled examples
         if unlabeled_batch is not None:
-            x, metadata = unlabeled_batch
-            x = x.to(self.device)
+            x_unlab, metadata = unlabeled_batch
+            x_unlab = x_unlab.to(self.device)
             g = self.grouper.metadata_to_group(metadata).to(self.device)
             results['unlabeled_metadata'] = metadata
             results['unlabeled_g'] = g
 
-            with torch.no_grad():
-                outputs = self.model(x)
-                mask = torch.max(F.softmax(outputs, -1), -1)[0] >= self.confidence_threshold
-                pseudolabels = self.process_outputs_function(outputs)
-                results['unlabeled_y_pseudo'] = pseudolabels
-                results['unlabeled_mask'] = mask
+        # Concat and call forward
+        n_lab = x.shape[0]
+        if unlabeled_batch is not None: x_concat = torch.cat((x, x_unlab), dim=0)
+        else: x_concat = x
 
-            outputs = self.model(x)
-            results['unlabeled_y_pred'] = outputs
+        outputs = self.model(x_concat)
+        results['y_pred'] = outputs[:n_lab]
+
+        if unlabeled_batch is not None:
+            logits = outputs[n_lab:]
+            results['unlabeled_y_pred'] = logits
+            pseudo = logits.detach().clone()
+            mask = torch.max(F.softmax(pseudo, -1), -1)[0] >= self.confidence_threshold
+            pseudolabels = self.process_outputs_function(pseudo)
+            results['unlabeled_y_pseudo'] = pseudolabels
+            results['unlabeled_mask'] = mask
+
         return results
 
     def objective(self, results):
@@ -109,10 +115,12 @@ class PseudoLabel(SingleModelAlgorithm):
         # Pseudolabeled loss
         if 'unlabeled_y_pseudo' in results:
             mask = results['unlabeled_mask']
-            consistency_loss = self.loss.compute(
-                results['unlabeled_y_pred'][mask], 
-                results['unlabeled_y_pseudo'][mask], 
-                return_dict=False)
+            masked_loss_output = self.loss.compute_element_wise(
+                results['unlabeled_y_pred'],
+                results['unlabeled_y_pseudo'],
+                return_dict=False,
+            ) * mask
+            consistency_loss = masked_loss_output.mean()
             pseudolabels_kept_frac = mask.count_nonzero().item() / mask.shape[0]
         else: 
             consistency_loss = 0

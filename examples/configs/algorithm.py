@@ -54,6 +54,7 @@ algorithm_defaults = {
         'self_training_lambda': 1,
         'self_training_threshold': 0.7,
         'pseudolabel_T2': 0.4,
+        'scheduler': 'FixMatchLR',
         'randaugment_n': 2,
         'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled examples
     },
