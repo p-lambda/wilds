@@ -105,6 +105,7 @@ def populate_defaults(config):
 
     return config
 
+
 def populate_config(config, template: dict, force_compatibility=False):
     """Populates missing (key, val) pairs in config with (key, val) in template.
     Example usage: populate config with defaults

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import os
+import traceback
 
 from models.layers import Identity
 from utils import load
@@ -134,9 +135,10 @@ def initialize_model(config, d_out, is_featurizer=False):
                     + (f'previously trained for {prev_epoch} epochs ' if prev_epoch else '')
                     + (f'with previous val metric {best_val_metric} ' if best_val_metric else '')
                 )
-            except:
-                print('Something went wrong loading the pretrained model.')
-                pass
+            except Exception as e:
+                print('Something went wrong loading the pretrained model:')
+                traceback.print_exc()
+                raise
 
     return model
 
