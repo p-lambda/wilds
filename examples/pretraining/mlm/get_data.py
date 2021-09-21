@@ -6,14 +6,14 @@ from tqdm import tqdm
 from collections import defaultdict
 import csv
 
-os.system('mkdir -p mlm_pretrain/data')
+os.system('mkdir -p examples/pretraining/mlm/data')
 
 
 ######################## CivilComments ########################
 CCU_metadata_df = pd.read_csv('data/civilcomments_unlabeled_v1.0/unlabeled_data_with_identities.csv', index_col=0)
 CCU_text_array = list(CCU_metadata_df['comment_text']) #1_551_515
 
-with open('mlm_pretrain/data/civilcomments_train.json', 'w') as outf:
+with open('examples/pretraining/mlm/data/civilcomments_train.json', 'w') as outf:
     for text in tqdm(CCU_text_array):
         print (json.dumps({'text': text}), file=outf)
 
@@ -21,7 +21,7 @@ with open('mlm_pretrain/data/civilcomments_train.json', 'w') as outf:
 CC_metadata_df = pd.read_csv('data/civilcomments_v1.0/all_data_with_identities.csv', index_col=0)
 CC_text_array_val = list(CC_metadata_df[CC_metadata_df['split'] == 'val']['comment_text']) #45_180
 
-with open('mlm_pretrain/data/civilcomments_val.json', 'w') as outf:
+with open('examples/pretraining/mlm/data/civilcomments_val.json', 'w') as outf:
     for text in tqdm(CC_text_array_val):
         print (json.dumps({'text': text}), file=outf)
 
@@ -58,22 +58,22 @@ _text_array_12  = list(amazon_data_df[amazon_split_df['split']==12]['reviewText'
 _text_array_13  = list(amazon_data_df[amazon_split_df['split']==13]['reviewText']) #2_927_841
 _text_array_val = list(amazon_data_df[amazon_split_df['split']==1]['reviewText']) #100_050
 
-with open('mlm_pretrain/data/amazon_train_11.json', 'w') as outf:
+with open('examples/pretraining/mlm/data/amazon_train_11.json', 'w') as outf:
     for text in tqdm(_text_array_11):
         print (json.dumps({'text': text}), file=outf)
 
-with open('mlm_pretrain/data/amazon_train_12.json', 'w') as outf:
+with open('examples/pretraining/mlm/data/amazon_train_12.json', 'w') as outf:
     for text in tqdm(_text_array_12):
         print (json.dumps({'text': text}), file=outf)
 
-with open('mlm_pretrain/data/amazon_train_13.json', 'w') as outf:
+with open('examples/pretraining/mlm/data/amazon_train_13.json', 'w') as outf:
     for text in tqdm(_text_array_13):
         print (json.dumps({'text': text}), file=outf)
 
-with open('mlm_pretrain/data/amazon_train_11_12_13.json', 'w') as outf:
+with open('examples/pretraining/mlm/data/amazon_train_11_12_13.json', 'w') as outf:
     for text in tqdm(_text_array_11 + _text_array_12 + _text_array_13):
         print (json.dumps({'text': text}), file=outf)
 
-with open('mlm_pretrain/data/amazon_val.json', 'w') as outf:
+with open('examples/pretraining/mlm/data/amazon_val.json', 'w') as outf:
     for text in tqdm(_text_array_val):
         print (json.dumps({'text': text}), file=outf)
