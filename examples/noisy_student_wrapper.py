@@ -16,26 +16,30 @@ Notes:
     - This command will use the FIRST occurrence of --log_dir (instead of the last).
 """
 import argparse
+import os
 import pathlib
 import pdb
 import subprocess
 
 parser = argparse.ArgumentParser()
 parser.add_argument("num_iters", type=int)
-parser.add_argument("initial_teacher_path", type=str) # required
+parser.add_argument("initial_teacher_path", type=str)  # required
 parser.add_argument("cmd", nargs=argparse.REMAINDER)
 args = parser.parse_args()
 
-assert args.initial_teacher_path.endswith('.pth')
+assert args.initial_teacher_path.endswith(".pth")
+assert os.path.exists(
+    args.initial_teacher_path
+), f"Model weights did not exist at {args.initial_teacher_path}"
 prefix = pathlib.Path(__file__).parent.resolve()
+
 
 def remove_arg(args, arg_to_remove):
     idx = args.cmd.index(f"--{arg_to_remove}")
     value = args.cmd[idx + 1]
-    args.cmd = (
-        args.cmd[:idx] + args.cmd[idx + 2:]
-    )
+    args.cmd = args.cmd[:idx] + args.cmd[idx + 2 :]
     return value
+
 
 # Parse out a few args that we need
 try:
@@ -63,16 +67,18 @@ n_epochs = remove_arg(args, "n_epochs")
 
 # Run student iters
 for i in range(1, args.num_iters + 1):
-    if (i == 1):
+    if i == 1:
         teacher_weights = args.initial_teacher_path
     else:
-        teacher_weights = f"{log_dir}/student{i-1}/{dataset}_seed:{seed}_epoch:best_model.pth"
+        teacher_weights = (
+            f"{log_dir}/student{i-1}/{dataset}_seed:{seed}_epoch:best_model.pth"
+        )
     cmd = (
         f"python {prefix}/run_expt.py --algorithm NoisyStudent {' '.join(args.cmd)}"
         + f" --unlabeled_split {unlabeled_split} --gradient_accumulation_steps {gradient_accumulation_steps}"
         + f" --n_epochs {n_epochs} --log_dir {log_dir}/student{i}"
         + f" --teacher_model_path {teacher_weights}"
-        + f" --pretrained_model_path {teacher_weights}" # warm starting        
+        + f" --pretrained_model_path {teacher_weights}"  # warm starting
     )
     print(f">>> Running {cmd}")
     subprocess.Popen(cmd, shell=True).wait()
