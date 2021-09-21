@@ -17,6 +17,7 @@ from reproducibility.codalab.hyperparameter_search_space import (
     FIXMATCH_HYPERPARAMETER_SEARCH_SPACE,
     PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE,
     NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE,
+    NOISY_STUDENT_TEACHERS,
 )
 from reproducibility.codalab.util.analysis_utils import (
     compile_results,
@@ -52,7 +53,7 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --random --coarse --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_deepcoral_tune
   
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets amazon --algorithm deepCORAL --random --coarse --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm deepCORAL --random --coarse --unlabeled-split extra_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x5eebc93ea19b4dd99aa68871d18d7cb2 --datasets fmow --experiment fmow_dann_coarse_valunlabeled_tune	
 
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm DANN --random --unlabeled-split test_unlabeled --dry-run
@@ -233,6 +234,9 @@ class CodaLabReproducibility:
                     dataset_fullname: dataset_uuid,
                     "wandb_api_key.txt": wandb_api_key_uuid,
                 }
+                if algorithm == "NoisyStudent":
+                    dependencies["teacher"] = NOISY_STUDENT_TEACHERS[dataset]
+
                 if unlabeled_dataset_uuid:
                     dependencies[unlabeled_dataset_fullname] = unlabeled_dataset_uuid
 
@@ -287,7 +291,7 @@ class CodaLabReproducibility:
             "--request-disk=10g",
             f"--request-memory={memory_gb}g",
             "--request-priority=1",
-            # "--request-queue=cluster",
+            "--request-queue=gcp",
         ]
         if gpus > 1:
             commands.append("--request-queue=multi")
@@ -521,7 +525,10 @@ class CodaLabReproducibility:
         unlabeled_split=None,
         gpus=1,
     ):
-        executable = "noisy_student_wrapper.py 2" if algorithm == "NoisyStudent" else "run_expt.py"
+        if algorithm == "NoisyStudent":
+            executable = f"noisy_student_wrapper.py 2 teacher/{dataset_name}_seed:0_epoch:best_model.pth "
+        else:
+            executable = "run_expt.py"
         command = (
             f"python -Wi wilds/examples/{executable} --root_dir $HOME --log_dir $HOME "
             f"--dataset {dataset_name} --algorithm {algorithm} --seed {seed}"

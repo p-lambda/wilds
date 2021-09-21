@@ -21,6 +21,13 @@ MAX_BATCH_SIZES = {
 
 DEFAULT_UNLABELED_FRAC = [3 / 4, 7 / 8, 15 / 16]
 
+NOISY_STUDENT_TEACHERS = {
+    CAMELYON17: "0x991cce12e08948fa9a441c5a12972bf7",
+    IWILDCAM: "0x52f2dd8e448a4c7e802783fa35c269c6",
+    FMOW: "0x3b7e033b88464f53a3c432614bda72d3",
+    POVERTY: "",    # TODO: run Poverty + ERM DA
+}
+
 
 def get_epochs_unlabeled(dataset, factor=1, parts=[4, 8, 16]):
     default_n_epochs = dataset_defaults[dataset]["n_epochs"]
