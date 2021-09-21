@@ -67,7 +67,7 @@ parser.add_argument('--root_dir', required=True,
                     help='The directory where [dataset]/data can be found (or should be downloaded to, if it does not exist).')
 parser.add_argument('--dataset_kwargs', nargs='*', action=ParseKwargs, default={})
 parser.add_argument('--loader_kwargs', nargs='*', action=ParseKwargs, default={})
-parser.add_argument('--splits', nargs='+', default=["test_unlabeled"])
+parser.add_argument('--splits', nargs='+')
 
 #########################
 #### data aug params ####

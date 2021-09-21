@@ -34,6 +34,7 @@ def get_queue_length(dataset, gpus=NUM_GPUS):
 # All the defaults are configured to run on 4 GPUs.
 DATASET_DEFAULTS = {
     "camelyon17": {
+        "splits": ["test_unlabeled"],
         "split_scheme": "official",
         "dataset_kwargs": {},
         "model": "densenet121",
@@ -64,6 +65,7 @@ DATASET_DEFAULTS = {
         },
     },
     "domainnet": {
+        "splits": ["test_unlabeled"],
         "split_scheme": "official",
         "dataset_kwargs": {
             "source_domain": "sketch",
@@ -97,6 +99,7 @@ DATASET_DEFAULTS = {
         },
     },
     "fmow": {
+        "splits": ["test_unlabeled"],
         "split_scheme": "official",
         "dataset_kwargs": {"seed": 111, "use_ood_val": True},
         "model": "densenet121",
@@ -126,6 +129,7 @@ DATASET_DEFAULTS = {
         },
     },
     "iwildcam": {
+        "splits": ["extra_unlabeled"],
         "dataset_kwargs": {},
         "loss_function": "cross_entropy",
         "val_metric": "F1-macro_all",
@@ -157,6 +161,7 @@ DATASET_DEFAULTS = {
         },
     },
     "poverty": {
+        "splits": ["test_unlabeled"],
         "split_scheme": "official",
         "dataset_kwargs": {"no_nl": False, "fold": "A", "use_ood_val": True},
         "model": "resnet18_ms",
