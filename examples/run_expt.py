@@ -41,7 +41,6 @@ def main():
     parser.add_argument('--algorithm', required=True, choices=supported.algorithms)
     parser.add_argument('--root_dir', required=True,
                         help='The directory where [dataset]/data can be found (or should be downloaded to, if it does not exist).')
-
     parser.add_argument('--pretrained_model_path', default=None, type=str, help="Specify a path to a pretrained model's weights")
     # Dataset
     parser.add_argument('--split_scheme', help='Identifies how the train/val/test split is constructed. Choices are dataset-specific.')

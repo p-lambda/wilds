@@ -136,7 +136,7 @@ def initialize_model(config, d_out, is_featurizer=False):
                     + (f'with previous val metric {best_val_metric} ' if best_val_metric else '')
                 )
             except Exception as e:
-                print(f'Something went wrong loading the pretrained model: {e}')
+                print('Something went wrong loading the pretrained model:')
                 traceback.print_exc()
                 raise
 
