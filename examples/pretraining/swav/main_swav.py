@@ -72,14 +72,10 @@ parser.add_argument('--splits', nargs='+')
 #########################
 #### data aug params ####
 #########################
-parser.add_argument("--nmb_crops", type=int, default=[2, 6], nargs="+",
-                    help="list of number of crops (default: [2, 6])")
-parser.add_argument("--size_crops", type=int, default=[224, 96], nargs="+",
-                    help="crops resolutions (default: [224, 96])")
-parser.add_argument("--min_scale_crops", type=float, default=[0.14, 0.05], nargs="+",
-                    help="argument in RandomResizedCrop (default: [0.14, 0.05])")
-parser.add_argument("--max_scale_crops", type=float, default=[1, 0.14], nargs="+",
-                    help="argument in RandomResizedCrop (default: [1., 0.14])")
+parser.add_argument("--nmb_crops", type=int, nargs="+", help="list of number of crops")
+parser.add_argument("--size_crops", type=int, nargs="+", help="crops resolutions")
+parser.add_argument("--min_scale_crops", type=float, nargs="+", help="argument in RandomResizedCrop")
+parser.add_argument("--max_scale_crops", type=float, nargs="+", help="argument in RandomResizedCrop")
 
 #########################
 ## swav specific params #
