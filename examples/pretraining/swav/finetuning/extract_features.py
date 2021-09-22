@@ -15,7 +15,7 @@ import wilds
 from wilds.common.data_loaders import get_eval_loader
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
-from examples.algorithms.swav.src.utils import ParseKwargs, populate_defaults_for_swav
+from examples.pretraining.swav.src.utils import ParseKwargs, populate_defaults_for_swav
 from examples.models.initializer import initialize_model
 from examples.transforms import initialize_transform
 
