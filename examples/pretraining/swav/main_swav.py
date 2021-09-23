@@ -35,6 +35,11 @@ try:
 except ImportError as e:
     print("Apex not found. Proceeding without it...")
 
+try:
+    import wandb
+except Exception as e:
+    print("wandb not found. Proceeding without it...")
+
 # TODO: This is needed to test the WILDS package locally. Remove later -Tony
 sys.path.insert(1, os.path.join(sys.path[0], '../../..'))
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
@@ -55,6 +60,7 @@ from src.multicropdataset import CustomSplitMultiCropDataset
 from src.model import SwAVModel
 
 from examples.models.initializer import initialize_model
+from examples.utils import initialize_wandb
 
 logger = getLogger()
 parser = argparse.ArgumentParser(description="Implementation of SwAV")
@@ -149,6 +155,13 @@ parser.add_argument("--cpu_only", type=bool_flag, default=False,
                     help="Set to true to run experiment on CPUs instead of GPUs (for debugging).")
 parser.add_argument('--pretrained_model_path', default=None, type=str)
 
+# Weights & Biases
+parser.add_argument('--use_wandb', type=bool_flag, nargs='?', default=False)
+parser.add_argument('--wandb_api_key_path', type=str,
+                    help="Path to Weights & Biases API Key. If use_wandb is set to True and this argument is not specified, user will be prompted to authenticate.")
+parser.add_argument('--wandb_kwargs', nargs='*', action=ParseKwargs, default={},
+                    help="Will be passed directly into wandb.init().")
+
 def main():
     global args
     args = parser.parse_args()
@@ -159,6 +172,10 @@ def main():
         os.makedirs(args.log_dir)
     logger, training_stats = initialize_exp(args, "epoch", "loss")
     logger.info(f"Initialized distributed mode and applied WILDS default...\n{args}")
+
+    # Weights and Biases
+    if args.use_wandb:
+        initialize_wandb(args)
 
     train_dataset = CustomSplitMultiCropDataset(
         args.dataset,
@@ -381,6 +398,13 @@ def train(train_loader, model, optimizer, epoch, lr_schedule, queue):
                     loss=losses,
                     lr=optimizer.optim.param_groups[0]["lr"],
                 )
+            )
+            wandb.log(
+                {
+                    "epoch": epoch,
+                    "loss": losses.val,
+                    "loss_avg": losses.avg,
+                }
             )
     return (epoch, losses.avg), queue
 
