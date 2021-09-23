@@ -7,11 +7,17 @@ from itertools import product
 
 import numpy as np
 
-from examples.configs.algorithm import algorithm_defaults
 from examples.configs.datasets import dataset_defaults
 from reproducibility.codalab.hyperparameter_search_space import (
+    MAX_BATCH_SIZES,
+    ERM_HYPERPARAMETER_SEARCH_SPACE,
+    ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE,
     CORAL_HYPERPARAMETER_SEARCH_SPACE,
     DANN_HYPERPARAMETER_SEARCH_SPACE,
+    FIXMATCH_HYPERPARAMETER_SEARCH_SPACE,
+    PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE,
+    NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE,
+    NOISY_STUDENT_TEACHERS,
 )
 from reproducibility.codalab.util.analysis_utils import (
     compile_results,
@@ -30,11 +36,24 @@ Usage:
     python reproducibility/codalab/reproduce.py <args>
     
 Example Usage:
+    # To tune for ERM runs
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets ogb-molpcba --algorithm ERM --random --dry-run
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --experiment fmow_erm_tune 
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm ERM --random --dry-run
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
+
+    # To tune for multi-gpu runs
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm FixMatch --random --gpus 1 --unlabeled-split extra_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets civilcomments --algorithm PseudoLabel --random --gpus 1 --unlabeled-split extra_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_pseudolabel_tune 
+
     # To tune model hyperparameters for Unlabeled WILDS
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --random --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm deepCORAL --random --coarse --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_deepcoral_tune
   
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets civilcomments --algorithm deepCORAL --random --coarse --unlabeled-split extra_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm deepCORAL --random --coarse --unlabeled-split extra_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x5eebc93ea19b4dd99aa68871d18d7cb2 --datasets fmow --experiment fmow_dann_coarse_valunlabeled_tune	
 
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm DANN --random --unlabeled-split test_unlabeled --dry-run
@@ -64,7 +83,7 @@ Example Usage:
     python3 reproducibility/codalab/reproduce.py --output --local --path /u/scr/nlp/dro/fixmatch_domainnet_logs --experiment domainnet_nlp_runs
     
     # DANN on domainnent
-    python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x13ef64a3a90842d981b6b1f566b1cc78 --experiment domainnet_real-sketch
+    python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --experiment domainnet_real-sketch
 
     python reproducibility/codalab/reproduce.py --output --worksheet-uuid 0x13ef64a3a90842d981b6b1f566b1cc78 --experiment fmow_dann1
     
@@ -74,106 +93,18 @@ Example Usage:
 
 
 class CodaLabReproducibility:
-    _ADDITIONAL_DATASETS = ["bdd100k", "celebA", "waterbirds", "yelp"]
-    _CIVIL_COMMENTS_ADDITIONAL_ALGORITHMS = [
-        "erm_groupby-y",
-        "erm_groupby-black-y",
-        "groupDRO_groupby-y",
-        "groupDRO_groupby-black-y",
+    _HAS_SEPARATE_UNLABELED_BUNDLE = [
+        "camelyon17",
+        "civilcomments",
+        "iwildcam",
+        "poverty",
+        "globalwheat",
     ]
-    _MAX_BATCH_SIZES = {
-        "amazon": 32,
-        "civilcomments": 64,
-        "camelyon17": 224,
-        "iwildcam": 32,
-        "fmow": 96,
-        "poverty": 160,
-    }
-    _HAS_SEPARATE_UNLABELED_BUNDLE = ["civilcomments", "iwildcam"]
 
-    def __init__(self, wilds_version, all_datasets=False, local=False):
-        self._wilds_version = wilds_version
-        self._all_datasets = all_datasets
-
+    def __init__(self, local=False):
         # Run experiments on the main instance - https://worksheets.codalab.org
         if not local:
             self._run(["cl", "work", "https://worksheets.codalab.org::"])
-
-    # TODO: remove this later if not needed -Tony
-    def analyze(self, in_distribution=False):
-        worksheet_uuid = self._set_worksheet()
-        datasets = (
-            dataset_defaults.keys()
-            if not in_distribution
-            else list(CORAL_HYPERPARAMETER_SEARCH_SPACE["datasets"].keys())
-        )
-
-        for dataset in datasets:
-            if (
-                not self._all_datasets
-                and dataset in CodaLabReproducibility._ADDITIONAL_DATASETS
-            ):
-                continue
-
-            dataset_results = dict()
-            algorithms = (
-                [key for key in algorithm_defaults.keys()]
-                + CodaLabReproducibility._CIVIL_COMMENTS_ADDITIONAL_ALGORITHMS
-                if dataset == "civilcomments"
-                else algorithm_defaults.keys()
-            )
-            for algorithm in algorithms:
-                dataset_results[algorithm] = []
-
-                # Skip the additional datasets if we don't want to reproduce results for all datasets
-                if (
-                    (algorithm in ["IRM", "deepCORAL"] and dataset == "civilcomments")
-                    or algorithm == "groupDRO"
-                    or (in_distribution and algorithm != "ERM")
-                ):
-                    continue
-
-                if dataset == "poverty":
-                    folds = ["A", "B", "C", "D", "E"]
-                    for fold in folds:
-                        bundle_name = (
-                            f"{dataset}_{algorithm}_fold{fold}"
-                            if not in_distribution
-                            else f"hp_id_{algorithm}_{dataset}_fold{fold}"
-                        )
-                        uuid = self._get_bundle_uuid(bundle_name, worksheet_uuid)
-                        results_dfs = load_results(
-                            f"https://worksheets.codalab.org/rest/bundles/{uuid}/contents/blob",
-                            splits=["val", "test"],
-                            include_in_distribution=True,
-                        )
-                        dataset_results[algorithm].append(results_dfs)
-                else:
-                    # 10 different seeds were used for camelyon17. 3 different seeds for other datasets.
-                    seeds = range(0, 10) if dataset == "camelyon17" else [0, 1, 2]
-                    for seed in seeds:
-                        bundle_name = (
-                            f"{dataset}_{algorithm}_seed{seed}"
-                            if not in_distribution
-                            else f"hp_id_{algorithm}_{dataset}_seed{seed}"
-                        )
-                        uuid = self._get_bundle_uuid(bundle_name, worksheet_uuid)
-                        results_dfs = load_results(
-                            f"https://worksheets.codalab.org/rest/bundles/{uuid}/contents/blob",
-                            splits=["val", "test"],
-                            include_in_distribution=True,
-                        )
-                        dataset_results[algorithm].append(results_dfs)
-            compiled_results = compile_results(
-                dataset, dataset_results, in_distribution
-            )
-
-            subdirectory = "main" if not in_distribution else "id_val"
-            with open(
-                f"reproducibility/codalab/output/{subdirectory}/{dataset}_result.json",
-                "w",
-            ) as f:
-                json.dump(compiled_results, f, indent=4)
 
     def tune_hyperparameters_grid(
         self, worksheet_uuid, datasets, algorithm="deepCORAL", coarse=False
@@ -197,13 +128,17 @@ class CodaLabReproducibility:
             search_space = self._get_hyperparameter_search_space(algorithm)
 
             hyperparameters = search_space[dataset].keys()
-            for hyperparameter_values in get_grid(search_space[dataset].values()):
+            for i, hyperparameter_values in enumerate(
+                get_grid(search_space[dataset].values())
+            ):
                 hyperparameter_config = dict()
                 for i, hyperparameter in enumerate(hyperparameters):
                     hyperparameter_config[hyperparameter] = hyperparameter_values[i]
 
+                experiment_name = f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}_tune{i}"
                 self._run_experiment(
-                    name=f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}_tune",
+                    name=experiment_name,
+                    dataset=dataset,
                     description=f"{str(hyperparameter_config)}",
                     dependencies={
                         "wilds": wilds_src_uuid,
@@ -211,6 +146,7 @@ class CodaLabReproducibility:
                     },
                     command=self._construct_command(
                         dataset,
+                        experiment_name,
                         algorithm=algorithm,
                         seed=0,
                         hyperparameters=hyperparameter_config,
@@ -224,23 +160,27 @@ class CodaLabReproducibility:
         datasets,
         algorithm="DANN",
         coarse=False,
-        num_of_samples=20,
-        unlabeled_split="test_unlabeled",
+        num_of_samples=10,
+        unlabeled_split=None,
         dry_run=False,
+        gpus=1,
     ):
         self._set_worksheet(worksheet_uuid)
         datasets_uuids = self._get_datasets_uuids(worksheet_uuid, datasets)
         wilds_src_uuid = self._get_bundle_uuid("wilds-unlabeled", worksheet_uuid)
+        wandb_api_key_uuid = self._get_bundle_uuid("wandb_api_key.txt", worksheet_uuid)
 
         self._add_header(
             f"Hyperparameter tuning: algorithm={algorithm}, coarse={coarse}",
             dry_run=dry_run,
         )
         for dataset, dataset_uuid in datasets_uuids.items():
-            dataset_fullname = self._get_field_value(dataset_uuid, "name")
             search_space = self._get_hyperparameter_search_space(algorithm)
 
-            if dataset in CodaLabReproducibility._HAS_SEPARATE_UNLABELED_BUNDLE:
+            if (
+                unlabeled_split
+                and dataset in CodaLabReproducibility._HAS_SEPARATE_UNLABELED_BUNDLE
+            ):
                 unlabeled_dataset_uuid = self._get_bundle_uuid(
                     f"{dataset}_unlabeled", worksheet_uuid
                 )
@@ -251,26 +191,37 @@ class CodaLabReproducibility:
                 unlabeled_dataset_uuid = None
                 unlabeled_dataset_fullname = None
 
-            for _ in range(num_of_samples):
+            for i in range(num_of_samples):
                 hyperparameter_config = dict()
+                if gpus == 1 and "ERM" not in algorithm:
+                    hyperparameter_config["gradient_accumulation_steps"] = 4
+
                 for hyperparameter, values in search_space[dataset].items():
+                    if hyperparameter == "n_epochs":
+                        continue
+
                     if hyperparameter == "unlabeled_batch_size_frac":
-                        max_batch_size = CodaLabReproducibility._MAX_BATCH_SIZES[
-                            dataset
-                        ]
-                        unlabeled_batch_size = math.ceil(
-                            np.random.uniform(low=values[0], high=values[-1])
-                            * max_batch_size
-                        )
+                        max_batch_size = MAX_BATCH_SIZES[dataset] * gpus
+                        index = np.random.choice(range(len(values)))
+                        unlabeled_frac = values[index]
+                        unlabeled_batch_size = int(unlabeled_frac * max_batch_size)
                         hyperparameter_config[
                             "unlabeled_batch_size"
                         ] = unlabeled_batch_size
                         hyperparameter_config["batch_size"] = (
                             max_batch_size - unlabeled_batch_size
                         )
+                        if "n_epochs" in search_space[dataset]:
+                            hyperparameter_config["n_epochs"] = search_space[dataset][
+                                "n_epochs"
+                            ][index]
                     else:
                         if len(values) == 1:
                             hyperparameter_config[hyperparameter] = values[0]
+                        elif hyperparameter == "self_training_threshold":
+                            hyperparameter_config[hyperparameter] = np.random.uniform(
+                                low=values[0], high=values[-1]
+                            )
                         else:
                             hyperparameter_config[hyperparameter] = math.pow(
                                 10, np.random.uniform(low=values[0], high=values[-1])
@@ -282,50 +233,97 @@ class CodaLabReproducibility:
 
                 dependencies = {
                     "wilds": wilds_src_uuid,
-                    dataset_fullname: dataset_uuid,
+                    "wandb_api_key.txt": wandb_api_key_uuid,
                 }
+                if dataset_uuid:
+                    dataset_fullname = self._get_field_value(dataset_uuid, "name")
+                    dependencies[dataset_fullname] = dataset_uuid
+
+                if algorithm == "NoisyStudent":
+                    dependencies["teacher"] = NOISY_STUDENT_TEACHERS[dataset]
+
                 if unlabeled_dataset_uuid:
                     dependencies[unlabeled_dataset_fullname] = unlabeled_dataset_uuid
 
+                experiment_name = (
+                    f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}"
+                )
+                if unlabeled_split:
+                    experiment_name += f"_{unlabeled_split.replace('_', '')}"
+                experiment_name += f"_tune{i}"
                 self._run_experiment(
-                    name=f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}_{unlabeled_split.replace('_', '')}_tune",
+                    name=experiment_name,
+                    dataset=dataset,
                     description=f"{str(hyperparameter_config)}",
                     dependencies=dependencies,
                     command=self._construct_command(
                         dataset,
-                        algorithm=algorithm,
+                        experiment_name,
+                        algorithm="ERM" if algorithm == "ERMAugment" else algorithm,
                         seed=0,
                         hyperparameters=hyperparameter_config,
                         coarse=coarse,
                         unlabeled_split=unlabeled_split,
+                        gpus=gpus,
                     ),
+                    gpus=gpus,
                     dry_run=dry_run,
                 )
 
-    def _run_experiment(self, name, description, dependencies, command, dry_run=False):
+    def _run_experiment(
+        self, name, dataset, description, dependencies, command, gpus=1, dry_run=False
+    ):
+        if "noisystudent" in name:
+            # Training the teacher requires only a single gpu
+            gpus = 1
+
+        if gpus == 1:
+            cpus = 4
+            memory_gb = 16
+        else:
+            cpus = 8
+            memory_gb = 32
+
         commands = [
             "cl",
             "run",
             f"--name={name}",
             f"--description={description}",
-            "--request-docker-image=pangwei/wilds_src:1.0",
+            "--request-docker-image=codalabrunner/wilds_unlabeled:1.1",
             "--request-network",
-            "--request-cpus=4",
-            "--request-gpus=1",
+            f"--request-cpus={cpus}",
+            f"--request-gpus={gpus}",
             "--request-disk=10g",
-            "--request-memory=19g",
-            "--request-priority=20",
+            f"--request-memory={memory_gb}g",
+            "--request-priority=1",
+            "--request-queue=cluster",
         ]
+        if dataset == "ogb-molpcba":
+            commands.append("--exclude-patterns=ogbg_molpcba")
+
+        if gpus > 1:
+            commands.append("--request-queue=multi")
+
         for key, uuid in dependencies.items():
             commands.append(f"{key}:{uuid}")
         commands.append(command)
         self._run(commands, dry_run=dry_run)
 
     def _get_hyperparameter_search_space(self, algorithm):
-        if algorithm == "deepCORAL":
+        if algorithm == "ERM":
+            search_space = ERM_HYPERPARAMETER_SEARCH_SPACE["datasets"]
+        elif algorithm == "ERMAugment":
+            search_space = ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE["datasets"]
+        elif algorithm == "deepCORAL":
             search_space = CORAL_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         elif algorithm == "DANN":
             search_space = DANN_HYPERPARAMETER_SEARCH_SPACE["datasets"]
+        elif algorithm == "FixMatch":
+            search_space = FIXMATCH_HYPERPARAMETER_SEARCH_SPACE["datasets"]
+        elif algorithm == "PseudoLabel":
+            search_space = PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE["datasets"]
+        elif algorithm == "NoisyStudent":
+            search_space = NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         else:
             raise ValueError(
                 f"Hyperparameter tuning for {algorithm} is not yet supported."
@@ -347,7 +345,7 @@ class CodaLabReproducibility:
                     "cl",
                     "search",
                     experiment_name,
-                    "state=ready",
+                    "state=ready,killed,worker_offline",
                     f"host_worksheet={worksheet_uuid}",
                     ".limit=100",
                     "--uuid-only",
@@ -361,7 +359,8 @@ class CodaLabReproducibility:
                     continue
 
                 results_dfs = load_results(
-                    f"https://worksheets.codalab.org/rest/bundles/{uuid}/contents/blob",
+                    f"https://worksheets.codalab.org/rest/bundles/{uuid}/contents/blob"
+                    f"{'/student2' if 'noisystudent' in experiment_name else ''}",
                     splits=["val", "test"],
                     include_in_distribution=True,
                 )
@@ -369,10 +368,14 @@ class CodaLabReproducibility:
                     results_dfs[split], results_dfs[split], metrics
                 )
                 test_result_df = get_early_stopped_row(
-                    results_dfs["test_eval"], results_dfs["val_eval"], metric
+                    results_dfs["test_eval"],
+                    results_dfs["val_eval"],
+                    metric,
+                    log=True,
                 )
+                bundle_description = self._get_field_value(uuid, "description")
                 print(
-                    f"uuid={uuid}, validation={val_result_df[metric]}, test={test_result_df[metric]}"
+                    f"uuid={uuid}, validation={val_result_df[metric]}, test={test_result_df[metric]}, description={bundle_description}"
                 )
                 if val_result_df[metric] > best_metric_value:
                     print(
@@ -439,7 +442,7 @@ class CodaLabReproducibility:
                 "cl",
                 "search",
                 experiment,
-                "state=ready",
+                "state=ready,killed",
                 "host_worksheet=%s" % worksheet_uuid,
                 ".limit=10",
                 "--uuid-only",
@@ -452,7 +455,8 @@ class CodaLabReproducibility:
                 continue
 
             results_dfs = load_results(
-                f"https://worksheets.codalab.org/rest/bundles/{uuid}/contents/blob",
+                f"https://worksheets.codalab.org/rest/bundles/{uuid}/contents/blob"
+                f"{'/student2' if 'noisystudent' in experiment else ''}",
                 splits=["val", "test"],
                 include_in_distribution=True,
             )
@@ -469,9 +473,7 @@ class CodaLabReproducibility:
         )
         print("\n")
 
-    def output_full_results_local(
-        self, experiment, path, in_distribution_val=False
-    ):
+    def output_full_results_local(self, experiment, path, in_distribution_val=False):
         """
         Output the full results for an experiment using experiments stored locally.
 
@@ -525,21 +527,51 @@ class CodaLabReproducibility:
     def _construct_command(
         self,
         dataset_name,
+        experiment_name,
         algorithm,
         seed,
         hyperparameters,
         coarse=False,
-        unlabeled_split="test_unlabeled",
+        unlabeled_split=None,
+        gpus=1,
     ):
+        if algorithm == "NoisyStudent":
+            executable = f"noisy_student_wrapper.py 2 teacher/{dataset_name}_seed:0_epoch:best_model.pth "
+        else:
+            executable = "run_expt.py"
         command = (
-            "python wilds/examples/run_expt.py --root_dir $HOME --log_dir $HOME "
+            f"python -Wi wilds/examples/{executable} --root_dir $HOME --log_dir $HOME "
             f"--dataset {dataset_name} --algorithm {algorithm} --seed {seed}"
         )
-        command += f" --unlabeled_split {unlabeled_split}"
+        if unlabeled_split:
+            command += f" --unlabeled_split {unlabeled_split}"
         if coarse:
             command += " --groupby_fields from_source_domain"
         for hyperparameter, value in hyperparameters.items():
             command += f" --{hyperparameter} {value}"
+
+        # Configure Multi-GPU
+        if gpus > 1 and algorithm != "NoisyStudent":
+            gpu_indices = [str(gpu) for gpu in range(gpus)]
+            command += f" --device {' '.join(gpu_indices)}"
+
+        if dataset_name not in ["amazon", "civilcomments"]:
+            command += f" --loader_kwargs num_workers=4 pin_memory=True"
+            if unlabeled_split != None:
+                command += f" --unlabeled_loader_kwargs num_workers=8 pin_memory=True"
+
+        # Always download ogb-molpcba dataset
+        if dataset_name == "ogb-molpcba":
+            command += f" --download"
+
+        # Configure wandb
+        # Disable pushing to WandB for Amazon - we're hitting retry loops when pushing metrics at the end of the run
+        if dataset_name != "amazon":
+            command += (
+                f" --use_wandb --wandb_api_key_path wandb_api_key.txt --wandb_kwargs"
+                f" entity=wilds project={algorithm.lower()}-{dataset_name.lower()}"
+                f" group={experiment_name}_gpus{gpus}_paper"
+            )
         return command
 
     def _get_dataset_name(self, experiment_name):
@@ -554,9 +586,13 @@ class CodaLabReproducibility:
             f"Could not find the corresponding dataset for experiment {experiment_name}"
         )
 
-    def _get_datasets_uuids(self, worksheet_uuid, datasets):
+    def _get_datasets_uuids(self, worksheet_uuid, datasets, unlabeled=False):
+        if datasets == ["ogb-molpcba"]:
+            return {datasets[0]: ''}
         return {
-            dataset: self._get_bundle_uuid(f"{dataset}", worksheet_uuid)
+            dataset: self._get_bundle_uuid(
+                f"{dataset}_unlabeled" if unlabeled else f"{dataset}_v", worksheet_uuid
+            )
             for dataset in datasets
         }
 
@@ -628,7 +664,10 @@ class CodaLabReproducibility:
             universal_newlines=True,
         )
         if print_output:
-            print(process.stdout)
+            if process.stdout:
+                print(process.stdout)
+            if process.stderr:
+                print(process.stderr)
         return clean_output(process.stdout) if clean else process.stdout
 
     def time(self, uuid):
@@ -669,7 +708,7 @@ class CodaLabReproducibility:
 def main():
     print(args)
 
-    reproducibility = CodaLabReproducibility(args.version, args.all_datasets, args.local)
+    reproducibility = CodaLabReproducibility(args.local)
     if args.tune_hyperparameters:
         if args.random_search:
             reproducibility.tune_hyperparameters_random(
@@ -679,6 +718,7 @@ def main():
                 coarse=args.coarse,
                 unlabeled_split=args.unlabeled_split,
                 dry_run=args.dry_run,
+                gpus=args.gpus,
             )
         else:
             reproducibility.tune_hyperparameters_grid(
@@ -709,20 +749,15 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Reproduce results of WILDS")
     parser.add_argument(
-        "--version",
-        type=str,
-        help="Version of WILDS to reproduce results for",
-        default="v1.0",
+        "--gpus",
+        type=int,
+        default=1,
+        help="Number of GPUs to run experiments on (defaults to 1).",
     )
     parser.add_argument(
         "--worksheet-name",
         type=str,
         help="Name of the CodaLab worksheet to reproduce the results on.",
-    )
-    parser.add_argument(
-        "--all-datasets",
-        action="store_true",
-        help="Whether to run experiments on all the datasets (default to false).",
     )
     parser.add_argument(
         "--datasets", nargs="+", help="List of datasets to run experiments on."
@@ -740,8 +775,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--unlabeled-split",
         type=str,
-        default="test_unlabeled",
-        help="Which unlabeled split to use (defaults to test_unlabeled).",
+        help="Which unlabeled split to use (defaults to None).",
     )
     parser.add_argument(
         "--repair",

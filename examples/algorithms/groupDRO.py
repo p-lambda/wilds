@@ -18,7 +18,7 @@ class GroupDRO(SingleModelAlgorithm):
         # check config
         assert config.uniform_over_groups
         # initialize model
-        model = initialize_model(config, d_out).to(config.device)
+        model = initialize_model(config, d_out)
         # initialize module
         super().__init__(
             config=config,

@@ -113,8 +113,8 @@ class GlobalWheatDataset(WILDSDataset):
     Supported `split_scheme`:
         - 'official'
         - 'official_with_subsampled_test'
-        - 'fixed-test'
-        - 'mixed-train'
+        - 'test-to-test'
+        - 'mixed-to-test'
     Input (x):
         1024 x 1024 RGB images of wheat field canopy starting from anthesis (flowering) to ripening.
     Output (y):
@@ -152,7 +152,7 @@ class GlobalWheatDataset(WILDSDataset):
     _versions_dict = {
         '1.0': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x443fbcb18eeb4f80b5ea4a9f77795168/contents/blob/',
-            'compressed_size': None}
+            'compressed_size': 10_286_120_960}
         }
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
@@ -205,12 +205,12 @@ class GlobalWheatDataset(WILDSDataset):
             data_dfs['val'] = pd.read_csv(self.root / f'official_val.csv')
             data_dfs['test'] = pd.read_csv(self.root / f'fixed_test_test.csv')
 
-        elif split_scheme == "fixed_test":
+        elif split_scheme == "test-to-test":
             data_dfs['train'] = pd.read_csv(self.root / f'fixed_test_train.csv')
             data_dfs['val'] = pd.read_csv(self.root / f'official_val.csv')
             data_dfs['test'] = pd.read_csv(self.root / f'fixed_test_test.csv')
 
-        elif split_scheme == "mixed_train":
+        elif split_scheme == "mixed-to-test":
             data_dfs['train'] = pd.read_csv(self.root / f'mixed_train_train.csv')
             data_dfs['val'] = pd.read_csv(self.root / f'official_val.csv')
             data_dfs['test'] = pd.read_csv(self.root / f'mixed_train_test.csv')

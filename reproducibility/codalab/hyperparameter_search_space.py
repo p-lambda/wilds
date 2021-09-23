@@ -1,85 +1,308 @@
+import math
+
+from examples.configs.datasets import dataset_defaults
+
+AMAZON = "amazon"
+CIVIL_COMMENTS = "civilcomments"
+CAMELYON17 = "camelyon17"
+GLOBAL_WHEAT = "globalwheat"
+IWILDCAM = "iwildcam"
+FMOW = "fmow"
+OGB = "ogb-molpcba"
+POVERTY = "poverty"
+
+# Maximum batch size that fits on a 12GB GPU
+MAX_BATCH_SIZES = {
+    AMAZON: 24,
+    CIVIL_COMMENTS: 48,
+    CAMELYON17: 168,
+    GLOBAL_WHEAT: 10,
+    IWILDCAM: 24,
+    FMOW: 72,
+    OGB: 4096,
+    POVERTY: 120,
+}
+
+DEFAULT_UNLABELED_FRAC = [3 / 4, 7 / 8, 15 / 16]
+
+NOISY_STUDENT_TEACHERS = {
+    CAMELYON17: "0xb7b57b6f117e4d48b4c6f172092ae323",
+    IWILDCAM: "0x52f2dd8e448a4c7e802783fa35c269c6",
+    FMOW: "0x3b7e033b88464f53a3c432614bda72d3",
+    POVERTY: "",    # TODO: run Poverty + ERM DA
+}
+
+
+def get_epochs_unlabeled(dataset, factor=1, parts=[4, 8, 16]):
+    default_n_epochs = dataset_defaults[dataset]["n_epochs"]
+    return [math.ceil((default_n_epochs * factor) / part) for part in parts]
+
+
+def get_lr_grid(dataset, grad_accumulation=1):
+    default_lr = dataset_defaults[dataset]["lr"]
+    default_batch_size = dataset_defaults[dataset]["batch_size"]
+    max_batch_size = MAX_BATCH_SIZES[dataset]
+    new_lr = default_lr * ((max_batch_size * grad_accumulation) / default_batch_size)
+    # We sample a value 10^U(a, b)
+    return [math.log10(new_lr / 10), math.log10(new_lr * 10)]
+
+
+ERM_HYPERPARAMETER_SEARCH_SPACE = {
+    "datasets": {
+        AMAZON: {
+            "batch_size": [MAX_BATCH_SIZES[AMAZON]],
+            "lr": get_lr_grid(AMAZON, grad_accumulation=1),
+        },
+        CIVIL_COMMENTS: {
+            "batch_size": [MAX_BATCH_SIZES[CIVIL_COMMENTS]],
+            "lr": get_lr_grid(CIVIL_COMMENTS, grad_accumulation=1),
+            "groupby_fields": ["y"],
+            "uniform_over_group": [True],
+        },
+        CAMELYON17: {
+            "batch_size": [MAX_BATCH_SIZES[CAMELYON17]],
+            "lr": get_lr_grid(CAMELYON17, grad_accumulation=1),
+        },
+        IWILDCAM: {
+            "batch_size": [MAX_BATCH_SIZES[IWILDCAM]],
+            "lr": get_lr_grid(IWILDCAM, grad_accumulation=1),
+        },
+        FMOW: {
+            "batch_size": [MAX_BATCH_SIZES[FMOW]],
+            "lr": get_lr_grid(FMOW, grad_accumulation=1),
+        },
+        POVERTY: {
+            "batch_size": [MAX_BATCH_SIZES[POVERTY]],
+            "lr": get_lr_grid(POVERTY, grad_accumulation=1),
+        },
+        GLOBAL_WHEAT: {
+            "batch_size": [MAX_BATCH_SIZES[GLOBAL_WHEAT]],
+            "lr": get_lr_grid(GLOBAL_WHEAT, grad_accumulation=1),
+        },
+        OGB: {
+            "batch_size": [MAX_BATCH_SIZES[OGB]],
+            "lr": get_lr_grid(OGB, grad_accumulation=1),
+        },
+    },
+}
+
+ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE = {
+    "datasets": {
+        CAMELYON17: {
+            "batch_size": [MAX_BATCH_SIZES[CAMELYON17]],
+            "lr": get_lr_grid(CAMELYON17, grad_accumulation=1),
+            "additional_train_transform": ["randaugment"],
+        },
+        IWILDCAM: {
+            "batch_size": [MAX_BATCH_SIZES[IWILDCAM]],
+            "lr": get_lr_grid(IWILDCAM, grad_accumulation=1),
+            "additional_train_transform": ["randaugment"],
+        },
+        FMOW: {
+            "batch_size": [MAX_BATCH_SIZES[FMOW]],
+            "lr": get_lr_grid(FMOW, grad_accumulation=1),
+            "additional_train_transform": ["randaugment"],
+        },
+        POVERTY: {
+            "batch_size": [MAX_BATCH_SIZES[POVERTY]],
+            "lr": get_lr_grid(POVERTY, grad_accumulation=1),
+            "additional_train_transform": ["randaugment"],
+        },
+    },
+}
+
 CORAL_HYPERPARAMETER_SEARCH_SPACE = {
     "datasets": {
-        "amazon": {
-            "lr": [-6, -4],
-            "weight_decay": [-3, -1],
-            "coral_penalty_weight": [-2, 2],
-            "unlabeled_batch_size_frac": [0.5, 0.9],
+        AMAZON: {
+            "lr": get_lr_grid(AMAZON, grad_accumulation=4),
+            "coral_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(AMAZON, factor=2),
         },
-        "civilcomments": {
-            "lr": [-6, -4],
-            "coral_penalty_weight": [-2, 2],
-            "unlabeled_batch_size_frac": [0.5, 0.9],
+        CAMELYON17: {
+            "lr": get_lr_grid(CAMELYON17, grad_accumulation=4),
+            "coral_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(CAMELYON17, factor=2),
         },
-        "camelyon17": {
-            "lr": [-4, -1],
-            "weight_decay": [-4, -1],
-            "coral_penalty_weight": [-2, 2],
-            "unlabeled_batch_size_frac": [0.5, 0.9],
+        IWILDCAM: {
+            "lr": get_lr_grid(IWILDCAM, grad_accumulation=4),
+            "coral_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(IWILDCAM, factor=2),
         },
-        "iwildcam": {
-            "lr": [-5, -3],
-            "weight_decay": [-4, -1],
-            "coral_penalty_weight": [-2, 2],
-            "unlabeled_batch_size_frac": [0.5, 0.9],
+        FMOW: {
+            "lr": get_lr_grid(FMOW, grad_accumulation=4),
+            "coral_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(FMOW, factor=2),
         },
-        "fmow": {
-            "lr": [-5, -1],
-            "weight_decay": [-5, 0],
-            "coral_penalty_weight": [-2, 2],
-            "unlabeled_batch_size_frac": [0.5, 0.9],
-        },
-        "poverty": {
-            "lr": [-5, -1],
-            "weight_decay": [-4, 0],
-            "coral_penalty_weight": [-2, 2],
-            "unlabeled_batch_size_frac": [0.5, 0.9],
+        POVERTY: {
+            "lr": get_lr_grid(POVERTY, grad_accumulation=4),
+            "coral_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(POVERTY, factor=2),
         },
     },
 }
 
 DANN_HYPERPARAMETER_SEARCH_SPACE = {
     "datasets": {
-        "amazon": {
-            "weight_decay": [-3, -1],
-            "dann_classifier_lr": [-6, -4],
-            "dann_discriminator_lr": [-6, -4],
-            "dann_penalty_weight": [-2, 2],
-            "unlabeled_batch_size_frac": [0.5, 0.9],
+        AMAZON: {
+            "dann_classifier_lr": get_lr_grid(AMAZON, grad_accumulation=4),
+            "dann_discriminator_lr": get_lr_grid(AMAZON, grad_accumulation=4),
+            "dann_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(AMAZON, factor=2),
         },
-        "civilcomments": {
-            "dann_classifier_lr": [-6, -4],
-            "dann_discriminator_lr": [-6, -4],
-            "dann_penalty_weight": [-2, 2],
-            "unlabeled_batch_size_frac": [0.5, 0.9],
+        CAMELYON17: {
+            "dann_classifier_lr": get_lr_grid(CAMELYON17, grad_accumulation=4),
+            "dann_discriminator_lr": get_lr_grid(CAMELYON17, grad_accumulation=4),
+            "dann_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(CAMELYON17, factor=2),
         },
-        "camelyon17": {
-            "weight_decay": [-4, -1],
-            "dann_classifier_lr": [-4, -1],
-            "dann_discriminator_lr": [-4, -1],
-            "dann_penalty_weight": [-2, 2],
-            "unlabeled_batch_size_frac": [0.5, 0.9],
+        IWILDCAM: {
+            "dann_classifier_lr": get_lr_grid(IWILDCAM, grad_accumulation=4),
+            "dann_discriminator_lr": get_lr_grid(IWILDCAM, grad_accumulation=4),
+            "dann_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(IWILDCAM, factor=2),
         },
-        "iwildcam": {
-            "weight_decay": [-4, -1],
-            "dann_classifier_lr": [-5, -3],
-            "dann_discriminator_lr": [-5, -3],
-            "dann_penalty_weight": [-2, 2],
-            "unlabeled_batch_size_frac": [0.5, 0.9],
+        FMOW: {
+            "dann_classifier_lr": get_lr_grid(FMOW, grad_accumulation=4),
+            "dann_discriminator_lr": get_lr_grid(FMOW, grad_accumulation=4),
+            "dann_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(FMOW, factor=2),
         },
-        "fmow": {
-            "weight_decay": [-5, 0],
-            "dann_classifier_lr": [-5, -1],
-            "dann_discriminator_lr": [-5, -1],
-            "dann_penalty_weight": [-2, 2],
-            "unlabeled_batch_size_frac": [0.5, 0.9],
+        POVERTY: {
+            "dann_classifier_lr": get_lr_grid(POVERTY, grad_accumulation=4),
+            "dann_discriminator_lr": get_lr_grid(POVERTY, grad_accumulation=4),
+            "dann_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(POVERTY, factor=2),
         },
-        "poverty": {
-            "weight_decay": [-4, 0],
-            "dann_classifier_lr": [-5, -1],
-            "dann_discriminator_lr": [-5, -1],
-            "dann_penalty_weight": [-2, 2],
-            "unlabeled_batch_size_frac": [0.5, 0.9],
+    },
+}
+
+FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
+    "datasets": {
+        CAMELYON17: {
+            "lr": get_lr_grid(CAMELYON17, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(CAMELYON17, factor=2),
+        },
+        IWILDCAM: {
+            "lr": get_lr_grid(IWILDCAM, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(IWILDCAM, factor=2),
+        },
+        FMOW: {
+            "lr": get_lr_grid(FMOW, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(FMOW, factor=2),
+        },
+        POVERTY: {
+            "lr": get_lr_grid(POVERTY, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(POVERTY, factor=2),
+        },
+    },
+}
+
+PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
+    "datasets": {
+        AMAZON: {
+            "lr": get_lr_grid(AMAZON, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(AMAZON, factor=2),
+        },
+        CIVIL_COMMENTS: {
+            "lr": get_lr_grid(CIVIL_COMMENTS, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(CIVIL_COMMENTS, factor=2),
+            "groupby_fields": ["y"],
+            "uniform_over_group": [True],
+        },
+        CAMELYON17: {
+            "lr": get_lr_grid(CAMELYON17, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(CAMELYON17, factor=2),
+        },
+        IWILDCAM: {
+            "lr": get_lr_grid(IWILDCAM, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(IWILDCAM, factor=2),
+        },
+        FMOW: {
+            "lr": get_lr_grid(FMOW, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(FMOW, factor=2),
+        },
+        POVERTY: {
+            "lr": get_lr_grid(POVERTY, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(POVERTY, factor=2),
+        },
+    },
+}
+
+NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE = {
+    "datasets": {
+        CAMELYON17: {
+            "lr": get_lr_grid(CAMELYON17, grad_accumulation=4),
+            "scheduler": ["FixMatchLR"],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(CAMELYON17),
+        },
+        IWILDCAM: {
+            "lr": get_lr_grid(IWILDCAM, grad_accumulation=4),
+            "scheduler": ["FixMatchLR"],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(IWILDCAM),
+        },
+        FMOW: {
+            "lr": get_lr_grid(FMOW, grad_accumulation=4),
+            "scheduler": ["FixMatchLR"],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(FMOW),
+        },
+        POVERTY: {
+            "lr": get_lr_grid(POVERTY, grad_accumulation=4),
+            "scheduler": ["FixMatchLR"],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(POVERTY),
         },
     },
 }

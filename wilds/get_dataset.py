@@ -79,8 +79,12 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
         return YelpDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'ogb-molpcba':
-        from wilds.datasets.ogbmolpcba_dataset import OGBPCBADataset
-        return OGBPCBADataset(version=version, **dataset_kwargs)
+        if unlabeled:
+            from wilds.datasets.unlabeled.ogbmolpcba_unlabeled_dataset import OGBPCBAUnlabeledDataset
+            return OGBPCBAUnlabeledDataset(version=version, **dataset_kwargs)
+        else:
+            from wilds.datasets.ogbmolpcba_dataset import OGBPCBADataset
+            return OGBPCBADataset(version=version, **dataset_kwargs)
 
     elif dataset == 'poverty':
         if unlabeled:
@@ -123,3 +127,15 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
         else:
             from wilds.datasets.globalwheat_dataset import GlobalWheatDataset # type:ignore
             return GlobalWheatDataset(version=version, **dataset_kwargs)
+
+    elif dataset == 'encode':
+        from wilds.datasets.encode_dataset import EncodeDataset
+        return EncodeDataset(version=version, **dataset_kwargs)
+
+    elif dataset == 'rxrx1':
+        from wilds.datasets.rxrx1_dataset import RxRx1Dataset
+        return RxRx1Dataset(version=version, **dataset_kwargs)
+
+    elif dataset == 'globalwheat':
+        from wilds.datasets.globalwheat_dataset import GlobalWheatDataset
+        return GlobalWheatDataset(version=version, **dataset_kwargs)

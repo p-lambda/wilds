@@ -3,7 +3,9 @@ import torch
 from algorithms.group_algorithm import GroupAlgorithm
 from scheduler import initialize_scheduler
 from optimizer import initialize_optimizer
+from torch.nn import DataParallel
 from torch.nn.utils import clip_grad_norm_
+from utils import move_to
 
 class SingleModelAlgorithm(GroupAlgorithm):
     """
@@ -24,6 +26,14 @@ class SingleModelAlgorithm(GroupAlgorithm):
             self.optimizer = initialize_optimizer(config, model)
         self.max_grad_norm = config.max_grad_norm
         scheduler = initialize_scheduler(config, self.optimizer, n_train_steps)
+
+        if config.use_data_parallel:
+            model = DataParallel(model)
+        model.to(config.device)
+
+        self.batch_idx = 0
+        self.gradient_accumulation_steps = config.gradient_accumulation_steps
+
         # initialize the module
         super().__init__(
             device=config.device,
@@ -51,11 +61,18 @@ class SingleModelAlgorithm(GroupAlgorithm):
                 - y_true
         """
         x, y_true, metadata = batch
-        x = x.to(self.device)
-        y_true = y_true.to(self.device)
-        g = self.grouper.metadata_to_group(metadata).to(self.device)
-        outputs = self.model(x)
+        x = move_to(x, self.device)
+        y_true = move_to(y_true, self.device)
+        g = move_to(self.grouper.metadata_to_group(metadata), self.device)
 
+        if self.model.needs_y:
+            if self.training:
+                outputs = self.model(x, y_true)
+            else:
+                outputs = self.model(x, None)
+        else:
+            outputs = self.model(x)
+            
         results = {
             'g': g,
             'y_true': y_true,
@@ -93,12 +110,14 @@ class SingleModelAlgorithm(GroupAlgorithm):
         self.update_log(results)
         return self.sanitize_dict(results)
 
-    def update(self, batch, unlabeled_batch=None):
+    def update(self, batch, unlabeled_batch=None, is_epoch_end=False):
         """
         Process the batch, update the log, and update the model
         Args:
             - batch (tuple of Tensors): a batch of data yielded by data loaders
             - unlabeled_batch (tuple of Tensors or None): a batch of data yielded by unlabeled data loader
+            - is_epoch_end: whether this batch is the last batch of the epoch. if so, force optimizer to step,
+                regardless of whether this batch idx divides self.gradient_accumulation_steps evenly
         Output:
             - results (dictionary): information about the batch, such as:
                 - g (Tensor)
@@ -109,14 +128,27 @@ class SingleModelAlgorithm(GroupAlgorithm):
                 - objective (float)
         """
         assert self.is_training
-        # process batch
+
+        # process this batch
         results = self.process_batch(batch, unlabeled_batch)
-        self._update(results)
-        # log results
+
+        # update running statistics and update model if we've reached end of effective batch
+        self._update(
+            results, 
+            should_step=(((self.batch_idx + 1) % self.gradient_accumulation_steps == 0) or (is_epoch_end))
+        )
         self.update_log(results)
+
+        # iterate batch index
+        if is_epoch_end:
+            self.batch_idx = 0
+        else:
+            self.batch_idx += 1
+
+        # return only this batch's results
         return self.sanitize_dict(results)
 
-    def _update(self, results):
+    def _update(self, results, should_step=False):
         """
         Computes the objective and updates the model.
         Also updates the results dictionary yielded by process_batch().
@@ -125,16 +157,18 @@ class SingleModelAlgorithm(GroupAlgorithm):
         # compute objective
         objective = self.objective(results)
         results['objective'] = objective.item()
-        # update
-        self.model.zero_grad()
         objective.backward()
-        if self.max_grad_norm:
-            clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
-        self.optimizer.step()
-        self.step_schedulers(
-            is_epoch=False,
-            metrics=results,
-            log_access=False)
+        
+        # update model and logs based on effective batch
+        if should_step:
+            if self.max_grad_norm:
+                clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
+            self.optimizer.step()
+            self.step_schedulers(
+                is_epoch=False,
+                metrics=self.log_dict,
+                log_access=False)
+            self.model.zero_grad()
 
     def save_metric_for_logging(self, results, metric, value):
         if isinstance(value, torch.Tensor):

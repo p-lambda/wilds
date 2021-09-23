@@ -33,7 +33,7 @@ class DeepCORAL(SingleModelAlgorithm):
         featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
         featurizer = featurizer.to(config.device)
         classifier = classifier.to(config.device)
-        model = torch.nn.Sequential(featurizer, classifier).to(config.device)
+        model = torch.nn.Sequential(featurizer, classifier)
         # initialize module
         super().__init__(
             config=config,

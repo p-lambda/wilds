@@ -1,3 +1,4 @@
+import copy
 from configs.algorithm import algorithm_defaults
 from configs.model import model_defaults
 from configs.scheduler import scheduler_defaults
@@ -7,6 +8,8 @@ from configs.datasets import dataset_defaults, split_defaults
 def populate_defaults(config):
     """Populates hyperparameters with defaults implied by choices
     of other hyperparameters."""
+
+    orig_config = copy.deepcopy(config)
     assert config.dataset is not None, 'dataset must be specified'
     assert config.algorithm is not None, 'algorithm must be specified'
 
@@ -34,40 +37,53 @@ def populate_defaults(config):
             "and dann_discriminator_lr are valid learning rate parameters."
         )
 
+    if config.additional_train_transform is not None:
+        if config.algorithm == "NoisyStudent":
+            raise ValueError(
+                "Cannot pass in a value for additional_train_transform, NoisyStudent "
+                "already has a default transformation for the training data."
+            )
+
+    if config.load_featurizer_only:
+        if config.pretrained_model_path is None:
+            raise ValueError(
+                "load_featurizer_only cannot be set when there is no pretrained_model_path "
+                "specified."
+            )
 
     # implied defaults from choice of dataset
     config = populate_config(
-        config, 
+        config,
         dataset_defaults[config.dataset]
     )
 
     # implied defaults from choice of split
     if config.dataset in split_defaults and config.split_scheme in split_defaults[config.dataset]:
         config = populate_config(
-            config, 
+            config,
             split_defaults[config.dataset][config.split_scheme]
         )
-    
+
     # implied defaults from choice of algorithm
     config = populate_config(
-        config, 
+        config,
         algorithm_defaults[config.algorithm]
     )
 
     # implied defaults from choice of loader
     config = populate_config(
-        config, 
+        config,
         loader_defaults
     )
     # implied defaults from choice of model
     if config.model: config = populate_config(
-        config, 
+        config,
         model_defaults[config.model],
     )
-    
+
     # implied defaults from choice of scheduler
     if config.scheduler: config = populate_config(
-        config, 
+        config,
         scheduler_defaults[config.scheduler]
     )
 
@@ -78,13 +94,24 @@ def populate_defaults(config):
 
     # basic checks
     required_fields = [
-        'split_scheme', 'train_loader', 'uniform_over_groups', 'batch_size', 'eval_loader', 'model', 'loss_function', 
+        'split_scheme', 'train_loader', 'uniform_over_groups', 'batch_size', 'eval_loader', 'model', 'loss_function',
         'val_metric', 'val_metric_decreasing', 'n_epochs', 'optimizer', 'lr', 'weight_decay',
-        ] 
+        ]
     for field in required_fields:
         assert getattr(config, field) is not None, f"Must manually specify {field} for this setup."
 
+    # data loader validations
+    # we only raise this error if the train_loader is standard, and
+    # n_groups_per_batch or distinct_groups are
+    # specified by the user (instead of populated as a default)
+    if config.train_loader == 'standard':
+        if orig_config.n_groups_per_batch is not None:
+            raise ValueError("n_groups_per_batch cannot be specified if the data loader is 'standard'. Consider using a 'group' data loader instead.")
+        if orig_config.distinct_groups is not None:
+            raise ValueError("distinct_groups cannot be specified if the data loader is 'standard'. Consider using a 'group' data loader instead.")
+
     return config
+
 
 def populate_config(config, template: dict, force_compatibility=False):
     """Populates missing (key, val) pairs in config with (key, val) in template.
@@ -104,7 +131,7 @@ def populate_config(config, template: dict, force_compatibility=False):
                 d_config[key] = val
             elif d_config[key] != val and force_compatibility:
                 raise ValueError(f"Argument {key} must be set to {val}")
-                
+
         else: # config[key] expected to be a kwarg dict
             for kwargs_key, kwargs_val in val.items():
                 if kwargs_key not in d_config[key] or d_config[key][kwargs_key] is None:
