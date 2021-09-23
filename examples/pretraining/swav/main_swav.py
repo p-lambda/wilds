@@ -398,13 +398,14 @@ def train(train_loader, model, optimizer, epoch, lr_schedule, queue):
                     lr=optimizer.optim.param_groups[0]["lr"],
                 )
             )
-            wandb.log(
-                {
-                    "epoch": epoch,
-                    "loss": losses.val,
-                    "loss_avg": losses.avg,
-                }
-            )
+            if args.use_wandb:
+                wandb.log(
+                    {
+                        "epoch": epoch,
+                        "loss": losses.val,
+                        "loss_avg": losses.avg,
+                    }
+                )
     return (epoch, losses.avg), queue
 
 
