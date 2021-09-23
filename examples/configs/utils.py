@@ -44,6 +44,13 @@ def populate_defaults(config):
                 "already has a default transformation for the training data."
             )
 
+    if config.load_featurizer_only:
+        if config.pretrained_model_path is None:
+            raise ValueError(
+                "load_featurizer_only cannot be set when there is no pretrained_model_path "
+                "specified."
+            )
+
     # implied defaults from choice of dataset
     config = populate_config(
         config,

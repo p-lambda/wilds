@@ -41,7 +41,6 @@ def main():
     parser.add_argument('--algorithm', required=True, choices=supported.algorithms)
     parser.add_argument('--root_dir', required=True,
                         help='The directory where [dataset]/data can be found (or should be downloaded to, if it does not exist).')
-    parser.add_argument('--pretrained_model_path', default=None, type=str, help="Specify a path to a pretrained model's weights")
 
     # Dataset
     parser.add_argument('--split_scheme', help='Identifies how the train/val/test split is constructed. Choices are dataset-specific.')
@@ -73,8 +72,13 @@ def main():
     parser.add_argument('--model', choices=supported.models)
     parser.add_argument('--model_kwargs', nargs='*', action=ParseKwargs, default={},
         help='keyword arguments for model initialization passed as key1=value1 key2=value2')
-    parser.add_argument('--teacher_model_path', type=str, help='Path to teacher model weights. If this is defined, pseudolabels will first be computed for unlabeled data before anything else runs.')
     parser.add_argument('--dropout_rate', type=float)
+    parser.add_argument('--pretrained_model_path', default=None, type=str, help="Specify a path to a pretrained model's weights")
+    parser.add_argument('--load_featurizer_only', default=False, type=parse_bool, const=True, nargs='?', help="Set this to only load the featurizer weights and not the classifier weights.")
+
+    # NoisyStudent-specific loading
+    parser.add_argument('--teacher_model_path', type=str, help='Path to teacher model weights. If this is defined, pseudolabels will first be computed for unlabeled data before anything else runs.')
+
 
     # Transforms
     parser.add_argument('--transform', choices=supported.transforms)
@@ -247,8 +251,8 @@ def main():
             )
         else:
             unlabeled_train_transform = train_transform
-        
-        if config.algorithm == "NoisyStudent": 
+
+        if config.algorithm == "NoisyStudent":
             # For Noisy Student, we need to first generate pseudolabels using the teacher
             # and then prep the unlabeled dataset to return these pseudolabels in __getitem__
             print("Inferring teacher pseudolabels for Noisy Student")
@@ -284,7 +288,7 @@ def main():
             del teacher_model
             unlabeled_split_dataset = WILDSPseudolabeledSubset(
                 reference_subset=unlabeled_split_dataset,
-                pseudolabels=teacher_outputs, 
+                pseudolabels=teacher_outputs,
                 transform=unlabeled_train_transform
             )
         else:
