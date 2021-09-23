@@ -173,7 +173,6 @@ def main():
     logger, training_stats = initialize_exp(args, "epoch", "loss")
     logger.info(f"Initialized distributed mode and applied WILDS default...\n{args}")
 
-    # Weights and Biases
     if args.use_wandb:
         initialize_wandb(args)
 
