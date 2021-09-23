@@ -37,13 +37,13 @@ Usage:
     
 Example Usage:
     # To tune for ERM runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets civilcomments --algorithm ERM --random --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets ogb-molpcba --algorithm ERM --random --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --experiment fmow_erm_tune 
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm ERM --random --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
 
     # To tune for multi-gpu runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm FixMatch --random --gpus 1 --unlabeled-split extra_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets civilcomments --algorithm PseudoLabel --random --gpus 1 --unlabeled-split extra_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
@@ -98,6 +98,7 @@ class CodaLabReproducibility:
         "civilcomments",
         "iwildcam",
         "poverty",
+        "globalwheat",
     ]
 
     def __init__(self, local=False):
@@ -174,7 +175,6 @@ class CodaLabReproducibility:
             dry_run=dry_run,
         )
         for dataset, dataset_uuid in datasets_uuids.items():
-            dataset_fullname = self._get_field_value(dataset_uuid, "name")
             search_space = self._get_hyperparameter_search_space(algorithm)
 
             if (
@@ -184,7 +184,9 @@ class CodaLabReproducibility:
                 unlabeled_dataset_uuid = self._get_bundle_uuid(
                     f"{dataset}_unlabeled", worksheet_uuid
                 )
-                unlabeled_dataset_fullname = self._get_field_value(unlabeled_dataset_uuid, "name")
+                unlabeled_dataset_fullname = self._get_field_value(
+                    unlabeled_dataset_uuid, "name"
+                )
             else:
                 unlabeled_dataset_uuid = None
                 unlabeled_dataset_fullname = None
@@ -202,17 +204,17 @@ class CodaLabReproducibility:
                         max_batch_size = MAX_BATCH_SIZES[dataset] * gpus
                         index = np.random.choice(range(len(values)))
                         unlabeled_frac = values[index]
-                        unlabeled_batch_size = int(
-                            unlabeled_frac * max_batch_size
-                        )
+                        unlabeled_batch_size = int(unlabeled_frac * max_batch_size)
                         hyperparameter_config[
                             "unlabeled_batch_size"
                         ] = unlabeled_batch_size
                         hyperparameter_config["batch_size"] = (
                             max_batch_size - unlabeled_batch_size
                         )
-                        if 'n_epochs' in search_space[dataset]:
-                            hyperparameter_config["n_epochs"] = search_space[dataset]['n_epochs'][index]
+                        if "n_epochs" in search_space[dataset]:
+                            hyperparameter_config["n_epochs"] = search_space[dataset][
+                                "n_epochs"
+                            ][index]
                     else:
                         if len(values) == 1:
                             hyperparameter_config[hyperparameter] = values[0]
@@ -231,9 +233,12 @@ class CodaLabReproducibility:
 
                 dependencies = {
                     "wilds": wilds_src_uuid,
-                    dataset_fullname: dataset_uuid,
                     "wandb_api_key.txt": wandb_api_key_uuid,
                 }
+                if dataset_uuid:
+                    dataset_fullname = self._get_field_value(dataset_uuid, "name")
+                    dependencies[dataset_fullname] = dataset_uuid
+
                 if algorithm == "NoisyStudent":
                     dependencies["teacher"] = NOISY_STUDENT_TEACHERS[dataset]
 
@@ -291,8 +296,11 @@ class CodaLabReproducibility:
             "--request-disk=10g",
             f"--request-memory={memory_gb}g",
             "--request-priority=1",
-            "--request-queue=gcp",
+            "--request-queue=cluster",
         ]
+        if dataset == "ogb-molpcba":
+            commands.append("--exclude-patterns=ogbg_molpcba")
+
         if gpus > 1:
             commands.append("--request-queue=multi")
 
@@ -337,7 +345,7 @@ class CodaLabReproducibility:
                     "cl",
                     "search",
                     experiment_name,
-                    "state=ready,killed",
+                    "state=ready,killed,worker_offline",
                     f"host_worksheet={worksheet_uuid}",
                     ".limit=100",
                     "--uuid-only",
@@ -351,7 +359,8 @@ class CodaLabReproducibility:
                     continue
 
                 results_dfs = load_results(
-                    f"https://worksheets.codalab.org/rest/bundles/{uuid}/contents/blob",
+                    f"https://worksheets.codalab.org/rest/bundles/{uuid}/contents/blob"
+                    f"{'/student2' if 'noisystudent' in experiment_name else ''}",
                     splits=["val", "test"],
                     include_in_distribution=True,
                 )
@@ -446,7 +455,8 @@ class CodaLabReproducibility:
                 continue
 
             results_dfs = load_results(
-                f"https://worksheets.codalab.org/rest/bundles/{uuid}/contents/blob",
+                f"https://worksheets.codalab.org/rest/bundles/{uuid}/contents/blob"
+                f"{'/student2' if 'noisystudent' in experiment else ''}",
                 splits=["val", "test"],
                 include_in_distribution=True,
             )
@@ -550,12 +560,17 @@ class CodaLabReproducibility:
             if unlabeled_split != None:
                 command += f" --unlabeled_loader_kwargs num_workers=8 pin_memory=True"
 
+        # Always download ogb-molpcba dataset
+        if dataset_name == "ogb-molpcba":
+            command += f" --download"
+
         # Configure wandb
         # Disable pushing to WandB for Amazon - we're hitting retry loops when pushing metrics at the end of the run
         if dataset_name != "amazon":
             command += (
                 f" --use_wandb --wandb_api_key_path wandb_api_key.txt --wandb_kwargs"
-                f" entity=wilds project={algorithm.lower()}-{dataset_name.lower()} group={experiment_name}_gpus{gpus}_paper"
+                f" entity=wilds project={algorithm.lower()}-{dataset_name.lower()}"
+                f" group={experiment_name}_gpus{gpus}_paper"
             )
         return command
 
@@ -572,6 +587,8 @@ class CodaLabReproducibility:
         )
 
     def _get_datasets_uuids(self, worksheet_uuid, datasets, unlabeled=False):
+        if datasets == ["ogb-molpcba"]:
+            return {datasets[0]: ''}
         return {
             dataset: self._get_bundle_uuid(
                 f"{dataset}_unlabeled" if unlabeled else f"{dataset}_v", worksheet_uuid
