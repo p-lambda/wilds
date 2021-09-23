@@ -5,8 +5,10 @@ from examples.configs.datasets import dataset_defaults
 AMAZON = "amazon"
 CIVIL_COMMENTS = "civilcomments"
 CAMELYON17 = "camelyon17"
+GLOBAL_WHEAT = "globalwheat"
 IWILDCAM = "iwildcam"
 FMOW = "fmow"
+OGB = "ogb-molpcba"
 POVERTY = "poverty"
 
 # Maximum batch size that fits on a 12GB GPU
@@ -14,15 +16,17 @@ MAX_BATCH_SIZES = {
     AMAZON: 24,
     CIVIL_COMMENTS: 48,
     CAMELYON17: 168,
+    GLOBAL_WHEAT: 10,
     IWILDCAM: 24,
     FMOW: 72,
+    OGB: 4096,
     POVERTY: 120,
 }
 
 DEFAULT_UNLABELED_FRAC = [3 / 4, 7 / 8, 15 / 16]
 
 NOISY_STUDENT_TEACHERS = {
-    CAMELYON17: "0x991cce12e08948fa9a441c5a12972bf7",
+    CAMELYON17: "0xb7b57b6f117e4d48b4c6f172092ae323",
     IWILDCAM: "0x52f2dd8e448a4c7e802783fa35c269c6",
     FMOW: "0x3b7e033b88464f53a3c432614bda72d3",
     POVERTY: "",    # TODO: run Poverty + ERM DA
@@ -52,6 +56,8 @@ ERM_HYPERPARAMETER_SEARCH_SPACE = {
         CIVIL_COMMENTS: {
             "batch_size": [MAX_BATCH_SIZES[CIVIL_COMMENTS]],
             "lr": get_lr_grid(CIVIL_COMMENTS, grad_accumulation=1),
+            "groupby_fields": ["y"],
+            "uniform_over_group": [True],
         },
         CAMELYON17: {
             "batch_size": [MAX_BATCH_SIZES[CAMELYON17]],
@@ -68,6 +74,14 @@ ERM_HYPERPARAMETER_SEARCH_SPACE = {
         POVERTY: {
             "batch_size": [MAX_BATCH_SIZES[POVERTY]],
             "lr": get_lr_grid(POVERTY, grad_accumulation=1),
+        },
+        GLOBAL_WHEAT: {
+            "batch_size": [MAX_BATCH_SIZES[GLOBAL_WHEAT]],
+            "lr": get_lr_grid(GLOBAL_WHEAT, grad_accumulation=1),
+        },
+        OGB: {
+            "batch_size": [MAX_BATCH_SIZES[OGB]],
+            "lr": get_lr_grid(OGB, grad_accumulation=1),
         },
     },
 }
@@ -105,12 +119,6 @@ CORAL_HYPERPARAMETER_SEARCH_SPACE = {
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "n_epochs": get_epochs_unlabeled(AMAZON, factor=2),
         },
-        CIVIL_COMMENTS: {
-            "lr": get_lr_grid(CIVIL_COMMENTS, grad_accumulation=4),
-            "coral_penalty_weight": [-1, 1],
-            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
-            "n_epochs": get_epochs_unlabeled(CIVIL_COMMENTS, factor=2),
-        },
         CAMELYON17: {
             "lr": get_lr_grid(CAMELYON17, grad_accumulation=4),
             "coral_penalty_weight": [-1, 1],
@@ -146,13 +154,6 @@ DANN_HYPERPARAMETER_SEARCH_SPACE = {
             "dann_penalty_weight": [-1, 1],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "n_epochs": get_epochs_unlabeled(AMAZON, factor=2),
-        },
-        CIVIL_COMMENTS: {
-            "dann_classifier_lr": get_lr_grid(CIVIL_COMMENTS, grad_accumulation=4),
-            "dann_discriminator_lr": get_lr_grid(CIVIL_COMMENTS, grad_accumulation=4),
-            "dann_penalty_weight": [-1, 1],
-            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
-            "n_epochs": get_epochs_unlabeled(CIVIL_COMMENTS, factor=2),
         },
         CAMELYON17: {
             "dann_classifier_lr": get_lr_grid(CAMELYON17, grad_accumulation=4),
@@ -239,6 +240,8 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "scheduler": ["FixMatchLR"],
             "n_epochs": get_epochs_unlabeled(CIVIL_COMMENTS, factor=2),
+            "groupby_fields": ["y"],
+            "uniform_over_group": [True],
         },
         CAMELYON17: {
             "lr": get_lr_grid(CAMELYON17, grad_accumulation=4),
