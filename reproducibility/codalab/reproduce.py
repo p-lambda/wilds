@@ -296,7 +296,7 @@ class CodaLabReproducibility:
             "--request-disk=10g",
             f"--request-memory={memory_gb}g",
             "--request-priority=1",
-            # "--request-queue=cluster",
+            "--request-queue=cluster",
         ]
         if dataset == "ogb-molpcba":
             commands.append("--exclude-patterns=ogbg_molpcba")

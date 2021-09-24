@@ -266,7 +266,7 @@ dataset_defaults = {
         'unlabeled_batch_size': 32,
         'lr': 1e-03,
         'weight_decay': 0.,
-        'n_epochs': 150,
+        'n_epochs': 200,
         'n_groups_per_batch': 4,
         'unlabeled_n_groups_per_batch': 4,
         'irm_lambda': 1.,
