@@ -266,7 +266,7 @@ dataset_defaults = {
         'unlabeled_batch_size': 32,
         'lr': 1e-03,
         'weight_decay': 0.,
-        'n_epochs': 100,
+        'n_epochs': 150,
         'n_groups_per_batch': 4,
         'unlabeled_n_groups_per_batch': 4,
         'irm_lambda': 1.,
@@ -424,7 +424,7 @@ dataset_defaults = {
         'batch_size': 4,
         'lr': 1e-5,
         'weight_decay': 1e-3,
-        'n_epochs': 10,
+        'n_epochs': 12,
         'loader_kwargs': {
             'num_workers': 1,
             'pin_memory': True,
