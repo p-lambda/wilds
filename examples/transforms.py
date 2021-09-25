@@ -30,6 +30,7 @@ def initialize_transform(
         return initialize_rxrx1_transform(is_training)
 
     # For images
+    normalize = True
     if transform_name == "image_base":
         transform_steps = get_image_base_transform_steps(config, dataset)
     elif transform_name == "image_resize":
@@ -44,6 +45,7 @@ def initialize_transform(
         if not is_training:
             return None
         transform_steps = []
+        normalize = False
     else:
         raise ValueError(f"{transform_name} not recognized")
 
