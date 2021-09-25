@@ -189,45 +189,6 @@ def get_image_resize_transform_steps(config, dataset) -> List:
         transforms.Resize(scaled_resolution)
     ]
 
-
-def initialize_poverty_transform(is_training):
-    if is_training:
-        transforms_ls = [
-            transforms.ToPILImage(),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomVerticalFlip(),
-            transforms.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.1),
-            transforms.ToTensor()]
-        rgb_transform = transforms.Compose(transforms_ls)
-
-        def transform_rgb(img):
-            # bgr to rgb and back to bgr
-            img[:3] = rgb_transform(img[:3][[2,1,0]])[[2,1,0]]
-            return img
-        transform = transforms.Lambda(lambda x: transform_rgb(x))
-        return transform
-    else:
-        return None
-
-
-def get_poverty_train_transform_steps() -> List:
-    return [
-        transforms.ToPILImage(),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomVerticalFlip(),
-        transforms.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.1),
-    ]
-
-
-def apply_rgb_transform(transform):
-    def transform_rgb(img):
-        # bgr to rgb and then back to bgr
-        img[:3] = transform(img[:3][[2, 1, 0]])[[2, 1, 0]]
-        return img
-
-    return transforms.Lambda(lambda x: transform_rgb(x))
-
-
 def add_fixmatch_transform(config, dataset, base_transform_steps, normalization):
     return (
         add_weak_transform(config, dataset, base_transform_steps, normalization),
@@ -270,7 +231,7 @@ def add_rand_augment_transform(config, dataset, base_transform_steps, normalizat
     )
     return transforms.Compose(strong_transform_steps)
 
-def add_poverty_rand_augment_transform(config, dataset, base_transform_steps):
+def poverty_rgb_color_transform(ms_img, transform):
     from wilds.datasets.poverty_dataset import _MEANS_2009_17, _STD_DEVS_2009_17
     poverty_rgb_means = np.array([_MEANS_2009_17[c] for c in ['RED', 'GREEN', 'BLUE']]).reshape((-1, 1, 1))
     poverty_rgb_stds = np.array([_STD_DEVS_2009_17[c] for c in ['RED', 'GREEN', 'BLUE']]).reshape((-1, 1, 1))
@@ -283,25 +244,36 @@ def add_poverty_rand_augment_transform(config, dataset, base_transform_steps):
         ms_img[:3] = (ms_img[:3] - poverty_rgb_means) / poverty_rgb_stds
         return ms_img
 
-    def rgb_color_transform(ms_img):
-        color_transform = transforms.Compose([
-            transforms.Lambda(lambda ms_img: unnormalize_rgb_in_poverty_ms_img(ms_img)),
-            transforms.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.1),
-            transforms.Lambda(lambda ms_img: normalize_rgb_in_poverty_ms_img(ms_img)),
-        ])
-        # The first three channels of the Poverty MS images are BGR
-        # So we shuffle them to the standard RGB to do the ColorJitter
-        # Before shuffling them back
-        ms_img[:3] = color_transform(ms_img[[2,1,0]])[[2,1,0]] # bgr to rgb to bgr
-        return ms_img
+    color_transform = transforms.Compose([
+        transforms.Lambda(lambda ms_img: unnormalize_rgb_in_poverty_ms_img(ms_img)),
+        transform,
+        transforms.Lambda(lambda ms_img: normalize_rgb_in_poverty_ms_img(ms_img)),
+    ])
+    # The first three channels of the Poverty MS images are BGR
+    # So we shuffle them to the standard RGB to do the ColorJitter
+    # Before shuffling them back
+    ms_img[:3] = color_transform(ms_img[[2,1,0]])[[2,1,0]] # bgr to rgb to bgr
+    return ms_img
 
-    def viz(ms_img):
-        # This function is just to visualize the images for exploratory/debugging purposes
-        color_transform = transforms.Compose([
-            transforms.Lambda(lambda ms_img: unnormalize_rgb_in_poverty_ms_img(ms_img))
-        ])
-        ms_img[:3] = color_transform(ms_img[[2,1,0]])[[2,1,0]] # bgr to rgb to bgr
-        return ms_img
+def add_poverty_rand_augment_transform(config, dataset, base_transform_steps):
+    def poverty_color_jitter(ms_img):
+        return poverty_rgb_color_transform(
+            ms_img,
+            transforms.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.1))
+
+    # def viz(ms_img):
+    #     # This function is just to visualize the images for exploratory/debugging purposes
+    #     from wilds.datasets.poverty_dataset import _MEANS_2009_17, _STD_DEVS_2009_17
+    #     poverty_rgb_means = np.array([_MEANS_2009_17[c] for c in ['RED', 'GREEN', 'BLUE']]).reshape((-1, 1, 1))
+    #     poverty_rgb_stds = np.array([_STD_DEVS_2009_17[c] for c in ['RED', 'GREEN', 'BLUE']]).reshape((-1, 1, 1))
+    #     def unnormalize_rgb_in_poverty_ms_img(ms_img):
+    #         ms_img[:3] = (ms_img[:3] * poverty_rgb_stds) + poverty_rgb_means
+    #         return ms_img
+    #     color_transform = transforms.Compose([
+    #         transforms.Lambda(lambda ms_img: unnormalize_rgb_in_poverty_ms_img(ms_img))
+    #     ])
+    #     ms_img[:3] = color_transform(ms_img[[2,1,0]])[[2,1,0]] # bgr to rgb to bgr
+    #     return ms_img
 
     def ms_cutout(ms_img):
         def _sample_uniform(a, b):
@@ -327,7 +299,7 @@ def add_poverty_rand_augment_transform(config, dataset, base_transform_steps):
         transforms.RandomHorizontalFlip(),
         transforms.RandomVerticalFlip(),
         transforms.RandomAffine(degrees=10, translate=(0.1, 0.1), shear=0.1, scale=(0.9, 1.1)),
-        transforms.Lambda(lambda ms_img: rgb_color_transform(ms_img)),
+        transforms.Lambda(lambda ms_img: poverty_color_jitter(ms_img)),
         transforms.Lambda(lambda ms_img: ms_cutout(ms_img)),
         # transforms.Lambda(lambda ms_img: viz(ms_img)),
     ])
