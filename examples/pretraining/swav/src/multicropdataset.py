@@ -103,12 +103,12 @@ class CustomSplitMultiCropDataset(Dataset):
                 trans.extend([transforms.Compose([
                     random_resized_crop,
                     transforms.RandomHorizontalFlip(p=0.5),
-                    transforms.Lambda(ms_img: poverty_rgb_color_transform(
+                    transforms.Lambda(lambda ms_img: poverty_rgb_color_transform(
                         ms_img,
                         color_distortion)),
                     transforms.RandomApply(
                         [transforms.GaussianBlur(
-                            kernel_size=int(224/10),
+                            kernel_size=23, # nearest odd number to image size (224) / 10
                             sigma=(0.1,2))],
                         p=0.5)
                     ])
