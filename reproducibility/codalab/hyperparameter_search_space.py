@@ -140,6 +140,12 @@ CORAL_HYPERPARAMETER_SEARCH_SPACE = {
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "n_epochs": get_epochs_unlabeled(FMOW, factor=2),
         },
+        OGB: {
+            "lr": get_lr_grid(OGB, grad_accumulation=4),
+            "coral_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(OGB, factor=2),
+        },
         POVERTY: {
             "lr": get_lr_grid(POVERTY, grad_accumulation=4),
             "coral_penalty_weight": [-1, 1],
@@ -178,6 +184,13 @@ DANN_HYPERPARAMETER_SEARCH_SPACE = {
             "dann_penalty_weight": [-1, 1],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "n_epochs": get_epochs_unlabeled(FMOW, factor=2),
+        },
+        OGB: {
+            "dann_classifier_lr": get_lr_grid(OGB, grad_accumulation=4),
+            "dann_discriminator_lr": get_lr_grid(OGB, grad_accumulation=4),
+            "dann_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(OGB, factor=2),
         },
         POVERTY: {
             "dann_classifier_lr": get_lr_grid(POVERTY, grad_accumulation=4),
@@ -269,6 +282,14 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "scheduler": ["FixMatchLR"],
             "n_epochs": get_epochs_unlabeled(FMOW, factor=2),
+        },
+        OGB: {
+            "lr": get_lr_grid(OGB, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(OGB, factor=2),
         },
         POVERTY: {
             "lr": get_lr_grid(POVERTY, grad_accumulation=4),
