@@ -9,6 +9,7 @@ import numpy as np
 
 from examples.configs.datasets import dataset_defaults
 from reproducibility.codalab.hyperparameter_search_space import (
+    OGB,
     MAX_BATCH_SIZES,
     ERM_HYPERPARAMETER_SEARCH_SPACE,
     ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE,
@@ -39,7 +40,7 @@ Example Usage:
     # To tune for ERM runs
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets ogb-molpcba --algorithm ERM --random --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --experiment fmow_erm_tune 
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm ERM --random --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets poverty --algorithm ERM --random --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
 
     # To tune for multi-gpu runs
@@ -279,7 +280,7 @@ class CodaLabReproducibility:
 
         if gpus == 1:
             cpus = 4
-            memory_gb = 16
+            memory_gb = 65 if dataset == OGB else 16
         else:
             cpus = 8
             memory_gb = 32
@@ -298,8 +299,8 @@ class CodaLabReproducibility:
             "--request-priority=1",
             "--request-queue=cluster",
         ]
-        if dataset == "ogb-molpcba":
-            commands.append("--exclude-patterns=molpcba_unlabeled ogbg_molpcba")
+        if dataset == OGB:
+            commands.append("--exclude-patterns=data")
 
         if gpus > 1:
             commands.append("--request-queue=multi")
@@ -540,8 +541,8 @@ class CodaLabReproducibility:
         else:
             executable = "run_expt.py"
         command = (
-            f"python -Wi wilds/examples/{executable} --root_dir $HOME --log_dir $HOME "
-            f"--dataset {dataset_name} --algorithm {algorithm} --seed {seed}"
+            f"python -Wi wilds/examples/{executable} --root_dir $HOME{'/data' if dataset_name == OGB else ''}"
+            f" --log_dir $HOME --dataset {dataset_name} --algorithm {algorithm} --seed {seed}"
         )
         if unlabeled_split:
             command += f" --unlabeled_split {unlabeled_split}"
@@ -561,7 +562,7 @@ class CodaLabReproducibility:
                 command += f" --unlabeled_loader_kwargs num_workers=8 pin_memory=True"
 
         # Always download ogb-molpcba dataset
-        if dataset_name == "ogb-molpcba":
+        if dataset_name == OGB:
             command += f" --download"
 
         # Configure wandb
@@ -587,7 +588,7 @@ class CodaLabReproducibility:
         )
 
     def _get_datasets_uuids(self, worksheet_uuid, datasets, unlabeled=False):
-        if datasets == ["ogb-molpcba"]:
+        if datasets == [OGB]:
             return {datasets[0]: ''}
         return {
             dataset: self._get_bundle_uuid(
