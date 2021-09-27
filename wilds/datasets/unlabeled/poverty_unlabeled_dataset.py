@@ -83,6 +83,7 @@ class PovertyMapUnlabeledDataset(WILDSUnlabeledDataset):
                  cache_size=100):
         self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
+        self._original_resolution = (224, 224)
 
         if split_scheme=='official':
             split_scheme = 'countries'
