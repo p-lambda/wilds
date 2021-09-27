@@ -72,7 +72,9 @@ def initialize_transform(
             config, dataset, transform_steps, default_normalization
         )
     else:
-        transform_steps.append(transforms.ToTensor())
+        if transform_name != "poverty":
+            # The poverty data is already a tensor at this point
+            transform_steps.append(transforms.ToTensor())
         if normalize:
             transform_steps.append(default_normalization)
         transform = transforms.Compose(transform_steps)
