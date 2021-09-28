@@ -83,8 +83,6 @@ def Solarize(img, v):  # [0, 256]
 
 def Cutout(img, v):  # [0, 60] => percentage: [0, 0.2] => change to [0, 0.5]
     assert 0.0 <= v <= 0.5
-    if v <= 0.0:
-        return img
 
     v = v * img.size[0]
     return CutoutAbs(img, v)

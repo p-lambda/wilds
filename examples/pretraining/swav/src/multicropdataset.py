@@ -18,6 +18,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 
 from wilds import get_dataset
+from examples.transforms import poverty_rgb_color_transform
 
 logger = getLogger()
 
@@ -81,22 +82,46 @@ class CustomSplitMultiCropDataset(Dataset):
         self.return_index = return_index
 
         self.ds = CustomSplitDataset(dataset_name, root_dir, config)
-        color_transform = [get_color_distortion(), PILRandomGaussianBlur()]
+        color_distortion = get_color_distortion()
+        color_transform = [color_distortion, PILRandomGaussianBlur()]
         trans = []
         means = [0.485, 0.456, 0.406]
         stds = [0.229, 0.224, 0.225]
         for i in range(len(size_crops)):
-            randomresizedcrop = transforms.RandomResizedCrop(
+            random_resized_crop = transforms.RandomResizedCrop(
                 size_crops[i],
                 scale=(min_scale_crops[i], max_scale_crops[i]),
             )
-            trans.extend([transforms.Compose([
-                randomresizedcrop,
-                transforms.RandomHorizontalFlip(p=0.5),
-                transforms.Compose(color_transform),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=means, std=stds)])
-            ] * nmb_crops[i])
+            if dataset_name == "poverty":
+                # The Poverty-WILDS dataset is made up of 8 x 224 x 224 multispectral, normalized images.
+                # Apply spatial-level transformations first, then apply pixel-level transformations
+                # on RGB channels only.
+                # We use PyTorch's GaussianBlur because we want to blur all channels;
+                # the PIL implementation will only blur the RGB channels.
+                # The PyTorch and PIL GaussianBlur APIs differ.
+                # Here, we follow SimCLR defaults for the kernel size.
+                trans.extend([transforms.Compose([
+                    random_resized_crop,
+                    transforms.RandomHorizontalFlip(p=0.5),
+                    transforms.Lambda(lambda ms_img: poverty_rgb_color_transform(
+                        ms_img,
+                        color_distortion)),
+                    transforms.RandomApply(
+                        [transforms.GaussianBlur(
+                            kernel_size=23, # nearest odd number to image size (224) / 10
+                            sigma=(0.1,2))],
+                        p=0.5)
+                    ])
+                ] * nmb_crops[i])
+            else:
+                trans.extend([transforms.Compose([
+                    random_resized_crop,
+                    transforms.RandomHorizontalFlip(p=0.5),
+                    transforms.Compose(color_transform),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean=means, std=stds)])
+                ] * nmb_crops[i])
+
         self.trans = trans
 
     def __len__(self):
