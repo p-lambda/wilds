@@ -157,12 +157,14 @@ LOCATIONS = [
 
 
 STAGES = [
-    "Emergence",
-    "Filling",
-    "Filling-Ripening",
-    "multiple",
-    "Post-Flowering",
-    "Ripening",
+    'Filling',
+    'Filling - Ripening',
+    'multiple',
+    'Post-flowering',
+    'Post-Flowering',
+    'Ripening',
+    'Emergence',
+    'Filling-Ripening'
 ]
 
 
