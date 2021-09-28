@@ -133,6 +133,8 @@ class CombinatorialGrouper(Grouper):
                 if min_value < 0:
                     raise ValueError(f"Metadata for CombinatorialGrouper cannot have values less than 0: {field}, {min_value}")
                 if min_value > 0:
+                    import IPython
+                    IPython.embed()
                     warnings.warn(f"Minimum metadata value for CombinatorialGrouper is not 0 ({field}, {min_value}). This will result in empty groups")
 
             # We assume that the metadata fields are integers,
