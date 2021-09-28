@@ -35,4 +35,5 @@ unlabeled_datasets = [
     'ogb-molpcba',
     'poverty',
     'fmow',
+    'globalwheat',
 ]

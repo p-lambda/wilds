@@ -311,10 +311,6 @@ class GlobalWheatUnlabeledDataset(WILDSUnlabeledDataset):
             "stage": STAGES,
         }
 
-        self._eval_grouper = CombinatorialGrouper(
-            dataset=self, groupby_fields=["session"]
-        )
-
         super().__init__(root_dir, download, split_scheme)
 
     def get_input(self, idx):
