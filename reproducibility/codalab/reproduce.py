@@ -280,7 +280,7 @@ class CodaLabReproducibility:
 
         if gpus == 1:
             cpus = 4
-            memory_gb = 65 if dataset == OGB else 16
+            memory_gb = 64 if dataset == OGB else 16
         else:
             cpus = 8
             memory_gb = 32
