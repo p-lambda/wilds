@@ -242,8 +242,6 @@ class MultiTaskMetric(Metric):
         batch_idx = torch.where(is_labeled)[0]
         flattened_y_pred = y_pred[is_labeled]
         flattened_y_true = y_true[is_labeled]
-        # import IPython
-        # IPython.embed()
         flattened_metrics = self._compute_flattened(flattened_y_pred, flattened_y_true)
         if return_dict:
             return {self.name: flattened_metrics, 'index': batch_idx}
