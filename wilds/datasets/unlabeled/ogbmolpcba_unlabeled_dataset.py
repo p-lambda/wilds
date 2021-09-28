@@ -6,8 +6,11 @@ from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSUnlabeledDatas
 
 from ogb.graphproppred import PygGraphPropPredDataset
 from ogb.utils.url import download_url
-from torch_geometric.data.dataloader import Collater as PyGCollater
 import torch_geometric
+if torch_geometric.__version__ >= '2.0.0':
+    from torch_geometric.loader.dataloader import Collater as PyGCollater
+else:
+    from torch_geometric.data.dataloader import Collater as PyGCollater
 
 class OGBPCBAUnlabeledDataset(WILDSUnlabeledDataset):
     """
