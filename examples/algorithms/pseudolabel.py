@@ -9,6 +9,11 @@ from configs.supported import process_outputs_functions, process_pseudolabels_fu
 import copy
 from utils import load
 
+try:
+    from torch_geometric.data import Batch
+except ImportError:
+    pass
+
 class PseudoLabel(SingleModelAlgorithm):
     """
     PseudoLabel.
@@ -94,15 +99,18 @@ class PseudoLabel(SingleModelAlgorithm):
 
         # Concat and call forward
         if unlabeled_batch is not None:
+            n_lab = y_true.shape[0]
             if isinstance(x, torch.Tensor):
-                n_lab = x.shape[0]
-                x_concat = torch.cat((x, x_unlab), dim=0)
-                outputs = self.model(x_concat)
-                results['y_pred'] = outputs[:n_lab]
-                unlabeled_output = outputs[n_lab:]
+                x_cat = torch.cat((x, x_unlab), dim=0)
+            elif isinstance(x, Batch):
+                x.y = None
+                x_cat = Batch.from_data_list([x, x_unlab])
             else:
-                results['y_pred'] = self.model(x)
-                unlabeled_output = self.model(x_unlab)
+                raise TypeError('x must be Tensor or Batch')
+
+            outputs = self.model(x_cat)
+            results['y_pred'] = outputs[:n_lab]
+            unlabeled_output = outputs[n_lab:]
 
             unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac = self.process_pseudolabels_function(
                 unlabeled_output,

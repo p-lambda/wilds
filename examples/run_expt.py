@@ -235,8 +235,6 @@ def main():
             unlabeled=True,
             **config.dataset_kwargs
         )
-        import IPython
-        IPython.embed()
         train_grouper = CombinatorialGrouper(
             dataset=[full_dataset, full_unlabeled_dataset],
             groupby_fields=config.groupby_fields
