@@ -256,7 +256,7 @@ dataset_defaults = {
         'dann_classifier_lr': 3e-5,
         'dann_discriminator_lr': 3e-5,
         'no_group_logging': True,
-        'process_outputs_function': 'multiclass_logits_to_pred'
+        'process_outputs_function': 'multiclass_logits_to_pred',
         'process_pseudolabels_function': 'pseudolabel_multiclass_logits',
     },
     'ogb-molpcba': {
