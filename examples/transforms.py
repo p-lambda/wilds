@@ -239,11 +239,13 @@ def poverty_rgb_color_transform(ms_img, transform):
     poverty_rgb_stds = np.array([_STD_DEVS_2009_17[c] for c in ['RED', 'GREEN', 'BLUE']]).reshape((-1, 1, 1))
 
     def unnormalize_rgb_in_poverty_ms_img(ms_img):
-        ms_img[:3] = (ms_img[:3] * poverty_rgb_stds) + poverty_rgb_means
-        return ms_img
+        result = ms_img.detach().clone()
+        result[:3] = (result[:3] * poverty_rgb_stds) + poverty_rgb_means
+        return result
 
     def normalize_rgb_in_poverty_ms_img(ms_img):
-        ms_img[:3] = (ms_img[:3] - poverty_rgb_means) / poverty_rgb_stds
+        result = ms_img.detach().clone()
+        result[:3] = (result[:3] - poverty_rgb_means) / poverty_rgb_stds
         return ms_img
 
     color_transform = transforms.Compose([
