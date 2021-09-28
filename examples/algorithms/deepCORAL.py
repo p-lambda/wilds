@@ -90,6 +90,7 @@ class DeepCORAL(SingleModelAlgorithm):
             'metadata': metadata,
             'features': features,
         }
+        # TODO: do this in a single pass
         if unlabeled_batch is not None:
             x, metadata = unlabeled_batch
             x = x.to(self.device)

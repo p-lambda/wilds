@@ -108,6 +108,7 @@ def main():
     parser.add_argument('--pseudolabel_T2', type=float, help='Percentage of total iterations at which to end linear scheduling and hold lambda at the max value')
     parser.add_argument('--soft_pseudolabels', default=False, type=parse_bool, const=True, nargs='?')
     parser.add_argument('--algo_log_metric')
+    parser.add_argument('--process_pseudolabels_function', choices = supported.process_pseudolabels_functions)
 
     # Model selection
     parser.add_argument('--val_metric')

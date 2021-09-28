@@ -9,11 +9,11 @@ from configs.supported import process_outputs_functions
 class FixMatch(SingleModelAlgorithm):
     """
     FixMatch.
-    This algorithm was originally proposed as a semi-supervised learning algorithm. 
+    This algorithm was originally proposed as a semi-supervised learning algorithm.
 
     Loss is of the form
         \ell_s + \lambda * \ell_u
-    where 
+    where
         \ell_s = cross-entropy with true labels using weakly augmented labeled examples
         \ell_u = cross-entropy with pseudolabel generated using weak augmentation and prediction
             using strong augmentation
@@ -64,7 +64,7 @@ class FixMatch(SingleModelAlgorithm):
             - 'metadata': metdata tensor for the labeled batch
             - 'unlabeled_g': groups for the unlabeled batch
             - 'unlabeled_weak_y_pseudo': class pseudolabels predicted from weakly augmented x of the unlabeled batch
-            - 'unlabeled_mask': true if the unlabeled example had confidence above the threshold; we pass this around 
+            - 'unlabeled_mask': true if the unlabeled example had confidence above the threshold; we pass this around
                 to help compute the loss in self.objective()
             - 'unlabeled_strong_y_pred': outputs (logits) on strongly augmented x of the unlabeled batch
             - 'unlabeled_metadata': metdata tensor for the unlabeled batch
@@ -96,7 +96,7 @@ class FixMatch(SingleModelAlgorithm):
                 pseudolabels = self.process_outputs_function(outputs)
                 results['unlabeled_weak_y_pseudo'] = pseudolabels
                 results['unlabeled_mask'] = mask
-        
+
         # Concat and call forward
         n_lab = x.shape[0]
         if unlabeled_batch is not None: x_concat = torch.cat((x, x_strong), dim=0)
@@ -105,7 +105,7 @@ class FixMatch(SingleModelAlgorithm):
         results['y_pred'] = outputs[:n_lab]
         if unlabeled_batch is not None:
             results['unlabeled_strong_y_pred'] = outputs[n_lab:]
-        
+
         return results
 
     def objective(self, results):
@@ -113,6 +113,7 @@ class FixMatch(SingleModelAlgorithm):
         classification_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
 
         # Pseudolabeled loss
+        # TODO: update to newer pseudolabel code
         if 'unlabeled_weak_y_pseudo' in results:
             mask = results['unlabeled_mask']
             masked_loss_output = self.loss.compute_element_wise(

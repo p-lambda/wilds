@@ -4,6 +4,8 @@ from wilds.common.metrics.all_metrics import (
     MSE,
     multiclass_logits_to_pred,
     binary_logits_to_pred,
+    pseudolabel_binary_logits,
+    pseudolabel_multiclass_logits,
     MultiTaskAveragePrecision
 )
 
@@ -20,6 +22,11 @@ process_outputs_functions = {
     'binary_logits_to_pred': binary_logits_to_pred,
     'multiclass_logits_to_pred': multiclass_logits_to_pred,
     None: None,
+}
+
+process_pseudolabels_functions = {
+    'pseudolabel_binary_logits': pseudolabel_binary_logits,
+    'pseudolabel_multiclass_logits': pseudolabel_multiclass_logits,
 }
 
 # see initialize_*() functions for correspondence=
