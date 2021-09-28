@@ -107,6 +107,7 @@ SESSIONS = [
     "unlabeled_uliege_7_7",
     "unlabeled_usask_2019_08_06_sampled",
     "unlabeled_usask_2019_08_12_sampled",
+    "unlabeled_ETHZ_2"
 ]
 COUNTRIES = [
     'Switzerland',
@@ -209,7 +210,7 @@ class GlobalWheatUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name = "globalwheat_unlabeled"
     _versions_dict = {
         "1.0": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0x48ceab0e3c61475dacd66fdb5aa5c5e7",
+            "download_url": "https://worksheets.codalab.org/rest/bundles/0x7808fd8dca5b4611813e709fc4a3f5a7/contents/blob/",
             "compressed_size": None,
         }
     }
