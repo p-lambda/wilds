@@ -107,6 +107,7 @@ SESSIONS = [
     "unlabeled_uliege_7_7",
     "unlabeled_usask_2019_08_06_sampled",
     "unlabeled_usask_2019_08_12_sampled",
+    "unlabeled_ETHZ_2"
 ]
 COUNTRIES = [
     'Switzerland',
@@ -156,12 +157,14 @@ LOCATIONS = [
 
 
 STAGES = [
-    "Emergence",
-    "Filling",
-    "Filling-Ripening",
-    "multiple",
-    "Post-Flowering",
-    "Ripening",
+    'Filling',
+    'Filling - Ripening',
+    'multiple',
+    'Post-flowering',
+    'Post-Flowering',
+    'Ripening',
+    'Emergence',
+    'Filling-Ripening'
 ]
 
 
@@ -209,7 +212,7 @@ class GlobalWheatUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name = "globalwheat_unlabeled"
     _versions_dict = {
         "1.0": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0x1393104a42aa4377b4962ea08d52424f/contents/blob/",
+            "download_url": "https://worksheets.codalab.org/rest/bundles/0x7808fd8dca5b4611813e709fc4a3f5a7/contents/blob/",
             "compressed_size": None,
         }
     }
@@ -309,10 +312,6 @@ class GlobalWheatUnlabeledDataset(WILDSUnlabeledDataset):
             "location": LOCATIONS,
             "stage": STAGES,
         }
-
-        self._eval_grouper = CombinatorialGrouper(
-            dataset=self, groupby_fields=["session"]
-        )
 
         super().__init__(root_dir, download, split_scheme)
 
