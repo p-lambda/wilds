@@ -46,6 +46,8 @@ class FixMatch(SingleModelAlgorithm):
         self.confidence_threshold = config.self_training_threshold
         if config.process_outputs_function is not None:
             self.process_outputs_function = process_outputs_functions[config.process_outputs_function]
+        else:
+            self.process_outputs_function = None
 
         # Additional logging
         self.logged_fields.append("pseudolabels_kept_frac")
@@ -93,7 +95,7 @@ class FixMatch(SingleModelAlgorithm):
             with torch.no_grad():
                 outputs = self.model(x_weak)
                 mask = torch.max(F.softmax(outputs, -1), -1)[0] >= self.confidence_threshold
-                pseudolabels = self.process_outputs_function(outputs)
+                pseudolabels = self.process_outputs_function(outputs) if self.process_outputs_function else outputs
                 results['unlabeled_weak_y_pseudo'] = pseudolabels
                 results['unlabeled_mask'] = mask
         
