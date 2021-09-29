@@ -49,6 +49,9 @@ class PseudoLabel(SingleModelAlgorithm):
         self.confidence_threshold = config.self_training_threshold
         if config.process_outputs_function is not None: 
             self.process_outputs_function = process_outputs_functions[config.process_outputs_function]
+        else:
+            self.process_outputs_function = None
+
         # Additional logging
         self.logged_fields.append("pseudolabels_kept_frac")
         self.logged_fields.append("classification_loss")
@@ -103,7 +106,7 @@ class PseudoLabel(SingleModelAlgorithm):
             results['unlabeled_y_pred'] = logits
             pseudo = logits.detach().clone()
             mask = torch.max(F.softmax(pseudo, -1), -1)[0] >= self.confidence_threshold
-            pseudolabels = self.process_outputs_function(pseudo)
+            pseudolabels = self.process_outputs_function(pseudo) if self.process_outputs_function else pseudo
             results['unlabeled_y_pseudo'] = pseudolabels
             results['unlabeled_mask'] = mask
 

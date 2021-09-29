@@ -54,9 +54,12 @@ def initialize_transform(
         _DEFAULT_IMAGE_TENSOR_NORMALIZATION_STD,
     )
     if additional_transform_name == "fixmatch":
-        transformations = add_fixmatch_transform(
-            config, dataset, transform_steps, default_normalization
-        )
+        if transform_name == 'poverty':
+            transformations = add_poverty_fixmatch_transform(config, dataset, transform_steps)
+        else:
+            transformations = add_fixmatch_transform(
+                config, dataset, transform_steps, default_normalization
+            )
         transform = MultipleTransforms(transformations)
     elif additional_transform_name == "randaugment":
         if transform_name == 'poverty':
@@ -69,7 +72,7 @@ def initialize_transform(
             )
     elif additional_transform_name == "weak":
         transform = add_weak_transform(
-            config, dataset, transform_steps, default_normalization
+            config, dataset, transform_steps, normalize, default_normalization
         )
     else:
         if transform_name != "poverty":
@@ -197,7 +200,13 @@ def add_fixmatch_transform(config, dataset, base_transform_steps, normalization)
         add_rand_augment_transform(config, dataset, base_transform_steps, normalization)
     )
 
-def add_weak_transform(config, dataset, base_transform_steps, normalization):
+def add_poverty_fixmatch_transform(config, dataset, base_transform_steps):
+    return (
+        add_weak_transform(config, dataset, base_transform_steps, False, None),
+        add_poverty_rand_augment_transform(config, dataset, base_transform_steps)
+    )
+
+def add_weak_transform(config, dataset, base_transform_steps, should_normalize, normalization):
     # Adapted from https://github.com/YBZh/Bridging_UDA_SSL
     target_resolution = _get_target_resolution(config, dataset)
     weak_transform_steps = copy.deepcopy(base_transform_steps)
@@ -207,10 +216,11 @@ def add_weak_transform(config, dataset, base_transform_steps, normalization):
             transforms.RandomCrop(
                 size=target_resolution,
             ),
-            transforms.ToTensor(),
-            normalization,
         ]
     )
+    if should_normalize:
+        weak_transform_steps.append(transforms.ToTensor())
+        weak_transform_steps.append(normalization)
     return transforms.Compose(weak_transform_steps)
 
 def add_rand_augment_transform(config, dataset, base_transform_steps, normalization):
