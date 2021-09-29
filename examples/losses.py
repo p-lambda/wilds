@@ -3,7 +3,7 @@ from wilds.common.metrics.loss import ElementwiseLoss, Loss, MultiTaskLoss
 from wilds.common.metrics.all_metrics import MSE
 from utils import cross_entropy_with_logits_loss
 
-def initialize_loss(loss, config, d_out):
+def initialize_loss(loss, config):
     if loss == 'cross_entropy':
         return ElementwiseLoss(loss_fn=nn.CrossEntropyLoss(reduction='none'))
 

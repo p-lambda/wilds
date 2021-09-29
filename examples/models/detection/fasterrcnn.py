@@ -420,7 +420,7 @@ class FastWILDS(GeneralizedRCNN):
         super(FastWILDS, self).__init__(backbone, rpn, roi_heads, transform)
 
     # Set your own forward pass
-    def forward(self, images, targets=None):
+    def forward(self, images, targets=None):        
         if self.training:
             if targets is None:
                 raise ValueError("In training mode, targets should be passed")

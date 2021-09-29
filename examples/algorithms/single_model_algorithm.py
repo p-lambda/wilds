@@ -46,6 +46,16 @@ class SingleModelAlgorithm(GroupAlgorithm):
         )
         self.model = model
 
+    def get_model_output(self, x, y_true):
+        if self.model.needs_y:
+            if self.training:
+                outputs = self.model(x, y_true)
+            else:
+                outputs = self.model(x, None)
+        else:
+            outputs = self.model(x)
+        return outputs
+
     def process_batch(self, batch, unlabeled_batch=None):
         """
         A helper function for update() and evaluate() that processes the batch
@@ -65,14 +75,8 @@ class SingleModelAlgorithm(GroupAlgorithm):
         y_true = move_to(y_true, self.device)
         g = move_to(self.grouper.metadata_to_group(metadata), self.device)
 
-        if self.model.needs_y:
-            if self.training:
-                outputs = self.model(x, y_true)
-            else:
-                outputs = self.model(x, None)
-        else:
-            outputs = self.model(x)
-            
+        outputs = self.get_model_output(x, y_true)
+
         results = {
             'g': g,
             'y_true': y_true,
@@ -134,7 +138,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
 
         # update running statistics and update model if we've reached end of effective batch
         self._update(
-            results, 
+            results,
             should_step=(((self.batch_idx + 1) % self.gradient_accumulation_steps == 0) or (is_epoch_end))
         )
         self.update_log(results)
@@ -158,7 +162,7 @@ class SingleModelAlgorithm(GroupAlgorithm):
         objective = self.objective(results)
         results['objective'] = objective.item()
         objective.backward()
-        
+
         # update model and logs based on effective batch
         if should_step:
             if self.max_grad_norm:

@@ -6,7 +6,12 @@ from algorithms.single_model_algorithm import SingleModelAlgorithm
 from models.domain_adversarial_network import DomainAdversarialNetwork
 from models.initializer import initialize_model
 from optimizer import initialize_optimizer_with_model_params
+from losses import initialize_loss
 
+try:
+    from torch_geometric.data import Batch
+except ImportError:
+    pass
 
 class DANN(SingleModelAlgorithm):
     """
@@ -43,6 +48,7 @@ class DANN(SingleModelAlgorithm):
             discriminator_lr=config.dann_discriminator_lr,
         )
         self.optimizer = initialize_optimizer_with_model_params(config, parameters_to_optimize)
+        self.domain_loss = initialize_loss('cross_entropy', config)
 
         # Initialize module
         super().__init__(
@@ -78,13 +84,22 @@ class DANN(SingleModelAlgorithm):
             ]
 
             # Concatenate examples and true domains
-            x = torch.cat([x, unlabeled_x])
-            domains_true = torch.cat([domains_true, unlabeled_domains_true])
+            if isinstance(x, torch.Tensor):
+                x_cat = torch.cat((x, unlabeled_x), dim=0)
+            elif isinstance(x, Batch):
+                x.y = None
+                x_cat = Batch.from_data_list([x, unlabeled_x])
+            else:
+                raise TypeError('x must be Tensor or Batch')
 
-        x = x.to(self.device)
+            domains_true = torch.cat([domains_true, unlabeled_domains_true])
+        else:
+            x_cat = x
+            
+        x_cat = x_cat.to(self.device)
         y_true = y_true.to(self.device)
         domains_true = domains_true.to(self.device)
-        y_pred, domains_pred = self.model(x)
+        y_pred, domains_pred = self.model(x_cat)
 
         # Ignore the predicted labels for the unlabeled data
         y_pred = y_pred[: len(y_true)]
@@ -104,7 +119,7 @@ class DANN(SingleModelAlgorithm):
         )
 
         if self.is_training:
-            domain_classification_loss = self.loss.compute(
+            domain_classification_loss = self.domain_loss.compute(
                 results.pop("domains_pred"),
                 results.pop("domains_true"),
                 return_dict=False,
@@ -119,5 +134,4 @@ class DANN(SingleModelAlgorithm):
         self.save_metric_for_logging(
             results, "domain_classification_loss", domain_classification_loss
         )
-
         return classification_loss + domain_classification_loss * self.penalty_weight

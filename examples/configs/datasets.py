@@ -28,6 +28,7 @@ dataset_defaults = {
             'pin_memory': True,
         },
         'process_outputs_function': 'multiclass_logits_to_pred',
+        'process_pseudolabels_function': 'pseudolabel_multiclass_logits',
     },
     'bdd100k': {
         'split_scheme': 'official',
@@ -74,6 +75,7 @@ dataset_defaults = {
         'dann_discriminator_lr': 0.001,
         'algo_log_metric': 'accuracy',
         'process_outputs_function': 'multiclass_logits_to_pred',
+        'process_pseudolabels_function': 'pseudolabel_multiclass_logits',
     },
     'celebA': {
         'split_scheme': 'official',
@@ -127,6 +129,7 @@ dataset_defaults = {
             'pin_memory': True,
         },
         'process_outputs_function': 'multiclass_logits_to_pred',
+        'process_pseudolabels_function': 'pseudolabel_multiclass_logits',
     },
     'domainnet': {
         'split_scheme': 'official',
@@ -164,6 +167,7 @@ dataset_defaults = {
         'dann_discriminator_lr': 0.01,
         'algo_log_metric': 'accuracy',
         'process_outputs_function': 'multiclass_logits_to_pred',
+        'process_pseudolabels_function': 'pseudolabel_multiclass_logits',
         'loader_kwargs': {
             'num_workers': 2,
             'pin_memory': True,
@@ -193,7 +197,7 @@ dataset_defaults = {
     },
     'fmow': {
         'split_scheme': 'official',
-        'dataset_kwargs': {            
+        'dataset_kwargs': {
             'seed': 111,
             'use_ood_val': True
         },
@@ -222,6 +226,7 @@ dataset_defaults = {
         'dann_discriminator_lr': 0.0001,
         'algo_log_metric': 'accuracy',
         'process_outputs_function': 'multiclass_logits_to_pred',
+        'process_pseudolabels_function': 'pseudolabel_multiclass_logits',
     },
     'iwildcam': {
         'loss_function': 'cross_entropy',
@@ -251,7 +256,8 @@ dataset_defaults = {
         'dann_classifier_lr': 3e-5,
         'dann_discriminator_lr': 3e-5,
         'no_group_logging': True,
-        'process_outputs_function': 'multiclass_logits_to_pred'
+        'process_outputs_function': 'multiclass_logits_to_pred',
+        'process_pseudolabels_function': 'pseudolabel_multiclass_logits',
     },
     'ogb-molpcba': {
         'split_scheme': 'official',
@@ -264,16 +270,25 @@ dataset_defaults = {
         'optimizer': 'Adam',
         'batch_size': 32,
         'unlabeled_batch_size': 32,
-        'lr': 1e-03,
+        'lr': 1e-3,
         'weight_decay': 0.,
         'n_epochs': 200,
         'n_groups_per_batch': 4,
         'unlabeled_n_groups_per_batch': 4,
         'irm_lambda': 1.,
         'coral_penalty_weight': 0.1,
+        'dann_penalty_weight': 0.1,
+        'dann_featurizer_lr': 1e-3,
+        'dann_classifier_lr': 1e-2,
+        'dann_discriminator_lr': 1e-2,
         'no_group_logging': True,
-        'process_outputs_function': None,
         'algo_log_metric': 'multitask_binary_accuracy',
+        'process_outputs_function': None,
+        'process_pseudolabels_function': 'pseudolabel_binary_logits',
+        'loader_kwargs': {
+            'num_workers': 1,
+            'pin_memory': True,
+        },
     },
     'py150': {
         'split_scheme': 'official',
@@ -422,6 +437,7 @@ dataset_defaults = {
         'optimizer_kwargs': {},
         'scheduler': None,
         'batch_size': 4,
+        'unlabeled_batch_size': 4,
         'lr': 1e-5,
         'weight_decay': 1e-3,
         'n_epochs': 12,
@@ -430,6 +446,7 @@ dataset_defaults = {
             'pin_memory': True,
         },
         'process_outputs_function': None,
+        'process_pseudolabels_function': 'pseudolabel_detection',
     }
 }
 
