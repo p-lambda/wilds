@@ -45,7 +45,9 @@ def get_lr_grid(dataset, grad_accumulation=1):
     if dataset == OGB:
         new_lr = default_lr * 10
     else:
-        new_lr = default_lr * ((max_batch_size * grad_accumulation) / default_batch_size)
+        new_lr = default_lr * (
+            (max_batch_size * grad_accumulation) / default_batch_size
+        )
     # We sample a value 10^U(a, b)
     return [math.log10(new_lr / 10), math.log10(new_lr * 10)]
 

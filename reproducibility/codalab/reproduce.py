@@ -38,7 +38,7 @@ Usage:
     
 Example Usage:
     # To tune for ERM runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets ogb-molpcba --algorithm ERM --random --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x36ab18e5c43c480f8766a3351d3efad2 --datasets ogb-molpcba --algorithm ERM --random --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --experiment fmow_erm_tune 
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets poverty --algorithm ERM --random --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
@@ -46,12 +46,12 @@ Example Usage:
     # To tune for multi-gpu runs
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm FixMatch --random --gpus 1 --unlabeled-split extra_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets ogb-molpcba --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x36ab18e5c43c480f8766a3351d3efad2 --datasets ogb-molpcba --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_pseudolabel_tune 
 
     # To tune model hyperparameters for Unlabeled WILDS
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets ogb-molpcba --algorithm deepCORAL --random --coarse --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x36ab18e5c43c480f8766a3351d3efad2 --datasets ogb-molpcba --algorithm DANN --random --coarse --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_deepcoral_tune
   
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm deepCORAL --random --coarse --unlabeled-split extra_unlabeled --dry-run
@@ -280,7 +280,7 @@ class CodaLabReproducibility:
 
         if gpus == 1:
             cpus = 4
-            memory_gb = 64 if dataset == OGB else 16
+            memory_gb = 96 if dataset == OGB else 16
         else:
             cpus = 8
             memory_gb = 32
@@ -294,10 +294,10 @@ class CodaLabReproducibility:
             "--request-network",
             f"--request-cpus={cpus}",
             f"--request-gpus={gpus}",
-            "--request-disk=20g",
+            "--request-disk=40g",
             f"--request-memory={memory_gb}g",
             "--request-priority=1",
-            "--request-queue=cluster",
+            "--request-queue=ogb",
         ]
         if dataset == OGB:
             commands.append("--exclude-patterns=data")
@@ -544,6 +544,12 @@ class CodaLabReproducibility:
             f"python -Wi wilds/examples/{executable} --root_dir $HOME{'/data' if dataset_name == OGB else ''}"
             f" --log_dir $HOME --dataset {dataset_name} --algorithm {algorithm} --seed {seed}"
         )
+        if dataset_name == OGB:
+            command = (
+                "pip install --force-reinstall git+https://github.com/pyg-team/pytorch_geometric.git && "
+                + command
+            )
+
         if unlabeled_split:
             command += f" --unlabeled_split {unlabeled_split}"
         if coarse:
@@ -589,7 +595,7 @@ class CodaLabReproducibility:
 
     def _get_datasets_uuids(self, worksheet_uuid, datasets, unlabeled=False):
         if datasets == [OGB]:
-            return {datasets[0]: ''}
+            return {datasets[0]: ""}
         return {
             dataset: self._get_bundle_uuid(
                 f"{dataset}_unlabeled" if unlabeled else f"{dataset}_v", worksheet_uuid
