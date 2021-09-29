@@ -50,7 +50,7 @@ def pseudolabel_binary_logits(logits, confidence_threshold):
     if len(logits.shape) != 2:
         raise ValueError('Logits must be 2-dimensional.')
     probs = 1 / (1 + torch.exp(-logits))
-    mask = (torch.max(probs, 1-probs) > confidence_threshold)
+    mask = (torch.max(probs, 1-probs) >= confidence_threshold)
     unlabeled_y_pseudo = (logits > 0).float()
     unlabeled_y_pseudo[~mask] = float('nan')
     pseudolabels_kept_frac = mask.sum() / mask.numel() # mask is bool, so no .mean()
@@ -77,6 +77,42 @@ def pseudolabel_multiclass_logits(logits, confidence_threshold):
     unlabeled_y_pseudo = unlabeled_y_pseudo[mask]
     unlabeled_y_pred = logits[mask]
     pseudolabels_kept_frac = mask.sum() / mask.numel() # mask is bool, so no .mean()
+    return unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac
+
+def pseudolabel_detection(preds, confidence_threshold):
+    """
+    Input:
+        preds (List): List of len batch_size. Each entry is a dict containing
+                      the keys 'boxes', 'labels', 'scores', and 'losses'
+                      ('losses' is empty)
+        confidence_threshold (float): In [0,1]
+    """
+    total_boxes = 0.0
+    kept_boxes = 0.0
+
+    for pred in preds:
+        mask = (pred['scores'] >= confidence_threshold)
+        pred['boxes'] = pred['boxes'][mask]
+        pred['labels'] = pred['labels'][mask]
+        pred['scores'] = pred['scores'][mask]
+        total_boxes += len(mask)
+        kept_boxes += mask.sum()
+
+    unlabeled_y_pred = [
+        {
+            'boxes': pred['boxes'],
+            'labels': pred['labels'],
+            'scores': pred['scores'],
+            'losses': pred['losses'],
+        } for pred in preds if len(pred['labels'] > 0)
+    ]
+    unlabeled_y_pseudo = [
+        {
+            'boxes': pred['boxes'],
+            'labels': pred['labels'],
+        } for pred in preds if len(pred['labels'] > 0)
+    ]
+    pseudolabels_kept_frac = kept_boxes / total_boxes
     return unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac
 
 

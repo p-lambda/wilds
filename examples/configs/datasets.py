@@ -280,7 +280,7 @@ dataset_defaults = {
         'dann_penalty_weight': 0.1,
         'dann_featurizer_lr': 1e-3,
         'dann_classifier_lr': 1e-2,
-        'dann_discriminator_lr': 1e-2, 
+        'dann_discriminator_lr': 1e-2,
         'no_group_logging': True,
         'algo_log_metric': 'multitask_binary_accuracy',
         'process_outputs_function': None,
@@ -437,6 +437,7 @@ dataset_defaults = {
         'optimizer_kwargs': {},
         'scheduler': None,
         'batch_size': 4,
+        'unlabeled_batch_size': 4,
         'lr': 1e-5,
         'weight_decay': 1e-3,
         'n_epochs': 12,
@@ -445,6 +446,7 @@ dataset_defaults = {
             'pin_memory': True,
         },
         'process_outputs_function': None,
+        'process_pseudolabels_function': 'pseudolabel_detection',
     }
 }
 

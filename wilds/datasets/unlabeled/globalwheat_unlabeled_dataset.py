@@ -4,8 +4,8 @@ import torch
 from pathlib import Path
 from PIL import Image
 from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSUnlabeledDataset
-
 from wilds.common.grouper import CombinatorialGrouper
+from wilds.datasets.globalwheat_dataset import GlobalWheatDataset
 
 SESSIONS = [
     'Arvalis_1',

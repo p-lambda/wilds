@@ -1,4 +1,3 @@
-from transformers import get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
 from torch.optim.lr_scheduler import LambdaLR, ReduceLROnPlateau, StepLR, CosineAnnealingLR, MultiStepLR
 
 def initialize_scheduler(config, optimizer, n_train_steps):
@@ -6,6 +5,7 @@ def initialize_scheduler(config, optimizer, n_train_steps):
     if config.scheduler is None:
         return None
     elif config.scheduler == 'linear_schedule_with_warmup':
+        from transformers import get_linear_schedule_with_warmu
         scheduler = get_linear_schedule_with_warmup(
             optimizer,
             num_training_steps=n_train_steps,
@@ -13,6 +13,7 @@ def initialize_scheduler(config, optimizer, n_train_steps):
         step_every_batch = True
         use_metric = False
     elif config.scheduler == 'cosine_schedule_with_warmup':
+        from transformers import get_cosine_schedule_with_warmup
         scheduler = get_cosine_schedule_with_warmup(
             optimizer,
             num_training_steps=n_train_steps,
@@ -58,13 +59,13 @@ def step_scheduler(scheduler, metric=None):
 
 class LinearScheduleWithWarmupAndThreshold():
     """
-    Linear scheduler with warmup and threshold for non lr parameters. 
+    Linear scheduler with warmup and threshold for non lr parameters.
     Parameters is held at 0 until some T1, linearly increased until T2, and then held
     at some max value after T2.
     Designed to be called by step_scheduler() above and used within Algorithm class.
     Args:
         - last_warmup_step: aka T1. for steps [0, T1) keep param = 0
-        - threshold_step: aka T2. step over period [T1, T2) to reach param = max value 
+        - threshold_step: aka T2. step over period [T1, T2) to reach param = max value
         - max value: end value of the param
     """
     def __init__(self, max_value, last_warmup_step=0, threshold_step=1, step_every_batch=False):

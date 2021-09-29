@@ -83,7 +83,10 @@ class Metric:
             - results (dict): Dictionary of results, mapping metric.agg_metric_field to avg_metric
         """
         if numel(y_true) == 0:
-            agg_metric = torch.tensor(0., device=y_true.device)
+            if hasattr(y_true, 'device'):
+                agg_metric = torch.tensor(0., device=y_true.device)
+            else:
+                agg_metric = torch.tensor(0.)
         else:
             agg_metric = self._compute(y_pred, y_true)
         if return_dict:
