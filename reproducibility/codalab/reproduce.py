@@ -51,7 +51,7 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_pseudolabel_tune 
 
     # To tune model hyperparameters for Unlabeled WILDS
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x36ab18e5c43c480f8766a3351d3efad2 --datasets ogb-molpcba --algorithm DANN --random --coarse --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets poverty --algorithm DANN --random --coarse --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_deepcoral_tune
   
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm deepCORAL --random --coarse --unlabeled-split extra_unlabeled --dry-run
@@ -537,7 +537,10 @@ class CodaLabReproducibility:
         gpus=1,
     ):
         if algorithm == "NoisyStudent":
-            executable = f"noisy_student_wrapper.py 2 teacher/{dataset_name}_seed:0_epoch:best_model.pth "
+            executable = (
+                f"noisy_student_wrapper.py 2 teacher/{dataset_name}_"
+                f"{'seed:0' if dataset_name != 'poverty' else 'fold:A'}_epoch:best_model.pth "
+            )
         else:
             executable = "run_expt.py"
         command = (

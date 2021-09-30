@@ -3,7 +3,8 @@ import torch.nn.functional as F
 
 from models.initializer import initialize_model
 from algorithms.single_model_algorithm import SingleModelAlgorithm
-from configs.supported import process_outputs_functions
+from configs.supported import process_pseudolabels_functions
+from utils import detach_and_clone
 
 
 class FixMatch(SingleModelAlgorithm):
@@ -44,10 +45,7 @@ class FixMatch(SingleModelAlgorithm):
         # algorithm hyperparameters
         self.fixmatch_lambda = config.self_training_lambda
         self.confidence_threshold = config.self_training_threshold
-        if config.process_outputs_function is not None:
-            self.process_outputs_function = process_outputs_functions[config.process_outputs_function]
-        else:
-            self.process_outputs_function = None
+        self.process_pseudolabels_function = process_pseudolabels_functions[config.process_pseudolabels_function]
 
         # Additional logging
         self.logged_fields.append("pseudolabels_kept_frac")
@@ -82,6 +80,8 @@ class FixMatch(SingleModelAlgorithm):
             'y_true': y_true,
             'metadata': metadata
         }
+        pseudolabels_kept_frac = 0
+
         # Unlabeled examples
         if unlabeled_batch is not None:
             (x_weak, x_strong), metadata = unlabeled_batch
@@ -94,20 +94,27 @@ class FixMatch(SingleModelAlgorithm):
 
             with torch.no_grad():
                 outputs = self.model(x_weak)
-                mask = torch.max(F.softmax(outputs, -1), -1)[0] >= self.confidence_threshold
-                pseudolabels = self.process_outputs_function(outputs) if self.process_outputs_function else outputs
-                results['unlabeled_weak_y_pseudo'] = pseudolabels
-                results['unlabeled_mask'] = mask
+                _, pseudolabels, pseudolabels_kept_frac, mask = self.process_pseudolabels_function(
+                    outputs,
+                    self.confidence_threshold,
+                )
+                results['unlabeled_weak_y_pseudo'] = detach_and_clone(pseudolabels)
+
+        self.save_metric_for_logging(
+            results, "pseudolabels_kept_frac", pseudolabels_kept_frac
+        )
 
         # Concat and call forward
         n_lab = x.shape[0]
-        if unlabeled_batch is not None: x_concat = torch.cat((x, x_strong), dim=0)
-        else: x_concat = x
+        if unlabeled_batch is not None:
+            x_concat = torch.cat((x, x_strong), dim=0)
+        else:
+            x_concat = x
+
         outputs = self.model(x_concat)
         results['y_pred'] = outputs[:n_lab]
         if unlabeled_batch is not None:
-            results['unlabeled_strong_y_pred'] = outputs[n_lab:]
-
+            results['unlabeled_strong_y_pred'] = outputs[n_lab:][mask]
         return results
 
     def objective(self, results):
@@ -115,19 +122,15 @@ class FixMatch(SingleModelAlgorithm):
         classification_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
 
         # Pseudolabeled loss
-        # TODO: update to newer pseudolabel code
         if 'unlabeled_weak_y_pseudo' in results:
-            mask = results['unlabeled_mask']
-            masked_loss_output = self.loss.compute_element_wise(
+            loss_output = self.loss.compute(
                 results['unlabeled_strong_y_pred'],
                 results['unlabeled_weak_y_pseudo'],
                 return_dict=False,
-            ) * mask
-            consistency_loss = masked_loss_output.mean()
-            pseudolabels_kept_frac = mask.count_nonzero().item() / mask.shape[0]
+            )
+            consistency_loss = loss_output * results['pseudolabels_kept_frac']
         else:
             consistency_loss = 0
-            pseudolabels_kept_frac = 0
 
         # Add to results for additional logging
         self.save_metric_for_logging(
@@ -135,9 +138,6 @@ class FixMatch(SingleModelAlgorithm):
         )
         self.save_metric_for_logging(
             results, "consistency_loss", consistency_loss
-        )
-        self.save_metric_for_logging(
-            results, "pseudolabels_kept_frac", pseudolabels_kept_frac
         )
 
         return classification_loss + self.fixmatch_lambda * consistency_loss

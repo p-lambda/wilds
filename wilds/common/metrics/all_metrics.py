@@ -46,6 +46,7 @@ def pseudolabel_binary_logits(logits, confidence_threshold):
                                      entries with confidence below confidence_threshold are set to
                                      nan. All rows with no confident entries are discarded.
         pseudolabels_kept_frac (float): Fraction of (examples, tasks) not set to nan or discarded.
+        mask (Tensor): Mask used to discard predictions with confidence under the confidence threshold.
     """
     if len(logits.shape) != 2:
         raise ValueError('Logits must be 2-dimensional.')
@@ -57,7 +58,7 @@ def pseudolabel_binary_logits(logits, confidence_threshold):
     example_mask = torch.any(~torch.isnan(unlabeled_y_pseudo), dim=1)
     unlabeled_y_pseudo = unlabeled_y_pseudo[example_mask]
     unlabeled_y_pred = logits[example_mask]
-    return unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac
+    return unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, example_mask
 
 def pseudolabel_multiclass_logits(logits, confidence_threshold):
     """
@@ -71,13 +72,17 @@ def pseudolabel_multiclass_logits(logits, confidence_threshold):
         unlabeled_y_pseudo (Tensor): Corresponding hard-pseudo-labeled version of logits. All
                                      examples with confidence below confidence_threshold are discarded.
         pseudolabels_kept_frac (float): Fraction of examples not discarded.
+        mask (Tensor): Mask used to discard predictions with confidence under the confidence threshold.
     """
     mask = torch.max(F.softmax(logits, -1), -1)[0] >= confidence_threshold
     unlabeled_y_pseudo = multiclass_logits_to_pred(logits)
     unlabeled_y_pseudo = unlabeled_y_pseudo[mask]
     unlabeled_y_pred = logits[mask]
     pseudolabels_kept_frac = mask.sum() / mask.numel() # mask is bool, so no .mean()
-    return unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac
+    return unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, mask
+
+def pseudolabel_identity(logits, confidence_threshold):
+    return logits, logits, 1, None
 
 def pseudolabel_detection(preds, confidence_threshold):
     """
@@ -113,7 +118,7 @@ def pseudolabel_detection(preds, confidence_threshold):
         } for pred in preds if len(pred['labels'] > 0)
     ]
     pseudolabels_kept_frac = kept_boxes / total_boxes
-    return unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac
+    return unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, None
 
 
 class Accuracy(ElementwiseMetric):

@@ -342,6 +342,7 @@ dataset_defaults = {
         'dann_classifier_lr': 0.001,
         'dann_discriminator_lr': 0.001,
         'process_outputs_function': None,
+        'process_pseudolabels_function': 'pseudolabel_identity',
     },
     'waterbirds': {
         'split_scheme': 'official',
