@@ -124,9 +124,7 @@ class PseudoLabel(SingleModelAlgorithm):
                 outputs = self.get_model_output(x_cat, None)
                 results['y_pred'] = outputs[:n_lab]
                 unlabeled_output = outputs[n_lab:]
-                # import IPython
-                # IPython.embed()
-
+                
             unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac = self.process_pseudolabels_function(
                 unlabeled_output,
                 self.confidence_threshold)
@@ -146,8 +144,6 @@ class PseudoLabel(SingleModelAlgorithm):
 
     def objective(self, results):
         # Labeled loss
-        # import IPython
-        # IPython.embed()
         classification_loss = self.loss.compute(
             results['y_pred'],
             results['y_true'],
