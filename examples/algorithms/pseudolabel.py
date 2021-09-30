@@ -124,8 +124,8 @@ class PseudoLabel(SingleModelAlgorithm):
                 outputs = self.get_model_output(x_cat, None)
                 results['y_pred'] = outputs[:n_lab]
                 unlabeled_output = outputs[n_lab:]
-                
-            unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac = self.process_pseudolabels_function(
+
+            unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, _ = self.process_pseudolabels_function(
                 unlabeled_output,
                 self.confidence_threshold)
             results['unlabeled_y_pred'] = unlabeled_y_pred

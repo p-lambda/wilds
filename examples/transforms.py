@@ -196,7 +196,7 @@ def get_image_resize_transform_steps(config, dataset) -> List:
 
 def add_fixmatch_transform(config, dataset, base_transform_steps, normalization):
     return (
-        add_weak_transform(config, dataset, base_transform_steps, normalization),
+        add_weak_transform(config, dataset, base_transform_steps, True, normalization),
         add_rand_augment_transform(config, dataset, base_transform_steps, normalization)
     )
 
