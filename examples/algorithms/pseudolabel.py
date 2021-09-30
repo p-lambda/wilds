@@ -105,6 +105,7 @@ class PseudoLabel(SingleModelAlgorithm):
             # and turn off training to avoid errors when y is None
             # Note: we have to specifically turn training in the model off
             # instead of using self.train, which would reset the log
+            # TODO: This is buggy because it cuts off gradients for unlabeled_output
             if self.model.needs_y:
                 results['y_pred'] = self.get_model_output(x, y_true)
                 self.model.train(mode=False)
@@ -112,7 +113,7 @@ class PseudoLabel(SingleModelAlgorithm):
                 self.model.train(mode=True)
             # Otherwise, make a combined forward pass
             else:
-                n_lab = numel(y_true)
+                n_lab = len(metadata)
                 if isinstance(x, torch.Tensor):
                     x_cat = torch.cat((x, x_unlab), dim=0)
                 elif isinstance(x, Batch):

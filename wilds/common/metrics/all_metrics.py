@@ -109,16 +109,18 @@ def pseudolabel_detection(preds, confidence_threshold):
             'labels': pred['labels'],
             'scores': pred['scores'],
             'losses': pred['losses'],
-        } for pred in preds if len(pred['labels'] > 0)
+        } for pred in preds if len(pred['labels']) > 0
     ]
     unlabeled_y_pseudo = [
         {
             'boxes': pred['boxes'],
             'labels': pred['labels'],
-        } for pred in preds if len(pred['labels'] > 0)
+        } for pred in preds if len(pred['labels']) > 0
     ]
-    pseudolabels_kept_frac = kept_boxes / total_boxes
-    return unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, None
+    pseudolabels_kept_frac = kept_boxes / total_boxes    
+    example_mask = torch.tensor([len(pred['labels']) > 0 for pred in preds])
+
+    return unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, example_mask
 
 
 class Accuracy(ElementwiseMetric):
