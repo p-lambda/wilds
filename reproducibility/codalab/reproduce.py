@@ -346,7 +346,7 @@ class CodaLabReproducibility:
                     "cl",
                     "search",
                     experiment_name,
-                    "state=ready,killed,worker_offline",
+                    "state=ready,killed,worker_offline,failed",
                     f"host_worksheet={worksheet_uuid}",
                     ".limit=100",
                     "--uuid-only",

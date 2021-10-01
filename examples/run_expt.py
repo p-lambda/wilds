@@ -22,7 +22,7 @@ from wilds.common.grouper import CombinatorialGrouper
 from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSPseudolabeledSubset
 
 from utils import set_seed, Logger, BatchLogger, log_config, ParseKwargs, load, initialize_wandb, log_group_data, parse_bool, get_model_prefix
-from train import train, evaluate, infer_predictions
+from train import train, evaluate, infer_predictions, infer_wheat_predictions
 from algorithms.initializer import initialize_algorithm, infer_d_out
 from transforms import initialize_transform
 from models.initializer import initialize_model
@@ -30,6 +30,10 @@ from configs.utils import populate_defaults
 import configs.supported as supported
 
 import torch.multiprocessing
+
+# Necessary for large images of GlobalWheat
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 def main():
 
@@ -283,8 +287,12 @@ def main():
                 batch_size=config.unlabeled_batch_size,
                 **config.unlabeled_loader_kwargs
             )
-            teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
-            teacher_outputs = teacher_outputs.to(torch.device("cpu"))
+            if config.dataset == "globalwheat":
+                teacher_outputs = infer_wheat_predictions(teacher_model, sequential_loader, config)
+            else:
+                teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
+                teacher_outputs = teacher_outputs.to(torch.device("cpu"))
+
             teacher_model = teacher_model.to(torch.device("cpu"))
             del teacher_model
             unlabeled_split_dataset = WILDSPseudolabeledSubset(
