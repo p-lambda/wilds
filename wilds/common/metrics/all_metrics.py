@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-import torch.nn as nn
+
 import torch.nn.functional as F
 from torchvision.ops.boxes import box_iou
 from torchvision.models.detection._utils import Matcher
