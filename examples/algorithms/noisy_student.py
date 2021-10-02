@@ -1,11 +1,14 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+
 from models.initializer import initialize_model
-from algorithms.ERM import ERM
 from algorithms.single_model_algorithm import SingleModelAlgorithm
-from optimizer import initialize_optimizer_with_model_params
-from wilds.common.utils import split_into_groups
+
+try:
+    from torch_geometric.data import Batch
+except ImportError:
+    pass
+
 
 class DropoutModel(nn.Module):
     def __init__(self, featurizer, classifier, dropout_rate):
@@ -13,6 +16,7 @@ class DropoutModel(nn.Module):
         self.featurizer = featurizer
         self.dropout = nn.Dropout(p=dropout_rate)
         self.classifier = classifier
+
     def forward(self, x):
         features = self.featurizer(x)
         features_sparse = self.dropout(features)
@@ -54,9 +58,12 @@ class NoisyStudent(SingleModelAlgorithm):
     """
     def __init__(self, config, d_out, grouper, loss, unlabeled_loss, metric, n_train_steps):
         # initialize student model with dropout before last layer
-        featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
-        student_model = DropoutModel(featurizer, classifier, config.dropout_rate).to(config.device)
-        
+        if config.noisystudent_add_dropout:
+            featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
+            student_model = DropoutModel(featurizer, classifier, config.noisystudent_dropout_rate).to(config.device)
+        else:
+            student_model = initialize_model(config, d_out=d_out, is_featurizer=False)
+
         # initialize module
         super().__init__(
             config=config,
@@ -86,19 +93,28 @@ class NoisyStudent(SingleModelAlgorithm):
 
         # Unlabeled examples with pseudolabels
         if unlabeled_batch is not None:
-            x_unlab, y_pseudo, metadata = unlabeled_batch # x should be strongly augmented
+            x_unlab, y_pseudo, metadata_unlab = unlabeled_batch
             x_unlab = x_unlab.to(self.device)
-            g = self.grouper.metadata_to_group(metadata).to(self.device)
+            g = self.grouper.metadata_to_group(metadata_unlab).to(self.device)
             y_pseudo = y_pseudo.to(self.device)
-            results['unlabeled_metadata'] = metadata
+            results['unlabeled_metadata'] = metadata_unlab
             results['unlabeled_y_pseudo'] = y_pseudo 
             results['unlabeled_g'] = g
 
         # Concat and call forward
-        n_lab = x.shape[0]
-        if unlabeled_batch is not None: x_concat = torch.cat((x, x_unlab), dim=0)
-        else: x_concat = x
-        outputs = self.model(x_concat)
+        n_lab = len(metadata)
+        if unlabeled_batch is not None:
+            if isinstance(x, torch.Tensor):
+                x_cat = torch.cat((x, x_unlab), dim=0)
+            elif isinstance(x, Batch):
+                x.y = None
+                x_cat = Batch.from_data_list([x, x_unlab])
+            else:
+                raise TypeError('x must be Tensor or Batch')
+            outputs = self.get_model_output(x_cat, None)
+        else:
+            outputs = self.get_model_output(x, None)
+
         results['y_pred'] = outputs[:n_lab]
         if unlabeled_batch is not None:
             results['unlabeled_y_pred'] = outputs[n_lab:]

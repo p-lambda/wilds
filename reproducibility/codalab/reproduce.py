@@ -443,7 +443,7 @@ class CodaLabReproducibility:
                 "cl",
                 "search",
                 experiment,
-                "state=ready,killed",
+                "state=ready,killed,failed",
                 "host_worksheet=%s" % worksheet_uuid,
                 ".limit=10",
                 "--uuid-only",

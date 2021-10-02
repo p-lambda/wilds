@@ -62,7 +62,8 @@ algorithm_defaults = {
         'train_loader': 'standard',
         'uniform_over_groups': False,
         'eval_loader': 'standard',
-        'dropout_rate': 0.5,
+        'noisystudent_add_dropout': True,
+        'noisystudent_dropout_rate': 0.5,
         'scheduler': 'FixMatchLR',
         'randaugment_n': 2,
         'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled examples
