@@ -95,7 +95,7 @@ def pseudolabel_detection(preds, confidence_threshold):
     total_boxes = 0.0
     kept_boxes = 0.0
 
-    for pred in preds:
+    for idx, pred in enumerate(preds):
         mask = (pred['scores'] >= confidence_threshold)
         pred['boxes'] = pred['boxes'][mask]
         pred['labels'] = pred['labels'][mask]
@@ -109,16 +109,19 @@ def pseudolabel_detection(preds, confidence_threshold):
             'labels': pred['labels'],
             'scores': pred['scores'],
             'losses': pred['losses'],
-        } for pred in preds if len(pred['labels']) > 0
+        } for pred in preds
     ]
     unlabeled_y_pseudo = [
         {
             'boxes': pred['boxes'],
             'labels': pred['labels'],
-        } for pred in preds if len(pred['labels']) > 0
+        } for pred in preds
     ]
-    pseudolabels_kept_frac = kept_boxes / total_boxes    
-    example_mask = torch.tensor([len(pred['labels']) > 0 for pred in preds])
+    pseudolabels_kept_frac = kept_boxes / total_boxes
+
+    # Keep all examples even if they don't have any confident-enough predictions
+    # They will be treated as empty images
+    example_mask = torch.ones(len(preds), dtype=torch.bool)
 
     return unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, example_mask
 
