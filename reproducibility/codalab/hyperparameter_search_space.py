@@ -293,6 +293,14 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
             "scheduler": ["FixMatchLR"],
             "n_epochs": get_epochs_unlabeled(OGB, factor=2),
         },
+        GLOBAL_WHEAT: {
+            "lr": get_lr_grid(GLOBAL_WHEAT, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(GLOBAL_WHEAT, factor=2),
+        },
         POVERTY: {
             "lr": get_lr_grid(POVERTY, grad_accumulation=4),
             "self_training_lambda": [1],
@@ -329,6 +337,19 @@ NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE = {
             "scheduler": ["FixMatchLR"],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "n_epochs": get_epochs_unlabeled(POVERTY),
+        },
+        OGB: {
+            "lr": get_lr_grid(OGB, grad_accumulation=4),
+            "scheduler": ["FixMatchLR"],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(OGB),
+            "noisystudent_dropout_rate": [0],
+        },
+        GLOBAL_WHEAT: {
+            "lr": get_lr_grid(GLOBAL_WHEAT, grad_accumulation=4),
+            "scheduler": ["FixMatchLR"],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(GLOBAL_WHEAT),
         },
     },
 }
