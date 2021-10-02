@@ -16,6 +16,7 @@ class DropoutModel(nn.Module):
         self.featurizer = featurizer
         self.dropout = nn.Dropout(p=dropout_rate)
         self.classifier = classifier
+        self.needs_y = featurizer.needs_y
 
     def forward(self, x):
         features = self.featurizer(x)

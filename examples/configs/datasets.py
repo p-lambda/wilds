@@ -426,7 +426,6 @@ dataset_defaults = {
         'split_scheme': 'official',
         'model': 'fasterrcnn',
         'transform': 'image_base',
-        'additional_train_transform': None,
         'model_kwargs': {
             'n_classes': 1,
             'pretrained': True
@@ -444,7 +443,6 @@ dataset_defaults = {
         'lr': 1e-5,
         'weight_decay': 1e-3,
         'n_epochs': 12,
-        'noisystudent_add_dropout': False,
         'loader_kwargs': {
             'num_workers': 1,
             'pin_memory': True,
