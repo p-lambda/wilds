@@ -296,8 +296,6 @@ def main():
                     pseudolabels=teacher_outputs,
                     transform=unlabeled_train_transform
                 )
-                # TODO: remove later -Tony
-                import pdb; pdb.set_trace()
             else:
                 teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
                 teacher_outputs = teacher_outputs.to(torch.device("cpu"))
