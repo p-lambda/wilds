@@ -116,7 +116,6 @@ class PseudoLabel(SingleModelAlgorithm):
                 self.model.train(mode=True)
                 x_cat = torch.cat((x, x_unlab_masked), dim=0)
                 y_cat = y_true + unlabeled_y_pseudo
-                outputs = self.get_model_output(x_cat, y_cat)
             else:
                 if isinstance(x, torch.Tensor):
                     x_cat = torch.cat((x, x_unlab), dim=0)
@@ -125,8 +124,9 @@ class PseudoLabel(SingleModelAlgorithm):
                     x_cat = Batch.from_data_list([x, x_unlab])
                 else:
                     raise TypeError('x must be Tensor or Batch')
-                outputs = self.get_model_output(x_cat, None)
+                y_cat = None
 
+            outputs = self.get_model_output(x_cat, y_cat)
             results['y_pred'] = outputs[:n_lab]
             unlabeled_output = outputs[n_lab:]
             unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, _ = self.process_pseudolabels_function(
@@ -143,8 +143,6 @@ class PseudoLabel(SingleModelAlgorithm):
         self.save_metric_for_logging(
             results, "pseudolabels_kept_frac", pseudolabels_kept_frac
         )
-
-
         return results
 
     def objective(self, results):
