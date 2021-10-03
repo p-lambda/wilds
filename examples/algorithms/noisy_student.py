@@ -112,29 +112,18 @@ class NoisyStudent(SingleModelAlgorithm):
             results["unlabeled_y_pseudo"] = y_pseudo
             results["unlabeled_g"] = g
 
-            if self.model.needs_y:
-                # TODO: remove later -Tony
-                import pdb; pdb.set_trace()
-                results["y_pred"] = self.get_model_output(x, y_true)
-                unlabeled_output = self.get_model_output(x_unlab, None)
-            # Otherwise, make a combined forward pass
+            if isinstance(x, torch.Tensor):
+                x_cat = torch.cat((x, x_unlab), dim=0)
+            elif isinstance(x, Batch):
+                x.y = None
+                x_cat = Batch.from_data_list([x, x_unlab])
             else:
-                if isinstance(x, torch.Tensor):
-                    x_cat = torch.cat((x, x_unlab), dim=0)
-                elif isinstance(x, Batch):
-                    x.y = None
-                    x_cat = Batch.from_data_list([x, x_unlab])
-                else:
-                    raise TypeError("x must be Tensor or Batch")
+                raise TypeError("x must be Tensor or Batch")
 
-                outputs = self.get_model_output(x_cat, None)
-                results["y_pred"] = outputs[:n_lab]
-                unlabeled_output = outputs[n_lab:]
-
-            unlabeled_y_pred, _, _, _ = self.process_pseudolabels_function(
-                unlabeled_output, confidence_threshold=0
-            )
-            results["unlabeled_y_pred"] = unlabeled_y_pred
+            y_cat = y_true + y_pseudo if self.model.needs_y else None
+            outputs = self.get_model_output(x_cat, y_cat)
+            results["y_pred"] = outputs[:n_lab]
+            results["unlabeled_y_pred"] = outputs[n_lab:]
         else:
             results["y_pred"] = self.get_model_output(x, y_true)
 
