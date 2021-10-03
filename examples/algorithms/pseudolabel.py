@@ -78,6 +78,7 @@ class PseudoLabel(SingleModelAlgorithm):
         """
         # Labeled examples
         x, y_true, metadata = labeled_batch
+        n_lab = len(metadata)
         x = move_to(x, self.device)
         y_true = move_to(y_true, self.device)
         g = move_to(self.grouper.metadata_to_group(metadata), self.device)
@@ -108,15 +109,15 @@ class PseudoLabel(SingleModelAlgorithm):
 
                 _, unlabeled_y_pseudo, _, mask = self.process_pseudolabels_function(
                     unlabeled_output,
-                    self.confidence_threshold)
-
+                    self.confidence_threshold
+                )
                 x_unlab_masked = x_unlab[mask]
 
                 self.model.train(mode=True)
-                unlabeled_output = self.get_model_output(x_unlab_masked, unlabeled_y_pseudo)
-            # Otherwise, make a combined forward pass
+                x_cat = torch.cat((x, x_unlab_masked), dim=0)
+                y_cat = y_true + unlabeled_y_pseudo
+                outputs = self.get_model_output(x_cat, y_cat)
             else:
-                n_lab = len(metadata)
                 if isinstance(x, torch.Tensor):
                     x_cat = torch.cat((x, x_unlab), dim=0)
                 elif isinstance(x, Batch):
@@ -125,12 +126,13 @@ class PseudoLabel(SingleModelAlgorithm):
                 else:
                     raise TypeError('x must be Tensor or Batch')
                 outputs = self.get_model_output(x_cat, None)
-                results['y_pred'] = outputs[:n_lab]
-                unlabeled_output = outputs[n_lab:]
 
+            results['y_pred'] = outputs[:n_lab]
+            unlabeled_output = outputs[n_lab:]
             unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, _ = self.process_pseudolabels_function(
                 unlabeled_output,
-                self.confidence_threshold)
+                self.confidence_threshold
+            )
             results['unlabeled_y_pred'] = unlabeled_y_pred
             results['unlabeled_y_pseudo'] = detach_and_clone(unlabeled_y_pseudo)
 
