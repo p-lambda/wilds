@@ -7,7 +7,7 @@ from scheduler import LinearScheduleWithWarmupAndThreshold
 from wilds.common.utils import split_into_groups, numel
 from configs.supported import process_pseudolabels_functions
 import copy
-from utils import load, move_to, detach_and_clone
+from utils import load, move_to, detach_and_clone, collate_list
 
 try:
     from torch_geometric.data import Batch
@@ -93,9 +93,9 @@ class PseudoLabel(SingleModelAlgorithm):
         if unlabeled_batch is not None:
             x_unlab, metadata_unlab = unlabeled_batch
             x_unlab = move_to(x_unlab, self.device)
-            g = move_to(self.grouper.metadata_to_group(metadata_unlab), self.device)
+            g_unlab = move_to(self.grouper.metadata_to_group(metadata_unlab), self.device)
             results['unlabeled_metadata'] = metadata_unlab
-            results['unlabeled_g'] = g
+            results['unlabeled_g'] = g_unlab
 
             # Special case for models where we need to pass in y:
             # we handle these in two separate forward passes
@@ -110,20 +110,20 @@ class PseudoLabel(SingleModelAlgorithm):
                     unlabeled_output,
                     self.confidence_threshold
                 )
-                x_unlab_masked = x_unlab[mask]
+                x_unlab = x_unlab[mask]
 
                 self.model.train(mode=True)
-                x_cat = torch.cat((x, x_unlab_masked), dim=0)
-                y_cat = y_true + unlabeled_y_pseudo
+                y_cat = collate_list((y_true, unlabeled_y_pseudo))
             else:
-                if isinstance(x, torch.Tensor):
-                    x_cat = torch.cat((x, x_unlab), dim=0)
-                elif isinstance(x, Batch):
-                    x.y = None
-                    x_cat = Batch.from_data_list([x, x_unlab])
-                else:
-                    raise TypeError('x must be Tensor or Batch')
                 y_cat = None
+
+            if isinstance(x, torch.Tensor):
+                x_cat = torch.cat((x, x_unlab), dim=0)
+            elif isinstance(x, Batch):
+                x.y = None
+                x_cat = Batch.from_data_list([x, x_unlab])
+            else:
+                raise TypeError('x must be Tensor or Batch')
 
             outputs = self.get_model_output(x_cat, y_cat)
             results['y_pred'] = outputs[:n_lab]
@@ -133,8 +133,9 @@ class PseudoLabel(SingleModelAlgorithm):
                 self.confidence_threshold
             )
             results['unlabeled_y_pred'] = unlabeled_y_pred
-            results['unlabeled_y_pseudo'] = detach_and_clone(unlabeled_y_pseudo)
-
+            results['unlabeled_y_pseudo'] = detach_and_clone(
+                y_cat[:n_lab] if self.model.needs_y else unlabeled_y_pseudo
+            )
         else:
             results['y_pred'] = self.get_model_output(x, y_true)
             pseudolabels_kept_frac = 0

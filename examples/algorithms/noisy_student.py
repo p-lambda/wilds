@@ -4,7 +4,7 @@ import torch.nn as nn
 from configs.supported import process_pseudolabels_functions
 from models.initializer import initialize_model
 from algorithms.single_model_algorithm import SingleModelAlgorithm
-from utils import move_to
+from utils import move_to, collate_list
 
 try:
     from torch_geometric.data import Batch
@@ -106,11 +106,11 @@ class NoisyStudent(SingleModelAlgorithm):
         if unlabeled_batch is not None:
             x_unlab, y_pseudo, metadata_unlab = unlabeled_batch
             x_unlab = move_to(x_unlab, self.device)
-            g = move_to(self.grouper.metadata_to_group(metadata_unlab), self.device)
+            g_unlab = move_to(self.grouper.metadata_to_group(metadata_unlab), self.device)
             y_pseudo = move_to(y_pseudo, self.device)
             results["unlabeled_metadata"] = metadata_unlab
             results["unlabeled_y_pseudo"] = y_pseudo
-            results["unlabeled_g"] = g
+            results["unlabeled_g"] = g_unlab
 
             if isinstance(x, torch.Tensor):
                 x_cat = torch.cat((x, x_unlab), dim=0)
@@ -120,7 +120,7 @@ class NoisyStudent(SingleModelAlgorithm):
             else:
                 raise TypeError("x must be Tensor or Batch")
 
-            y_cat = y_true + y_pseudo if self.model.needs_y else None
+            y_cat = collate_list((y_true, y_pseudo)) if self.model.needs_y else None
             outputs = self.get_model_output(x_cat, y_cat)
             results["y_pred"] = outputs[:n_lab]
             results["unlabeled_y_pred"] = outputs[n_lab:]
