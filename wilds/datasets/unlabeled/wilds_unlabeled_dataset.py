@@ -234,3 +234,23 @@ class WILDSPseudolabeledSubset(WILDSUnlabeledDataset):
     @property
     def metadata_array(self):
         return self.dataset.metadata_array[self.indices]
+
+
+class WILDSPseudolabeledGlobalWheatSubset(WILDSPseudolabeledSubset):
+    """Pseudolabeled subset initialized from an unlabeled subset"""
+    def __init__(self, reference_subset, pseudolabels, transform):
+        self._collate = WILDSPseudolabeledGlobalWheatSubset._collate_fn
+        super().__init__(reference_subset, pseudolabels, transform)
+
+    @staticmethod
+    def _collate_fn(batch):
+        """
+        Stack x (batch[0]) and metadata (batch[2]), but not y.
+        originally, batch = (item1, item2, item3, item4)
+        after zip, batch = [(item1[0], item2[0], ..), ..]
+        """
+        batch = list(zip(*batch))
+        batch[0] = torch.stack(batch[0])
+        batch[1] = list(batch[1])
+        batch[2] = torch.stack(batch[2])
+        return tuple(batch)

@@ -43,6 +43,8 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
     for labeled_batch in batches:
         if train:
             if unlabeled_dataset:
+                # TODO: remove later -Tony
+                import pdb; pdb.set_trace()
                 unlabeled_batch = next(unlabeled_data_iterator)
                 batch_results = algorithm.update(labeled_batch, unlabeled_batch, is_epoch_end=(batch_idx==last_batch_idx))
             else:

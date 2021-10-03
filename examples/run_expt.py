@@ -19,7 +19,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import wilds
 from wilds.common.data_loaders import get_train_loader, get_eval_loader
 from wilds.common.grouper import CombinatorialGrouper
-from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSPseudolabeledSubset
+from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSPseudolabeledSubset, WILDSPseudolabeledGlobalWheatSubset
 
 from utils import set_seed, Logger, BatchLogger, log_config, ParseKwargs, load, initialize_wandb, log_group_data, parse_bool, get_model_prefix
 from train import train, evaluate, infer_predictions, infer_wheat_predictions
@@ -290,17 +290,24 @@ def main():
             )
             if config.dataset == "globalwheat":
                 teacher_outputs = infer_wheat_predictions(teacher_model, sequential_loader, config)
+                unlabeled_split_dataset = WILDSPseudolabeledGlobalWheatSubset(
+                    reference_subset=unlabeled_split_dataset,
+                    pseudolabels=teacher_outputs,
+                    transform=unlabeled_train_transform
+                )
+                # TODO: remove later -Tony
+                import pdb; pdb.set_trace()
             else:
                 teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
                 teacher_outputs = teacher_outputs.to(torch.device("cpu"))
+                unlabeled_split_dataset = WILDSPseudolabeledSubset(
+                    reference_subset=unlabeled_split_dataset,
+                    pseudolabels=teacher_outputs,
+                    transform=unlabeled_train_transform
+                )
 
             teacher_model = teacher_model.to(torch.device("cpu"))
             del teacher_model
-            unlabeled_split_dataset = WILDSPseudolabeledSubset(
-                reference_subset=unlabeled_split_dataset,
-                pseudolabels=teacher_outputs,
-                transform=unlabeled_train_transform
-            )
         else:
             unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=unlabeled_train_transform, frac=config.frac)
 
