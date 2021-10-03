@@ -19,7 +19,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import wilds
 from wilds.common.data_loaders import get_train_loader, get_eval_loader
 from wilds.common.grouper import CombinatorialGrouper
-from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSPseudolabeledSubset, WILDSPseudolabeledGlobalWheatSubset
+from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSPseudolabeledSubset
 
 from utils import set_seed, Logger, BatchLogger, log_config, ParseKwargs, load, initialize_wandb, log_group_data, parse_bool, get_model_prefix, move_to
 from train import train, evaluate, infer_predictions, infer_wheat_predictions
@@ -290,21 +290,25 @@ def main():
             )
             if config.dataset == "globalwheat":
                 teacher_outputs = infer_wheat_predictions(teacher_model, sequential_loader, config)
-                teacher_outputs = move_to(teacher_outputs, torch.device("cpu"))
-                unlabeled_split_dataset = WILDSPseudolabeledGlobalWheatSubset(
-                    reference_subset=unlabeled_split_dataset,
-                    pseudolabels=teacher_outputs,
-                    transform=unlabeled_train_transform
-                )
             else:
                 teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
-                teacher_outputs = teacher_outputs.to(torch.device("cpu"))
-                unlabeled_split_dataset = WILDSPseudolabeledSubset(
-                    reference_subset=unlabeled_split_dataset,
-                    pseudolabels=teacher_outputs,
-                    transform=unlabeled_train_transform
-                )
+            teacher_outputs = move_to(teacher_outputs, torch.device("cpu"))
+            full_dataset.collate
 
+            if config.dataset == "globalwheat":
+                teacher_outputs = infer_wheat_predictions(teacher_model, sequential_loader, config)
+                collate = full_dataset.collate
+            else:
+                teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
+                collate = None
+
+            teacher_outputs = teacher_outputs.to(torch.device("cpu"))
+            unlabeled_split_dataset = WILDSPseudolabeledSubset(
+                reference_subset=unlabeled_split_dataset,
+                pseudolabels=teacher_outputs,
+                transform=unlabeled_train_transform,
+                collate=collate,
+            )
             teacher_model = teacher_model.to(torch.device("cpu"))
             del teacher_model
         else:
