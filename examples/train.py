@@ -221,8 +221,8 @@ def infer_wheat_predictions(model, loader, config):
             _, output, _, _ = process_pseudolabels_functions[config.process_pseudolabels_function](
                 output, confidence_threshold=0
             )
-        y_pred.extend(output)
-    return copy.deepcopy(y_pred)
+        y_pred.extend(detach_and_clone(output))
+    return y_pred
 
 def log_results(algorithm, dataset, general_logger, epoch, effective_batch_idx):
     if algorithm.has_log:
