@@ -203,24 +203,12 @@ def infer_predictions(model, loader, config):
                 )
             elif config.soft_pseudolabels:
                 output = torch.nn.functional.softmax(output, dim=1)
-        y_pred.append(output.clone().detach())
-    return torch.cat(y_pred, 0)
+        if isinstance(output, list):
+            y_pred.extend(detach_and_clone(output))
+        else:
+            y_pred.append(detach_and_clone(output))
 
-
-def infer_wheat_predictions(model, loader, config):
-    model.eval()
-    y_pred = []
-    iterator = tqdm(loader) if config.progress_bar else loader
-    for batch in iterator:
-        x = batch[0]
-        x = x.to(config.device)
-        with torch.no_grad():
-            output = model(x)
-            _, output, _, _ = process_pseudolabels_functions[config.process_pseudolabels_function](
-                output, confidence_threshold=0
-            )
-        y_pred.extend(detach_and_clone(output))
-    return y_pred
+    return torch.cat(y_pred, 0) if torch.is_tensor(y_pred[0]) else y_pred
 
 def log_results(algorithm, dataset, general_logger, epoch, effective_batch_idx):
     if algorithm.has_log:
