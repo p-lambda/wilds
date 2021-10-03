@@ -288,13 +288,7 @@ def main():
                 batch_size=config.unlabeled_batch_size,
                 **config.unlabeled_loader_kwargs
             )
-            if config.dataset == "globalwheat":
-                teacher_outputs = infer_wheat_predictions(teacher_model, sequential_loader, config)
-            else:
-                teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
-            teacher_outputs = move_to(teacher_outputs, torch.device("cpu"))
-            full_dataset.collate
-
+            
             if config.dataset == "globalwheat":
                 teacher_outputs = infer_wheat_predictions(teacher_model, sequential_loader, config)
                 collate = full_dataset.collate
@@ -302,7 +296,7 @@ def main():
                 teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
                 collate = None
 
-            teacher_outputs = teacher_outputs.to(torch.device("cpu"))
+            teacher_outputs = move_to(teacher_outputs, torch.device("cpu"))
             unlabeled_split_dataset = WILDSPseudolabeledSubset(
                 reference_subset=unlabeled_split_dataset,
                 pseudolabels=teacher_outputs,
