@@ -56,7 +56,6 @@ def populate_defaults(config):
             raise ValueError(
                 f"Augmentations not supported for detection dataset: {config.dataset}."
             )
-        config.noisystudent_add_dropout = False
         config.additional_train_transform = ''
 
     # implied defaults from choice of dataset

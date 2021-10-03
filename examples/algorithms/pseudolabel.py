@@ -89,7 +89,7 @@ class PseudoLabel(SingleModelAlgorithm):
             'metadata': metadata
         }
 
-        # Unlabeled examples
+        # Concat and call forward
         if unlabeled_batch is not None:
             x_unlab, metadata_unlab = unlabeled_batch
             x_unlab = move_to(x_unlab, self.device)
@@ -97,20 +97,23 @@ class PseudoLabel(SingleModelAlgorithm):
             results['unlabeled_metadata'] = metadata_unlab
             results['unlabeled_g'] = g
 
-        # Concat and call forward
-        if unlabeled_batch is not None:
-
             # Special case for models where we need to pass in y:
             # we handle these in two separate forward passes
             # and turn off training to avoid errors when y is None
             # Note: we have to specifically turn training in the model off
             # instead of using self.train, which would reset the log
-            # TODO: This is buggy because it cuts off gradients for unlabeled_output
             if self.model.needs_y:
-                results['y_pred'] = self.get_model_output(x, y_true)
                 self.model.train(mode=False)
                 unlabeled_output = self.get_model_output(x_unlab, None)
+
+                _, unlabeled_y_pseudo, _, mask = self.process_pseudolabels_function(
+                    unlabeled_output,
+                    self.confidence_threshold)
+
+                x_unlab_masked = x_unlab[mask]
+
                 self.model.train(mode=True)
+                unlabeled_output = self.get_model_output(x_unlab_masked, unlabeled_y_pseudo)
             # Otherwise, make a combined forward pass
             else:
                 n_lab = len(metadata)

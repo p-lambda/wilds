@@ -3,7 +3,7 @@ import torch
 from tqdm import tqdm
 import math
 
-from configs.supported import process_pseudolabels_functions
+from configs.supported import process_outputs_functions, process_pseudolabels_functions
 from utils import save_model, save_pred, get_pred_prefix, get_model_prefix, collate_list, detach_and_clone, InfiniteDataIterator
 
 def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabeled_dataset=None):
@@ -56,10 +56,8 @@ def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabele
         # (they should already be detached in batch_results)
         epoch_y_true.append(detach_and_clone(batch_results['y_true']))
         y_pred = detach_and_clone(batch_results['y_pred'])
-        if config.process_pseudolabels_function is not None:
-            _, y_pred, _, _ = process_pseudolabels_functions[config.process_pseudolabels_function](
-                y_pred, confidence_threshold=0
-            )
+        if config.process_outputs_function is not None:
+            y_pred = process_outputs_functions[config.process_outputs_function](y_pred)
         epoch_y_pred.append(y_pred)
         epoch_metadata.append(detach_and_clone(batch_results['metadata']))
 
@@ -160,10 +158,8 @@ def evaluate(algorithm, datasets, epoch, general_logger, config, is_best):
             batch_results = algorithm.evaluate(batch)
             epoch_y_true.append(detach_and_clone(batch_results['y_true']))
             y_pred = detach_and_clone(batch_results['y_pred'])
-            if config.process_pseudolabels_function is not None:
-                _, y_pred, _, _ = process_pseudolabels_functions[config.process_pseudolabels_function](
-                    y_pred, confidence_threshold=0
-                )
+            if config.process_outputs_function is not None:
+                y_pred = process_outputs_functions[config.process_outputs_function](y_pred)
             epoch_y_pred.append(y_pred)
             epoch_metadata.append(detach_and_clone(batch_results['metadata']))
 

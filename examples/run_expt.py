@@ -76,7 +76,7 @@ def main():
     parser.add_argument('--model', choices=supported.models)
     parser.add_argument('--model_kwargs', nargs='*', action=ParseKwargs, default={},
         help='keyword arguments for model initialization passed as key1=value1 key2=value2')
-    parser.add_argument('--noisystudent_add_dropout', default=True, type=parse_bool, const=True, nargs='?', help="Whether to add the dropout layer to the student model of NoisyStudent.")
+    parser.add_argument('--noisystudent_add_dropout', type=parse_bool, const=True, nargs='?', help="Whether to add the dropout layer to the student model of NoisyStudent.")
     parser.add_argument('--noisystudent_dropout_rate', type=float)
     parser.add_argument('--pretrained_model_path', default=None, type=str, help="Specify a path to a pretrained model's weights")
     parser.add_argument('--load_featurizer_only', default=False, type=parse_bool, const=True, nargs='?', help="Set this to only load the featurizer weights and not the classifier weights.")

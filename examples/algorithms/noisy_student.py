@@ -98,7 +98,7 @@ class NoisyStudent(SingleModelAlgorithm):
         n_lab = len(metadata)
         x = move_to(x, self.device)
         y_true = move_to(y_true, self.device)
-        g = self.grouper.metadata_to_group(metadata).to(self.device)
+        g = move_to(self.grouper.metadata_to_group(metadata), self.device)
         # package the results
         results = {"g": g, "y_true": y_true, "metadata": metadata}
 
@@ -112,17 +112,11 @@ class NoisyStudent(SingleModelAlgorithm):
             results["unlabeled_y_pseudo"] = y_pseudo
             results["unlabeled_g"] = g
 
-            # Special case for models where we need to pass in y:
-            # we handle these in two separate forward passes
-            # and turn off training to avoid errors when y is None
-            # Note: we have to specifically turn training in the model off
-            # instead of using self.train, which would reset the log
-            # TODO: This is buggy because it cuts off gradients for unlabeled_output
             if self.model.needs_y:
+                # TODO: remove later -Tony
+                import pdb; pdb.set_trace()
                 results["y_pred"] = self.get_model_output(x, y_true)
-                self.model.train(mode=False)
                 unlabeled_output = self.get_model_output(x_unlab, None)
-                self.model.train(mode=True)
             # Otherwise, make a combined forward pass
             else:
                 if isinstance(x, torch.Tensor):
