@@ -90,7 +90,6 @@ class PseudoLabel(SingleModelAlgorithm):
             'metadata': metadata
         }
 
-        # Concat and call forward
         if unlabeled_batch is not None:
             x_unlab, metadata_unlab = unlabeled_batch
             x_unlab = move_to(x_unlab, self.device)
