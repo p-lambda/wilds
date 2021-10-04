@@ -51,7 +51,7 @@ def populate_defaults(config):
                 "specified."
             )
 
-    if config.algorithm == 'NoisyStudent' and config.dataset == 'globalwheat':
+    if config.dataset == 'globalwheat':
         if config.additional_train_transform is not None:
             raise ValueError(
                 f"Augmentations not supported for detection dataset: {config.dataset}."
