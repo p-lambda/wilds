@@ -30,6 +30,8 @@ NOISY_STUDENT_TEACHERS = {
     IWILDCAM: "0x52f2dd8e448a4c7e802783fa35c269c6",
     FMOW: "0x3b7e033b88464f53a3c432614bda72d3",
     POVERTY: "0x6e908c5ef2f544a3aeab871549711084",
+    OGB: "0xbef12512ae7f43b9a2f1e570be0b89df",
+    GLOBAL_WHEAT: "0xc7277e7a07d0441882b242a759687935",
 }
 
 
@@ -293,6 +295,14 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
             "scheduler": ["FixMatchLR"],
             "n_epochs": get_epochs_unlabeled(OGB, factor=2),
         },
+        GLOBAL_WHEAT: {
+            "lr": get_lr_grid(GLOBAL_WHEAT, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(GLOBAL_WHEAT, factor=2),
+        },
         POVERTY: {
             "lr": get_lr_grid(POVERTY, grad_accumulation=4),
             "self_training_lambda": [1],
@@ -329,6 +339,19 @@ NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE = {
             "scheduler": ["FixMatchLR"],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "n_epochs": get_epochs_unlabeled(POVERTY),
+        },
+        OGB: {
+            "lr": get_lr_grid(OGB, grad_accumulation=4),
+            "scheduler": ["FixMatchLR"],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(OGB),
+            "noisystudent_dropout_rate": [0],
+        },
+        GLOBAL_WHEAT: {
+            "lr": get_lr_grid(GLOBAL_WHEAT, grad_accumulation=4),
+            "scheduler": ["FixMatchLR"],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(GLOBAL_WHEAT),
         },
     },
 }

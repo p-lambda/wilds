@@ -21,7 +21,7 @@ from wilds.common.data_loaders import get_train_loader, get_eval_loader
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSPseudolabeledSubset
 
-from utils import set_seed, Logger, BatchLogger, log_config, ParseKwargs, load, initialize_wandb, log_group_data, parse_bool, get_model_prefix
+from utils import set_seed, Logger, BatchLogger, log_config, ParseKwargs, load, initialize_wandb, log_group_data, parse_bool, get_model_prefix, move_to
 from train import train, evaluate, infer_predictions
 from algorithms.initializer import initialize_algorithm, infer_d_out
 from transforms import initialize_transform
@@ -30,6 +30,10 @@ from configs.utils import populate_defaults
 import configs.supported as supported
 
 import torch.multiprocessing
+
+# Necessary for large images of GlobalWheat
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 def main():
 
@@ -72,7 +76,8 @@ def main():
     parser.add_argument('--model', choices=supported.models)
     parser.add_argument('--model_kwargs', nargs='*', action=ParseKwargs, default={},
         help='keyword arguments for model initialization passed as key1=value1 key2=value2')
-    parser.add_argument('--dropout_rate', type=float)
+    parser.add_argument('--noisystudent_add_dropout', type=parse_bool, const=True, nargs='?', help="Whether to add the dropout layer to the student model of NoisyStudent.")
+    parser.add_argument('--noisystudent_dropout_rate', type=float)
     parser.add_argument('--pretrained_model_path', default=None, type=str, help="Specify a path to a pretrained model's weights")
     parser.add_argument('--load_featurizer_only', default=False, type=parse_bool, const=True, nargs='?', help="Set this to only load the featurizer weights and not the classifier weights.")
 
@@ -283,15 +288,17 @@ def main():
                 batch_size=config.unlabeled_batch_size,
                 **config.unlabeled_loader_kwargs
             )
+
             teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
-            teacher_outputs = teacher_outputs.to(torch.device("cpu"))
-            teacher_model = teacher_model.to(torch.device("cpu"))
-            del teacher_model
+            teacher_outputs = move_to(teacher_outputs, torch.device("cpu"))
             unlabeled_split_dataset = WILDSPseudolabeledSubset(
                 reference_subset=unlabeled_split_dataset,
                 pseudolabels=teacher_outputs,
-                transform=unlabeled_train_transform
+                transform=unlabeled_train_transform,
+                collate=full_dataset.collate if config.dataset == "globalwheat" else None,
             )
+            teacher_model = teacher_model.to(torch.device("cpu"))
+            del teacher_model
         else:
             unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=unlabeled_train_transform, frac=config.frac)
 

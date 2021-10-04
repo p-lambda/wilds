@@ -51,6 +51,13 @@ def populate_defaults(config):
                 "specified."
             )
 
+    if config.dataset == 'globalwheat':
+        if config.additional_train_transform is not None:
+            raise ValueError(
+                f"Augmentations not supported for detection dataset: {config.dataset}."
+            )
+        config.additional_train_transform = ''
+
     # implied defaults from choice of dataset
     config = populate_config(
         config,

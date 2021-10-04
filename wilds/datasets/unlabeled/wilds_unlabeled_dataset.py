@@ -197,7 +197,7 @@ class WILDSUnlabeledSubset(WILDSUnlabeledDataset):
 
 class WILDSPseudolabeledSubset(WILDSUnlabeledDataset):
     """Pseudolabeled subset initialized from an unlabeled subset"""
-    def __init__(self, reference_subset, pseudolabels, transform):
+    def __init__(self, reference_subset, pseudolabels, transform, collate=None):
         assert len(reference_subset) == len(pseudolabels)
         self.pseudolabels = pseudolabels
         copied_attrs = [
@@ -216,6 +216,8 @@ class WILDSPseudolabeledSubset(WILDSUnlabeledDataset):
             if hasattr(reference_subset, attr_name):
                 setattr(self, attr_name, getattr(reference_subset, attr_name))
         self.transform = transform
+        if collate:
+            self._collate = collate
 
     def __getitem__(self, idx):
         x, metadata = self.dataset[self.indices[idx]]

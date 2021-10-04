@@ -1,11 +1,16 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+
+from configs.supported import process_pseudolabels_functions
 from models.initializer import initialize_model
-from algorithms.ERM import ERM
 from algorithms.single_model_algorithm import SingleModelAlgorithm
-from optimizer import initialize_optimizer_with_model_params
-from wilds.common.utils import split_into_groups
+from utils import move_to, collate_list
+
+try:
+    from torch_geometric.data import Batch
+except ImportError:
+    pass
+
 
 class DropoutModel(nn.Module):
     def __init__(self, featurizer, classifier, dropout_rate):
@@ -13,10 +18,13 @@ class DropoutModel(nn.Module):
         self.featurizer = featurizer
         self.dropout = nn.Dropout(p=dropout_rate)
         self.classifier = classifier
+        self.needs_y = featurizer.needs_y
+
     def forward(self, x):
         features = self.featurizer(x)
         features_sparse = self.dropout(features)
         return self.classifier(features_sparse)
+
 
 class NoisyStudent(SingleModelAlgorithm):
     """
@@ -30,7 +38,7 @@ class NoisyStudent(SingleModelAlgorithm):
 
     Based on the original paper, loss is of the form
         \ell_s + \ell_u
-    where 
+    where
         \ell_s = cross-entropy with true labels; student predicts with noise
         \ell_u = cross-entropy with pseudolabel generated without noise; student predicts with noise
     The student is noised using:
@@ -52,11 +60,24 @@ class NoisyStudent(SingleModelAlgorithm):
             year={2020}
             }
     """
-    def __init__(self, config, d_out, grouper, loss, unlabeled_loss, metric, n_train_steps):
+
+    def __init__(
+        self, config, d_out, grouper, loss, unlabeled_loss, metric, n_train_steps
+    ):
         # initialize student model with dropout before last layer
-        featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
-        student_model = DropoutModel(featurizer, classifier, config.dropout_rate).to(config.device)
-        
+        if config.noisystudent_add_dropout:
+            featurizer, classifier = initialize_model(
+                config, d_out=d_out, is_featurizer=True
+            )
+            student_model = DropoutModel(
+                featurizer, classifier, config.noisystudent_dropout_rate
+            ).to(config.device)
+        else:
+            student_model = initialize_model(config, d_out=d_out, is_featurizer=False)
+        self.process_pseudolabels_function = process_pseudolabels_functions[
+            config.process_pseudolabels_function
+        ]
+
         # initialize module
         super().__init__(
             config=config,
@@ -74,57 +95,60 @@ class NoisyStudent(SingleModelAlgorithm):
     def process_batch(self, labeled_batch, unlabeled_batch=None):
         # Labeled examples
         x, y_true, metadata = labeled_batch
-        x = x.to(self.device)
-        y_true = y_true.to(self.device)
-        g = self.grouper.metadata_to_group(metadata).to(self.device)
+        n_lab = len(metadata)
+        x = move_to(x, self.device)
+        y_true = move_to(y_true, self.device)
+        g = move_to(self.grouper.metadata_to_group(metadata), self.device)
         # package the results
-        results = {
-            'g': g,
-            'y_true': y_true,
-            'metadata': metadata
-        }
+        results = {"g": g, "y_true": y_true, "metadata": metadata}
 
         # Unlabeled examples with pseudolabels
         if unlabeled_batch is not None:
-            x_unlab, y_pseudo, metadata = unlabeled_batch # x should be strongly augmented
-            x_unlab = x_unlab.to(self.device)
-            g = self.grouper.metadata_to_group(metadata).to(self.device)
-            y_pseudo = y_pseudo.to(self.device)
-            results['unlabeled_metadata'] = metadata
-            results['unlabeled_y_pseudo'] = y_pseudo 
-            results['unlabeled_g'] = g
+            x_unlab, y_pseudo, metadata_unlab = unlabeled_batch
+            x_unlab = move_to(x_unlab, self.device)
+            g_unlab = move_to(self.grouper.metadata_to_group(metadata_unlab), self.device)
+            y_pseudo = move_to(y_pseudo, self.device)
+            results["unlabeled_metadata"] = metadata_unlab
+            results["unlabeled_y_pseudo"] = y_pseudo
+            results["unlabeled_g"] = g_unlab
 
-        # Concat and call forward
-        n_lab = x.shape[0]
-        if unlabeled_batch is not None: x_concat = torch.cat((x, x_unlab), dim=0)
-        else: x_concat = x
-        outputs = self.model(x_concat)
-        results['y_pred'] = outputs[:n_lab]
-        if unlabeled_batch is not None:
-            results['unlabeled_y_pred'] = outputs[n_lab:]
+            if isinstance(x, torch.Tensor):
+                x_cat = torch.cat((x, x_unlab), dim=0)
+            elif isinstance(x, Batch):
+                x.y = None
+                x_cat = Batch.from_data_list([x, x_unlab])
+            else:
+                raise TypeError("x must be Tensor or Batch")
+
+            y_cat = collate_list([y_true, y_pseudo]) if self.model.needs_y else None
+            outputs = self.get_model_output(x_cat, y_cat)
+            results["y_pred"] = outputs[:n_lab]
+            results["unlabeled_y_pred"] = outputs[n_lab:]
+        else:
+            results["y_pred"] = self.get_model_output(x, y_true)
 
         return results
 
     def objective(self, results):
         # Labeled loss
-        classification_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
+        classification_loss = self.loss.compute(
+            results["y_pred"], results["y_true"], return_dict=False
+        )
 
         # Pseudolabel loss
-        if 'unlabeled_y_pseudo' in results: 
+        if "unlabeled_y_pseudo" in results:
             consistency_loss = self.unlabeled_loss.compute(
-                results['unlabeled_y_pred'], 
-                results['unlabeled_y_pseudo'], 
-                return_dict=False
+                results["unlabeled_y_pred"],
+                results["unlabeled_y_pseudo"],
+                return_dict=False,
             )
-        else: 
+        else:
             consistency_loss = 0
 
         # Add to results for additional logging
         self.save_metric_for_logging(
             results, "classification_loss", classification_loss
         )
-        self.save_metric_for_logging(
-            results, "consistency_loss", consistency_loss
-        )
+        self.save_metric_for_logging(results, "consistency_loss", consistency_loss)
 
-        return classification_loss + consistency_loss 
+        return classification_loss + consistency_loss

@@ -1,8 +1,9 @@
+import copy
 import torch
 from tqdm import tqdm
 import math
 
-from configs.supported import process_outputs_functions
+from configs.supported import process_outputs_functions, process_pseudolabels_functions
 from utils import save_model, save_pred, get_pred_prefix, get_model_prefix, collate_list, detach_and_clone, InfiniteDataIterator
 
 def run_epoch(algorithm, dataset, general_logger, epoch, config, train, unlabeled_dataset=None):
@@ -192,12 +193,18 @@ def infer_predictions(model, loader, config):
         x = x.to(config.device)
         with torch.no_grad(): 
             output = model(x)
-            if not config.soft_pseudolabels and config.process_outputs_function is not None:
-                output = process_outputs_functions[config.process_outputs_function](output)
+            if not config.soft_pseudolabels and config.process_pseudolabels_function is not None:
+                _, output, _, _ = process_pseudolabels_functions[config.process_pseudolabels_function](
+                    output, confidence_threshold=0
+                )
             elif config.soft_pseudolabels:
                 output = torch.nn.functional.softmax(output, dim=1)
-        y_pred.append(output.clone().detach())
-    return torch.cat(y_pred, 0)
+        if isinstance(output, list):
+            y_pred.extend(detach_and_clone(output))
+        else:
+            y_pred.append(detach_and_clone(output))
+
+    return torch.cat(y_pred, 0) if torch.is_tensor(y_pred[0]) else y_pred
 
 def log_results(algorithm, dataset, general_logger, epoch, effective_batch_idx):
     if algorithm.has_log:
