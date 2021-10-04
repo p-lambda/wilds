@@ -115,7 +115,7 @@ class PseudoLabel(SingleModelAlgorithm):
                 self.model.train(mode=True)
                 outputs = self.get_model_output(
                     torch.cat((x, x_unlab), dim=0),
-                    collate_list((y_true, unlabeled_y_pseudo)),
+                    collate_list([y_true, unlabeled_y_pseudo]),
                 )
                 unlabeled_y_pred = outputs[n_lab:]
             else:

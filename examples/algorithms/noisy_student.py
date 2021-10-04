@@ -120,7 +120,7 @@ class NoisyStudent(SingleModelAlgorithm):
             else:
                 raise TypeError("x must be Tensor or Batch")
 
-            y_cat = collate_list((y_true, y_pseudo)) if self.model.needs_y else None
+            y_cat = collate_list([y_true, y_pseudo]) if self.model.needs_y else None
             outputs = self.get_model_output(x_cat, y_cat)
             results["y_pred"] = outputs[:n_lab]
             results["unlabeled_y_pred"] = outputs[n_lab:]
