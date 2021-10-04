@@ -106,36 +106,37 @@ class PseudoLabel(SingleModelAlgorithm):
                 self.model.train(mode=False)
                 unlabeled_output = self.get_model_output(x_unlab, None)
 
-                _, unlabeled_y_pseudo, _, mask = self.process_pseudolabels_function(
+                _, unlabeled_y_pseudo, pseudolabels_kept_frac, mask = self.process_pseudolabels_function(
                     unlabeled_output,
                     self.confidence_threshold
                 )
                 x_unlab = x_unlab[mask]
 
                 self.model.train(mode=True)
-                y_cat = collate_list((y_true, unlabeled_y_pseudo))
+                outputs = self.get_model_output(
+                    torch.cat((x, x_unlab), dim=0),
+                    collate_list((y_true, unlabeled_y_pseudo)),
+                )
+                unlabeled_y_pred = outputs[n_lab:]
             else:
-                y_cat = None
+                if isinstance(x, torch.Tensor):
+                    x_cat = torch.cat((x, x_unlab), dim=0)
+                elif isinstance(x, Batch):
+                    x.y = None
+                    x_cat = Batch.from_data_list([x, x_unlab])
+                else:
+                    raise TypeError('x must be Tensor or Batch')
 
-            if isinstance(x, torch.Tensor):
-                x_cat = torch.cat((x, x_unlab), dim=0)
-            elif isinstance(x, Batch):
-                x.y = None
-                x_cat = Batch.from_data_list([x, x_unlab])
-            else:
-                raise TypeError('x must be Tensor or Batch')
+                outputs = self.get_model_output(x_cat, None)
+                unlabeled_output = outputs[n_lab:]
+                unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, _ = self.process_pseudolabels_function(
+                    unlabeled_output,
+                    self.confidence_threshold
+                )
 
-            outputs = self.get_model_output(x_cat, y_cat)
             results['y_pred'] = outputs[:n_lab]
-            unlabeled_output = outputs[n_lab:]
-            unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, _ = self.process_pseudolabels_function(
-                unlabeled_output,
-                self.confidence_threshold
-            )
             results['unlabeled_y_pred'] = unlabeled_y_pred
-            results['unlabeled_y_pseudo'] = detach_and_clone(
-                y_cat[:n_lab] if self.model.needs_y else unlabeled_y_pseudo
-            )
+            results['unlabeled_y_pseudo'] = detach_and_clone(unlabeled_y_pseudo)
         else:
             results['y_pred'] = self.get_model_output(x, y_true)
             pseudolabels_kept_frac = 0
