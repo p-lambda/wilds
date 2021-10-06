@@ -126,6 +126,46 @@ def pseudolabel_detection(preds, confidence_threshold):
     return unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, example_mask
 
 
+def pseudolabel_detection2(preds, confidence_threshold):
+    """
+    TODO: use this method but ensure it works with NoisyStudent
+    Input:
+        preds (List): List of len batch_size. Each entry is a dict containing
+                      the keys 'boxes', 'labels', 'scores', and 'losses'
+                      ('losses' is empty)
+        confidence_threshold (float): In [0,1]
+    """
+    total_boxes = 0.0
+    kept_boxes = 0.0
+
+    for pred in preds:
+        mask = (pred['scores'] >= confidence_threshold)
+        pred['boxes'] = pred['boxes'][mask]
+        pred['labels'] = pred['labels'][mask]
+        pred['scores'] = pred['scores'][mask]
+        total_boxes += len(mask)
+        kept_boxes += mask.sum()
+
+    unlabeled_y_pred = [
+        {
+            'boxes': pred['boxes'],
+            'labels': pred['labels'],
+            'scores': pred['scores'],
+            'losses': pred['losses'],
+        } for pred in preds if len(pred['labels']) > 0
+    ]
+    unlabeled_y_pseudo = [
+        {
+            'boxes': pred['boxes'],
+            'labels': pred['labels'],
+        } for pred in preds if len(pred['labels']) > 0
+    ]
+    pseudolabels_kept_frac = kept_boxes / total_boxes
+    example_mask = torch.tensor([len(pred['labels']) > 0 for pred in preds])
+
+    return unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, example_mask
+
+
 class Accuracy(ElementwiseMetric):
     def __init__(self, prediction_fn=None, name=None):
         self.prediction_fn = prediction_fn
