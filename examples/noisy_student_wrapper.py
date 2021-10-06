@@ -60,6 +60,14 @@ try:
 except:
     seed = 0  # default in run_expt.py
 
+try:
+    idx = args.cmd.index("--dataset_kwargs")
+    fold = args.cmd[idx + 1]
+    assert fold.startswith("fold=")
+    fold = fold.replace("fold=", "")
+except:
+    fold = "A"
+
 # Train the teacher model without unlabeled data and default values for gradient_accumulation_steps and n_epochs
 unlabeled_split = remove_arg(args, "unlabeled_split")
 gradient_accumulation_steps = remove_arg(args, "gradient_accumulation_steps")
@@ -70,9 +78,14 @@ for i in range(1, args.num_iters + 1):
     if i == 1:
         teacher_weights = args.initial_teacher_path
     else:
-        teacher_weights = (
-            f"{log_dir}/student{i-1}/{dataset}_seed:{seed}_epoch:best_model.pth"
-        )
+        if dataset == "poverty":
+            teacher_weights = (
+                f"{log_dir}/student{i - 1}/{dataset}_fold:{fold}_epoch:best_model.pth"
+            )
+        else:
+            teacher_weights = (
+                f"{log_dir}/student{i-1}/{dataset}_seed:{seed}_epoch:best_model.pth"
+            )
     cmd = (
         f"python {prefix}/run_expt.py --algorithm NoisyStudent {' '.join(args.cmd)}"
         + f" --unlabeled_split {unlabeled_split} --gradient_accumulation_steps {gradient_accumulation_steps}"
