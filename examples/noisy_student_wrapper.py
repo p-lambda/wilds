@@ -98,6 +98,8 @@ for i in range(1, args.num_iters + 1):
     print(f">>> Running {cmd}")
     return_code = subprocess.Popen(cmd, shell=True).wait()
     if return_code != SUCCESS_RETURN_CODE:
-        print(f"FAILED: Iteration {i} failed with return code: {return_code}")
+        raise RuntimeError(
+            f"FAILED: Iteration {i} failed with return code: {return_code}"
+        )
 
 print(">>> Done!")
