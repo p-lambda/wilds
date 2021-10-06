@@ -21,6 +21,8 @@ import pathlib
 import pdb
 import subprocess
 
+SUCCESS_RETURN_CODE = 0
+
 parser = argparse.ArgumentParser()
 parser.add_argument("num_iters", type=int)
 parser.add_argument("initial_teacher_path", type=str)  # required
@@ -73,7 +75,7 @@ unlabeled_split = remove_arg(args, "unlabeled_split")
 gradient_accumulation_steps = remove_arg(args, "gradient_accumulation_steps")
 n_epochs = remove_arg(args, "n_epochs")
 
-# Run student iters
+# Run student iterations
 for i in range(1, args.num_iters + 1):
     if i == 1:
         teacher_weights = args.initial_teacher_path
@@ -94,6 +96,8 @@ for i in range(1, args.num_iters + 1):
         + f" --pretrained_model_path {teacher_weights}"  # warm starting
     )
     print(f">>> Running {cmd}")
-    subprocess.Popen(cmd, shell=True).wait()
+    return_code = subprocess.Popen(cmd, shell=True).wait()
+    if return_code != SUCCESS_RETURN_CODE:
+        print(f"FAILED: Iteration {i} failed with return code: {return_code}")
 
 print(">>> Done!")
