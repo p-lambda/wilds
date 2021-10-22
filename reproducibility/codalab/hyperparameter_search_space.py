@@ -5,6 +5,7 @@ from examples.configs.datasets import dataset_defaults
 AMAZON = "amazon"
 CIVIL_COMMENTS = "civilcomments"
 CAMELYON17 = "camelyon17"
+DOMAINNET = "domainnet"
 GLOBAL_WHEAT = "globalwheat"
 IWILDCAM = "iwildcam"
 FMOW = "fmow"
@@ -16,6 +17,7 @@ MAX_BATCH_SIZES = {
     AMAZON: 24,
     CIVIL_COMMENTS: 48,
     CAMELYON17: 168,
+    DOMAINNET: 96,
     GLOBAL_WHEAT: 8,
     IWILDCAM: 24,
     FMOW: 72,
@@ -32,6 +34,7 @@ NOISY_STUDENT_TEACHERS = {
     POVERTY: "0x6e908c5ef2f544a3aeab871549711084",
     OGB: "0xbef12512ae7f43b9a2f1e570be0b89df",
     GLOBAL_WHEAT: "0xc7277e7a07d0441882b242a759687935",
+    DOMAINNET: "0x94ce0d6abe4345c88d524edde1137f3b",
 }
 
 
@@ -90,6 +93,10 @@ ERM_HYPERPARAMETER_SEARCH_SPACE = {
             "batch_size": [MAX_BATCH_SIZES[OGB]],
             "lr": get_lr_grid(OGB, grad_accumulation=1),
         },
+        DOMAINNET: {
+            "batch_size": [MAX_BATCH_SIZES[DOMAINNET]],
+            "lr": [-4, -2],
+        },
     },
 }
 
@@ -113,6 +120,11 @@ ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE = {
         POVERTY: {
             "batch_size": [MAX_BATCH_SIZES[POVERTY]],
             "lr": get_lr_grid(POVERTY, grad_accumulation=1),
+            "additional_train_transform": ["randaugment"],
+        },
+        DOMAINNET: {
+            "batch_size": [MAX_BATCH_SIZES[DOMAINNET]],
+            "lr": [-4, -2],
             "additional_train_transform": ["randaugment"],
         },
     },
@@ -155,6 +167,12 @@ CORAL_HYPERPARAMETER_SEARCH_SPACE = {
             "coral_penalty_weight": [-1, 1],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "n_epochs": get_epochs_unlabeled(POVERTY, factor=2),
+        },
+        DOMAINNET: {
+            "lr": get_lr_grid(DOMAINNET, grad_accumulation=4),
+            "coral_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(DOMAINNET, factor=2),
         },
     },
 }
@@ -203,6 +221,13 @@ DANN_HYPERPARAMETER_SEARCH_SPACE = {
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "n_epochs": get_epochs_unlabeled(POVERTY, factor=2),
         },
+        DOMAINNET: {
+            "dann_classifier_lr": get_lr_grid(DOMAINNET, grad_accumulation=4),
+            "dann_discriminator_lr": get_lr_grid(DOMAINNET, grad_accumulation=4),
+            "dann_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(DOMAINNET, factor=2),
+        },
     },
 }
 
@@ -239,6 +264,14 @@ FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "scheduler": ["FixMatchLR"],
             "n_epochs": get_epochs_unlabeled(POVERTY, factor=2),
+        },
+        DOMAINNET: {
+            "lr": get_lr_grid(DOMAINNET, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(DOMAINNET, factor=2),
         },
     },
 }
@@ -311,6 +344,14 @@ PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE = {
             "scheduler": ["FixMatchLR"],
             "n_epochs": get_epochs_unlabeled(POVERTY, factor=2),
         },
+        DOMAINNET: {
+            "lr": get_lr_grid(DOMAINNET, grad_accumulation=4),
+            "self_training_lambda": [1],
+            "self_training_threshold": [0.7, 0.95],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "scheduler": ["FixMatchLR"],
+            "n_epochs": get_epochs_unlabeled(DOMAINNET, factor=2),
+        },
     },
 }
 
@@ -352,6 +393,12 @@ NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE = {
             "scheduler": ["FixMatchLR"],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "n_epochs": get_epochs_unlabeled(GLOBAL_WHEAT),
+        },
+        DOMAINNET: {
+            "lr": get_lr_grid(DOMAINNET, grad_accumulation=4),
+            "scheduler": ["FixMatchLR"],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(DOMAINNET),
         },
     },
 }
