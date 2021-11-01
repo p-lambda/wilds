@@ -44,9 +44,10 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
 
     # To tune for multi-gpu runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --weak --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --weak --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm FixMatch --random --gpus 1 --unlabeled-split extra_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets ogb-molpcba --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm NoisyStudent --random --gpus 1 --unlabeled-split val_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_pseudolabel_tune 
 
@@ -165,6 +166,7 @@ class CodaLabReproducibility:
         unlabeled_split=None,
         dry_run=False,
         gpus=1,
+        weak=False,
     ):
         self._set_worksheet(worksheet_uuid)
         datasets_uuids = self._get_datasets_uuids(worksheet_uuid, datasets)
@@ -196,6 +198,8 @@ class CodaLabReproducibility:
                 hyperparameter_config = dict()
                 if gpus == 1 and "ERM" not in algorithm:
                     hyperparameter_config["gradient_accumulation_steps"] = 4
+                if weak:
+                    hyperparameter_config["additional_train_transform"] = "weak"
 
                 for hyperparameter, values in search_space[dataset].items():
                     if hyperparameter == "n_epochs":
@@ -247,7 +251,7 @@ class CodaLabReproducibility:
                     dependencies[unlabeled_dataset_fullname] = unlabeled_dataset_uuid
 
                 experiment_name = (
-                    f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}"
+                    f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}{'_weak' if weak else ''}"
                 )
                 if unlabeled_split:
                     experiment_name += f"_{unlabeled_split.replace('_', '')}"
@@ -294,7 +298,7 @@ class CodaLabReproducibility:
             "--request-network",
             f"--request-cpus={cpus}",
             f"--request-gpus={gpus}",
-            "--request-disk=40g",
+            "--request-disk=20g",
             f"--request-memory={memory_gb}g",
             "--request-priority=1",
             "--request-queue=cluster",
@@ -729,6 +733,7 @@ def main():
                 unlabeled_split=args.unlabeled_split,
                 dry_run=args.dry_run,
                 gpus=args.gpus,
+                weak=args.weak,
             )
         else:
             reproducibility.tune_hyperparameters_grid(
@@ -776,6 +781,11 @@ if __name__ == "__main__":
         "--algorithm",
         type=str,
         help="Name of the algorithm",
+    )
+    parser.add_argument(
+        "--weak",
+        action="store_true",
+        help="Whether to run with weak augmentation for labeled examples (defaults to false).",
     )
     parser.add_argument(
         "--coarse",
