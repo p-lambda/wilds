@@ -43,7 +43,7 @@ class WILDSUnlabeledDataset(WILDSDataset):
         metadata = self.metadata_array[idx]
         return x, metadata
 
-    def get_subset(self, split, frac=1.0, transform=None):
+    def get_subset(self, split, frac=1.0, transform=None, load_y=False):
         """
         Args:
             - split (str): Split identifier, e.g., 'train', 'val', 'test'.
@@ -63,7 +63,7 @@ class WILDSUnlabeledDataset(WILDSDataset):
             num_to_retain = int(np.round(float(len(split_idx)) * frac))
             split_idx = np.sort(np.random.permutation(split_idx)[:num_to_retain])
 
-        return WILDSUnlabeledSubset(self, split_idx, transform)
+        return WILDSUnlabeledSubset(self, split_idx, transform, load_y=load_y)
 
     def check_init(self):
         """
@@ -160,7 +160,7 @@ class WILDSUnlabeledDataset(WILDSDataset):
 
 
 class WILDSUnlabeledSubset(WILDSUnlabeledDataset):
-    def __init__(self, dataset, indices, transform):
+    def __init__(self, dataset, indices, transform, load_y=False):
         self.dataset = dataset
         self.indices = indices
         inherited_attrs = [
@@ -177,12 +177,17 @@ class WILDSUnlabeledSubset(WILDSUnlabeledDataset):
             if hasattr(dataset, attr_name):
                 setattr(self, attr_name, getattr(dataset, attr_name))
         self.transform = transform
+        self.load_y = load_y
 
     def __getitem__(self, idx):
         x, metadata = self.dataset[self.indices[idx]]
         if self.transform is not None:
             x = self.transform(x)
-        return x, metadata
+        if self.load_y:
+            y = metadata[self.indices[idx], self.metadata_fields.index("y")]
+            return x, y, metadata
+        else:
+            return x, metadata
 
     def __len__(self):
         return len(self.indices)

@@ -58,7 +58,7 @@ def main():
     # Unlabeled Dataset
     parser.add_argument('--unlabeled_split', default=None, type=str, help='Unlabeled split to use')
     parser.add_argument('--unlabeled_version', default=None, type=str)
-    parser.add_argument('--unlabeled_data_as_labeled_oracle', default=False, type=parse_bool, const=True, nargs='?', help='If true, trains on the true (hidden) labels of the unlabeled data.')
+    parser.add_argument('--use_unlabeled_y', default=False, type=parse_bool, const=True, nargs='?', help='For oracle experiments. Train on unlabeled data as labeled data using the value stored in the "y" column of metadata_array as the label. On some datasets, these are actual (hidden) labels, and not dummy values.')
 
     # Loaders
     parser.add_argument('--loader_kwargs', nargs='*', action=ParseKwargs, default={})
@@ -241,8 +241,6 @@ def main():
             unlabeled=True,
             **config.dataset_kwargs
         )
-        import pdb
-        pdb.set_trace()
         train_grouper = CombinatorialGrouper(
             dataset=[full_dataset, full_unlabeled_dataset],
             groupby_fields=config.groupby_fields
@@ -303,7 +301,12 @@ def main():
             teacher_model = teacher_model.to(torch.device("cpu"))
             del teacher_model
         else:
-            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=unlabeled_train_transform, frac=config.frac)
+            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(
+                split, 
+                transform=unlabeled_train_transform, 
+                frac=config.frac, 
+                load_y=config.use_unlabeled_y
+            )
 
         unlabeled_dataset = {
             'split': split,
