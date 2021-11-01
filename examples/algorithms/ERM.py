@@ -1,6 +1,7 @@
 import torch
 from algorithms.single_model_algorithm import SingleModelAlgorithm
 from models.initializer import initialize_model
+from utils import move_to
 
 class ERM(SingleModelAlgorithm):
     def __init__(self, config, d_out, grouper, loss,
@@ -60,7 +61,7 @@ class ERM(SingleModelAlgorithm):
 
     def objective(self, results):
         labeled_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
-        if not config.use_unlabeled_y:
+        if not self.use_unlabeled_y:
             return labeled_loss
         else:
             return labeled_loss + self.loss.compute(results['unlabeled_y_pred'], results['unlabeled_y_true'], return_dict=False)
