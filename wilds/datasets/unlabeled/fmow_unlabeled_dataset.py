@@ -17,6 +17,8 @@ from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSUnlabeledDatas
 Image.MAX_IMAGE_PIXELS = 10000000000
 
 
+categories = ["airport", "airport_hangar", "airport_terminal", "amusement_park", "aquaculture", "archaeological_site", "barn", "border_checkpoint", "burial_site", "car_dealership", "construction_site", "crop_field", "dam", "debris_or_rubble", "educational_institution", "electric_substation", "factory_or_powerplant", "fire_station", "flooded_road", "fountain", "gas_station", "golf_course", "ground_transportation_station", "helipad", "hospital", "impoverished_settlement", "interchange", "lake_or_pond", "lighthouse", "military_facility", "multi-unit_residential", "nuclear_powerplant", "office_building", "oil_or_gas_facility", "park", "parking_lot_or_garage", "place_of_worship", "police_station", "port", "prison", "race_track", "railway_bridge", "recreational_facility", "road_bridge", "runway", "shipyard", "shopping_mall", "single-unit_residential", "smokestack", "solar_farm", "space_facility", "stadium", "storage_tank", "surface_mine", "swimming_pool", "toll_booth", "tower", "tunnel_opening", "waste_disposal", "water_treatment_facility", "wind_farm", "zoo"]
+
 class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
     """
     The Functional Map of the World land use / building classification dataset.
@@ -142,8 +144,9 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
         self.metadata['year'] = year_array
         self._metadata_map['year'] = list(range(2002, 2018))
 
-        # no labels
-        self.metadata['y'] = (-100 * np.ones(len(self.metadata)))
+        # hidden labels
+        self.category_to_idx = {cat: i for i, cat in enumerate(categories)}
+        self.metadata['y'] = np.asarray([self.category_to_idx[y] for y in list(self.metadata['category'])])
 
         self._metadata_fields = ['region', 'year', 'y']
         self._metadata_array = torch.from_numpy(self.metadata[self._metadata_fields].astype(int).to_numpy()).long()[unlabeled_mask]
