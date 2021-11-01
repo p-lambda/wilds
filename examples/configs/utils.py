@@ -14,9 +14,10 @@ def populate_defaults(config):
     assert config.algorithm is not None, 'algorithm must be specified'
 
     # Run oracle using ERM with unlabeled split
-    if config.algorithm == 'ERM' and config.unlabeled_split is not None:
-        assert config.dataset in ['amazon', 'civilcomments', 'fmow', 'iwildcam'], ''
-
+    if config.unlabeled_data_as_labeled_oracle:
+        assert config.algorithm == 'ERM', 'Only ERM is currently supported for training on the true labels of unlabeled data.'
+        assert config.unlabeled_split is not None, 'Specify an unlabeled split'
+        assert config.dataset in ['amazon', 'civilcomments', 'fmow', 'iwildcam'], 'The unlabeled data in this dataset are truly unlabeled, and we do not have true labels for them.'
 
     # Validations
     if config.groupby_fields == ['from_source_domain']:

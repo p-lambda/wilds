@@ -58,6 +58,7 @@ def main():
     # Unlabeled Dataset
     parser.add_argument('--unlabeled_split', default=None, type=str, help='Unlabeled split to use')
     parser.add_argument('--unlabeled_version', default=None, type=str)
+    parser.add_argument('--unlabeled_data_as_labeled_oracle', default=False, type=parse_bool, const=True, nargs='?', help='If true, trains on the true (hidden) labels of the unlabeled data.')
 
     # Loaders
     parser.add_argument('--loader_kwargs', nargs='*', action=ParseKwargs, default={})
