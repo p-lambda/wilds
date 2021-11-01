@@ -13,6 +13,11 @@ def populate_defaults(config):
     assert config.dataset is not None, 'dataset must be specified'
     assert config.algorithm is not None, 'algorithm must be specified'
 
+    # Run oracle using ERM with unlabeled split
+    if config.algorithm == 'ERM' and config.unlabeled_split is not None:
+        assert config.dataset in ['amazon', 'civilcomments', 'fmow', 'iwildcam'], ''
+
+
     # Validations
     if config.groupby_fields == ['from_source_domain']:
         if config.n_groups_per_batch is None:
