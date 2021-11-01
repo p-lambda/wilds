@@ -101,7 +101,7 @@ class CivilCommentsUnlabeledDataset(WILDSUnlabeledDataset):
                     len(self._metadata_df),
                     len(self._identity_vars) + len(self._auxiliary_vars)
                 ) * 2,
-                torch.LongTensor(self._metadata_df['toxicity'].values >= 0.5)
+                torch.LongTensor(self._metadata_df['toxicity'].values >= 0.5).unsqueeze(dim=-1)
             ),
             axis=1
         )
