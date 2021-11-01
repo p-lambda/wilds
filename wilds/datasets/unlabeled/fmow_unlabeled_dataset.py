@@ -143,7 +143,7 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
         self._metadata_map['year'] = list(range(2002, 2018))
 
         # no labels
-        self.metadata['y'] = (-100 * np.ones(len(self.metadata)))
+        self.metadata['y'] = np.asarray([self.category_to_idx[y] for y in list(self.metadata['category'])])
 
         self._metadata_fields = ['region', 'year', 'y']
         self._metadata_array = torch.from_numpy(self.metadata[self._metadata_fields].astype(int).to_numpy()).long()[unlabeled_mask]

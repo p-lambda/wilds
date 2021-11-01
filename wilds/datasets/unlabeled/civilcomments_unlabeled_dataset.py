@@ -95,10 +95,16 @@ class CivilCommentsUnlabeledDataset(WILDSUnlabeledDataset):
             'sexual_explicit'
         ]
 
-        self._metadata_array = torch.ones(
-            len(self._metadata_df),
-            len(self._identity_vars) + len(self._auxiliary_vars) + 1
-        ) * 2
+        self._metadata_array = torch.cat(
+            (
+                torch.ones(
+                    len(self._metadata_df),
+                    len(self._identity_vars) + len(self._auxiliary_vars)
+                ) * 2,
+                torch.LongTensor(self._metadata_df['toxicity'].values >= 0.5)
+            ),
+            axis=1
+        )
         self._metadata_fields = self._identity_vars + self._auxiliary_vars + ['y']
 
         super().__init__(root_dir, download, split_scheme)
