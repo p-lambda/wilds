@@ -5,7 +5,7 @@ def initialize_scheduler(config, optimizer, n_train_steps):
     if config.scheduler is None:
         return None
     elif config.scheduler == 'linear_schedule_with_warmup':
-        from transformers import get_linear_schedule_with_warmu
+        from transformers import get_linear_schedule_with_warmup
         scheduler = get_linear_schedule_with_warmup(
             optimizer,
             num_training_steps=n_train_steps,
