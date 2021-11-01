@@ -70,8 +70,6 @@ class IWildCamUnlabeledDataset(WILDSUnlabeledDataset):
         # Location/group info
         n_groups = df["location_remapped"].nunique()
         self._n_groups = n_groups
-        self._y_array = df["category_id"]
-        self._y_size = 1
 
         def get_date(x):
             if isinstance(x, str):
@@ -100,9 +98,9 @@ class IWildCamUnlabeledDataset(WILDSUnlabeledDataset):
             lambda x: int(x.second) if isinstance(x, datetime) else -1
         )
 
-        df["y"] = df[
-            "y"
-        ]  # same mapping as in iwildcam_v2.0. -1 means the category was not in iwildcam_v2.0
+        df["y"] = df["y"].apply( # filter out "bad" labels (-1 means the category was not in iwildcam_v2.0; 99999 means the category was unknown). map all to -1.
+            lambda x: x if ((x != -1) and (x != 99999)) else -1
+        )
 
         self._metadata_array = torch.tensor(
             np.stack(
