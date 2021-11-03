@@ -61,7 +61,7 @@ class ERM(SingleModelAlgorithm):
 
     def objective(self, results):
         labeled_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
-        if self.use_unlabeled_y:
+        if self.use_unlabeled_y and 'unlabeled_y_true' in results:
             # only keep good labels (>=0)
             mask = results['unlabeled_y_true'] >= 0
             unlabeled_loss = self.loss.compute(
