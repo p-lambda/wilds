@@ -98,9 +98,10 @@ class IWildCamUnlabeledDataset(WILDSUnlabeledDataset):
             lambda x: int(x.second) if isinstance(x, datetime) else -1
         )
 
-        df["y"] = df["y"].apply( # filter out "bad" labels (-1 means the category was not in iwildcam_v2.0; 99999 means the category was unknown). map all to -1.
-            lambda x: x if ((x != -1) and (x != 99999)) else -1
+        df["y"] = df["y"].apply( # filter out "bad" labels (-1 means the category was not in iwildcam_v2.0; 99999 means the category was unknown). map all to -100.
+            lambda x: x if ((x != -1) and (x != 99999)) else -100
         )
+        self._y_array = torch.LongTensor(df['y'].values)
 
         self._metadata_array = torch.tensor(
             np.stack(
