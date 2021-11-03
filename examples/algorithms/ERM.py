@@ -67,6 +67,8 @@ class ERM(SingleModelAlgorithm):
                 results['unlabeled_y_true'], 
                 return_dict=False
             )
-            return labeled_loss + unlabeled_loss
+            lab_size = len(results['y_pred'])
+            unl_size = len(results['unlabeled_y_pred'])
+            return (lab_size * labeled_loss + unl_size * unlabeled_loss) / (lab_size + unl_size)
         else:
             return labeled_loss
