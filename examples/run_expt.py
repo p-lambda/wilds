@@ -58,7 +58,8 @@ def main():
     # Unlabeled Dataset
     parser.add_argument('--unlabeled_split', default=None, type=str, help='Unlabeled split to use')
     parser.add_argument('--unlabeled_version', default=None, type=str)
-    parser.add_argument('--use_unlabeled_y', default=False, type=parse_bool, const=True, nargs='?', help='For oracle experiments. Train on unlabeled data as labeled data using the value stored in the "y" column of metadata_array as the label. On some datasets, these are actual (hidden) labels, and not dummy values.')
+    parser.add_argument('--use_unlabeled_y', default=False, type=parse_bool, const=True, nargs='?', 
+                        help='For oracle experiments. Train on unlabeled data as labeled data using the value stored in dataset._y_array. This is only defined for some datasets. Correct functionality relies on CrossEntropyLoss using ignore_index=-100.')
 
     # Loaders
     parser.add_argument('--loader_kwargs', nargs='*', action=ParseKwargs, default={})

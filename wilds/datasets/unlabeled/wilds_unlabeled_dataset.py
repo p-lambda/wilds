@@ -184,7 +184,7 @@ class WILDSUnlabeledSubset(WILDSUnlabeledDataset):
         if self.transform is not None:
             x = self.transform(x)
         if self.load_y:
-            y = metadata[self.metadata_fields.index("y")].long()
+            y = self._y_array[self.indices[idx]]
             return x, y, metadata
         else:
             return x, metadata
