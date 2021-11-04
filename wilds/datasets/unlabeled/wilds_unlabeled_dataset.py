@@ -172,6 +172,7 @@ class WILDSUnlabeledSubset(WILDSUnlabeledDataset):
             "_split_names",
             "_metadata_fields",
             "_metadata_map",
+            "_y_array", 
         ]
         for attr_name in inherited_attrs:
             if hasattr(dataset, attr_name):
@@ -219,7 +220,7 @@ class WILDSPseudolabeledSubset(WILDSUnlabeledDataset):
         ]
         for attr_name in copied_attrs:
             if hasattr(reference_subset, attr_name):
-                setattr(self, attr_name, getattr(reference_subset, attr_name))
+                setattr(self, attr_name, getattr(reference_subset, attr_name, None))
         self.transform = transform
         if collate:
             self._collate = collate
