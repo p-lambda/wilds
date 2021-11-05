@@ -195,7 +195,8 @@ def infer_predictions(model, loader, config):
             output = model(x)
             if not config.soft_pseudolabels and config.process_pseudolabels_function is not None:
                 _, output, _, _ = process_pseudolabels_functions[config.process_pseudolabels_function](
-                    output, confidence_threshold=0
+                    output,
+                    confidence_threshold=config.self_training_threshold if config.dataset == 'globalwheat' else 0
                 )
             elif config.soft_pseudolabels:
                 output = torch.nn.functional.softmax(output, dim=1)

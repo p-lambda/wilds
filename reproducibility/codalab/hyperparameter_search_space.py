@@ -130,6 +130,43 @@ ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE = {
     },
 }
 
+ERM_ORACLE_HYPERPARAMETER_SEARCH_SPACE = {
+    "datasets": {
+        AMAZON: {
+            "use_unlabeled_y": [True],
+            "batch_size": [16],
+            "unlabeled_batch_size": [8],
+            "epochs": [4],
+            "lr": get_lr_grid(AMAZON, grad_accumulation=1),
+        },
+        CIVIL_COMMENTS: {
+            "use_unlabeled_y": [True],
+            "batch_size": [10],
+            "unlabeled_batch_size": [38],
+            "epochs": [3],
+            "lr": get_lr_grid(CIVIL_COMMENTS, grad_accumulation=1),
+            "groupby_fields": ["y"],
+            "uniform_over_group": [True],
+        },
+        FMOW: {
+            "use_unlabeled_y": [True],
+            "batch_size": [32],
+            "unlabeled_batch_size": [40],
+            "epochs": [55],
+            "lr": get_lr_grid(FMOW, grad_accumulation=1),
+            "additional_train_transform": ["randaugment"],
+        },
+        IWILDCAM: {
+            "use_unlabeled_y": [True],
+            "batch_size": [4],
+            "unlabeled_batch_size": [20],
+            "epochs": [5],
+            "lr": get_lr_grid(IWILDCAM, grad_accumulation=1),
+            "additional_train_transform": ["randaugment"],
+        },
+    },
+}
+
 CORAL_HYPERPARAMETER_SEARCH_SPACE = {
     "datasets": {
         AMAZON: {
@@ -393,6 +430,7 @@ NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE = {
             "scheduler": ["FixMatchLR"],
             "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
             "n_epochs": get_epochs_unlabeled(GLOBAL_WHEAT),
+            "self_training_threshold": [0.5, 0.95],
         },
         DOMAINNET: {
             "lr": get_lr_grid(DOMAINNET, grad_accumulation=4),

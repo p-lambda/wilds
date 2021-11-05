@@ -13,6 +13,7 @@ from reproducibility.codalab.hyperparameter_search_space import (
     MAX_BATCH_SIZES,
     ERM_HYPERPARAMETER_SEARCH_SPACE,
     ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE,
+    ERM_ORACLE_HYPERPARAMETER_SEARCH_SPACE,
     CORAL_HYPERPARAMETER_SEARCH_SPACE,
     DANN_HYPERPARAMETER_SEARCH_SPACE,
     FIXMATCH_HYPERPARAMETER_SEARCH_SPACE,
@@ -42,12 +43,13 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --experiment fmow_erm_tune 
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets poverty --algorithm ERM --random --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets amazon --algorithm ERMOracle --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
 
     # To tune for multi-gpu runs
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --weak --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --weak --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm FixMatch --random --gpus 1 --unlabeled-split extra_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm NoisyStudent --random --gpus 1 --unlabeled-split val_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets globalwheat --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_pseudolabel_tune 
 
@@ -264,7 +266,7 @@ class CodaLabReproducibility:
                     command=self._construct_command(
                         dataset,
                         experiment_name,
-                        algorithm="ERM" if algorithm == "ERMAugment" else algorithm,
+                        algorithm="ERM" if "ERM" in algorithm else algorithm,
                         seed=0,
                         hyperparameters=hyperparameter_config,
                         coarse=coarse,
@@ -319,6 +321,8 @@ class CodaLabReproducibility:
             search_space = ERM_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         elif algorithm == "ERMAugment":
             search_space = ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE["datasets"]
+        elif algorithm == "ERMOracle":
+            search_space = ERM_ORACLE_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         elif algorithm == "deepCORAL":
             search_space = CORAL_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         elif algorithm == "DANN":
