@@ -113,7 +113,7 @@ class Camelyon17UnlabeledDataset(WILDSUnlabeledDataset):
 
         self._split_array = self._metadata_df["split"].values
 
-        self._y_array = torch.LongTensor(self._metadata_df["tumor"].values)
+        self._y_array = 100 * torch.LongTensor(self._metadata_df["tumor"].values) # in metadata.csv, these are all -1
         self._metadata_array = torch.stack(
             (
                 torch.LongTensor(centers),

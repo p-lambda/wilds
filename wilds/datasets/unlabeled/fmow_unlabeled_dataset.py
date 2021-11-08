@@ -13,9 +13,9 @@ import pytz
 from PIL import Image
 from tqdm import tqdm
 from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSUnlabeledDataset
+from wilds.datasets.fmow_dataset import categories
 
 Image.MAX_IMAGE_PIXELS = 10000000000
-
 
 class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
     """
@@ -142,8 +142,10 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
         self.metadata['year'] = year_array
         self._metadata_map['year'] = list(range(2002, 2018))
 
-        # no labels
-        self.metadata['y'] = (-100 * np.ones(len(self.metadata)))
+        # hidden labels
+        self.category_to_idx = {cat: i for i, cat in enumerate(categories)} 
+        self.metadata['y'] = np.asarray([self.category_to_idx[y] for y in list(self.metadata['category'])])
+        self._y_array = torch.LongTensor(self.metadata['y'].values)[unlabeled_mask]
 
         self._metadata_fields = ['region', 'year', 'y']
         self._metadata_array = torch.from_numpy(self.metadata[self._metadata_fields].astype(int).to_numpy()).long()[unlabeled_mask]
