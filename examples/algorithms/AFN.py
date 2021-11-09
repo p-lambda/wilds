@@ -58,7 +58,7 @@ class AFN(SingleModelAlgorithm):
         self.logged_fields.append("classification_loss")
         self.logged_fields.append("afn_loss")
 
-    def afn_loss(self, features):
+    def afn_loss_soft(self, features):
         """
         Adapted from https://github.com/jihanyang/AFN
         """
@@ -66,6 +66,13 @@ class AFN(SingleModelAlgorithm):
         assert not radius.requires_grad
         radius = radius + 1.0
         loss = ((features.norm(p=2, dim=1) - radius) ** 2).mean()
+        return loss
+
+    def afn_loss(self, features):
+        """
+        Adapted from https://github.com/jihanyang/AFN
+        """
+        loss = (features.norm(p=2, dim=1).mean() - 1) ** 2
         return loss
 
     def process_batch(self, batch, unlabeled_batch=None):
@@ -114,7 +121,7 @@ class AFN(SingleModelAlgorithm):
         if self.is_training:
             features = results.pop("features")
             features_source = features[: len(results["y_true"])]
-            features_target = features[len(results["y_true"]) :]
+            features_target = features[len(results["y_true"]):]
             afn_loss = self.afn_loss(features_source) + self.afn_loss(features_target)
         else:
             afn_loss = 0.0
