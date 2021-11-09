@@ -3,6 +3,7 @@ import torch
 import math
 from wilds.common.utils import get_counts
 from algorithms.ERM import ERM
+from algorithms.AFN import AFN
 from algorithms.DANN import DANN
 from algorithms.groupDRO import GroupDRO
 from algorithms.deepCORAL import DeepCORAL
@@ -85,6 +86,15 @@ def initialize_algorithm(config, datasets, train_grouper, unlabeled_dataset=None
             n_train_steps=n_train_steps,
             n_domains = domain_idx,
             group_ids_to_domains=group_ids_to_domains,
+        )
+    elif config.algorithm == 'AFN':
+        algorithm = AFN(
+            config=config,
+            d_out=d_out,
+            grouper=train_grouper,
+            loss=loss,
+            metric=metric,
+            n_train_steps=n_train_steps
         )
     elif config.algorithm == 'FixMatch':
         algorithm = FixMatch(
