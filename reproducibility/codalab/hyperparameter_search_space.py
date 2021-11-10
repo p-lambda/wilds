@@ -268,6 +268,41 @@ DANN_HYPERPARAMETER_SEARCH_SPACE = {
     },
 }
 
+AFN_HYPERPARAMETER_SEARCH_SPACE = {
+    "datasets": {
+        CAMELYON17: {
+            "lr": get_lr_grid(CAMELYON17, grad_accumulation=4),
+            "afn_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(CAMELYON17, factor=2),
+        },
+        IWILDCAM: {
+            "lr": get_lr_grid(IWILDCAM, grad_accumulation=4),
+            "afn_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(IWILDCAM, factor=2),
+        },
+        FMOW: {
+            "lr": get_lr_grid(FMOW, grad_accumulation=4),
+            "afn_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(FMOW, factor=2),
+        },
+        POVERTY: {
+            "lr": get_lr_grid(POVERTY, grad_accumulation=4),
+            "afn_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(POVERTY, factor=2),
+        },
+        DOMAINNET: {
+            "lr": get_lr_grid(DOMAINNET, grad_accumulation=4),
+            "afn_penalty_weight": [-1, 1],
+            "unlabeled_batch_size_frac": DEFAULT_UNLABELED_FRAC,
+            "n_epochs": get_epochs_unlabeled(DOMAINNET, factor=2),
+        },
+    },
+}
+
 FIXMATCH_HYPERPARAMETER_SEARCH_SPACE = {
     "datasets": {
         CAMELYON17: {

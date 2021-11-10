@@ -135,7 +135,7 @@ class AFN(SingleModelAlgorithm):
 
 
 class AFNModel(nn.Module):
-    def __init__(self, featurizer, d_out, bottleneck_dim: Optional[int] = 1000):
+    def __init__(self, featurizer, d_out, bottleneck_dim: Optional[int] = 1024):
         super().__init__()
         self.featurizer = featurizer
         self.bottleneck = nn.Sequential(Block(featurizer.d_out, bottleneck_dim=bottleneck_dim))

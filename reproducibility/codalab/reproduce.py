@@ -16,6 +16,7 @@ from reproducibility.codalab.hyperparameter_search_space import (
     ERM_ORACLE_HYPERPARAMETER_SEARCH_SPACE,
     CORAL_HYPERPARAMETER_SEARCH_SPACE,
     DANN_HYPERPARAMETER_SEARCH_SPACE,
+    AFN_HYPERPARAMETER_SEARCH_SPACE,
     FIXMATCH_HYPERPARAMETER_SEARCH_SPACE,
     PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE,
     NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE,
@@ -46,8 +47,8 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm ERMOracle --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
 
     # To tune for multi-gpu runs
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm AFN --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --weak --dry-run
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --weak --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm FixMatch --random --gpus 1 --unlabeled-split extra_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets globalwheat --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
@@ -327,6 +328,8 @@ class CodaLabReproducibility:
             search_space = CORAL_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         elif algorithm == "DANN":
             search_space = DANN_HYPERPARAMETER_SEARCH_SPACE["datasets"]
+        elif algorithm == "AFN":
+            search_space = AFN_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         elif algorithm == "FixMatch":
             search_space = FIXMATCH_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         elif algorithm == "PseudoLabel":

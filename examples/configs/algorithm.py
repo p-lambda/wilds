@@ -42,8 +42,9 @@ algorithm_defaults = {
         'uniform_over_groups': False,
         'eval_loader': 'standard',
         'afn_penalty_weight': 1.,
-        'randaugment_n': 2,
-        'additional_train_transform': 'randaugment',  # Apply strong augmentation to labeled examples
+        # Strongly augmented labeled examples causes poor performance.
+        # 'randaugment_n': 2,
+        # 'additional_train_transform': 'randaugment',  # Apply strong augmentation to labeled examples
     },
     'FixMatch': {
         'train_loader': 'standard',
