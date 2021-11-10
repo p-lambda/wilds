@@ -122,11 +122,9 @@ class AFN(SingleModelAlgorithm):
             features = results.pop("features")
             f_source = features[: len(results["y_true"])]
             f_target = features[len(results["y_true"]) :]
-            afn_loss = self.afn_loss(f_source) + self.afn_loss(f_target)
+            afn_loss = self.afn_loss_stepwise(f_source) + self.afn_loss_stepwise(f_target)
         else:
             afn_loss = 0.0
-
-        import pdb; pdb.set_trace()
 
         # Add to results for additional logging
         self.save_metric_for_logging(
@@ -176,7 +174,7 @@ class Block(nn.Module):
     def __init__(
         self,
         in_features: int,
-        bottleneck_dim: Optional[int] = 1000,
+        bottleneck_dim: Optional[int] = 1024,
         dropout_p: Optional[float] = 0.5,
     ):
         super(Block, self).__init__()
