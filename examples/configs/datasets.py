@@ -144,9 +144,9 @@ dataset_defaults = {
         "resize_scale": 256.0 / 224.0,
         "target_resolution": (224, 224),
         "loss_function": "cross_entropy",
-        # "groupby_fields": [
-        #     "category",
-        # ],
+        "groupby_fields": [
+            "category",
+        ],
         "val_metric": "acc_avg",
         "val_metric_decreasing": False,
         "batch_size": 96,

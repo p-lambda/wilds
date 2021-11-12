@@ -4,11 +4,6 @@ from typing import Optional, List, Dict
 import torch
 import torch.nn as nn
 
-try:
-    from torch_geometric.data import Batch
-except ImportError:
-    pass
-
 from algorithms.single_model_algorithm import SingleModelAlgorithm
 from models.initializer import initialize_model
 
@@ -38,9 +33,7 @@ class AFN(SingleModelAlgorithm):
         n_train_steps,
     ):
         # Initialize model
-        featurizer, _ = initialize_model(
-            config, d_out=d_out, is_featurizer=True
-        )
+        featurizer, _ = initialize_model(config, d_out=d_out, is_featurizer=True)
         model = AFNModel(featurizer, d_out=d_out)
 
         # Initialize module
@@ -54,26 +47,30 @@ class AFN(SingleModelAlgorithm):
         )
         # Algorithm hyperparameters
         self.penalty_weight = config.afn_penalty_weight
+        self.delta_r = config.afn_delta_r
+        self.r = config.afn_r
+
+        self.afn_loss = self.hafn_loss if config.use_hafn else self.safn_loss
 
         # Additional logging
         self.logged_fields.append("classification_loss")
-        self.logged_fields.append("afn_loss")
+        self.logged_fields.append("feature_norm_penalty")
 
-    def afn_loss_stepwise(self, features):
+    def safn_loss(self, features):
         """
         Adapted from https://github.com/jihanyang/AFN
         """
         radius = features.norm(p=2, dim=1).detach()
         assert not radius.requires_grad
-        radius = radius + 1.0
+        radius = radius + self.delta_r
         loss = ((features.norm(p=2, dim=1) - radius) ** 2).mean()
         return loss
 
-    def afn_loss(self, features):
+    def hafn_loss(self, features):
         """
         Adapted from https://github.com/jihanyang/AFN
         """
-        loss = (features.norm(p=2, dim=1).mean() - 1) ** 2
+        loss = (features.norm(p=2, dim=1).mean() - self.r) ** 2
         return loss
 
     def process_batch(self, batch, unlabeled_batch=None):
@@ -86,15 +83,7 @@ class AFN(SingleModelAlgorithm):
 
         if unlabeled_batch is not None:
             unlabeled_x, unlabeled_metadata = unlabeled_batch
-
-            # Concatenate examples and true domains
-            if isinstance(x, torch.Tensor):
-                x_cat = torch.cat((x, unlabeled_x), dim=0)
-            elif isinstance(x, Batch):
-                x.y = None
-                x_cat = Batch.from_data_list([x, unlabeled_x])
-            else:
-                raise TypeError("x must be Tensor or Batch")
+            x_cat = self.concat_input(x, unlabeled_x)
         else:
             x_cat = x
 
@@ -122,23 +111,27 @@ class AFN(SingleModelAlgorithm):
             features = results.pop("features")
             f_source = features[: len(results["y_true"])]
             f_target = features[len(results["y_true"]) :]
-            afn_loss = self.afn_loss_stepwise(f_source) + self.afn_loss_stepwise(f_target)
+            feature_norm_penalty = self.afn_loss(f_source) + self.afn_loss(f_target)
         else:
-            afn_loss = 0.0
+            feature_norm_penalty = 0.0
 
         # Add to results for additional logging
         self.save_metric_for_logging(
             results, "classification_loss", classification_loss
         )
-        self.save_metric_for_logging(results, "afn_loss", afn_loss)
-        return classification_loss + self.penalty_weight * afn_loss
+        self.save_metric_for_logging(
+            results, "feature_norm_penalty", feature_norm_penalty
+        )
+        return classification_loss + self.penalty_weight * feature_norm_penalty
 
 
 class AFNModel(nn.Module):
     def __init__(self, featurizer, d_out, bottleneck_dim: Optional[int] = 1024):
         super().__init__()
         self.featurizer = featurizer
-        self.bottleneck = nn.Sequential(Block(featurizer.d_out, bottleneck_dim=bottleneck_dim))
+        self.bottleneck = nn.Sequential(
+            Block(featurizer.d_out, bottleneck_dim=bottleneck_dim)
+        )
         self.classifier = nn.Linear(bottleneck_dim, d_out)
 
     def forward(self, x):

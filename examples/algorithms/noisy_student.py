@@ -6,11 +6,6 @@ from models.initializer import initialize_model
 from algorithms.single_model_algorithm import SingleModelAlgorithm
 from utils import move_to, collate_list
 
-try:
-    from torch_geometric.data import Batch
-except ImportError:
-    pass
-
 
 class DropoutModel(nn.Module):
     def __init__(self, featurizer, classifier, dropout_rate):
@@ -112,14 +107,7 @@ class NoisyStudent(SingleModelAlgorithm):
             results["unlabeled_y_pseudo"] = y_pseudo
             results["unlabeled_g"] = g_unlab
 
-            if isinstance(x, torch.Tensor):
-                x_cat = torch.cat((x, x_unlab), dim=0)
-            elif isinstance(x, Batch):
-                x.y = None
-                x_cat = Batch.from_data_list([x, x_unlab])
-            else:
-                raise TypeError("x must be Tensor or Batch")
-
+            x_cat = self.concat_input(x, x_unlab)
             y_cat = collate_list([y_true, y_pseudo]) if self.model.needs_y else None
             outputs = self.get_model_output(x_cat, y_cat)
             results["y_pred"] = outputs[:n_lab]

@@ -47,7 +47,7 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm ERMOracle --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
 
     # To tune for multi-gpu runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm AFN --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm AFN --random --gpus 1 --unlabeled-split test_unlabeled --use_hafn --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --weak --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm FixMatch --random --gpus 1 --unlabeled-split extra_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets globalwheat --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
@@ -170,6 +170,7 @@ class CodaLabReproducibility:
         dry_run=False,
         gpus=1,
         weak=False,
+        use_hafn=False,
     ):
         self._set_worksheet(worksheet_uuid)
         datasets_uuids = self._get_datasets_uuids(worksheet_uuid, datasets)
@@ -226,7 +227,7 @@ class CodaLabReproducibility:
                     else:
                         if len(values) == 1:
                             hyperparameter_config[hyperparameter] = values[0]
-                        elif hyperparameter == "self_training_threshold":
+                        elif hyperparameter in ["self_training_threshold", "afn_delta_r", "afn_r"]:
                             hyperparameter_config[hyperparameter] = np.random.uniform(
                                 low=values[0], high=values[-1]
                             )
@@ -255,6 +256,7 @@ class CodaLabReproducibility:
 
                 experiment_name = (
                     f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}{'_weak' if weak else ''}"
+                    f"{'_hafn' if use_hafn else ''}"
                 )
                 if unlabeled_split:
                     experiment_name += f"_{unlabeled_split.replace('_', '')}"
@@ -272,6 +274,7 @@ class CodaLabReproducibility:
                         hyperparameters=hyperparameter_config,
                         coarse=coarse,
                         unlabeled_split=unlabeled_split,
+                        use_hafn=use_hafn,
                         gpus=gpus,
                     ),
                     gpus=gpus,
@@ -304,7 +307,7 @@ class CodaLabReproducibility:
             "--request-disk=20g",
             f"--request-memory={memory_gb}g",
             "--request-priority=0",
-            "--request-queue=cluster",
+            "--request-queue=domainnet",
         ]
         if dataset == OGB:
             commands.append("--exclude-patterns=data")
@@ -545,6 +548,7 @@ class CodaLabReproducibility:
         hyperparameters,
         coarse=False,
         unlabeled_split=None,
+        use_hafn=False,
         gpus=1,
     ):
         if algorithm == "NoisyStudent":
@@ -568,6 +572,8 @@ class CodaLabReproducibility:
             command += f" --unlabeled_split {unlabeled_split}"
         if coarse:
             command += " --groupby_fields from_source_domain"
+        if use_hafn:
+            command += " --use_hafn"
         for hyperparameter, value in hyperparameters.items():
             command += f" --{hyperparameter} {value}"
 
@@ -741,6 +747,7 @@ def main():
                 dry_run=args.dry_run,
                 gpus=args.gpus,
                 weak=args.weak,
+                use_hafn=args.use_hafn,
             )
         else:
             reproducibility.tune_hyperparameters_grid(
@@ -798,6 +805,11 @@ if __name__ == "__main__":
         "--coarse",
         action="store_true",
         help="Whether to run with coarse-grained domains instead of fine-grained domains (defaults to false).",
+    )
+    parser.add_argument(
+        "--use_hafn",
+        action="store_true",
+        help="Use HAFN for AFN instead of SAFN (defaults to false).",
     )
     parser.add_argument(
         "--unlabeled-split",

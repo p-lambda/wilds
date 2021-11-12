@@ -2,6 +2,11 @@ import torch
 import torch.nn as nn
 from utils import move_to, detach_and_clone
 
+try:
+    from torch_geometric.data import Batch
+except ImportError:
+    pass
+
 class Algorithm(nn.Module):
     def __init__(self, device):
         super().__init__()
@@ -102,3 +107,13 @@ class Algorithm(nn.Module):
         if to_out_device:
             out_dict = move_to(out_dict, self.out_device)
         return out_dict
+
+    def concat_input(self, labeled_x, unlabeled_x):
+        if isinstance(labeled_x, torch.Tensor):
+            x_cat = torch.cat((labeled_x, unlabeled_x), dim=0)
+        elif isinstance(labeled_x, Batch):
+            labeled_x.y = None
+            x_cat = Batch.from_data_list([labeled_x, unlabeled_x])
+        else:
+            raise TypeError("x must be Tensor or Batch")
+        return x_cat
