@@ -47,8 +47,8 @@ class AFN(SingleModelAlgorithm):
         )
         # Algorithm hyperparameters
         self.penalty_weight = config.afn_penalty_weight
-        self.delta_r = config.afn_delta_r
-        self.r = config.afn_r
+        self.delta_r = config.safn_delta_r
+        self.r = config.hafn_r
 
         self.afn_loss = self.hafn_loss if config.use_hafn else self.safn_loss
 

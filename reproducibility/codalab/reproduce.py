@@ -227,7 +227,7 @@ class CodaLabReproducibility:
                     else:
                         if len(values) == 1:
                             hyperparameter_config[hyperparameter] = values[0]
-                        elif hyperparameter in ["self_training_threshold", "afn_delta_r", "afn_r"]:
+                        elif hyperparameter in ["self_training_threshold", "safn_delta_r", "hafn_r"]:
                             hyperparameter_config[hyperparameter] = np.random.uniform(
                                 low=values[0], high=values[-1]
                             )

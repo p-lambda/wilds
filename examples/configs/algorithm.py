@@ -43,8 +43,8 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'use_hafn': False,
         'afn_penalty_weight': 0.01,
-        'afn_delta_r': 1.0,
-        'afn_r': 1.0,
+        'safn_delta_r': 1.0,
+        'hafn_r': 1.0,
         'additional_train_transform': 'weak',
     },
     'FixMatch': {
