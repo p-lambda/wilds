@@ -6,7 +6,7 @@ import torch.nn as nn
 
 from algorithms.single_model_algorithm import SingleModelAlgorithm
 from models.initializer import initialize_model
-
+from optimizer import initialize_optimizer_with_model_params
 
 class AFN(SingleModelAlgorithm):
     """
@@ -35,6 +35,8 @@ class AFN(SingleModelAlgorithm):
         # Initialize model
         featurizer, _ = initialize_model(config, d_out=d_out, is_featurizer=True)
         model = AFNModel(featurizer, d_out=d_out)
+        parameters_to_optimize: List[Dict] = model.get_parameters()
+        self.optimizer = initialize_optimizer_with_model_params(config, parameters_to_optimize)
 
         # Initialize module
         super().__init__(
@@ -49,7 +51,6 @@ class AFN(SingleModelAlgorithm):
         self.penalty_weight = config.afn_penalty_weight
         self.delta_r = config.safn_delta_r
         self.r = config.hafn_r
-
         self.afn_loss = self.hafn_loss if config.use_hafn else self.safn_loss
 
         # Additional logging
@@ -79,22 +80,12 @@ class AFN(SingleModelAlgorithm):
         """
         # Forward pass
         x, y_true, metadata = batch
-        g = self.grouper.metadata_to_group(metadata).to(self.device)
-
-        if unlabeled_batch is not None:
-            unlabeled_x, unlabeled_metadata = unlabeled_batch
-            x_cat = self.concat_input(x, unlabeled_x)
-        else:
-            x_cat = x
-
-        x_cat = x_cat.to(self.device)
+        x = x.to(self.device)
         y_true = y_true.to(self.device)
+        g = self.grouper.metadata_to_group(metadata).to(self.device)
+        y_pred, features = self.model(x)
 
-        y_pred, features = self.model(x_cat)
-        # Ignore the predicted labels for the unlabeled data
-        y_pred = y_pred[: len(y_true)]
-
-        return {
+        results = {
             "g": g,
             "metadata": metadata,
             "y_true": y_true,
@@ -102,15 +93,34 @@ class AFN(SingleModelAlgorithm):
             "features": features,
         }
 
+        if unlabeled_batch is not None:
+            unlabeled_x, unlabeled_metadata = unlabeled_batch
+            unlabeled_x = unlabeled_x.to(self.device)
+            _, unlabeled_features = self.model(unlabeled_x)
+            results['unlabeled_features'] = unlabeled_features
+
+        # if unlabeled_batch is not None:
+        #     unlabeled_x, unlabeled_metadata = unlabeled_batch
+        #     x_cat = self.concat_input(x, unlabeled_x)
+        # else:
+        #     x_cat = x
+        #
+        # x_cat = x_cat.to(self.device)
+        # y_true = y_true.to(self.device)
+        #
+        # y_pred, features = self.model(x_cat)
+        # # Ignore the predicted labels for the unlabeled data
+        # y_pred = y_pred[: len(y_true)]
+        return results
+
     def objective(self, results):
         classification_loss = self.loss.compute(
             results["y_pred"], results["y_true"], return_dict=False
         )
 
         if self.is_training:
-            features = results.pop("features")
-            f_source = features[: len(results["y_true"])]
-            f_target = features[len(results["y_true"]) :]
+            f_source = results.pop("features")
+            f_target = results.pop("unlabeled_features")
             feature_norm_penalty = self.afn_loss(f_source) + self.afn_loss(f_target)
         else:
             feature_norm_penalty = 0.0
@@ -126,13 +136,25 @@ class AFN(SingleModelAlgorithm):
 
 
 class AFNModel(nn.Module):
-    def __init__(self, featurizer, d_out, bottleneck_dim: Optional[int] = 1024):
+    def __init__(self, featurizer, d_out, bottleneck_dim: Optional[int] = 1000):
         super().__init__()
         self.featurizer = featurizer
         self.bottleneck = nn.Sequential(
-            Block(featurizer.d_out, bottleneck_dim=bottleneck_dim)
+            Block(featurizer.d_out, bottleneck_dim, dropout_p=0.5)
         )
         self.classifier = nn.Linear(bottleneck_dim, d_out)
+
+        for m in self.bottleneck.modules():
+            if isinstance(m, nn.BatchNorm1d):
+                m.weight.data.normal_(1.0, 0.01)
+                m.bias.data.fill_(0)
+            if isinstance(m, nn.Linear):
+                m.weight.data.normal_(0.0, 0.01)
+                m.bias.data.normal_(0.0, 0.01)
+        for m in self.classifier.modules():
+            if isinstance(m, nn.Linear):
+                m.weight.data.normal_(0.0, 0.01)
+                m.bias.data.normal_(0.0, 0.01)
 
     def forward(self, x):
         features = self.featurizer(x)
@@ -140,6 +162,13 @@ class AFNModel(nn.Module):
         predictions = self.classifier(features)
         return predictions, features
 
+    def get_parameters(self) -> List[Dict]:
+        params = [
+            {"params": self.featurizer.parameters()},
+            {"params": self.bottleneck.parameters(), "momentum": 0.9},
+            {"params": self.classifier.parameters(), "momentum": 0.9},
+        ]
+        return params
 
 class Block(nn.Module):
     r"""
@@ -167,7 +196,7 @@ class Block(nn.Module):
     def __init__(
         self,
         in_features: int,
-        bottleneck_dim: Optional[int] = 1024,
+        bottleneck_dim: Optional[int] = 1000,
         dropout_p: Optional[float] = 0.5,
     ):
         super(Block, self).__init__()
