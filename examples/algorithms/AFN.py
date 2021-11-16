@@ -98,19 +98,6 @@ class AFN(SingleModelAlgorithm):
             unlabeled_x = unlabeled_x.to(self.device)
             _, unlabeled_features = self.model(unlabeled_x)
             results['unlabeled_features'] = unlabeled_features
-
-        # if unlabeled_batch is not None:
-        #     unlabeled_x, unlabeled_metadata = unlabeled_batch
-        #     x_cat = self.concat_input(x, unlabeled_x)
-        # else:
-        #     x_cat = x
-        #
-        # x_cat = x_cat.to(self.device)
-        # y_true = y_true.to(self.device)
-        #
-        # y_pred, features = self.model(x_cat)
-        # # Ignore the predicted labels for the unlabeled data
-        # y_pred = y_pred[: len(y_true)]
         return results
 
     def objective(self, results):
