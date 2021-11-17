@@ -99,7 +99,7 @@ LOCATIONS = [
 
 STAGES = [
     'Filling',
-    'Filling - Ripening',
+    'Filling-Ripening',
     'multiple',
     'Post-flowering',
     'Ripening',
