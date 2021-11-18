@@ -7,7 +7,7 @@ from scheduler import LinearScheduleWithWarmupAndThreshold
 from wilds.common.utils import split_into_groups, numel
 from configs.supported import process_pseudolabels_functions
 import copy
-from utils import load, move_to, detach_and_clone, collate_list
+from utils import load, move_to, detach_and_clone, collate_list, concat_input
 
 
 class PseudoLabel(SingleModelAlgorithm):
@@ -115,7 +115,7 @@ class PseudoLabel(SingleModelAlgorithm):
                 )
                 unlabeled_y_pred = outputs[n_lab:]
             else:
-                x_cat = self.concat_input(x, x_unlab)
+                x_cat = concat_input(x, x_unlab)
                 outputs = self.get_model_output(x_cat, None)
                 unlabeled_output = outputs[n_lab:]
                 unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, _ = self.process_pseudolabels_function(

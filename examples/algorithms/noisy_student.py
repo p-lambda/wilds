@@ -4,7 +4,7 @@ import torch.nn as nn
 from configs.supported import process_pseudolabels_functions
 from models.initializer import initialize_model
 from algorithms.single_model_algorithm import SingleModelAlgorithm
-from utils import move_to, collate_list
+from utils import move_to, collate_list, concat_input
 
 
 class DropoutModel(nn.Module):
@@ -107,7 +107,7 @@ class NoisyStudent(SingleModelAlgorithm):
             results["unlabeled_y_pseudo"] = y_pseudo
             results["unlabeled_g"] = g_unlab
 
-            x_cat = self.concat_input(x, x_unlab)
+            x_cat = concat_input(x, x_unlab)
             y_cat = collate_list([y_true, y_pseudo]) if self.model.needs_y else None
             outputs = self.get_model_output(x_cat, y_cat)
             results["y_pred"] = outputs[:n_lab]

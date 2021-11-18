@@ -7,6 +7,7 @@ from models.domain_adversarial_network import DomainAdversarialNetwork
 from models.initializer import initialize_model
 from optimizer import initialize_optimizer_with_model_params
 from losses import initialize_loss
+from utils import concat_input
 
 class DANN(SingleModelAlgorithm):
     """
@@ -79,7 +80,7 @@ class DANN(SingleModelAlgorithm):
             ]
 
             # Concatenate examples and true domains
-            x_cat = self.concat_input(x, unlabeled_x)
+            x_cat = concat_input(x, unlabeled_x)
             domains_true = torch.cat([domains_true, unlabeled_domains_true])
         else:
             x_cat = x
