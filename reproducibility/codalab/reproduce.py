@@ -256,7 +256,7 @@ class CodaLabReproducibility:
 
                 experiment_name = (
                     f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}{'_weak' if weak else ''}"
-                    f"{'_hafn' if use_hafn else ''}"
+                    f"{'_hafn' if use_hafn else ''}_adjustsamelrgridstrongaug"
                 )
                 if unlabeled_split:
                     experiment_name += f"_{unlabeled_split.replace('_', '')}"

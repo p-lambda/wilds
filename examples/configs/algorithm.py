@@ -45,7 +45,8 @@ algorithm_defaults = {
         'afn_penalty_weight': 0.01,
         'safn_delta_r': 1.0,
         'hafn_r': 1.0,
-        'additional_train_transform': 'weak',
+        'additional_train_transform': 'randaugment',
+        'randaugment_n': 2,
     },
     'FixMatch': {
         'train_loader': 'standard',

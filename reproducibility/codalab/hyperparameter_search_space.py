@@ -43,7 +43,7 @@ def get_epochs_unlabeled(dataset, factor=1, parts=[4, 8, 16]):
     return [math.ceil((default_n_epochs * factor) / part) for part in parts]
 
 
-def get_lr_grid(dataset, grad_accumulation=1):
+def get_lr_grid(dataset, grad_accumulation=1, low_factor=10, high_factor=10):
     default_lr = dataset_defaults[dataset]["lr"]
     default_batch_size = dataset_defaults[dataset]["batch_size"]
     max_batch_size = MAX_BATCH_SIZES[dataset]
@@ -54,7 +54,7 @@ def get_lr_grid(dataset, grad_accumulation=1):
             (max_batch_size * grad_accumulation) / default_batch_size
         )
     # We sample a value 10^U(a, b)
-    return [math.log10(new_lr / 10), math.log10(new_lr * 10)]
+    return [math.log10(new_lr / low_factor), math.log10(new_lr * high_factor)]
 
 
 ERM_HYPERPARAMETER_SEARCH_SPACE = {
@@ -271,44 +271,44 @@ DANN_HYPERPARAMETER_SEARCH_SPACE = {
 AFN_HYPERPARAMETER_SEARCH_SPACE = {
     "datasets": {
         CAMELYON17: {
-            "lr": get_lr_grid(CAMELYON17, grad_accumulation=4),
-            "afn_penalty_weight": [0.01],
-            "safn_delta_r": [0.1, 1],
-            "hafn_r": [20, 30],
+            "lr": get_lr_grid(CAMELYON17, grad_accumulation=4, high_factor=1),
+            "afn_penalty_weight": [-4, -2],
+            "safn_delta_r": [1],
+            # "hafn_r": [20, 30],
             "unlabeled_batch_size_frac": [0.5],
-            "n_epochs": get_epochs_unlabeled(CAMELYON17, factor=2),
+            "n_epochs": get_epochs_unlabeled(CAMELYON17, factor=2, parts=[2]),
         },
         IWILDCAM: {
-            "lr": get_lr_grid(IWILDCAM, grad_accumulation=4),
-            "afn_penalty_weight": [0.01],
-            "safn_delta_r": [0.1, 1],
-            "hafn_r": [20, 30],
+            "lr": get_lr_grid(IWILDCAM, grad_accumulation=4, high_factor=1),
+            "afn_penalty_weight": [-4, -2],
+            "safn_delta_r": [1],
+            # "hafn_r": [20, 30],
             "unlabeled_batch_size_frac": [0.5],
-            "n_epochs": get_epochs_unlabeled(IWILDCAM, factor=2),
+            "n_epochs": get_epochs_unlabeled(IWILDCAM, factor=2, parts=[2]),
         },
         FMOW: {
-            "lr": get_lr_grid(FMOW, grad_accumulation=4),
-            "afn_penalty_weight": [0.01],
-            "safn_delta_r": [0.1, 1],
-            "hafn_r": [20, 30],
+            "lr": get_lr_grid(FMOW, grad_accumulation=4, high_factor=1),
+            "afn_penalty_weight": [-4, -2],
+            "safn_delta_r": [1],
+            # "hafn_r": [20, 30],
             "unlabeled_batch_size_frac": [0.5],
-            "n_epochs": get_epochs_unlabeled(FMOW, factor=2),
+            "n_epochs": get_epochs_unlabeled(FMOW, factor=2, parts=[2]),
         },
         POVERTY: {
-            "lr": get_lr_grid(POVERTY, grad_accumulation=4),
-            "afn_penalty_weight": [0.01],
-            "safn_delta_r": [0.1, 1],
-            "hafn_r": [20, 30],
+            "lr": get_lr_grid(POVERTY, grad_accumulation=4, high_factor=1),
+            "afn_penalty_weight": [-4, -2],
+            "safn_delta_r": [1],
+            # "hafn_r": [20, 30],
             "unlabeled_batch_size_frac": [0.5],
-            "n_epochs": get_epochs_unlabeled(POVERTY, factor=2),
+            "n_epochs": get_epochs_unlabeled(POVERTY, factor=2, parts=[2]),
         },
         DOMAINNET: {
-            "lr": get_lr_grid(DOMAINNET, grad_accumulation=4),
-            "afn_penalty_weight": [0.01],
-            "safn_delta_r": [0.1, 1],
-            "hafn_r": [20, 30],
+            "lr": get_lr_grid(DOMAINNET, grad_accumulation=4, high_factor=1),
+            "afn_penalty_weight": [-4, -2],
+            "safn_delta_r": [1],
+            # "hafn_r": [20, 30],
             "unlabeled_batch_size_frac": [0.5],
-            "n_epochs": get_epochs_unlabeled(DOMAINNET, factor=2),
+            "n_epochs": get_epochs_unlabeled(DOMAINNET, factor=2, parts=[2]),
         },
     },
 }
