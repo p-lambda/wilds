@@ -47,7 +47,7 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm ERMOracle --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
 
     # To tune for multi-gpu runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm AFN --random --gpus 1 --unlabeled-split test_unlabeled --use_hafn --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm AFN --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --weak --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm FixMatch --random --gpus 1 --unlabeled-split extra_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets globalwheat --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
@@ -307,7 +307,7 @@ class CodaLabReproducibility:
             "--request-disk=20g",
             f"--request-memory={memory_gb}g",
             "--request-priority=0",
-            "--request-queue=domainnet",
+            "--request-queue=fmow",
         ]
         if dataset == OGB:
             commands.append("--exclude-patterns=data")
