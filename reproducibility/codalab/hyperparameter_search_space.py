@@ -270,11 +270,17 @@ DANN_HYPERPARAMETER_SEARCH_SPACE = {
 
 AFN_HYPERPARAMETER_SEARCH_SPACE = {
     "datasets": {
+        AMAZON: {
+            "lr": get_lr_grid(AMAZON, grad_accumulation=4, high_factor=1),
+            "afn_penalty_weight": [-4, -2],
+            "safn_delta_r": [1],
+            "unlabeled_batch_size_frac": [0.5],
+            "n_epochs": get_epochs_unlabeled(AMAZON, factor=2, parts=[2]),
+        },
         CAMELYON17: {
             "lr": get_lr_grid(CAMELYON17, grad_accumulation=4, high_factor=1),
             "afn_penalty_weight": [-4, -2],
             "safn_delta_r": [1],
-            # "hafn_r": [20, 30],
             "unlabeled_batch_size_frac": [0.5],
             "n_epochs": get_epochs_unlabeled(CAMELYON17, factor=2, parts=[2]),
         },
@@ -282,7 +288,6 @@ AFN_HYPERPARAMETER_SEARCH_SPACE = {
             "lr": get_lr_grid(IWILDCAM, grad_accumulation=4, high_factor=1),
             "afn_penalty_weight": [-4, -2],
             "safn_delta_r": [1],
-            # "hafn_r": [20, 30],
             "unlabeled_batch_size_frac": [0.5],
             "n_epochs": get_epochs_unlabeled(IWILDCAM, factor=2, parts=[2]),
         },
@@ -290,15 +295,20 @@ AFN_HYPERPARAMETER_SEARCH_SPACE = {
             "lr": get_lr_grid(FMOW, grad_accumulation=4, high_factor=1),
             "afn_penalty_weight": [-4, -2],
             "safn_delta_r": [1],
-            # "hafn_r": [20, 30],
             "unlabeled_batch_size_frac": [0.5],
             "n_epochs": get_epochs_unlabeled(FMOW, factor=2, parts=[2]),
+        },
+        OGB: {
+            "lr": get_lr_grid(OGB, grad_accumulation=4, high_factor=1),
+            "afn_penalty_weight": [-4, -2],
+            "safn_delta_r": [1],
+            "unlabeled_batch_size_frac": [0.5],
+            "n_epochs": get_epochs_unlabeled(OGB, factor=2, parts=[2]),
         },
         POVERTY: {
             "lr": get_lr_grid(POVERTY, grad_accumulation=4, high_factor=1),
             "afn_penalty_weight": [-4, -2],
             "safn_delta_r": [1],
-            # "hafn_r": [20, 30],
             "unlabeled_batch_size_frac": [0.5],
             "n_epochs": get_epochs_unlabeled(POVERTY, factor=2, parts=[2]),
         },
@@ -306,7 +316,6 @@ AFN_HYPERPARAMETER_SEARCH_SPACE = {
             "lr": get_lr_grid(DOMAINNET, grad_accumulation=4, high_factor=1),
             "afn_penalty_weight": [-4, -2],
             "safn_delta_r": [1],
-            # "hafn_r": [20, 30],
             "unlabeled_batch_size_frac": [0.5],
             "n_epochs": get_epochs_unlabeled(DOMAINNET, factor=2, parts=[2]),
         },
