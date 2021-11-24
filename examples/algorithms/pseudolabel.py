@@ -7,12 +7,8 @@ from scheduler import LinearScheduleWithWarmupAndThreshold
 from wilds.common.utils import split_into_groups, numel
 from configs.supported import process_pseudolabels_functions
 import copy
-from utils import load, move_to, detach_and_clone, collate_list
+from utils import load, move_to, detach_and_clone, collate_list, concat_input
 
-try:
-    from torch_geometric.data import Batch
-except ImportError:
-    pass
 
 class PseudoLabel(SingleModelAlgorithm):
     """
@@ -119,14 +115,7 @@ class PseudoLabel(SingleModelAlgorithm):
                 )
                 unlabeled_y_pred = outputs[n_lab:]
             else:
-                if isinstance(x, torch.Tensor):
-                    x_cat = torch.cat((x, x_unlab), dim=0)
-                elif isinstance(x, Batch):
-                    x.y = None
-                    x_cat = Batch.from_data_list([x, x_unlab])
-                else:
-                    raise TypeError('x must be Tensor or Batch')
-
+                x_cat = concat_input(x, x_unlab)
                 outputs = self.get_model_output(x_cat, None)
                 unlabeled_output = outputs[n_lab:]
                 unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, _ = self.process_pseudolabels_function(

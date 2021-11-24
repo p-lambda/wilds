@@ -1,6 +1,6 @@
-import torch
 import torch.nn as nn
 from utils import move_to, detach_and_clone
+
 
 class Algorithm(nn.Module):
     def __init__(self, device):
