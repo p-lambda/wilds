@@ -2,6 +2,7 @@ import torch
 from models.initializer import initialize_model
 from algorithms.single_model_algorithm import SingleModelAlgorithm
 from wilds.common.utils import split_into_groups
+from utils import concat_input
 
 class DeepCORAL(SingleModelAlgorithm):
     """
@@ -68,7 +69,7 @@ class DeepCORAL(SingleModelAlgorithm):
         mean_diff = (mean_x - mean_y).pow(2).mean()
         cova_diff = (cova_x - cova_y).pow(2).mean()
 
-        return mean_diff+cova_diff
+        return mean_diff + cova_diff
 
     def process_batch(self, batch, unlabeled_batch=None):
         """
@@ -76,42 +77,36 @@ class DeepCORAL(SingleModelAlgorithm):
         """
         # forward pass
         x, y_true, metadata = batch
-        x = x.to(self.device)
         y_true = y_true.to(self.device)
         g = self.grouper.metadata_to_group(metadata).to(self.device)
-        features = self.featurizer(x)
-        outputs = self.classifier(features)
 
-        # package the results
         results = {
             'g': g,
             'y_true': y_true,
-            'y_pred': outputs,
             'metadata': metadata,
-            'features': features,
         }
-        # TODO: do this in a single pass
+
         if unlabeled_batch is not None:
-            x, metadata = unlabeled_batch
-            x = x.to(self.device)
-            results['unlabeled_metadata'] = metadata
-            results['unlabeled_features'] = self.featurizer(x)
-            results['unlabeled_g'] = self.grouper.metadata_to_group(metadata).to(self.device)
+            unlabeled_x, unlabeled_metadata = unlabeled_batch
+            x = concat_input(x, unlabeled_x)
+            unlabeled_g = self.grouper.metadata_to_group(unlabeled_metadata).to(self.device)
+            results['unlabeled_g'] = unlabeled_g
+
+        x = x.to(self.device)
+        features = self.featurizer(x)
+        outputs = self.classifier(features)
+        y_pred = outputs[: len(y_true)]
+
+        results['features'] = features
+        results['y_pred'] = y_pred
         return results
 
     def objective(self, results):
         if self.is_training:
-            # Extract features
-            labeled_features = results.pop('features')
-            if 'unlabeled_features' in results:
-                unlabeled_features = results.pop('unlabeled_features')
-                features = torch.cat((labeled_features, unlabeled_features))
-                groups = torch.cat((results['g'], results['unlabeled_g']))
-            else:
-                features = labeled_features
-                groups = results['g']
+            features = results.pop('features')
 
             # Split into groups
+            groups = concat_input(results['g'], results['unlabeled_g']) if 'unlabeled_g' in results else results['g']
             unique_groups, group_indices, _ = split_into_groups(groups)
             n_groups_per_batch = unique_groups.numel()
 
