@@ -450,7 +450,7 @@ dataset_defaults = {
             'pin_memory': True,
         },
         'process_outputs_function': None,
-        'process_pseudolabels_function': 'pseudolabel_detection',
+        'process_pseudolabels_function': 'pseudolabel_detection_discard_empty',
     }
 }
 

@@ -64,6 +64,15 @@ def populate_defaults(config):
             )
         config.additional_train_transform = ''
 
+        if config.algorithm == "NoisyStudent":
+            if config.process_pseudolabels_function is None:
+                config.process_pseudolabels_function = 'pseudolabel_detection'
+            elif config.process_pseudolabels_function == 'pseudolabel_detection_discard_empty':
+                raise ValueError(
+                    f"Filtering out empty images when generating pseudo-labels for {config.algorithm} "
+                    f"is not supported for detection."
+                )
+
     # implied defaults from choice of dataset
     config = populate_config(
         config,
