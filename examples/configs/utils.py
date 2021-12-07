@@ -13,6 +13,12 @@ def populate_defaults(config):
     assert config.dataset is not None, 'dataset must be specified'
     assert config.algorithm is not None, 'algorithm must be specified'
 
+    # Run oracle using ERM with unlabeled split
+    if config.use_unlabeled_y:
+        assert config.algorithm == 'ERM', 'Only ERM is currently supported for training on the true labels of unlabeled data.'
+        assert config.unlabeled_split is not None, 'Specify an unlabeled split'
+        assert config.dataset in ['amazon', 'civilcomments', 'fmow', 'iwildcam'], 'The unlabeled data in this dataset are truly unlabeled, and we do not have true labels for them.'
+
     # Validations
     if config.groupby_fields == ['from_source_domain']:
         if config.n_groups_per_batch is None:
@@ -50,6 +56,13 @@ def populate_defaults(config):
                 "load_featurizer_only cannot be set when there is no pretrained_model_path "
                 "specified."
             )
+
+    if config.dataset == 'globalwheat':
+        if config.additional_train_transform is not None:
+            raise ValueError(
+                f"Augmentations not supported for detection dataset: {config.dataset}."
+            )
+        config.additional_train_transform = ''
 
     # implied defaults from choice of dataset
     config = populate_config(

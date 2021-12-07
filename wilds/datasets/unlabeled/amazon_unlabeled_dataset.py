@@ -109,7 +109,11 @@ class AmazonUnlabeledDataset(WILDSUnlabeledDataset):
             self._metadata_array,
             self._metadata_map,
         ) = self.load_metadata(data_df, self.split_array)
-
+        # Get y from metadata
+        self._y_type: str = "long"
+        self._y_array = getattr(
+            self.metadata_array[:, self.metadata_fields.index("y")], self._y_type
+        )()
         # Set split info
         self.initialize_split_dicts()
 

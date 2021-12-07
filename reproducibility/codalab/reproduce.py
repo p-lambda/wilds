@@ -13,8 +13,10 @@ from reproducibility.codalab.hyperparameter_search_space import (
     MAX_BATCH_SIZES,
     ERM_HYPERPARAMETER_SEARCH_SPACE,
     ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE,
+    ERM_ORACLE_HYPERPARAMETER_SEARCH_SPACE,
     CORAL_HYPERPARAMETER_SEARCH_SPACE,
     DANN_HYPERPARAMETER_SEARCH_SPACE,
+    AFN_HYPERPARAMETER_SEARCH_SPACE,
     FIXMATCH_HYPERPARAMETER_SEARCH_SPACE,
     PSEUDOLABEL_HYPERPARAMETER_SEARCH_SPACE,
     NOISY_STUDENT_HYPERPARAMETER_SEARCH_SPACE,
@@ -42,16 +44,18 @@ Example Usage:
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --experiment fmow_erm_tune 
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets poverty --algorithm ERM --random --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17--experiment fmow_ermaugment_tune
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm ERMOracle --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
 
     # To tune for multi-gpu runs
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets camelyon17 --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm AFN --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --weak --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm FixMatch --random --gpus 1 --unlabeled-split extra_unlabeled --dry-run
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x36ab18e5c43c480f8766a3351d3efad2 --datasets ogb-molpcba --algorithm PseudoLabel --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets globalwheat --algorithm NoisyStudent --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --algorithm FixMatch --random --gpus 1 --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_pseudolabel_tune 
 
     # To tune model hyperparameters for Unlabeled WILDS
-    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets poverty --algorithm DANN --random --coarse --unlabeled-split test_unlabeled --dry-run
+    python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets domainnet --algorithm DANN --random --coarse --unlabeled-split test_unlabeled --dry-run
     python reproducibility/codalab/reproduce.py --split val_eval --post-tune --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets fmow --experiment fmow_deepcoral_tune
   
     python reproducibility/codalab/reproduce.py --tune-hyperparameters --worksheet-uuid 0x63397d8cb2fc463c80707b149c2d90d1 --datasets iwildcam --algorithm deepCORAL --random --coarse --unlabeled-split extra_unlabeled --dry-run
@@ -165,6 +169,8 @@ class CodaLabReproducibility:
         unlabeled_split=None,
         dry_run=False,
         gpus=1,
+        weak=False,
+        use_hafn=False,
     ):
         self._set_worksheet(worksheet_uuid)
         datasets_uuids = self._get_datasets_uuids(worksheet_uuid, datasets)
@@ -196,9 +202,11 @@ class CodaLabReproducibility:
                 hyperparameter_config = dict()
                 if gpus == 1 and "ERM" not in algorithm:
                     hyperparameter_config["gradient_accumulation_steps"] = 4
+                if weak:
+                    hyperparameter_config["additional_train_transform"] = "weak"
 
                 for hyperparameter, values in search_space[dataset].items():
-                    if hyperparameter == "n_epochs":
+                    if hyperparameter == "n_epochs" and algorithm != "ERMOracle":
                         continue
 
                     if hyperparameter == "unlabeled_batch_size_frac":
@@ -219,7 +227,7 @@ class CodaLabReproducibility:
                     else:
                         if len(values) == 1:
                             hyperparameter_config[hyperparameter] = values[0]
-                        elif hyperparameter == "self_training_threshold":
+                        elif hyperparameter in ["self_training_threshold", "safn_delta_r", "hafn_r"]:
                             hyperparameter_config[hyperparameter] = np.random.uniform(
                                 low=values[0], high=values[-1]
                             )
@@ -247,7 +255,8 @@ class CodaLabReproducibility:
                     dependencies[unlabeled_dataset_fullname] = unlabeled_dataset_uuid
 
                 experiment_name = (
-                    f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}"
+                    f"{dataset}_{algorithm.lower()}{'_coarse' if coarse else ''}{'_weak' if weak else ''}"
+                    f"{'_hafn' if use_hafn else ''}"
                 )
                 if unlabeled_split:
                     experiment_name += f"_{unlabeled_split.replace('_', '')}"
@@ -260,11 +269,12 @@ class CodaLabReproducibility:
                     command=self._construct_command(
                         dataset,
                         experiment_name,
-                        algorithm="ERM" if algorithm == "ERMAugment" else algorithm,
+                        algorithm="ERM" if "ERM" in algorithm else algorithm,
                         seed=0,
                         hyperparameters=hyperparameter_config,
                         coarse=coarse,
                         unlabeled_split=unlabeled_split,
+                        use_hafn=use_hafn,
                         gpus=gpus,
                     ),
                     gpus=gpus,
@@ -294,10 +304,10 @@ class CodaLabReproducibility:
             "--request-network",
             f"--request-cpus={cpus}",
             f"--request-gpus={gpus}",
-            "--request-disk=40g",
+            "--request-disk=20g",
             f"--request-memory={memory_gb}g",
-            "--request-priority=1",
-            "--request-queue=ogb",
+            "--request-priority=0",
+            "--request-queue=fmow",
         ]
         if dataset == OGB:
             commands.append("--exclude-patterns=data")
@@ -315,10 +325,14 @@ class CodaLabReproducibility:
             search_space = ERM_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         elif algorithm == "ERMAugment":
             search_space = ERM_AUGMENT_HYPERPARAMETER_SEARCH_SPACE["datasets"]
+        elif algorithm == "ERMOracle":
+            search_space = ERM_ORACLE_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         elif algorithm == "deepCORAL":
             search_space = CORAL_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         elif algorithm == "DANN":
             search_space = DANN_HYPERPARAMETER_SEARCH_SPACE["datasets"]
+        elif algorithm == "AFN":
+            search_space = AFN_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         elif algorithm == "FixMatch":
             search_space = FIXMATCH_HYPERPARAMETER_SEARCH_SPACE["datasets"]
         elif algorithm == "PseudoLabel":
@@ -443,7 +457,7 @@ class CodaLabReproducibility:
                 "cl",
                 "search",
                 experiment,
-                "state=ready,killed",
+                "state=ready,killed,failed",
                 "host_worksheet=%s" % worksheet_uuid,
                 ".limit=10",
                 "--uuid-only",
@@ -534,6 +548,7 @@ class CodaLabReproducibility:
         hyperparameters,
         coarse=False,
         unlabeled_split=None,
+        use_hafn=False,
         gpus=1,
     ):
         if algorithm == "NoisyStudent":
@@ -557,6 +572,8 @@ class CodaLabReproducibility:
             command += f" --unlabeled_split {unlabeled_split}"
         if coarse:
             command += " --groupby_fields from_source_domain"
+        if use_hafn:
+            command += " --use_hafn"
         for hyperparameter, value in hyperparameters.items():
             command += f" --{hyperparameter} {value}"
 
@@ -729,6 +746,8 @@ def main():
                 unlabeled_split=args.unlabeled_split,
                 dry_run=args.dry_run,
                 gpus=args.gpus,
+                weak=args.weak,
+                use_hafn=args.use_hafn,
             )
         else:
             reproducibility.tune_hyperparameters_grid(
@@ -778,9 +797,19 @@ if __name__ == "__main__":
         help="Name of the algorithm",
     )
     parser.add_argument(
+        "--weak",
+        action="store_true",
+        help="Whether to run with weak augmentation for labeled examples (defaults to false).",
+    )
+    parser.add_argument(
         "--coarse",
         action="store_true",
         help="Whether to run with coarse-grained domains instead of fine-grained domains (defaults to false).",
+    )
+    parser.add_argument(
+        "--use_hafn",
+        action="store_true",
+        help="Use HAFN for AFN instead of SAFN (defaults to false).",
     )
     parser.add_argument(
         "--unlabeled-split",

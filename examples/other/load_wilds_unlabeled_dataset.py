@@ -3,32 +3,22 @@ TODO: Don't include this file later. Turn this into documentation:
       https://github.com/p-lambda/wilds-unlabeled/issues/2
 """
 
-import pdb
-
-from tqdm import tqdm
-
-from examples.utils import InfiniteDataIterator
 from wilds import get_dataset
 from wilds.common.data_loaders import get_train_loader
+import torchvision.transforms as transforms
 
-WILDS_DATASET = "civilcomments"
+# Load the labeled data
+dataset = get_dataset(dataset="fmow", download=True)
+labeled_subset = dataset.get_subset("train", transform=transforms.ToTensor())
+data_loader = get_train_loader("standard", labeled_subset, batch_size=16)
 
-# Labeled data
-dataset = get_dataset(dataset=WILDS_DATASET, download=True, root_dir="../data")
-labeled_subset = dataset.get_subset("train")
-labeled_data_loader = get_train_loader("standard", labeled_subset, batch_size=2)
+# Load the unlabeled data
+unlabeled_dataset = get_dataset(dataset="fmow", unlabeled=True, download=True)
+unlabeled_subset = unlabeled_dataset.get_subset("test_unlabeled", transform=transforms.ToTensor())
+unlabeled_data_loader = get_train_loader("standard", unlabeled_subset, batch_size=64)
 
-# Unlabeled data
-dataset = get_dataset(
-    dataset=WILDS_DATASET, unlabeled=True, download=True, root_dir="../data"
-)
-unlabeled_subset = dataset.get_subset("extra_unlabeled")
-unlabeled_data_loader = get_train_loader("standard", unlabeled_subset, batch_size=32)
-unlabeled_data_iterator = InfiniteDataIterator(unlabeled_data_loader)
-
-batch = 0
-for labeled_batch in tqdm(labeled_data_loader):
-    if batch % 1000 == 0:
-        print(f"Batch #{batch}")
-    unlabeled_batch = next(unlabeled_data_iterator)
-    batch += 1
+# Train loop
+for labeled_batch, unlabeled_batch in zip(data_loader, unlabeled_data_loader):
+    x, y, metadata = labeled_batch
+    unlabeled_x, unlabeled_metadata = unlabeled_batch
+    ...

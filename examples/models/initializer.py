@@ -109,7 +109,7 @@ def initialize_model(config, d_out, is_featurizer=False):
 
     # Load pretrained weights from disk using our utils.load function
     if config.pretrained_model_path is not None:
-        if config.model in ('code-gpt-py', 'logistic_regression', 'unet-seq', 'fasterrcnn'):
+        if config.model in ('code-gpt-py', 'logistic_regression', 'unet-seq'):
             # This has only been tested on some models (mostly vision), so run this code iff we're sure it works
             raise NotImplementedError(f"Model loading not yet tested for {config.model}.")
 

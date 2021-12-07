@@ -5,10 +5,10 @@ from utils import cross_entropy_with_logits_loss
 
 def initialize_loss(loss, config):
     if loss == 'cross_entropy':
-        return ElementwiseLoss(loss_fn=nn.CrossEntropyLoss(reduction='none'))
+        return ElementwiseLoss(loss_fn=nn.CrossEntropyLoss(reduction='none', ignore_index=-100))
 
     elif loss == 'lm_cross_entropy':
-        return MultiTaskLoss(loss_fn=nn.CrossEntropyLoss(reduction='none'))
+        return MultiTaskLoss(loss_fn=nn.CrossEntropyLoss(reduction='none', ignore_index=-100))
 
     elif loss == 'mse':
         return MSE(name='loss')

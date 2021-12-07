@@ -7,12 +7,8 @@ from scheduler import LinearScheduleWithWarmupAndThreshold
 from wilds.common.utils import split_into_groups, numel
 from configs.supported import process_pseudolabels_functions
 import copy
-from utils import load, move_to, detach_and_clone
+from utils import load, move_to, detach_and_clone, collate_list, concat_input
 
-try:
-    from torch_geometric.data import Batch
-except ImportError:
-    pass
 
 class PseudoLabel(SingleModelAlgorithm):
     """
@@ -78,6 +74,7 @@ class PseudoLabel(SingleModelAlgorithm):
         """
         # Labeled examples
         x, y_true, metadata = labeled_batch
+        n_lab = len(metadata)
         x = move_to(x, self.device)
         y_true = move_to(y_true, self.device)
         g = move_to(self.grouper.metadata_to_group(metadata), self.device)
@@ -89,48 +86,46 @@ class PseudoLabel(SingleModelAlgorithm):
             'metadata': metadata
         }
 
-        # Unlabeled examples
         if unlabeled_batch is not None:
             x_unlab, metadata_unlab = unlabeled_batch
             x_unlab = move_to(x_unlab, self.device)
-            g = move_to(self.grouper.metadata_to_group(metadata_unlab), self.device)
+            g_unlab = move_to(self.grouper.metadata_to_group(metadata_unlab), self.device)
             results['unlabeled_metadata'] = metadata_unlab
-            results['unlabeled_g'] = g
-
-        # Concat and call forward
-        if unlabeled_batch is not None:
+            results['unlabeled_g'] = g_unlab
 
             # Special case for models where we need to pass in y:
             # we handle these in two separate forward passes
             # and turn off training to avoid errors when y is None
             # Note: we have to specifically turn training in the model off
             # instead of using self.train, which would reset the log
-            # TODO: This is buggy because it cuts off gradients for unlabeled_output
             if self.model.needs_y:
-                results['y_pred'] = self.get_model_output(x, y_true)
                 self.model.train(mode=False)
                 unlabeled_output = self.get_model_output(x_unlab, None)
-                self.model.train(mode=True)
-            # Otherwise, make a combined forward pass
-            else:
-                n_lab = len(metadata)
-                if isinstance(x, torch.Tensor):
-                    x_cat = torch.cat((x, x_unlab), dim=0)
-                elif isinstance(x, Batch):
-                    x.y = None
-                    x_cat = Batch.from_data_list([x, x_unlab])
-                else:
-                    raise TypeError('x must be Tensor or Batch')
-                outputs = self.get_model_output(x_cat, None)
-                results['y_pred'] = outputs[:n_lab]
-                unlabeled_output = outputs[n_lab:]
 
-            unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, _ = self.process_pseudolabels_function(
-                unlabeled_output,
-                self.confidence_threshold)
+                _, unlabeled_y_pseudo, pseudolabels_kept_frac, mask = self.process_pseudolabels_function(
+                    unlabeled_output,
+                    self.confidence_threshold
+                )
+                x_unlab = x_unlab[mask]
+
+                self.model.train(mode=True)
+                outputs = self.get_model_output(
+                    torch.cat((x, x_unlab), dim=0),
+                    collate_list([y_true, unlabeled_y_pseudo]),
+                )
+                unlabeled_y_pred = outputs[n_lab:]
+            else:
+                x_cat = concat_input(x, x_unlab)
+                outputs = self.get_model_output(x_cat, None)
+                unlabeled_output = outputs[n_lab:]
+                unlabeled_y_pred, unlabeled_y_pseudo, pseudolabels_kept_frac, _ = self.process_pseudolabels_function(
+                    unlabeled_output,
+                    self.confidence_threshold
+                )
+
+            results['y_pred'] = outputs[:n_lab]
             results['unlabeled_y_pred'] = unlabeled_y_pred
             results['unlabeled_y_pseudo'] = detach_and_clone(unlabeled_y_pseudo)
-
         else:
             results['y_pred'] = self.get_model_output(x, y_true)
             pseudolabels_kept_frac = 0
@@ -138,8 +133,6 @@ class PseudoLabel(SingleModelAlgorithm):
         self.save_metric_for_logging(
             results, "pseudolabels_kept_frac", pseudolabels_kept_frac
         )
-
-
         return results
 
     def objective(self, results):

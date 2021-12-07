@@ -12,7 +12,7 @@ CUDA_VISIBLE_DEVICES=1 python3.7 -u mlm_pretrain/src/run_mlm.py \
     --train_file $TRAIN_FILE --validation_file $VAL_FILE \
     --do_train --do_eval --output_dir $outdir --overwrite_output_dir \
     --line_by_line --max_seq_length 300 --fp16 --preprocessing_num_workers 10 --learning_rate 1e-4 \
-    --max_steps 2000 --logging_first_step --logging_steps 10 --save_steps 100 \
+    --max_steps 1000 --logging_first_step --logging_steps 10 --save_steps 100 \
     --evaluation_strategy steps --eval_steps 100 \
     --per_device_train_batch_size 32 --per_device_eval_batch_size 64 --gradient_accumulation_steps 256 \
     |& tee $outdir/log.txt

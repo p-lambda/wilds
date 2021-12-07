@@ -114,7 +114,7 @@ class FixMatch(SingleModelAlgorithm):
         outputs = self.model(x_concat)
         results['y_pred'] = outputs[:n_lab]
         if unlabeled_batch is not None:
-            results['unlabeled_strong_y_pred'] = outputs[n_lab:][mask] if mask else outputs[n_lab:]
+            results['unlabeled_strong_y_pred'] = outputs[n_lab:] if mask is None else outputs[n_lab:][mask]
         return results
 
     def objective(self, results):

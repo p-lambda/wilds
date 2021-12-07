@@ -3,7 +3,7 @@ algorithm_defaults = {
         'train_loader': 'standard',
         'uniform_over_groups': False,
         'eval_loader': 'standard',
-        'randaugment_n': 2,     # If we are running ERM + data augmentation
+        'randaugment_n': 2,     # When running ERM + data augmentation
     },
     'groupDRO': {
         'train_loader': 'standard',
@@ -37,6 +37,17 @@ algorithm_defaults = {
         'randaugment_n': 2,
         'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled examples
     },
+    'AFN': {
+        'train_loader': 'standard',
+        'uniform_over_groups': False,
+        'eval_loader': 'standard',
+        'use_hafn': False,
+        'afn_penalty_weight': 0.01,
+        'safn_delta_r': 1.0,
+        'hafn_r': 1.0,
+        'additional_train_transform': 'randaugment',    # Apply strong augmentation to labeled examples
+        'randaugment_n': 2,
+    },
     'FixMatch': {
         'train_loader': 'standard',
         'uniform_over_groups': False,
@@ -62,7 +73,8 @@ algorithm_defaults = {
         'train_loader': 'standard',
         'uniform_over_groups': False,
         'eval_loader': 'standard',
-        'dropout_rate': 0.5,
+        'noisystudent_add_dropout': True,
+        'noisystudent_dropout_rate': 0.5,
         'scheduler': 'FixMatchLR',
         'randaugment_n': 2,
         'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled examples

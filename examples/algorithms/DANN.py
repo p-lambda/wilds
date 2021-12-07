@@ -7,11 +7,7 @@ from models.domain_adversarial_network import DomainAdversarialNetwork
 from models.initializer import initialize_model
 from optimizer import initialize_optimizer_with_model_params
 from losses import initialize_loss
-
-try:
-    from torch_geometric.data import Batch
-except ImportError:
-    pass
+from utils import concat_input
 
 class DANN(SingleModelAlgorithm):
     """
@@ -84,14 +80,7 @@ class DANN(SingleModelAlgorithm):
             ]
 
             # Concatenate examples and true domains
-            if isinstance(x, torch.Tensor):
-                x_cat = torch.cat((x, unlabeled_x), dim=0)
-            elif isinstance(x, Batch):
-                x.y = None
-                x_cat = Batch.from_data_list([x, unlabeled_x])
-            else:
-                raise TypeError('x must be Tensor or Batch')
-
+            x_cat = concat_input(x, unlabeled_x)
             domains_true = torch.cat([domains_true, unlabeled_domains_true])
         else:
             x_cat = x

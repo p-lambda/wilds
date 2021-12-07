@@ -13,8 +13,14 @@ from torch.utils.data import DataLoader
 
 try:
     import wandb
-except Exception as e:
+except ImportError as e:
     pass
+
+try:
+    from torch_geometric.data import Batch
+except ImportError:
+    pass
+
 
 def cross_entropy_with_logits_loss(input, soft_target):
     """
@@ -357,6 +363,15 @@ def remove_key(key):
         return {k: v for (k,v) in d.items() if k != key}
     return remove
 
+def concat_input(labeled_x, unlabeled_x):
+    if isinstance(labeled_x, torch.Tensor):
+        x_cat = torch.cat((labeled_x, unlabeled_x), dim=0)
+    elif isinstance(labeled_x, Batch):
+        labeled_x.y = None
+        x_cat = Batch.from_data_list([labeled_x, unlabeled_x])
+    else:
+        raise TypeError("x must be Tensor or Batch")
+    return x_cat
 
 class InfiniteDataIterator:
     """
