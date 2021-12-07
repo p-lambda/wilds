@@ -1,4 +1,4 @@
-mport numpy as np
+import numpy as np
 import pandas as pd
 import torch
 from pathlib import Path
