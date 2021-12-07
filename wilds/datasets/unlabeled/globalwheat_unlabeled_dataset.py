@@ -109,6 +109,7 @@ SESSIONS = [
     "unlabeled_usask_2019_08_12_sampled",
     "unlabeled_ETHZ_2"
 ]
+
 COUNTRIES = [
     'Switzerland',
     'UK',
@@ -123,7 +124,6 @@ COUNTRIES = [
     'Australia',
     'Sudan',
 ]
-
 
 LOCATIONS = [
     'Baima',
@@ -155,18 +155,14 @@ LOCATIONS = [
     "Eschikon",
 ]
 
-
 STAGES = [
     'Filling',
-    'Filling - Ripening',
+    'Filling-Ripening',
     'multiple',
     'Post-flowering',
-    'Post-Flowering',
     'Ripening',
     'Emergence',
-    'Filling-Ripening'
 ]
-
 
 class GlobalWheatUnlabeledDataset(WILDSUnlabeledDataset):
     """
@@ -212,7 +208,7 @@ class GlobalWheatUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name = "globalwheat_unlabeled"
     _versions_dict = {
         "1.0": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0x7808fd8dca5b4611813e709fc4a3f5a7/contents/blob/",
+            "download_url": "https://worksheets.codalab.org/rest/bundles/0x0704b6cb2d2a4881bbee9d552d71f8ae/contents/blob/",
             "compressed_size": None,
         }
     }
