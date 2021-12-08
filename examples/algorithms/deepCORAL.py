@@ -73,7 +73,18 @@ class DeepCORAL(SingleModelAlgorithm):
 
     def process_batch(self, batch, unlabeled_batch=None):
         """
-        Override
+        Overrides single_model_algorithm.process_batch().
+        Args:
+            - batch (tuple of Tensors): a batch of data yielded by data loaders
+            - unlabeled_batch (tuple of Tensors or None): a batch of data yielded by unlabeled data loader
+        Output:
+            - results (dictionary): information about the batch
+                - y_true (Tensor): ground truth labels for batch
+                - g (Tensor): groups for batch
+                - metadata (Tensor): metadata for batch
+                - unlabeled_g (Tensor): groups for unlabeled batch
+                - features (Tensor): featurizer output for batch and unlabeled batch
+                - y_pred (Tensor): full model output for batch and unlabeled batch
         """
         # forward pass
         x, y_true, metadata = batch

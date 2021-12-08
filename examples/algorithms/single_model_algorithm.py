@@ -64,11 +64,13 @@ class SingleModelAlgorithm(GroupAlgorithm):
             - unlabeled_batch (tuple of Tensors or None): a batch of data yielded by unlabeled data loader
         Output:
             - results (dictionary): information about the batch
-                - y_true (Tensor)
-                - g (Tensor)
-                - metadata (Tensor)
-                - output (Tensor)
-                - y_true
+                - y_true (Tensor): ground truth labels for batch
+                - g (Tensor): groups for batch
+                - metadata (Tensor): metadata for batch
+                - y_pred (Tensor): model output for batch 
+                - unlabeled_g (Tensor): groups for unlabeled batch
+                - unlabeled_metadata (Tensor): metadata for unlabeled batch
+                - unlabeled_features (Tensor): features for unlabeled batch
         """
         x, y_true, metadata = batch
         x = move_to(x, self.device)

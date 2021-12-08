@@ -54,20 +54,20 @@ class FixMatch(SingleModelAlgorithm):
 
     def process_batch(self, labeled_batch, unlabeled_batch=None):
         """
+        Overrides single_model_algorithm.process_batch().
         Args:
-            - labeled_batch: examples (x, y, m) where x is weakly augmented
+            - batch (x, y, m): a batch of data yielded by data loaders
             - unlabeled_batch: examples ((x_weak, x_strong), m) where x_weak is weakly augmented but x_strong is strongly augmented
-        Returns: results, a dict containing keys:
-            - 'g': groups for the labeled batch
-            - 'y_true': true labels for the labeled batch
-            - 'y_pred': outputs (logits) for the labeled batch
-            - 'metadata': metdata tensor for the labeled batch
-            - 'unlabeled_g': groups for the unlabeled batch
-            - 'unlabeled_weak_y_pseudo': class pseudolabels predicted from weakly augmented x of the unlabeled batch
-            - 'unlabeled_mask': true if the unlabeled example had confidence above the threshold; we pass this around
-                to help compute the loss in self.objective()
-            - 'unlabeled_strong_y_pred': outputs (logits) on strongly augmented x of the unlabeled batch
-            - 'unlabeled_metadata': metdata tensor for the unlabeled batch
+        Output:
+            - results (dictionary): information about the batch
+                - y_true (Tensor): ground truth labels for batch
+                - g (Tensor): groups for batch
+                - metadata (Tensor): metadata for batch
+                - y_pred (Tensor): model output for batch
+                - unlabeled_g (Tensor): groups for unlabeled batch
+                - unlabeled_metadata (Tensor): metadata for unlabeled batch
+                - unlabeled_weak_y_pseudo (Tensor): pseudolabels on x_weak of the unlabeled batch, already thresholded 
+                - unlabeled_strong_y_pred (Tensor): model output on x_strong of the unlabeled batch, already thresholded 
         """
         # Labeled examples
         x, y_true, metadata = labeled_batch

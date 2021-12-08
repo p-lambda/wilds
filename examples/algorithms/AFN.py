@@ -74,7 +74,18 @@ class AFN(SingleModelAlgorithm):
 
     def process_batch(self, batch, unlabeled_batch=None):
         """
-        Override
+        Overrides single_model_algorithm.process_batch().
+        Args:
+            - batch (tuple of Tensors): a batch of data yielded by data loaders
+            - unlabeled_batch (tuple of Tensors or None): a batch of data yielded by unlabeled data loader
+        Output:
+            - results (dictionary): information about the batch
+                - y_true (Tensor): ground truth labels for batch
+                - g (Tensor): groups for batch
+                - metadata (Tensor): metadata for batch
+                - features (Tensor): featurizer output for batch
+                - y_pred (Tensor): full model output for batch 
+                - unlabeled_features (Tensor): featurizer outputs for unlabeled_batch
         """
         # Forward pass
         x, y_true, metadata = batch

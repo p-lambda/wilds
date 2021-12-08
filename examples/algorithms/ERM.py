@@ -20,17 +20,21 @@ class ERM(SingleModelAlgorithm):
 
     def process_batch(self, batch, unlabeled_batch=None):
         """
-        A helper function for update() and evaluate() that processes the batch.
+        Overrides single_model_algorithm.process_batch().
         ERM defines its own process_batch to handle if self.use_unlabeled_y is true.
         Args:
             - batch (tuple of Tensors): a batch of data yielded by data loaders
             - unlabeled_batch (tuple of Tensors or None): a batch of data yielded by unlabeled data loader
         Output:
             - results (dictionary): information about the batch
-                - y_true (Tensor)
-                - g (Tensor)
-                - metadata (Tensor)
-                - output (Tensor)
+                - y_true (Tensor): ground truth labels for batch
+                - g (Tensor): groups for batch
+                - metadata (Tensor): metadata for batch
+                - y_pred (Tensor): model output for batch 
+                - unlabeled_g (Tensor): groups for unlabeled batch
+                - unlabeled_metadata (Tensor): metadata for unlabeled batch
+                - unlabeled_y_pred (Tensor): predictions for unlabeled batch for fully-supervised ERM experiments
+                - unlabeled_y_true (Tensor): true labels for unlabeled batch for fully-supervised ERM experiments
         """
         x, y_true, metadata = batch
         x = move_to(x, self.device)

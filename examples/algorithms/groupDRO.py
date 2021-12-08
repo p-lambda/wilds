@@ -39,19 +39,6 @@ class GroupDRO(SingleModelAlgorithm):
         self.group_weights = self.group_weights.to(self.device)
 
     def process_batch(self, batch, unlabeled_batch=None):
-        """
-        A helper function for update() and evaluate() that processes the batch
-        Args:
-            - batch (tuple of Tensors): a batch of data yielded by data loaders
-        Output:
-            - results (dictionary): information about the batch
-                - g (Tensor)
-                - y_true (Tensor)
-                - metadata (Tensor)
-                - loss (Tensor)
-                - metrics (Tensor)
-              all Tensors are of size (batch_size,)
-        """
         results = super().process_batch(batch)
         results['group_weight'] = self.group_weights
         return results

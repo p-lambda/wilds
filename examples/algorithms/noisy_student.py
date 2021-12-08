@@ -88,6 +88,22 @@ class NoisyStudent(SingleModelAlgorithm):
         self.logged_fields.append("consistency_loss")
 
     def process_batch(self, labeled_batch, unlabeled_batch=None):
+        """
+        Overrides single_model_algorithm.process_batch().
+        Args:
+            - batch (x, y, m): a batch of data yielded by data loaders
+            - unlabeled_batch: examples (x, y_pseudo, m) where y_pseudo is an already-computed teacher pseudolabel
+        Output:
+            - results (dictionary): information about the batch
+                - y_true (Tensor): ground truth labels for batch
+                - g (Tensor): groups for batch
+                - metadata (Tensor): metadata for batch
+                - y_pred (Tensor): model output for batch
+                - unlabeled_g (Tensor): groups for unlabeled batch
+                - unlabeled_metadata (Tensor): metadata for unlabeled batch
+                - unlabeled_y_pseudo (Tensor): pseudolabels for unlabeled batch (from loader)
+                - unlabeled_y_pred (Tensor): model output on unlabeled batch
+        """
         # Labeled examples
         x, y_true, metadata = labeled_batch
         n_lab = len(metadata)

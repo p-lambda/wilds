@@ -57,20 +57,20 @@ class PseudoLabel(SingleModelAlgorithm):
 
     def process_batch(self, labeled_batch, unlabeled_batch=None):
         """
+        Overrides single_model_algorithm.process_batch().
         Args:
-            - labeled_batch: examples (x, y, m)
-            - unlabeled_batch: examples (x, m)
-        Returns: results, a dict containing keys:
-            - 'g': groups for the labeled batch
-            - 'y_true': true labels for the labeled batch
-            - 'y_pred': outputs (logits) for the labeled batch
-            - 'metadata': metdata tensor for the labeled batch
-            - 'unlabeled_g': groups for the unlabeled batch
-            - 'unlabeled_y_pseudo': class pseudolabels of the unlabeled batch
-            - 'unlabeled_mask': true if the unlabeled example had confidence above the threshold; we pass this around
-                to help compute the loss in self.objective()
-            - 'unlabeled_y_pred': outputs (logits) on x of the unlabeled batch
-            - 'unlabeled_metadata': metdata tensor for the unlabeled batch
+            - batch (tuple of Tensors): a batch of data yielded by data loaders
+            - unlabeled_batch (tuple of Tensors or None): a batch of data yielded by unlabeled data loader
+        Output:
+            - results (dictionary): information about the batch
+                - y_true (Tensor): ground truth labels for batch
+                - g (Tensor): groups for batch
+                - metadata (Tensor): metadata for batch
+                - y_pred (Tensor): model output for batch
+                - unlabeled_g (Tensor): groups for unlabeled batch
+                - unlabeled_metadata (Tensor): metadata for unlabeled batch
+                - unlabeled_y_pseudo (Tensor): pseudolabels on the unlabeled batch, already thresholded 
+                - unlabeled_y_pred (Tensor): model output on the unlabeled batch, already thresholded 
         """
         # Labeled examples
         x, y_true, metadata = labeled_batch
