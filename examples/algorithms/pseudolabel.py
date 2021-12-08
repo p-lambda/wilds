@@ -55,7 +55,7 @@ class PseudoLabel(SingleModelAlgorithm):
         self.logged_fields.append("classification_loss")
         self.logged_fields.append("consistency_loss")
 
-    def process_batch(self, labeled_batch, unlabeled_batch=None):
+    def process_batch(self, batch, unlabeled_batch=None):
         """
         Overrides single_model_algorithm.process_batch().
         Args:
@@ -73,7 +73,7 @@ class PseudoLabel(SingleModelAlgorithm):
                 - unlabeled_y_pred (Tensor): model output on the unlabeled batch, already thresholded 
         """
         # Labeled examples
-        x, y_true, metadata = labeled_batch
+        x, y_true, metadata = batch
         n_lab = len(metadata)
         x = move_to(x, self.device)
         y_true = move_to(y_true, self.device)

@@ -52,7 +52,7 @@ class FixMatch(SingleModelAlgorithm):
         self.logged_fields.append("classification_loss")
         self.logged_fields.append("consistency_loss")
 
-    def process_batch(self, labeled_batch, unlabeled_batch=None):
+    def process_batch(self, batch, unlabeled_batch=None):
         """
         Overrides single_model_algorithm.process_batch().
         Args:
@@ -70,7 +70,7 @@ class FixMatch(SingleModelAlgorithm):
                 - unlabeled_strong_y_pred (Tensor): model output on x_strong of the unlabeled batch, already thresholded 
         """
         # Labeled examples
-        x, y_true, metadata = labeled_batch
+        x, y_true, metadata = batch
         x = x.to(self.device)
         y_true = y_true.to(self.device)
         g = self.grouper.metadata_to_group(metadata).to(self.device)
