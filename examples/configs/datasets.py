@@ -445,6 +445,7 @@ dataset_defaults = {
         'weight_decay': 1e-3,
         'n_epochs': 12,
         'noisystudent_add_dropout': False,
+        'self_training_threshold': 0.5,
         'loader_kwargs': {
             'num_workers': 1,
             'pin_memory': True,
