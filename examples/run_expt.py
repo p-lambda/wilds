@@ -221,6 +221,7 @@ def main():
         split_scheme=config.split_scheme,
         **config.dataset_kwargs)
 
+    # Transforms & data augmentations for labeled dataset
     # To modify data augmentation, modify the following code block.
     # If you want to use transforms that modify both `x` and `y`,
     # set `do_transform_y` to True when initializing the `WILDSSubset` below.
@@ -253,17 +254,15 @@ def main():
             groupby_fields=config.groupby_fields
         )
 
+        # Transforms & data augmentations for unlabeled dataset
         if config.algorithm == "FixMatch":
             # For FixMatch, we need our loader to return batches in the form ((x_weak, x_strong), m)
             # We do this by initializing a special transform function
             unlabeled_train_transform = initialize_transform(
                 config.transform, config, full_dataset, is_training=True, additional_transform_name="fixmatch"
             )
-        elif config.algorithm in ["deepCORAL", "DANN", "PseudoLabel"]:
-            unlabeled_train_transform = initialize_transform(
-                config.transform, config, full_dataset, is_training=True, additional_transform_name="randaugment"
-            )
         else:
+            # Otherwise, use the same data augmentations as the labeled data.
             unlabeled_train_transform = train_transform
 
         if config.algorithm == "NoisyStudent":
@@ -296,7 +295,6 @@ def main():
                 batch_size=config.unlabeled_batch_size,
                 **config.unlabeled_loader_kwargs
             )
-
             teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
             teacher_outputs = move_to(teacher_outputs, torch.device("cpu"))
             unlabeled_split_dataset = WILDSPseudolabeledSubset(

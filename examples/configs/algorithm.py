@@ -19,7 +19,7 @@ algorithm_defaults = {
         'eval_loader': 'standard',
         'coral_penalty_weight': 1.,
         'randaugment_n': 2,
-        'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled examples
+        'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled & unlabeled examples
     },
     'IRM': {
         'train_loader': 'group',
@@ -35,7 +35,7 @@ algorithm_defaults = {
         'distinct_groups': True,
         'eval_loader': 'standard',
         'randaugment_n': 2,
-        'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled examples
+        'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled & unlabeled examples
     },
     'AFN': {
         'train_loader': 'standard',
@@ -45,7 +45,7 @@ algorithm_defaults = {
         'afn_penalty_weight': 0.01,
         'safn_delta_r': 1.0,
         'hafn_r': 1.0,
-        'additional_train_transform': 'randaugment',    # Apply strong augmentation to labeled examples
+        'additional_train_transform': 'randaugment',    # Apply strong augmentation to labeled & unlabeled examples
         'randaugment_n': 2,
     },
     'FixMatch': {
@@ -67,7 +67,7 @@ algorithm_defaults = {
         'pseudolabel_T2': 0.4,
         'scheduler': 'FixMatchLR',
         'randaugment_n': 2,
-        'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled examples
+        'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled & unlabeled examples
     },
     'NoisyStudent': {
         'train_loader': 'standard',
@@ -77,6 +77,6 @@ algorithm_defaults = {
         'noisystudent_dropout_rate': 0.5,
         'scheduler': 'FixMatchLR',
         'randaugment_n': 2,
-        'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled examples
+        'additional_train_transform': 'randaugment',     # Apply strong augmentation to labeled & unlabeled examples
     }
 }
