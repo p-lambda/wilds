@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import torch
 
@@ -92,7 +94,7 @@ def pseudolabel_detection(preds, confidence_threshold):
                       ('losses' is empty)
         confidence_threshold (float): In [0,1]
     """
-    pseudolabels_kept_frac = _mask_pseudolabels_detection(preds, confidence_threshold)
+    preds, pseudolabels_kept_frac = _mask_pseudolabels_detection(preds, confidence_threshold)
     unlabeled_y_pred = [
         {
             'boxes': pred['boxes'],
@@ -122,7 +124,7 @@ def pseudolabel_detection_discard_empty(preds, confidence_threshold):
                       ('losses' is empty)
         confidence_threshold (float): In [0,1]
     """
-    pseudolabels_kept_frac = _mask_pseudolabels_detection(preds, confidence_threshold)
+    preds, pseudolabels_kept_frac = _mask_pseudolabels_detection(preds, confidence_threshold)
     unlabeled_y_pred = [
         {
             'boxes': pred['boxes'],
@@ -145,6 +147,7 @@ def _mask_pseudolabels_detection(preds, confidence_threshold):
     total_boxes = 0.0
     kept_boxes = 0.0
 
+    preds = copy.deepcopy(preds)
     for pred in preds:
         mask = (pred['scores'] >= confidence_threshold)
         pred['boxes'] = pred['boxes'][mask]
@@ -154,7 +157,7 @@ def _mask_pseudolabels_detection(preds, confidence_threshold):
         kept_boxes += mask.sum()
 
     pseudolabels_kept_frac = kept_boxes / total_boxes
-    return pseudolabels_kept_frac
+    return preds, pseudolabels_kept_frac
 
 
 class Accuracy(ElementwiseMetric):
