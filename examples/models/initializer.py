@@ -98,7 +98,7 @@ def initialize_model(config, d_out, is_featurizer=False):
             model = UNet(num_tasks=d_out, **config.model_kwargs)
 
     elif config.model == 'fasterrcnn':
-        if featurize: # TODO
+        if featurize:
             raise NotImplementedError('Featurizer not implemented for detection yet')
         else:
             model = initialize_fasterrcnn_model(config, d_out)
