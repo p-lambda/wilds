@@ -113,8 +113,7 @@ def initialize_model(config, d_out, is_featurizer=False):
             # This has only been tested on some models (mostly vision), so run this code iff we're sure it works
             raise NotImplementedError(f"Model loading not yet tested for {config.model}.")
 
-        # We've already loaded pretrained weights for bert-based models using the transformers library
-        if 'bert' not in config.model:
+        if 'bert' not in config.model:  # We've already loaded pretrained weights for bert-based models using the transformers library
             try:
                 if featurize:
                     if config.load_featurizer_only:

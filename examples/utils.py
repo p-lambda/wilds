@@ -87,7 +87,15 @@ def save_model(algorithm, epoch, best_val_metric, path):
     torch.save(state, path)
 
 def load(module, path, device=None, tries=2):
-    """Handles loading weights saved from this repo/model into an algorithm/model."""
+    """
+    Handles loading weights saved from this repo/model into an algorithm/model.
+    Attempts to handle key mismatches between this module's state_dict and the loaded state_dict.
+    Args:
+        - module (torch module): module to load parameters for
+        - path (str): path to .pth file
+        - device: device to load tensors on
+        - tries: number of times to run the match_keys() function
+    """
     if device is not None:
         state = torch.load(path, map_location=device)
     else:
@@ -105,9 +113,10 @@ def load(module, path, device=None, tries=2):
     else:
         prev_epoch, best_val_metric = None, None
 
-    # naive approach works if alg -> alg / mod -> mod
+    # If keys match perfectly, load_state_dict() will work
     try: module.load_state_dict(state)
     except:
+        # Otherwise, attempt to reconcile mismatched keys and load with strict=False
         module_keys = module.state_dict().keys()
         for _ in range(tries):
             state = match_keys(state, list(module_keys))
