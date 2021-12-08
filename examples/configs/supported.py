@@ -8,6 +8,7 @@ from wilds.common.metrics.all_metrics import (
     pseudolabel_multiclass_logits,
     pseudolabel_identity,
     pseudolabel_detection,
+    pseudolabel_detection_discard_empty,
     MultiTaskAveragePrecision
 )
 
@@ -31,6 +32,7 @@ process_pseudolabels_functions = {
     'pseudolabel_multiclass_logits': pseudolabel_multiclass_logits,
     'pseudolabel_identity': pseudolabel_identity,
     'pseudolabel_detection': pseudolabel_detection,
+    'pseudolabel_detection_discard_empty': pseudolabel_detection_discard_empty,
 }
 
 # see initialize_*() functions for correspondence=

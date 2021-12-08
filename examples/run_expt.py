@@ -301,7 +301,7 @@ def main():
                 reference_subset=unlabeled_split_dataset,
                 pseudolabels=teacher_outputs,
                 transform=unlabeled_train_transform,
-                collate=full_dataset.collate if config.dataset == "globalwheat" else None,
+                collate=full_dataset.collate,
             )
             teacher_model = teacher_model.to(torch.device("cpu"))
             del teacher_model
