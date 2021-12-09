@@ -49,7 +49,7 @@ pip install -e .
 - pytz>=2020.4
 - torch>=1.7.0
 - torch-scatter>=2.0.5
-- torch-geometric>=1.6.1
+- torch-geometric>=2.0.1
 - torchvision>=0.8.2
 - tqdm>=4.53.0
 - scikit-learn>=0.20.0
@@ -58,8 +58,7 @@ pip install -e .
 Running `pip install wilds` or `pip install -e .` will automatically check for and install all of these requirements
 except for the `torch-scatter` and `torch-geometric` packages, which require a 
 [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
-For the results in the paper, we used version 2.0.1 for `torch-geometric`. 
-We also recommend torch<1.9.0 because of data loader warnings described [here](https://github.com/pytorch/pytorch/issues/57273).
+We recommend torch<1.9.0 because of data loader warnings described [here](https://github.com/pytorch/pytorch/issues/57273).
 
 #### Optional dependencies
 
