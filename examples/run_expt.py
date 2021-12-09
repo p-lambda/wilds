@@ -36,8 +36,8 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 def main():
-
-    ''' to see default hyperparams for each dataset/model, look at configs/ '''
+    
+    ''' Arg defaults are filled in according to examples/configs/ '''
     parser = argparse.ArgumentParser()
 
     # Required arguments
@@ -48,57 +48,57 @@ def main():
 
     # Dataset
     parser.add_argument('--split_scheme', help='Identifies how the train/val/test split is constructed. Choices are dataset-specific.')
-    parser.add_argument('--dataset_kwargs', nargs='*', action=ParseKwargs, default={})
+    parser.add_argument('--dataset_kwargs', nargs='*', action=ParseKwargs, default={},
+                        help='keyword arguments for dataset initialization passed as key1=value1 key2=value2')
     parser.add_argument('--download', default=False, type=parse_bool, const=True, nargs='?',
                         help='If true, tries to download the dataset if it does not exist in root_dir.')
     parser.add_argument('--frac', type=float, default=1.0,
                         help='Convenience parameter that scales all dataset splits down to the specified fraction, for development purposes. Note that this also scales the test set down, so the reported numbers are not comparable with the full test set.')
-    parser.add_argument('--version', default=None, type=str)
+    parser.add_argument('--version', default=None, type=str, help='WILDS labeled dataset version number.')
 
     # Unlabeled Dataset
-    parser.add_argument('--unlabeled_split', default=None, type=str, help='Unlabeled split to use')
-    parser.add_argument('--unlabeled_version', default=None, type=str)
+    parser.add_argument('--unlabeled_split', default=None, type=str, choices=wilds.unlabeled_splits,  help='Unlabeled split to use. Some datasets only have some splits available.')
+    parser.add_argument('--unlabeled_version', default=None, type=str, help='WILDS unlabeled dataset version number.')
     parser.add_argument('--use_unlabeled_y', default=False, type=parse_bool, const=True, nargs='?', 
-                        help='For oracle experiments. Train on unlabeled data as labeled data using the value stored in dataset._y_array. This is only defined for some datasets. Correct functionality relies on CrossEntropyLoss using ignore_index=-100.')
+                        help='If true, unlabeled loaders will also the true labels for the unlabeled data. This is only available for some datasets. Used for "fully-labeled ERM experiments" in the paper. Correct functionality relies on CrossEntropyLoss using ignore_index=-100.')
 
     # Loaders
     parser.add_argument('--loader_kwargs', nargs='*', action=ParseKwargs, default={})
     parser.add_argument('--unlabeled_loader_kwargs', nargs='*', action=ParseKwargs, default={})
     parser.add_argument('--train_loader', choices=['standard', 'group'])
-    parser.add_argument('--uniform_over_groups', type=parse_bool, const=True, nargs='?')
-    parser.add_argument('--distinct_groups', type=parse_bool, const=True, nargs='?')
+    parser.add_argument('--uniform_over_groups', type=parse_bool, const=True, nargs='?', help='If true, sample examples such that batches are uniform over groups.')
+    parser.add_argument('--distinct_groups', type=parse_bool, const=True, nargs='?', help='If true, enforce groups sampled per batch are distinct.')
     parser.add_argument('--n_groups_per_batch', type=int)
     parser.add_argument('--unlabeled_n_groups_per_batch', type=int)
     parser.add_argument('--batch_size', type=int)
     parser.add_argument('--unlabeled_batch_size', type=int)
     parser.add_argument('--eval_loader', choices=['standard'], default='standard')
-    parser.add_argument('--gradient_accumulation_steps', type=int, default=1, help='Number of batches to process before stepping optimizer and/or schedulers. If > 1, we simulate having a larger effective batch size (though batchnorm behaves differently).')
+    parser.add_argument('--gradient_accumulation_steps', type=int, default=1, help='Number of batches to process before stepping optimizer and schedulers. If > 1, we simulate having a larger effective batch size (though batchnorm behaves differently).')
 
     # Model
     parser.add_argument('--model', choices=supported.models)
     parser.add_argument('--model_kwargs', nargs='*', action=ParseKwargs, default={},
-        help='keyword arguments for model initialization passed as key1=value1 key2=value2')
-    parser.add_argument('--noisystudent_add_dropout', type=parse_bool, const=True, nargs='?', help="Whether to add the dropout layer to the student model of NoisyStudent.")
+                        help='keyword arguments for model initialization passed as key1=value1 key2=value2')
+    parser.add_argument('--noisystudent_add_dropout', type=parse_bool, const=True, nargs='?', help='If true, adds a dropout layer to the student model of NoisyStudent.')
     parser.add_argument('--noisystudent_dropout_rate', type=float)
-    parser.add_argument('--pretrained_model_path', default=None, type=str, help="Specify a path to a pretrained model's weights")
-    parser.add_argument('--load_featurizer_only', default=False, type=parse_bool, const=True, nargs='?', help="Set this to only load the featurizer weights and not the classifier weights.")
+    parser.add_argument('--pretrained_model_path', default=None, type=str, help='Specify a path to pretrained model weights')
+    parser.add_argument('--load_featurizer_only', default=False, type=parse_bool, const=True, nargs='?', help='If true, only loads the featurizer weights and not the classifier weights.')
 
     # NoisyStudent-specific loading
-    parser.add_argument('--teacher_model_path', type=str, help='Path to teacher model weights. If this is defined, pseudolabels will first be computed for unlabeled data before anything else runs.')
-
+    parser.add_argument('--teacher_model_path', type=str, help='Path to NoisyStudent teacher model weights. If this is defined, pseudolabels will first be computed for unlabeled data before anything else runs.')
 
     # Transforms
     parser.add_argument('--transform', choices=supported.transforms)
-    parser.add_argument('--additional_train_transform', choices=supported.additional_transforms)
+    parser.add_argument('--additional_train_transform', choices=supported.additional_transforms, help='Optional data augmentations to layer on top of the default transforms.')
     parser.add_argument('--target_resolution', nargs='+', type=int, help='The input resolution that images will be resized to before being passed into the model. For example, use --target_resolution 224 224 for a standard ResNet.')
     parser.add_argument('--resize_scale', type=float)
     parser.add_argument('--max_token_length', type=int)
-    parser.add_argument('--randaugment_n', type=int, help='N parameter of RandAugment - the number of transformations to apply.')
+    parser.add_argument('--randaugment_n', type=int, help='Number of RandAugment transformations to apply.')
 
     # Objective
     parser.add_argument('--loss_function', choices=supported.losses)
     parser.add_argument('--loss_kwargs', nargs='*', action=ParseKwargs, default={},
-        help='keyword arguments for loss initialization passed as key1=value1 key2=value2')
+                        help='keyword arguments for loss initialization passed as key1=value1 key2=value2')
 
     # Algorithm
     parser.add_argument('--groupby_fields', nargs='+')
@@ -119,7 +119,7 @@ def main():
     parser.add_argument('--pseudolabel_T2', type=float, help='Percentage of total iterations at which to end linear scheduling and hold lambda at the max value')
     parser.add_argument('--soft_pseudolabels', default=False, type=parse_bool, const=True, nargs='?')
     parser.add_argument('--algo_log_metric')
-    parser.add_argument('--process_pseudolabels_function', choices = supported.process_pseudolabels_functions)
+    parser.add_argument('--process_pseudolabels_function', choices=supported.process_pseudolabels_functions)
 
     # Model selection
     parser.add_argument('--val_metric')
@@ -131,11 +131,13 @@ def main():
     parser.add_argument('--lr', type=float)
     parser.add_argument('--weight_decay', type=float)
     parser.add_argument('--max_grad_norm', type=float)
-    parser.add_argument('--optimizer_kwargs', nargs='*', action=ParseKwargs, default={})
+    parser.add_argument('--optimizer_kwargs', nargs='*', action=ParseKwargs, default={},
+                        help='keyword arguments for optimizer initialization passed as key1=value1 key2=value2')
 
     # Scheduler
     parser.add_argument('--scheduler', choices=supported.schedulers)
-    parser.add_argument('--scheduler_kwargs', nargs='*', action=ParseKwargs, default={})
+    parser.add_argument('--scheduler_kwargs', nargs='*', action=ParseKwargs, default={},
+                        help='keyword arguments for scheduler initialization passed as key1=value1 key2=value2')
     parser.add_argument('--scheduler_metric_split', choices=['train', 'val'], default='val')
     parser.add_argument('--scheduler_metric_name')
 
@@ -164,7 +166,7 @@ def main():
     parser.add_argument('--wandb_api_key_path', type=str,
                         help="Path to Weights & Biases API Key. If use_wandb is set to True and this argument is not specified, user will be prompted to authenticate.")
     parser.add_argument('--wandb_kwargs', nargs='*', action=ParseKwargs, default={},
-                        help="Will be passed directly into wandb.init().")
+                        help='keyword arguments for wandb.init() passed as key1=value1 key2=value2')
 
     config = parser.parse_args()
     config = populate_defaults(config)
@@ -219,6 +221,7 @@ def main():
         split_scheme=config.split_scheme,
         **config.dataset_kwargs)
 
+    # Transforms & data augmentations for labeled dataset
     # To modify data augmentation, modify the following code block.
     # If you want to use transforms that modify both `x` and `y`,
     # set `do_transform_y` to True when initializing the `WILDSSubset` below.
@@ -251,17 +254,15 @@ def main():
             groupby_fields=config.groupby_fields
         )
 
+        # Transforms & data augmentations for unlabeled dataset
         if config.algorithm == "FixMatch":
             # For FixMatch, we need our loader to return batches in the form ((x_weak, x_strong), m)
             # We do this by initializing a special transform function
             unlabeled_train_transform = initialize_transform(
                 config.transform, config, full_dataset, is_training=True, additional_transform_name="fixmatch"
             )
-        elif config.algorithm in ["deepCORAL", "DANN", "PseudoLabel"]:
-            unlabeled_train_transform = initialize_transform(
-                config.transform, config, full_dataset, is_training=True, additional_transform_name="randaugment"
-            )
         else:
+            # Otherwise, use the same data augmentations as the labeled data.
             unlabeled_train_transform = train_transform
 
         if config.algorithm == "NoisyStudent":
@@ -294,7 +295,6 @@ def main():
                 batch_size=config.unlabeled_batch_size,
                 **config.unlabeled_loader_kwargs
             )
-
             teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
             teacher_outputs = move_to(teacher_outputs, torch.device("cpu"))
             unlabeled_split_dataset = WILDSPseudolabeledSubset(
@@ -334,7 +334,7 @@ def main():
             groupby_fields=config.groupby_fields
         )
 
-    # Configure labeled datasets
+    # Configure labeled torch datasets (WILDS dataset splits)
     datasets = defaultdict(dict)
     for split in full_dataset.split_dict.keys():
         if split=='train':
@@ -383,8 +383,8 @@ def main():
             os.path.join(config.log_dir, f'{split}_algo.csv'), mode=mode, use_wandb=config.use_wandb
         )
 
-        if config.use_wandb:
-            initialize_wandb(config)
+    if config.use_wandb:
+        initialize_wandb(config)
 
     # Logging dataset info
     # Show class breakdown if feasible
@@ -400,7 +400,7 @@ def main():
     if unlabeled_dataset is not None:
         log_group_data({"unlabeled": unlabeled_dataset}, log_grouper, logger)
 
-    ## Initialize algorithm & load pretrained weights if provided
+    # Initialize algorithm & load pretrained weights if provided
     algorithm = initialize_algorithm(
         config=config,
         datasets=datasets,
@@ -408,9 +408,9 @@ def main():
         unlabeled_dataset=unlabeled_dataset,
     )
 
-    # Resume from most recent model in log_dir
     model_prefix = get_model_prefix(datasets['train'], config)
     if not config.eval_only:
+        # Resume from most recent model in log_dir
         resume_success = False
         if resume:
             save_path = model_prefix + 'epoch:last_model.pth'
@@ -433,12 +433,14 @@ def main():
             best_val_metric=None
 
         # Log effective batch size
-        logger.write(
-            (f'\nUsing gradient_accumulation_steps {config.gradient_accumulation_steps} means that')
-            + (f' the effective labeled batch size is {config.batch_size * config.gradient_accumulation_steps}')
-            + (f' and the effective unlabeled batch size is {config.unlabeled_batch_size * config.gradient_accumulation_steps}' if config.unlabeled_batch_size else '')
-            + ('. Updates behave as if torch loaders have drop_last=False\n')
-        )
+        if config.gradient_accumulation_steps > 1:
+            logger.write(
+                (f'\nUsing gradient_accumulation_steps {config.gradient_accumulation_steps} means that')
+                + (f' the effective labeled batch size is {config.batch_size * config.gradient_accumulation_steps}')
+                + (f' and the effective unlabeled batch size is {config.unlabeled_batch_size * config.gradient_accumulation_steps}' 
+                    if config.unlabeled_dataset and config.unlabeled_batch_size else '')
+                + ('. Updates behave as if torch loaders have drop_last=False\n')
+            )
 
         train(
             algorithm=algorithm,

@@ -37,3 +37,10 @@ unlabeled_datasets = [
     'fmow',
     'globalwheat',
 ]
+
+unlabeled_splits = [
+    'train_unlabeled',
+    'val_unlabeled',
+    'test_unlabeled',
+    'extra_unlabeled'
+]
