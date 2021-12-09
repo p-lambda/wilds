@@ -3,3 +3,5 @@ build
 dist
 venv
 wilds.egg-info
+.idea
+.DS_Store
