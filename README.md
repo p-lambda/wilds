@@ -56,8 +56,23 @@ pip install -e .
 - scipy>=1.5.4
 
 Running `pip install wilds` or `pip install -e .` will automatically check for and install all of these requirements
-except for the `torch-scatter` and `torch-geometric` packages, which require a [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
-We recommend torch<1.9.0 because of data loader warnings described [here](https://github.com/pytorch/pytorch/issues/57273).
+except for the `torch-scatter` and `torch-geometric` packages, which require a 
+[quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
+For the results in the paper, we used version 2.0.1 for `torch-geometric`. 
+We also recommend torch<1.9.0 because of data loader warnings described [here](https://github.com/pytorch/pytorch/issues/57273).
+
+#### Optional dependencies
+
+##### For SwAV
+
+SwAV requires [Apex](https://github.com/NVIDIA/apex). 
+To install Apex, please follow the [README from the official SwAV repository](https://github.com/facebookresearch/swav#requirements).
+
+##### For Weights & Biases
+
+We use [Weights & Biases](https://wandb.ai/site) to track and monitor experiments. 
+To install the Weights and Biases Python package, run `pip install wandb`.
+
 
 ### Default models
 After installing the WILDS package, you can use the scripts in `examples/` to train default models on the WILDS datasets.
