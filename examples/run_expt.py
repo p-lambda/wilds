@@ -13,9 +13,6 @@ try:
 except Exception as e:
     pass
 
-# TODO: This is needed to test the WILDS package locally. Remove later -Tony
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
-
 import wilds
 from wilds.common.data_loaders import get_train_loader, get_eval_loader
 from wilds.common.grouper import CombinatorialGrouper

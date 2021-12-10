@@ -95,9 +95,9 @@ def CutoutAbs(img, v):  # [0, 60] => percentage: [0, 0.2]
     x0 = _sample_uniform(0, w)
     y0 = _sample_uniform(0, h)
 
-    x0 = int(max(0, x0 - v / 2.0))
+    x0 = int(max(0, x0 - v / 2.0)) 
     y0 = int(max(0, y0 - v / 2.0))
-    x1 = min(w, x0 + v)
+    x1 = min(w, x0 + v) 
     y1 = min(h, y0 + v)
 
     xy = (x0, y0, x1, y1)

@@ -12,7 +12,7 @@ from wilds.common.grouper import CombinatorialGrouper
 
 class Camelyon17UnlabeledDataset(WILDSUnlabeledDataset):
     """
-    Unlabeled Camelyon17 dataset.
+    Unlabeled Camelyon17-WILDS dataset.
     This dataset contains patches from all of the slides in the original CAMELYON17 training data,
     except for the slides that were labeled with lesion annotations and therefore used in the
     labeled Camelyon17Dataset.
