@@ -138,8 +138,10 @@ The following are the sizes of the unlabeled datasets:
 | globalwheat     | Image    | 103                | 108               |
 | civilcomments   | Text     | 0.3                | 0.6               |
 | poverty         | Image    | 172                | 184               |
+| fmow*           | Image    | 50                 | 55                |
+| amazon*         | Text     | 7                  | 7                 |
 
-For FMoW and Amazon, the unlabeled data exists in the original datasets.
+* The unlabeled dataset is the same as the labeled dataset.
 
 While the `camelyon17` dataset is small and fast to train on, we advise against using it as the only dataset to prototype methods on, as the test performance of models trained on this dataset tend to exhibit a large degree of variability over random seeds.
 
