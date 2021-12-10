@@ -76,6 +76,8 @@ def main():
     parser.add_argument('--model', choices=supported.models)
     parser.add_argument('--model_kwargs', nargs='*', action=ParseKwargs, default={},
                         help='keyword arguments for model initialization passed as key1=value1 key2=value2')
+    parser.add_argument('--noisystudent_add_dropout', type=parse_bool, const=True, nargs='?', help='If true, adds a dropout layer to the student model of NoisyStudent.')
+    parser.add_argument('--noisystudent_dropout_rate', type=float)
     parser.add_argument('--pretrained_model_path', default=None, type=str, help='Specify a path to pretrained model weights')
     parser.add_argument('--load_featurizer_only', default=False, type=parse_bool, const=True, nargs='?', help='If true, only loads the featurizer weights and not the classifier weights.')
 
@@ -97,10 +99,6 @@ def main():
 
     # Algorithm
     parser.add_argument('--groupby_fields', nargs='+')
-    parser.add_argument('--algo_log_metric')
-    parser.add_argument('--process_pseudolabels_function', choices=supported.process_pseudolabels_functions)
-
-    # Algorithm-Specific Configs
     parser.add_argument('--group_dro_step_size', type=float)
     parser.add_argument('--coral_penalty_weight', type=float)
     parser.add_argument('--dann_penalty_weight', type=float)
@@ -113,12 +111,12 @@ def main():
     parser.add_argument('--use_hafn', default=False, type=parse_bool, const=True, nargs='?')
     parser.add_argument('--irm_lambda', type=float)
     parser.add_argument('--irm_penalty_anneal_iters', type=int)
-    parser.add_argument('--self_training_lambda', type=float, help='Unlabeled loss weight for self-training algorithms')
-    parser.add_argument('--self_training_threshold', type=float, help='Confidence threshold for self-training algorithms')
+    parser.add_argument('--self_training_lambda', type=float)
+    parser.add_argument('--self_training_threshold', type=float)
     parser.add_argument('--pseudolabel_T2', type=float, help='Percentage of total iterations at which to end linear scheduling and hold lambda at the max value')
-    parser.add_argument('--noisystudent_add_dropout', type=parse_bool, const=True, nargs='?', help='If true, adds a dropout layer before layer layer of the student model of NoisyStudent.')
-    parser.add_argument('--noisystudent_dropout_rate', type=float)
-    parser.add_argument('--noisystudent_soft_pseudolabels', default=False, type=parse_bool, const=True, nargs='?', help='If true, NoisyStudent uses soft pseudolabels instead of hard pseudolabels')
+    parser.add_argument('--soft_pseudolabels', default=False, type=parse_bool, const=True, nargs='?')
+    parser.add_argument('--algo_log_metric')
+    parser.add_argument('--process_pseudolabels_function', choices=supported.process_pseudolabels_functions)
 
     # Model selection
     parser.add_argument('--val_metric')

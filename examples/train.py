@@ -193,12 +193,12 @@ def infer_predictions(model, loader, config):
         x = x.to(config.device)
         with torch.no_grad(): 
             output = model(x)
-            if not config.noisystudent_soft_pseudolabels and config.process_pseudolabels_function is not None:
+            if not config.soft_pseudolabels and config.process_pseudolabels_function is not None:
                 _, output, _, _ = process_pseudolabels_functions[config.process_pseudolabels_function](
                     output,
                     confidence_threshold=config.self_training_threshold if config.dataset == 'globalwheat' else 0
                 )
-            elif config.noisystudent_soft_pseudolabels:
+            elif config.soft_pseudolabels:
                 output = torch.nn.functional.softmax(output, dim=1)
         if isinstance(output, list):
             y_pred.extend(detach_and_clone(output))

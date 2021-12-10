@@ -42,7 +42,7 @@ class NoisyStudent(SingleModelAlgorithm):
     We do not use stochastic depth.
 
     Pseudolabels are generated in run_expt.py on unlabeled images that have only been randomly cropped and flipped ("weak" transform).
-    By default, we use hard pseudolabels; use the --noisystudent_soft_pseudolabels flag to add soft pseudolabels.
+    By default, we use hard pseudolabels; use the --soft_pseudolabels flag to add soft pseudolabels.
 
     This code only supports a teacher that is the same class as the student (e.g. both densenet121s)
 
