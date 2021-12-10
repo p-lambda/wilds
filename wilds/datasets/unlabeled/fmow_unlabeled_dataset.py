@@ -19,7 +19,7 @@ Image.MAX_IMAGE_PIXELS = 10000000000
 
 class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
     """
-    The Functional Map of the World land use / building classification dataset.
+    The FMoW-WILDS land use / building classification dataset.
     This is a processed version of the Functional Map of the World dataset originally sourced from https://github.com/fMoW/dataset.
 
     Support `split_scheme`
