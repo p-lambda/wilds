@@ -89,15 +89,20 @@ def Cutout(img, v):  # [0, 60] => percentage: [0, 0.2] => change to [0, 0.5]
 
 
 def CutoutAbs(img, v):  # [0, 60] => percentage: [0, 0.2]
+    """
+    Note: This implementation cuts out a patch of side 1.5v from the image, instead of a patch of side v. 
+    This appears to be unintentional. The end result is that the magnitude of the cutout is slightly larger than intended.
+    However, the same code has been used in prior work, so we keep it here for consistency.
+    """
     if v < 0:
         return img
     w, h = img.size
     x0 = _sample_uniform(0, w)
     y0 = _sample_uniform(0, h)
 
-    x0 = int(max(0, x0 - v / 2.0))
+    x0 = int(max(0, x0 - v / 2.0)) 
     y0 = int(max(0, y0 - v / 2.0))
-    x1 = min(w, x0 + v)
+    x1 = min(w, x0 + v) 
     y1 = min(h, y0 + v)
 
     xy = (x0, y0, x1, y1)
