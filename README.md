@@ -29,7 +29,7 @@ pip install wilds
 If you have already installed it, please check that you have the latest version:
 ```bash
 python -c "import wilds; print(wilds.__version__)"
-# This should print "1.2.2". If it doesn't, update by running:
+# This should print "2.0.0". If it doesn't, update by running:
 pip install -U wilds
 ```
 
@@ -49,15 +49,29 @@ pip install -e .
 - pytz>=2020.4
 - torch>=1.7.0
 - torch-scatter>=2.0.5
-- torch-geometric>=1.6.1
+- torch-geometric>=2.0.1
 - torchvision>=0.8.2
 - tqdm>=4.53.0
 - scikit-learn>=0.20.0
 - scipy>=1.5.4
 
 Running `pip install wilds` or `pip install -e .` will automatically check for and install all of these requirements
-except for the `torch-scatter` and `torch-geometric` packages, which require a [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
+except for the `torch-scatter` and `torch-geometric` packages, which require a 
+[quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
 We recommend torch<1.9.0 because of data loader warnings described [here](https://github.com/pytorch/pytorch/issues/57273).
+
+#### Optional dependencies
+
+##### For SwAV
+
+SwAV requires [Apex](https://github.com/NVIDIA/apex). 
+To install Apex, please follow the [README from the official SwAV repository](https://github.com/facebookresearch/swav#requirements).
+
+##### For Weights & Biases
+
+We use [Weights & Biases](https://wandb.ai/site) to track and monitor experiments. 
+To install the Weights and Biases Python package, run `pip install wandb`.
+
 
 ### Default models
 After installing the WILDS package, you can use the scripts in `examples/` to train default models on the WILDS datasets.
@@ -113,6 +127,19 @@ These are the sizes of each of our datasets, as well as their approximate time t
 | poverty         | Image    | 12                 | 14                | 5                       |
 | amazon          | Text     | 7                  | 7                 | 5                       |
 | py150           | Text     | 0.1                | 0.8               | 9.5                     |
+
+The following are the sizes of the unlabeled datasets:
+
+| Dataset command | Modality | Download size (GB) | Size on disk (GB) | 
+|-----------------|----------|--------------------|-------------------|
+| iwildcam        | Image    | 41                 | 41                |
+| camelyon17      | Image    | 69.4               | 96                |
+| ogb-molpcba     | Graph    | 1.2                | 21                |
+| globalwheat     | Image    | 103                | 108               |
+| civilcomments   | Text     | 0.3                | 0.6               |
+| poverty         | Image    | 172                | 184               |
+
+For FMoW and Amazon, the unlabeled data exists in the original datasets.
 
 While the `camelyon17` dataset is small and fast to train on, we advise against using it as the only dataset to prototype methods on, as the test performance of models trained on this dataset tend to exhibit a large degree of variability over random seeds.
 

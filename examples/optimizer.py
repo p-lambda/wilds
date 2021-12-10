@@ -35,3 +35,30 @@ def initialize_optimizer(config, model):
         raise ValueError(f'Optimizer {config.optimizer} not recognized.')
 
     return optimizer
+
+def initialize_optimizer_with_model_params(config, params):
+    if config.optimizer=='SGD':
+        optimizer = SGD(
+            params,
+            lr=config.lr,
+            weight_decay=config.weight_decay,
+            **config.optimizer_kwargs
+        )
+    elif config.optimizer=='AdamW':
+        optimizer = AdamW(
+            params,
+            lr=config.lr,
+            weight_decay=config.weight_decay,
+            **config.optimizer_kwargs
+        )
+    elif config.optimizer == 'Adam':
+        optimizer = Adam(
+            params,
+            lr=config.lr,
+            weight_decay=config.weight_decay,
+            **config.optimizer_kwargs
+        )
+    else:
+        raise ValueError(f'Optimizer {config.optimizer} not supported.')
+
+    return optimizer

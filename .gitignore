@@ -1,7 +1,9 @@
 __pycache__
+.idea
 build
+data
+logs
 dist
 venv
 wilds.egg-info
-.idea
 .DS_Store

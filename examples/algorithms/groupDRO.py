@@ -18,7 +18,7 @@ class GroupDRO(SingleModelAlgorithm):
         # check config
         assert config.uniform_over_groups
         # initialize model
-        model = initialize_model(config, d_out).to(config.device)
+        model = initialize_model(config, d_out)
         # initialize module
         super().__init__(
             config=config,
@@ -38,20 +38,7 @@ class GroupDRO(SingleModelAlgorithm):
         self.group_weights = self.group_weights/self.group_weights.sum()
         self.group_weights = self.group_weights.to(self.device)
 
-    def process_batch(self, batch):
-        """
-        A helper function for update() and evaluate() that processes the batch
-        Args:
-            - batch (tuple of Tensors): a batch of data yielded by data loaders
-        Output:
-            - results (dictionary): information about the batch
-                - g (Tensor)
-                - y_true (Tensor)
-                - metadata (Tensor)
-                - loss (Tensor)
-                - metrics (Tensor)
-              all Tensors are of size (batch_size,)
-        """
+    def process_batch(self, batch, unlabeled_batch=None):
         results = super().process_batch(batch)
         results['group_weight'] = self.group_weights
         return results

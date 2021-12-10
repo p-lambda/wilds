@@ -155,6 +155,7 @@ class PovertyMapDataset(WILDSDataset):
                  cache_size=100):
         self._version = version
         self._data_dir = self.initialize_data_dir(root_dir, download)
+        self._original_resolution = (224, 224)
 
         self._split_dict = {'train': 0, 'id_val': 1, 'id_test': 2, 'val': 3, 'test': 4}
         self._split_names = {'train': 'Train', 'id_val': 'ID Val', 'id_test': 'ID Test', 'val': 'OOD Val', 'test': 'OOD Test'}
