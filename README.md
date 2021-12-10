@@ -14,7 +14,8 @@ The WILDS package contains:
 1. Data loaders that automatically handle data downloading, processing, and splitting, and
 2. Dataset evaluators that standardize model evaluation for each dataset.
 
-In addition, the example scripts contain default models, schedulers, and complete training/evaluation code. New algorithms can be easily added and run on all of the WILDS datasets.
+In addition, the example scripts contain default models, optimizers, schedulers, and training/evaluation code. 
+New algorithms can be easily added and run on all of the WILDS datasets.
 
 For more information, please read our papers ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)) or visit [our website](https://wilds.stanford.edu).
 For questions and feedback, please post on the [discussion board](https://github.com/p-lambda/wilds/discussions).
@@ -58,7 +59,6 @@ pip install -e .
 Running `pip install wilds` or `pip install -e .` will automatically check for and install all of these requirements
 except for the `torch-scatter` and `torch-geometric` packages, which require a
 [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
-We recommend torch < 1.9.0 because of data loader warnings described [here](https://github.com/pytorch/pytorch/issues/57273).
 
 ### Example Scripts
 
