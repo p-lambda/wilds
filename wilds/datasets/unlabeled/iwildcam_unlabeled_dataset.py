@@ -15,7 +15,7 @@ from wilds.common.metrics.all_metrics import Accuracy, Recall, F1
 
 class IWildCamUnlabeledDataset(WILDSUnlabeledDataset):
     """
-    The iWildCam2020 dataset.
+    The unlabeled iWildCam2020-WILDS dataset.
     This is a modified version of the original iWildCam2020 competition dataset.
     Input (x):
         RGB images from camera traps
