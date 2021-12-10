@@ -12,7 +12,7 @@ from wilds.common.utils import map_to_id_array
 
 class AmazonUnlabeledDataset(WILDSUnlabeledDataset):
     """
-    Unlabeled Amazon dataset.
+    Unlabeled Amazon-WILDS dataset.
     This is a modified version of the 2018 Amazon Reviews dataset.
 
     Supported `split_scheme`:
