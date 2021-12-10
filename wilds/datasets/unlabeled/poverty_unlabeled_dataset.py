@@ -29,7 +29,7 @@ from wilds.datasets.poverty_dataset import (
 
 class PovertyMapUnlabeledDataset(WILDSUnlabeledDataset):
     """
-    The PovertyMap poverty measure prediction dataset.
+    The unlabeled PovertyMap-WILDS poverty measure prediction dataset.
     This is a processed version of LandSat 5/7/8 satellite imagery originally from Google Earth Engine under the names `LANDSAT/LC08/C01/T1_SR`,`LANDSAT/LE07/C01/T1_SR`,`LANDSAT/LT05/C01/T1_SR`,
     nighttime light imagery from the DMSP and VIIRS satellites (Google Earth Engine names `NOAA/DMSP-OLS/CALIBRATED_LIGHTS_V4` and `NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG`)
     and processed DHS survey metadata obtained from https://github.com/sustainlab-group/africa_poverty and originally from `https://dhsprogram.com/data/available-datasets.cfm`.
