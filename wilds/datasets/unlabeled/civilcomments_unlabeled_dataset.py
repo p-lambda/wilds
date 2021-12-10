@@ -12,7 +12,7 @@ from wilds.common.utils import map_to_id_array
 
 class CivilCommentsUnlabeledDataset(WILDSUnlabeledDataset):
     """
-    Unlabeled CivilComments-wilds toxicity classification dataset.
+    Unlabeled CivilComments-WILDS toxicity classification dataset.
     This is a modified version of the original CivilComments dataset.
 
     Supported `split_scheme`:
