@@ -275,20 +275,6 @@ def add_poverty_rand_augment_transform(config, dataset, base_transform_steps):
             ms_img,
             transforms.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.1))
 
-    # def viz(ms_img):
-    #     # This function is just to visualize the images for exploratory/debugging purposes
-    #     from wilds.datasets.poverty_dataset import _MEANS_2009_17, _STD_DEVS_2009_17
-    #     poverty_rgb_means = np.array([_MEANS_2009_17[c] for c in ['RED', 'GREEN', 'BLUE']]).reshape((-1, 1, 1))
-    #     poverty_rgb_stds = np.array([_STD_DEVS_2009_17[c] for c in ['RED', 'GREEN', 'BLUE']]).reshape((-1, 1, 1))
-    #     def unnormalize_rgb_in_poverty_ms_img(ms_img):
-    #         ms_img[:3] = (ms_img[:3] * poverty_rgb_stds) + poverty_rgb_means
-    #         return ms_img
-    #     color_transform = transforms.Compose([
-    #         transforms.Lambda(lambda ms_img: unnormalize_rgb_in_poverty_ms_img(ms_img))
-    #     ])
-    #     ms_img[:3] = color_transform(ms_img[[2,1,0]])[[2,1,0]] # bgr to rgb to bgr
-    #     return ms_img
-
     def ms_cutout(ms_img):
         def _sample_uniform(a, b):
             return torch.empty(1).uniform_(a, b).item()
