@@ -128,6 +128,19 @@ These are the sizes of each of our datasets, as well as their approximate time t
 | amazon          | Text     | 7                  | 7                 | 5                       |
 | py150           | Text     | 0.1                | 0.8               | 9.5                     |
 
+The following are the sizes of the unlabeled datasets:
+
+| Dataset command | Modality | Download size (GB) | Size on disk (GB) | 
+|-----------------|----------|--------------------|-------------------|
+| iwildcam        | Image    | 41                 | 41                |
+| camelyon17      | Image    | 69.4               | 96                |
+| ogb-molpcba     | Graph    | 1.2                | 21                |
+| globalwheat     | Image    | 103                | 108               |
+| civilcomments   | Text     | 0.3                | 0.6               |
+| poverty         | Image    | 172                | 184               |
+
+For FMoW and Amazon, the unlabeled data exists in the original datasets.
+
 While the `camelyon17` dataset is small and fast to train on, we advise against using it as the only dataset to prototype methods on, as the test performance of models trained on this dataset tend to exhibit a large degree of variability over random seeds.
 
 The image datasets (`iwildcam`, `camelyon17`, `rxrx1`, `globalwheat`, `fmow`, and `poverty`) tend to have high disk I/O usage. If training time is much slower for you than the approximate times listed above, consider checking if I/O is a bottleneck (e.g., by moving to a local disk if you are using a network drive, or by increasing the number of data loader workers). To speed up training, you could also disable evaluation at each epoch or for all splits by toggling `--evaluate_all_splits` and related arguments.

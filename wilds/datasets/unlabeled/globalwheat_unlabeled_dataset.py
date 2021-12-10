@@ -208,8 +208,8 @@ class GlobalWheatUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name = "globalwheat_unlabeled"
     _versions_dict = {
         "1.0": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0x0704b6cb2d2a4881bbee9d552d71f8ae/contents/blob/",
-            "compressed_size": None,
+            "download_url": "https://worksheets.codalab.org/rest/bundles/0x59d4c1b8b7ad45cc83e080d11d1eaf94/contents/blob/",
+            "compressed_size": 103_766_940_000,
         }
     }
 
