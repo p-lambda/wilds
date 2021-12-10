@@ -14,12 +14,14 @@ The WILDS package contains:
 1. Data loaders that automatically handle data downloading, processing, and splitting, and
 2. Dataset evaluators that standardize model evaluation for each dataset.
 
-In addition, the example scripts contain default models, allowing new algorithms to be easily added and run on all of the WILDS datasets.
+In addition, the example scripts contain default models, schedulers, and complete training/evaluation code. New algorithms can be easily added and run on all of the WILDS datasets.
 
-For more information, please read [our paper](https://arxiv.org/abs/2012.07421) or visit [our website](https://wilds.stanford.edu).
+For more information, please read our papers ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)) or visit [our website](https://wilds.stanford.edu).
 For questions and feedback, please post on the [discussion board](https://github.com/p-lambda/wilds/discussions).
 
-## Installation
+**12/2021 Update:** WILDS 2.0 now includes unlabeled data for some datasets.
+
+## Installing the WILDS Package
 
 We recommend using pip to install WILDS:
 ```bash
@@ -58,109 +60,41 @@ pip install -e .
 Running `pip install wilds` or `pip install -e .` will automatically check for and install all of these requirements
 except for the `torch-scatter` and `torch-geometric` packages, which require a 
 [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
-We recommend torch<1.9.0 because of data loader warnings described [here](https://github.com/pytorch/pytorch/issues/57273).
 
-#### Optional dependencies
+### Example Scripts
+In `examples/`, we provide a set of scripts that can be used to train models on the WILDS datasets. These scripts were also used to benchmark baselines in our papers  ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)).
 
-##### For SwAV
-
-SwAV requires [Apex](https://github.com/NVIDIA/apex). 
-To install Apex, please follow the [README from the official SwAV repository](https://github.com/facebookresearch/swav#requirements).
-
-##### For Weights & Biases
-
-We use [Weights & Biases](https://wandb.ai/site) to track and monitor experiments. 
-To install the Weights and Biases Python package, run `pip install wandb`.
-
-
-### Default models
-After installing the WILDS package, you can use the scripts in `examples/` to train default models on the WILDS datasets.
-These scripts are not part of the installed WILDS package. To use them, you should clone the repo (assuming you did not install from source):
+These scripts are not part of the installed WILDS package. To use them, after installing the WILDS package, you should clone this repo (assuming you did not install WILDS from source):
 ```bash
 git clone git@github.com:p-lambda/wilds.git
 ```
 
-To run these scripts, you will also need to install this additional dependency:
+To run these scripts, you will also need to install these additional dependencies:
 
 - transformers>=3.5.0
+- SwAV requires [Apex](https://github.com/NVIDIA/apex). 
+To install Apex, please follow the [README from the official SwAV repository](https://github.com/facebookresearch/swav#requirements).
+- We use [Weights & Biases](https://wandb.ai/site) to track and monitor experiments. 
+To install the Weights and Biases Python package, run `pip install wandb`.
 
 All baseline experiments in the paper were run on Python 3.8.5 and CUDA 10.1.
 
+## Datasets
+WILDS currently includes 10 datasets, which we've briefly listed below. For full dataset descriptions, please see our papers ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)).
 
-## Using the example scripts
+| Dataset | Modality | Labeled splits | Unlabeled splits |
+|-----------------|----------|-------------------|-------------------------|
+| iwildcam        | Image    | train, val, test, id_val, id_test | extra_unlabeled |
+| camelyon17      | Image    | train, val, test, id_val | train_unlabeled, val_unlabeled, test_unlabeled |
+| rxrx1           | Image    | train, val, test, id_test | - |
+| ogb-molpcba     | Graph    | train, val, test | train_unlabeled, val_unlabeled, test_unlabeled |
+| globalwheat     | Image    | train, val, test, id_val, id_test | train_unlabeled, val_unlabeled, test_unlabeled, extra_unlabeled |
+| civilcomments   | Text     | train, val, test | extra_unlabeled |
+| fmow            | Image    | train, val, test, id_val, id_test | train_unlabeled, val_unlabeled, test_unlabeled |
+| poverty         | Image    | train, val, test, id_val, id_test | train_unlabeled, val_unlabeled, test_unlabeled |
+| amazon          | Text     | train, val, test, id_val, id_test | val_unlabeled, test_unlabeled, extra_unlabeled |
+| py150           | Text     | train, val, test, id_val, id_test | - |
 
-In the `examples/` folder, we provide a set of scripts that can be used to download WILDS datasets and train models on them.
-These scripts are configured with the default models and hyperparameters that we used for all of the baselines described in our paper. All baseline results in the paper can be easily replicated with commands like:
-
-```bash
-python examples/run_expt.py --dataset iwildcam --algorithm ERM --root_dir data
-python examples/run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data
-```
-
-The scripts are set up to facilitate general-purpose algorithm development: new algorithms can be added to `examples/algorithms` and then run on all of the WILDS datasets using the default models.
-
-### Downloading and training on the WILDS datasets
-The first time you run these scripts, you might need to download the datasets. You can do so with the `--download` argument, for example:
-```
-python examples/run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data --download
-```
-
-Alternatively, you can use the standalone `wilds/download_datasets.py` script to download the datasets, for example:
-
-```bash
-python wilds/download_datasets.py --root_dir data
-```
-
-This will download all datasets to the specified `data` folder. You can also use the `--datasets` argument to download particular datasets.
-
-These are the sizes of each of our datasets, as well as their approximate time taken to train and evaluate the default model for a single ERM run using a NVIDIA V100 GPU.
-
-| Dataset command | Modality | Download size (GB) | Size on disk (GB) | Train+eval time (Hours) |
-|-----------------|----------|--------------------|-------------------|-------------------------|
-| iwildcam        | Image    | 11                 | 25                | 7                       |
-| camelyon17      | Image    | 10                 | 15                | 2                       |
-| rxrx1           | Image    | 7                  | 7                 | 11                      |
-| ogb-molpcba     | Graph    | 0.04               | 2                 | 15                      |
-| globalwheat     | Image    | 10                 | 10                | 2                       |
-| civilcomments   | Text     | 0.1                | 0.3               | 4.5                     |
-| fmow            | Image    | 50                 | 55                | 6                       |
-| poverty         | Image    | 12                 | 14                | 5                       |
-| amazon          | Text     | 7                  | 7                 | 5                       |
-| py150           | Text     | 0.1                | 0.8               | 9.5                     |
-
-The following are the sizes of the unlabeled datasets:
-
-| Dataset command | Modality | Download size (GB) | Size on disk (GB) | 
-|-----------------|----------|--------------------|-------------------|
-| iwildcam        | Image    | 41                 | 41                |
-| camelyon17      | Image    | 69.4               | 96                |
-| ogb-molpcba     | Graph    | 1.2                | 21                |
-| globalwheat     | Image    | 103                | 108               |
-| civilcomments   | Text     | 0.3                | 0.6               |
-| poverty         | Image    | 172                | 184               |
-
-For FMoW and Amazon, the unlabeled data exists in the original datasets.
-
-While the `camelyon17` dataset is small and fast to train on, we advise against using it as the only dataset to prototype methods on, as the test performance of models trained on this dataset tend to exhibit a large degree of variability over random seeds.
-
-The image datasets (`iwildcam`, `camelyon17`, `rxrx1`, `globalwheat`, `fmow`, and `poverty`) tend to have high disk I/O usage. If training time is much slower for you than the approximate times listed above, consider checking if I/O is a bottleneck (e.g., by moving to a local disk if you are using a network drive, or by increasing the number of data loader workers). To speed up training, you could also disable evaluation at each epoch or for all splits by toggling `--evaluate_all_splits` and related arguments.
-
-### Evaluating trained models
-We also provide an evaluation script that aggregates prediction CSV files for different replicates and reports on their combined evaluation. To use this, run:
-
-```bash
-python examples/evaluate.py <predictions_dir> <output_dir> --root-dir <root_dir>
-```
-
-where `<predictions_dir>` is the path to your predictions directory, `<output_dir>` is where the results JSON will be writte, and `<root_dir>` is the dataset root directory.
-The predictions directory should have a subdirectory for each dataset
-(e.g. `iwildcam`) containing prediction CSV files to evaluate; see our [submission guidelines](https://wilds.stanford.edu/submit/) for the format.
-The evaluation script will skip over any datasets that has missing prediction files.
-Any dataset not in `<root_dir>` will be downloaded to `<root_dir>`.
-
-### Reproducibility
-We have an [executable version](https://wilds.stanford.edu/codalab) of our paper on CodaLab that contains the exact commands, code, and data for the experiments reported in our paper, which rely on these scripts. Trained model weights for all datasets can also be found there.
-All configurations and hyperparameters can also be found in the `examples/configs` folder of this repo, and dataset-specific parameters are in `examples/configs/datasets.py`.
 
 ## Using the WILDS package
 ### Data
@@ -191,6 +125,38 @@ We discuss data loading in more detail in [#Data loading](#data-loading).
 ```
 
 The `metadata` contains information like the domain identity, e.g., which camera a photo was taken from, or which hospital the patient's data came from, etc., as well as other metadata.
+
+**Optional Unlabeled Data.** As of WILDS 2.0, some datasets also provide optional unlabeled data. This snippet shows how to load this unlabeled data.
+
+```py
+>>> from wilds import get_dataset
+>>> from wilds.common.data_loaders import get_train_loader
+>>> import torchvision.transforms as transforms
+
+# Load the full dataset, and download it if necessary
+>>> dataset = get_dataset(dataset='iwildcam', download=True)
+
+# Get the training set
+>>> train_data = dataset.get_subset('train',
+...                                 transform=transforms.Compose([transforms.Resize((448,448)),
+...                                                               transforms.ToTensor()]))
+
+# Prepare the standard data loader
+>>> train_loader = get_train_loader('standard', train_data, batch_size=16)
+
+# (Optional) Load an unlabeled split
+>>> unlabeled_data = dataset.get_subset(('test_unlabeled',
+...                                       unlabeled=True,
+...                                       transform=transforms.Compose([transforms.Resize((448,448)),
+...                                                                     transforms.ToTensor()]))
+>>> unlabeled_loader = get_train_loader('standard', unlabeled_data, batch_size=16)
+
+# Train loop
+>>> for labeled_batch, unlabeled_batch in zip(train_loader, unlabeled_loader):
+...   x, y, metadata = labeled_batch
+...   unlabeled_x, unlabeled_metadata = unlabeled_batch
+...   ...
+```
 
 ### Domain information
 To allow algorithms to leverage domain annotations as well as other groupings over the available metadata, the WILDS package provides `Grouper` objects.
@@ -276,13 +242,118 @@ Invoking the `eval` method of each dataset yields all metrics reported in the pa
 ```
 Most `eval` methods take in predicted labels for `all_y_pred` by default, but the default inputs vary across datasets and are documented in the `eval` docstrings of the corresponding dataset class.
 
+## Using the example scripts
+In `examples/`, we provide a set of scripts that can be used to train models on the WILDS datasets.
+The scripts are configured to default to the models and hyperparameters from the papers. 
+Baseline results can thus be easily replicated with commands like:
+
+```bash
+python examples/run_expt.py --dataset iwildcam --algorithm ERM --root_dir data
+python examples/run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data
+python examples/run_expt.py --dataset fmow --algorithm DANN --unlabeled_split test_unlabeled --root_dir data
+```
+
+### Downloading and training on the WILDS datasets
+The first time you run these scripts, you might need to download the datasets. You can do so with the `--download` argument, for example:
+```python
+# downloads (labeled) dataset
+python examples/run_expt.py --dataset globalwheat --algorithm groupDRO --root_dir data --download 
+
+# additionally downloads all unlabeled data
+python examples/run_expt.py --dataset globalwheat --algorithm groupDRO --root_dir data --download  --unlabeled_split [...]
+```
+Note that downloading the large amount of unlabeled data is optional; unlabeled data will only be downloaded if some `--unlabeled_split` is set. (It does not matter which `--unlabeled_split` is set; all unlabeled data will be downloaded together.) 
+
+Alternatively, you can use the standalone `wilds/download_datasets.py` script to download the datasets, for example:
+
+```bash
+# downloads (labeled) data
+python wilds/download_datasets.py --root_dir data
+
+# downloads (unlabeled) data
+python wilds/download_datasets.py --root_dir data --unlabeled
+```
+
+This will download all datasets to the specified `data` folder. You can also use the `--datasets` argument to download particular datasets.
+
+These are the sizes of each of our datasets, as well as their approximate time taken to train and evaluate the default model for a single ERM run using a NVIDIA V100 GPU.
+
+| Dataset command | Modality | Download size (GB) | Size on disk (GB) | Train+eval time (Hours) |
+|-----------------|----------|--------------------|-------------------|-------------------------|
+| iwildcam        | Image    | 11                 | 25                | 7                       |
+| camelyon17      | Image    | 10                 | 15                | 2                       |
+| rxrx1           | Image    | 7                  | 7                 | 11                      |
+| ogb-molpcba     | Graph    | 0.04               | 2                 | 15                      |
+| globalwheat     | Image    | 10                 | 10                | 2                       |
+| civilcomments   | Text     | 0.1                | 0.3               | 4.5                     |
+| fmow            | Image    | 50                 | 55                | 6                       |
+| poverty         | Image    | 12                 | 14                | 5                       |
+| amazon          | Text     | 7                  | 7                 | 5                       |
+| py150           | Text     | 0.1                | 0.8               | 9.5                     |
+
+The following are the sizes of the unlabeled data bundles:
+
+| Dataset command | Modality | Download size (GB) | Size on disk (GB) | 
+|-----------------|----------|--------------------|-------------------|
+| iwildcam        | Image    | 41                 | 41                |
+| camelyon17      | Image    | 69.4               | 96                |
+| ogb-molpcba     | Graph    | 1.2                | 21                |
+| globalwheat     | Image    | 103                | 108               |
+| civilcomments   | Text     | 0.3                | 0.6               |
+| poverty         | Image    | 172                | 184               |
+
+For FMoW and Amazon, the unlabeled data exists in the original datasets.
+
+While the `camelyon17` dataset is small and fast to train on, we advise against using it as the only dataset to prototype methods on, as the test performance of models trained on this dataset tend to exhibit a large degree of variability over random seeds.
+
+The image datasets (`iwildcam`, `camelyon17`, `rxrx1`, `globalwheat`, `fmow`, and `poverty`) tend to have high disk I/O usage. If training time is much slower for you than the approximate times listed above, consider checking if I/O is a bottleneck (e.g., by moving to a local disk if you are using a network drive, or by increasing the number of data loader workers). To speed up training, you could also disable evaluation at each epoch or for all splits by toggling `--evaluate_all_splits` and related arguments.
+
+### Algorithms
+In the `examples/algorithms` folder, we provide implementations of the adaptation algorithms benchmarked in our papers ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)).
+All algorithms train on labeled data from a WILDS dataset's *train* split.
+Some algorithms are designed to also leverage unlabeled data. To load unlabeled data, specify an `--unlabeled_split` when running. 
+
+| Algorithm command | Hyperparameters | Notes | See WILDS paper |
+|-----------------|----------|--------------------|------|
+| ERM        | - | Only uses labeled data | ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)) | 
+| [groupDRO](https://arxiv.org/abs/1911.08731) | `group_dro_step_size` | Only uses labeled data | ([1](https://arxiv.org/abs/2012.07421)) |
+| [deepCORAL](https://arxiv.org/abs/1511.05547) | `coral_penalty_weight` | Can optionally use unlabeled data | ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)) |
+| [IRM](https://arxiv.org/abs/1907.02893)  | `irm_lambda`, `irm_penalty_anneal_iters` | Only uses labeled data | ([1](https://arxiv.org/abs/2012.07421)) |
+| [DANN](https://arxiv.org/abs/1505.07818) | `dann_penalty_weight`, `dann_classifier_lr`, `dann_featurizer_lr`, `dann_discriminator_lr` | Can use unlabeled data | ([2](https://arxiv.org/abs/2112.05090)) |
+| [AFN](https://arxiv.org/abs/1811.07456)  | `afn_penalty_weight`, `safn_delta_r`, `hafn_r` | Designed to use unlabeled data | ([2](https://arxiv.org/abs/2112.05090)) |
+| [FixMatch](https://arxiv.org/abs/2001.07685) | `self_training_lambda`, `self_training_threshold` | Designed to use unlabeled data | ([2](https://arxiv.org/abs/2112.05090)) |
+| PseudoLabel | `self_training_threshold`, `pseudolabel_T2` | Designed to use unlabeled data | ([2](https://arxiv.org/abs/2112.05090)) |
+| [NoisyStudent](https://arxiv.org/abs/1911.04252) | `soft_pseudolabels`,  `noisystudent_dropout_rate` | Designed to use unlabeled data | ([2](https://arxiv.org/abs/2112.05090)) |
+
+The scripts are set up to facilitate general-purpose algorithm development: new algorithms can be added to `examples/algorithms` and then run on all of the WILDS datasets using the default models.
+
+### Evaluating trained models
+We also provide an evaluation script that aggregates prediction CSV files for different replicates and reports on their combined evaluation. To use this, run:
+
+```bash
+python examples/evaluate.py <predictions_dir> <output_dir> --root-dir <root_dir>
+```
+
+where `<predictions_dir>` is the path to your predictions directory, `<output_dir>` is where the results JSON will be writte, and `<root_dir>` is the dataset root directory.
+The predictions directory should have a subdirectory for each dataset
+(e.g. `iwildcam`) containing prediction CSV files to evaluate; see our [submission guidelines](https://wilds.stanford.edu/submit/) for the format.
+The evaluation script will skip over any datasets that has missing prediction files.
+Any dataset not in `<root_dir>` will be downloaded to `<root_dir>`.
+
+### Reproducibility
+We have an [executable version](https://wilds.stanford.edu/codalab) of our paper on CodaLab that contains the exact commands, code, and data for the experiments reported in our paper, which rely on these scripts. Trained model weights for all datasets can also be found there.
+All configurations and hyperparameters can also be found in the `examples/configs` folder of this repo, and dataset-specific parameters are in `examples/configs/datasets.py`.
+
+
 ## Leaderboard
 If you are developing new training algorithms and/or models on WILDS, please consider submitting them to our [public leaderboard](https://wilds.stanford.edu/leaderboard/).
 
-## Citing WILDS
-If you use WILDS datasets in your work, please cite [our paper](https://arxiv.org/abs/2012.07421) ([Bibtex](https://wilds.stanford.edu/assets/files/wilds_bib.txt)):
+## Citing WILDS ([Bibtex](https://wilds.stanford.edu/assets/files/wilds_bib.txt))
+If you use WILDS datasets in your work, please cite our paper ([1](https://arxiv.org/abs/2012.07421)). If you use unlabeled data from the WILDS datasets, please also cite ([2](https://arxiv.org/abs/2112.05090)):
 
-- **WILDS: A Benchmark of in-the-Wild Distribution Shifts.** Pang Wei Koh*, Shiori Sagawa*, Henrik Marklund, Sang Michael Xie, Marvin Zhang, Akshay Balsubramani, Weihua Hu, Michihiro Yasunaga, Richard Lanas Phillips, Irena Gao, Tony Lee, Etienne David, Ian Stavness, Wei Guo, Berton A. Earnshaw, Imran S. Haque, Sara Beery, Jure Leskovec, Anshul Kundaje, Emma Pierson, Sergey Levine, Chelsea Finn, and Percy Liang. ICML 2021.
+1. **WILDS: A Benchmark of in-the-Wild Distribution Shifts.** Pang Wei Koh*, Shiori Sagawa*, Henrik Marklund, Sang Michael Xie, Marvin Zhang, Akshay Balsubramani, Weihua Hu, Michihiro Yasunaga, Richard Lanas Phillips, Irena Gao, Tony Lee, Etienne David, Ian Stavness, Wei Guo, Berton A. Earnshaw, Imran S. Haque, Sara Beery, Jure Leskovec, Anshul Kundaje, Emma Pierson, Sergey Levine, Chelsea Finn, and Percy Liang. ICML 2021.
+
+2. **Extending the WILDS Benchmark for Unsupervised Adaptation.** Shiori Sagawa*, Pang Wei Koh*, Tony Lee*, Irena Gao*, Sang Michael Xie, Kendrick Shen, Ananya Kumar, Weihua Hu, Michihiro Yasunaga, Henrik Marklund, Sara Beery, Etienne David, Ian Stavness, Wei Guo, Jure Leskovec, Kate Saenko, Tatsunori Hashimoto, Sergey Levine, Chelsea Finn, and Percy Liang. NeurIPS 2021 Workshop on Distribution Shifts.
 
 Please also cite the original papers that introduce the datasets, as listed on the [datasets page](https://wilds.stanford.edu/datasets/).
 
