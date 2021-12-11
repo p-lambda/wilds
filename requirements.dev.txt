@@ -1,2 +1,0 @@
-black==20.8b1       # Python code formatter
-mypy==0.782         # Python static type checker
