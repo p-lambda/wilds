@@ -61,7 +61,7 @@ class GroupDRO(SingleModelAlgorithm):
             return_dict=False)
         return group_losses @ self.group_weights
 
-    def _update(self, results):
+    def _update(self, results, should_step=True):
         """
         Process the batch, update the log, and update the model, group weights, and scheduler.
         Args:
@@ -88,4 +88,4 @@ class GroupDRO(SingleModelAlgorithm):
         # save updated group weights
         results['group_weight'] = self.group_weights
         # update model
-        super()._update(results)
+        super()._update(results, should_step=should_step)
