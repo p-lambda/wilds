@@ -40,9 +40,6 @@ try:
 except Exception as e:
     print("wandb not found. Proceeding without it...")
 
-# TODO: This is needed to test the WILDS package locally. Remove later -Tony
-sys.path.insert(1, os.path.join(sys.path[0], '../../..'))
-sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 
 import wilds
 from src.utils import (

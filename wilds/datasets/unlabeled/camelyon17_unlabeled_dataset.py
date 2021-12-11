@@ -104,7 +104,7 @@ class Camelyon17UnlabeledDataset(WILDSUnlabeledDataset):
         self._metadata_df.loc[test_center_mask, "split"] = self.split_dict[
             "test_unlabeled"
         ]
-        # Centers 1 and 2 have 600,030 labeled examples each.
+        # Centers 1 and 2 have 600,030 unlabeled examples each.
         # The rest of the unlabeled data is used for the train_unlabeled split (1,799,247 total).
         assert self._metadata_df.loc[val_center_mask].shape[0] == 600_030
         assert self._metadata_df.loc[test_center_mask].shape[0] == 600_030

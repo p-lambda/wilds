@@ -109,7 +109,6 @@ dataset_defaults = {
         'lr': 1e-5,
         'weight_decay': 0.01,
         'n_epochs': 5,
-        # TODO: double check n_groups_per_batch -Tony
         'n_groups_per_batch': 1,
         'unlabeled_n_groups_per_batch': 1,
         'algo_log_metric': 'accuracy',
@@ -247,7 +246,6 @@ dataset_defaults = {
         'split_scheme': 'official',
         'scheduler': None,
         'groupby_fields': ['location',],
-        # TODO: double check this -Tony
         'n_groups_per_batch': 2,
         'unlabeled_n_groups_per_batch': 2,
         'irm_lambda': 1.,
@@ -273,7 +271,7 @@ dataset_defaults = {
         'unlabeled_batch_size': 32,
         'lr': 1e-3,
         'weight_decay': 0.,
-        'n_epochs': 200,
+        'n_epochs': 100,
         'n_groups_per_batch': 4,
         'unlabeled_n_groups_per_batch': 4,
         'irm_lambda': 1.,
@@ -334,7 +332,7 @@ dataset_defaults = {
         'unlabeled_batch_size': 64,
         'lr': 0.001,
         'weight_decay': 0.0,
-        'n_epochs': 150,
+        'n_epochs': 200,
         'n_groups_per_batch': 8,
         'unlabeled_n_groups_per_batch': 4,
         'irm_lambda': 1.0,
