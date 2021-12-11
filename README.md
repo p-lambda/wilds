@@ -60,7 +60,7 @@ Running `pip install wilds` or `pip install -e .` will automatically check for a
 except for the `torch-scatter` and `torch-geometric` packages, which require a
 [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
 
-### Example Scripts
+### Example scripts
 
 In `examples/`, we provide a set of scripts that can be used to train models on the WILDS datasets. These scripts were also used to benchmark baselines in our papers ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)).
 
@@ -118,31 +118,6 @@ We discuss data loading in more detail in [#Data loading](#data-loading).
 # Prepare the standard data loader
 >>> train_loader = get_train_loader('standard', train_data, batch_size=16)
 
-# Train loop
->>> for x, y_true, metadata in train_loader:
-...   ...
-```
-
-The `metadata` contains information like the domain identity, e.g., which camera a photo was taken from, or which hospital the patient's data came from, etc., as well as other metadata.
-
-**Optional Unlabeled Data.** As of WILDS 2.0, some datasets also provide optional unlabeled data. This snippet shows how to load this unlabeled data.
-
-```py
->>> from wilds import get_dataset
->>> from wilds.common.data_loaders import get_train_loader
->>> import torchvision.transforms as transforms
-
-# Load the full dataset, and download it if necessary
->>> dataset = get_dataset(dataset='iwildcam', download=True)
-
-# Get the training set
->>> train_data = dataset.get_subset('train',
-...                                 transform=transforms.Compose([transforms.Resize((448,448)),
-...                                                               transforms.ToTensor()]))
-
-# Prepare the standard data loader
->>> train_loader = get_train_loader('standard', train_data, batch_size=16)
-
 # (Optional) Load an unlabeled split
 >>> unlabeled_data = dataset.get_subset(('test_unlabeled',
 ...                                       unlabeled=True,
@@ -156,6 +131,8 @@ The `metadata` contains information like the domain identity, e.g., which camera
 ...   unlabeled_x, unlabeled_metadata = unlabeled_batch
 ...   ...
 ```
+
+The `metadata` contains information like the domain identity, e.g., which camera a photo was taken from, or which hospital the patient's data came from, etc., as well as other metadata.
 
 ### Domain information
 To allow algorithms to leverage domain annotations as well as other groupings over the available metadata, the WILDS package provides `Grouper` objects.
