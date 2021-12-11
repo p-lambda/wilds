@@ -48,7 +48,7 @@ These scripts are not part of the installed WILDS package. To use them, you shou
 git clone git@github.com:p-lambda/wilds.git
 ```
 
-### WILDS requirements
+### Requirements
 The WILDS package depends on the following requirements:
 
 - numpy>=1.19.1
