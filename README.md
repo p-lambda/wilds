@@ -17,7 +17,7 @@ The WILDS package contains:
 In addition, the example scripts contain default models, optimizers, schedulers, and training/evaluation code. 
 New algorithms can be easily added and run on all of the WILDS datasets.
 
-For more information, please read our papers ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)) or visit [our website](https://wilds.stanford.edu).
+For more information, please visit [our website](https://wilds.stanford.edu) or read the main WILDS paper ([1](https://arxiv.org/abs/2012.07421)) and its follow-up integrating unlabeled data ([2](https://arxiv.org/abs/2112.05090)).
 For questions and feedback, please post on the [discussion board](https://github.com/p-lambda/wilds/discussions).
 
 ## Installation
@@ -41,7 +41,16 @@ cd wilds
 pip install -e .
 ```
 
-### Requirements
+In `examples/`, we provide a set of scripts that can be used to train models on the WILDS datasets. These scripts were also used to benchmark baselines in our papers ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)).
+
+These scripts are not part of the installed WILDS package. To use them, you should clone this repo:
+```bash
+git clone git@github.com:p-lambda/wilds.git
+```
+
+### WILDS requirements
+The WILDS package depends on the following requirements:
+
 - numpy>=1.19.1
 - ogb>=1.2.6
 - outdated>=0.2.0
@@ -60,16 +69,8 @@ Running `pip install wilds` or `pip install -e .` will automatically check for a
 except for the `torch-scatter` and `torch-geometric` packages, which require a
 [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
 
-### Example scripts
-
-In `examples/`, we provide a set of scripts that can be used to train models on the WILDS datasets. These scripts were also used to benchmark baselines in our papers ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)).
-
-These scripts are not part of the installed WILDS package. To use them, after installing the WILDS package, you should clone this repo (assuming you did not install WILDS from source):
-```bash
-git clone git@github.com:p-lambda/wilds.git
-```
-
-To run these scripts, you will also need to install these additional dependencies:
+### Example script requirements
+To run the example scripts, you will also need to install these additional dependencies:
 
 - transformers>=3.5.0
 - SwAV requires [Apex](https://github.com/NVIDIA/apex).
@@ -219,15 +220,15 @@ Invoking the `eval` method of each dataset yields all metrics reported in the pa
 Most `eval` methods take in predicted labels for `all_y_pred` by default, but the default inputs vary across datasets and are documented in the `eval` docstrings of the corresponding dataset class.
 
 ## Using the example scripts
-In `examples/`, we provide a set of scripts that can be used to train models on the WILDS datasets.
-The scripts are configured to default to the models and hyperparameters from the papers.
-Baseline results can thus be easily replicated with commands like:
+In `examples/`, we provide a set of scripts that can be used to train models on the WILDS datasets. 
 
 ```bash
 python examples/run_expt.py --dataset iwildcam --algorithm ERM --root_dir data
 python examples/run_expt.py --dataset civilcomments --algorithm groupDRO --root_dir data
 python examples/run_expt.py --dataset fmow --algorithm DANN --unlabeled_split test_unlabeled --root_dir data
 ```
+
+The scripts are configured to use the default models and reasonable hyperparameters. For exact hyperparameter settings used in our papers, please see [our CodaLab executable paper](https://wilds.stanford.edu/codalab).
 
 ### Downloading and training on the WILDS datasets
 The first time you run these scripts, you might need to download the datasets. You can do so with the `--download` argument, for example:
@@ -280,7 +281,7 @@ The following are the sizes of the unlabeled data bundles:
 | poverty         | Image    | 172                | 184               |
 | amazon\*        | Text     | 7                  | 7                 |
 
-\* The unlabeled dataset is the same as the labeled dataset.
+<sup> \* These unlabeled datasets are downloaded simultaneously with the labeled data and do not need to be downloaded separately. </sup>
 
 While the `camelyon17` dataset is small and fast to train on, we advise against using it as the only dataset to prototype methods on, as the test performance of models trained on this dataset tend to exhibit a large degree of variability over random seeds.
 
@@ -290,6 +291,8 @@ The image datasets (`iwildcam`, `camelyon17`, `rxrx1`, `globalwheat`, `fmow`, an
 In the `examples/algorithms` folder, we provide implementations of the adaptation algorithms benchmarked in our papers ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)).
 All algorithms train on labeled data from a WILDS dataset's _train_ split.
 Some algorithms are designed to also leverage unlabeled data. To load unlabeled data, specify an `--unlabeled_split` when running.
+
+In addition to shared hyperparameters such as `lr`, `weight_decay`, `batch_size`, and `unlabeled_batch_size`, the scripts also take in command line arguments for algorithm-specific hyperparameters.
 
 | Algorithm command                                | Hyperparameters                                                                            | Notes                             | See WILDS paper                                                                |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------ | --------------------------------- | ------------------------------------------------------------------------------ |
@@ -303,7 +306,7 @@ Some algorithms are designed to also leverage unlabeled data. To load unlabeled 
 | PseudoLabel                                      | `self_training_lambda`, `self_training_threshold`, `pseudolabel_T2`                        | Designed to use unlabeled data    | ([2](https://arxiv.org/abs/2112.05090))                                        |
 | [NoisyStudent](https://arxiv.org/abs/1911.04252) | `soft_pseudolabels`, `noisystudent_dropout_rate`                                           | Designed to use unlabeled data    | ([2](https://arxiv.org/abs/2112.05090))                                        |
 
-The scripts are set up to facilitate general-purpose algorithm development: new algorithms can be added to `examples/algorithms` and then run on all of the WILDS datasets using the default models.
+The repository is set up to facilitate general-purpose algorithm development: new algorithms can be added to `examples/algorithms` and then run on all of the WILDS datasets using the default models.
 
 ### Evaluating trained models
 We also provide an evaluation script that aggregates prediction CSV files for different replicates and reports on their combined evaluation. To use this, run:
