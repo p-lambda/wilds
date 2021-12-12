@@ -62,7 +62,7 @@ The WILDS package depends on the following requirements:
 - scipy>=1.5.4
 
 Running `pip install wilds` or `pip install -e .` will automatically check for and install all of these requirements
-except for the `torch-scatter` and `torch-geometric` packages, which require a
+**except for the `torch-scatter` and `torch-geometric` packages**, which require a
 [quick manual install](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-binaries).
 
 ### Example script requirements
