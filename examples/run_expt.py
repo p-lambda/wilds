@@ -435,7 +435,7 @@ def main():
                 (f'\nUsing gradient_accumulation_steps {config.gradient_accumulation_steps} means that')
                 + (f' the effective labeled batch size is {config.batch_size * config.gradient_accumulation_steps}')
                 + (f' and the effective unlabeled batch size is {config.unlabeled_batch_size * config.gradient_accumulation_steps}' 
-                    if config.unlabeled_dataset and config.unlabeled_batch_size else '')
+                    if unlabeled_dataset and config.unlabeled_batch_size else '')
                 + ('. Updates behave as if torch loaders have drop_last=False\n')
             )
 
