@@ -147,12 +147,12 @@ LOCATIONS = [
     'VLB',
     'VSC',
     'Wad Medani',
-    "Bignan",
-    "Clermont",
-    "Encrambade",
-    "NMBU",
-    "OLM",
-    "Eschikon",
+    'Eschikon',
+    'Bignan',
+    'Clermont',
+    'Encrambade',
+    'NMBU',
+    'OLM',    
 ]
 
 STAGES = [
