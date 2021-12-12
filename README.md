@@ -41,12 +41,8 @@ cd wilds
 pip install -e .
 ```
 
-In `examples/`, we provide a set of scripts that can be used to train models on the WILDS datasets. These scripts were also used to benchmark baselines in our papers ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)).
-
-These scripts are not part of the installed WILDS package. To use them, you should clone this repo:
-```bash
-git clone git@github.com:p-lambda/wilds.git
-```
+In `examples/`, we provide a set of scripts that can be used to train models on the WILDS datasets. These scripts were also used to benchmark baselines in our papers ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)). 
+These scripts are not part of the installed WILDS package. To use them, you should install from source, as described above.
 
 ### Requirements
 The WILDS package depends on the following requirements:
