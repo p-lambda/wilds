@@ -333,7 +333,7 @@ If you use unlabeled data from the WILDS datasets, please also cite:
 
 2. [**Extending the WILDS Benchmark for Unsupervised Adaptation.**](https://arxiv.org/abs/2112.05090) Shiori Sagawa*, Pang Wei Koh*, Tony Lee*, Irena Gao*, Sang Michael Xie, Kendrick Shen, Ananya Kumar, Weihua Hu, Michihiro Yasunaga, Henrik Marklund, Sara Beery, Etienne David, Ian Stavness, Wei Guo, Jure Leskovec, Kate Saenko, Tatsunori Hashimoto, Sergey Levine, Chelsea Finn, and Percy Liang. NeurIPS 2021 Workshop on Distribution Shifts.
 
-In addition, please cite the original papers that introduce the datasets, as listed on the [datasets page](https://wilds.stanford.edu/datasets/).
+In addition, please cite the original papers that introduced the datasets, as listed on the [datasets page](https://wilds.stanford.edu/datasets/).
 
 ## Acknowledgements
 The design of the WILDS benchmark was inspired by the [Open Graph Benchmark](https://ogb.stanford.edu/), and we are grateful to the Open Graph Benchmark team for their advice and help in setting up WILDS.
