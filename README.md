@@ -285,7 +285,7 @@ The image datasets (`iwildcam`, `camelyon17`, `rxrx1`, `globalwheat`, `fmow`, an
 
 ### Algorithms
 In the `examples/algorithms` folder, we provide implementations of the adaptation algorithms benchmarked in our papers ([1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)).
-All algorithms train on labeled data from a WILDS dataset's _train_ split.
+All algorithms train on labeled data from a WILDS dataset's `train` split.
 Some algorithms are designed to also leverage unlabeled data. To load unlabeled data, specify an `--unlabeled_split` when running.
 
 In addition to shared hyperparameters such as `lr`, `weight_decay`, `batch_size`, and `unlabeled_batch_size`, the scripts also take in command line arguments for algorithm-specific hyperparameters.
