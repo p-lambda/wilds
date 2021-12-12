@@ -71,7 +71,7 @@ To run the example scripts, you will also need to install these additional depen
 - transformers>=3.5.0
 - SwAV requires [Apex](https://github.com/NVIDIA/apex).
   To install Apex, please follow the [README from the official SwAV repository](https://github.com/facebookresearch/swav#requirements).
-- We use [Weights & Biases](https://wandb.ai/site) to track and monitor experiments.
+- Our code supports the optional use of [Weights & Biases](https://wandb.ai/site) to track and monitor experiments.
   To install the Weights and Biases Python package, run `pip install wandb`.
 
 All baseline experiments in the paper were run on Python 3.8.5 and CUDA 10.1.
