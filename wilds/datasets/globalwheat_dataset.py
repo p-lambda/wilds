@@ -94,14 +94,14 @@ LOCATIONS = [
     'VLB',
     'VSC',
     'Wad Medani',
+    'Eschikon'
 ]
 
 STAGES = [
     'Filling',
-    'Filling - Ripening',
+    'Filling-Ripening',
     'multiple',
     'Post-flowering',
-    'Post-Flowering',
     'Ripening',
 ]
 
@@ -109,7 +109,6 @@ class GlobalWheatDataset(WILDSDataset):
     """
     The GlobalWheat-WILDS wheat head localization dataset.
     This is a modified version of the original Global Wheat Head Dataset 2021.
-
     Supported `split_scheme`:
         - 'official'
         - 'official_with_subsampled_test'
@@ -152,7 +151,10 @@ class GlobalWheatDataset(WILDSDataset):
     _versions_dict = {
         '1.0': {
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x443fbcb18eeb4f80b5ea4a9f77795168/contents/blob/',
-            'compressed_size': 10_286_120_960}
+            'compressed_size': 10_286_120_960},
+        '1.1': {
+            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x36e16907b7254571b708b725f8beae52/contents/blob/',
+            'compressed_size': 10_284_949_504},
         }
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):

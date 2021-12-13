@@ -70,6 +70,7 @@ class FMoWDataset(WILDSDataset):
 
         self._split_dict = {'train': 0, 'id_val': 1, 'id_test': 2, 'val': 3, 'test': 4}
         self._split_names = {'train': 'Train', 'id_val': 'ID Val', 'id_test': 'ID Test', 'val': 'OOD Val', 'test': 'OOD Test'}
+        self._source_domain_splits = [0, 1, 2]
 
         self.oracle_training_set = False
         if split_scheme == 'official':
