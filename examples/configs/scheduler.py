@@ -17,6 +17,9 @@ scheduler_defaults = {
             'step_size': 1,
         }
     },
+    'FixMatchLR': {
+        'scheduler_kwargs': {},
+    },
     'MultiStepLR': {
         'scheduler_kwargs':{
             'gamma': 0.1,

@@ -124,7 +124,7 @@ class Py150Dataset(WILDSDataset):
 
         #y_pred: [n_samples, seqlen-1]
         #y_true: [n_samples, seqlen-1]
-        tok_type = metadata[:, 1:] #[n_samples, seqlen-1]
+        tok_type = metadata[:, 1:-1] #[n_samples, seqlen-1]. must splice off coarse domain info at end.
         results = {}
         results_str = ""
 

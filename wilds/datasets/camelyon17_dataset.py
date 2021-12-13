@@ -7,6 +7,13 @@ from wilds.datasets.wilds_dataset import WILDSDataset
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import Accuracy
 
+
+# Note that the hospital numbering here is different from what's in the paper,
+# where to avoid confusing readers we used a 1-indexed scheme and just labeled the test hospital as 5.
+# Here, the numbers are 0-indexed.
+TEST_CENTER = 2
+VAL_CENTER = 1
+
 class Camelyon17Dataset(WILDSDataset):
     """
     The CAMELYON17-WILDS histopathology dataset.
@@ -74,13 +81,6 @@ class Camelyon17Dataset(WILDSDataset):
             for patient, node, x, y in
             self._metadata_df.loc[:, ['patient', 'node', 'x_coord', 'y_coord']].itertuples(index=False, name=None)]
 
-        # Extract splits
-        # Note that the hospital numbering here is different from what's in the paper,
-        # where to avoid confusing readers we used a 1-indexed scheme and just labeled the test hospital as 5.
-        # Here, the numbers are 0-indexed.
-        test_center = 2
-        val_center = 1
-
         self._split_dict = {
             'train': 0,
             'id_val': 1,
@@ -93,10 +93,12 @@ class Camelyon17Dataset(WILDSDataset):
             'test': 'Test',
             'val': 'Validation (OOD)',
         }
+
+        # Extract splits
         centers = self._metadata_df['center'].values.astype('long')
         num_centers = int(np.max(centers)) + 1
-        val_center_mask = (self._metadata_df['center'] == val_center)
-        test_center_mask = (self._metadata_df['center'] == test_center)
+        val_center_mask = (self._metadata_df['center'] == VAL_CENTER)
+        test_center_mask = (self._metadata_df['center'] == TEST_CENTER)
         self._metadata_df.loc[val_center_mask, 'split'] = self.split_dict['val']
         self._metadata_df.loc[test_center_mask, 'split'] = self.split_dict['test']
 
