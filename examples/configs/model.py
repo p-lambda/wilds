@@ -40,7 +40,13 @@ model_defaults = {
     },
     'resnet50': {
         'model_kwargs': {
-            'pretrained':True,
+            'pretrained': True,
+        },
+        'target_resolution': (224, 224),
+    },
+    'resnet101': {
+        'model_kwargs': {
+            'pretrained': True,
         },
         'target_resolution': (224, 224),
     },

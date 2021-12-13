@@ -16,6 +16,7 @@ benchmark_datasets = [
 
 additional_datasets = [
     'celebA',
+    'domainnet',
     'waterbirds',
     'yelp',
     'bdd100k',
@@ -24,3 +25,22 @@ additional_datasets = [
 ]
 
 supported_datasets = benchmark_datasets + additional_datasets
+
+unlabeled_datasets = [
+    'amazon',
+    'camelyon17',
+    'domainnet',
+    'civilcomments',
+    'iwildcam',
+    'ogb-molpcba',
+    'poverty',
+    'fmow',
+    'globalwheat',
+]
+
+unlabeled_splits = [
+    'train_unlabeled',
+    'val_unlabeled',
+    'test_unlabeled',
+    'extra_unlabeled'
+]

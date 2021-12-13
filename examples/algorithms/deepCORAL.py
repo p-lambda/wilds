@@ -2,6 +2,7 @@ import torch
 from models.initializer import initialize_model
 from algorithms.single_model_algorithm import SingleModelAlgorithm
 from wilds.common.utils import split_into_groups
+from utils import concat_input
 
 class DeepCORAL(SingleModelAlgorithm):
     """
@@ -18,6 +19,9 @@ class DeepCORAL(SingleModelAlgorithm):
           organization={Springer}
         }
 
+    The original CORAL loss is the distance between second-order statistics (covariances)
+    of the source and target features.
+
     The CORAL penalty function below is adapted from DomainBed's implementation:
     https://github.com/facebookresearch/DomainBed/blob/1a61f7ff44b02776619803a1dd12f952528ca531/domainbed/algorithms.py#L539
     """
@@ -30,7 +34,7 @@ class DeepCORAL(SingleModelAlgorithm):
         featurizer, classifier = initialize_model(config, d_out=d_out, is_featurizer=True)
         featurizer = featurizer.to(config.device)
         classifier = classifier.to(config.device)
-        model = torch.nn.Sequential(featurizer, classifier).to(config.device)
+        model = torch.nn.Sequential(featurizer, classifier)
         # initialize module
         super().__init__(
             config=config,
@@ -49,7 +53,7 @@ class DeepCORAL(SingleModelAlgorithm):
         self.classifier = classifier
 
     def coral_penalty(self, x, y):
-        if x.dim() > 2: 
+        if x.dim() > 2:
             # featurizers output Tensors of size (batch_size, ..., feature dimensionality).
             # we flatten to Tensors of size (*, feature dimensionality)
             x = x.view(-1, x.size(-1))
@@ -65,55 +69,68 @@ class DeepCORAL(SingleModelAlgorithm):
         mean_diff = (mean_x - mean_y).pow(2).mean()
         cova_diff = (cova_x - cova_y).pow(2).mean()
 
-        return mean_diff+cova_diff
+        return mean_diff + cova_diff
 
-    def process_batch(self, batch):
+    def process_batch(self, batch, unlabeled_batch=None):
         """
-        Override
+        Overrides single_model_algorithm.process_batch().
+        Args:
+            - batch (tuple of Tensors): a batch of data yielded by data loaders
+            - unlabeled_batch (tuple of Tensors or None): a batch of data yielded by unlabeled data loader
+        Output:
+            - results (dictionary): information about the batch
+                - y_true (Tensor): ground truth labels for batch
+                - g (Tensor): groups for batch
+                - metadata (Tensor): metadata for batch
+                - unlabeled_g (Tensor): groups for unlabeled batch
+                - features (Tensor): featurizer output for batch and unlabeled batch
+                - y_pred (Tensor): full model output for batch and unlabeled batch
         """
         # forward pass
         x, y_true, metadata = batch
-        x = x.to(self.device)
         y_true = y_true.to(self.device)
         g = self.grouper.metadata_to_group(metadata).to(self.device)
-        features = self.featurizer(x)
-        outputs = self.classifier(features)
 
-        # package the results
         results = {
             'g': g,
             'y_true': y_true,
-            'y_pred': outputs,
             'metadata': metadata,
-            'features': features,
-            }
+        }
+
+        if unlabeled_batch is not None:
+            unlabeled_x, unlabeled_metadata = unlabeled_batch
+            x = concat_input(x, unlabeled_x)
+            unlabeled_g = self.grouper.metadata_to_group(unlabeled_metadata).to(self.device)
+            results['unlabeled_g'] = unlabeled_g
+
+        x = x.to(self.device)
+        features = self.featurizer(x)
+        outputs = self.classifier(features)
+        y_pred = outputs[: len(y_true)]
+
+        results['features'] = features
+        results['y_pred'] = y_pred
         return results
 
     def objective(self, results):
-        # extract features
-        features = results.pop('features')
-
         if self.is_training:
-            # split into groups
-            unique_groups, group_indices, _ = split_into_groups(results['g'])
-            # compute penalty
+            features = results.pop('features')
+
+            # Split into groups
+            groups = concat_input(results['g'], results['unlabeled_g']) if 'unlabeled_g' in results else results['g']
+            unique_groups, group_indices, _ = split_into_groups(groups)
             n_groups_per_batch = unique_groups.numel()
+
+            # Compute penalty - perform pairwise comparisons between features of all the groups
             penalty = torch.zeros(1, device=self.device)
             for i_group in range(n_groups_per_batch):
                 for j_group in range(i_group+1, n_groups_per_batch):
                     penalty += self.coral_penalty(features[group_indices[i_group]], features[group_indices[j_group]])
             if n_groups_per_batch > 1:
                 penalty /= (n_groups_per_batch * (n_groups_per_batch-1) / 2) # get the mean penalty
-            # save penalty
         else:
             penalty = 0.
 
-        if isinstance(penalty, torch.Tensor):
-            results['penalty'] = penalty.item()
-        else:
-            results['penalty'] = penalty
-
-
+        self.save_metric_for_logging(results, 'penalty', penalty)
         avg_loss = self.loss.compute(results['y_pred'], results['y_true'], return_dict=False)
-
         return avg_loss + penalty * self.penalty_weight
