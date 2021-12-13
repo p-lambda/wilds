@@ -100,33 +100,39 @@ This short Python snippet covers all of the steps of getting started with a WILD
 We discuss data loading in more detail in [#Data loading](#data-loading).
 
 ```py
->>> from wilds import get_dataset
->>> from wilds.common.data_loaders import get_train_loader
->>> import torchvision.transforms as transforms
+from wilds import get_dataset
+from wilds.common.data_loaders import get_train_loader
+import torchvision.transforms as transforms
 
 # Load the full dataset, and download it if necessary
->>> dataset = get_dataset(dataset='iwildcam', download=True)
+dataset = get_dataset(dataset="iwildcam", download=True)
 
 # Get the training set
->>> train_data = dataset.get_subset('train',
-...                                 transform=transforms.Compose([transforms.Resize((448,448)),
-...                                                               transforms.ToTensor()]))
+train_data = dataset.get_subset(
+    "train",
+    transform=transforms.Compose(
+        [transforms.Resize((448, 448)), transforms.ToTensor()]
+    ),
+)
 
 # Prepare the standard data loader
->>> train_loader = get_train_loader('standard', train_data, batch_size=16)
+train_loader = get_train_loader("standard", train_data, batch_size=16)
 
-# (Optional) Load an unlabeled split
->>> unlabeled_data = dataset.get_subset(('test_unlabeled',
-...                                       unlabeled=True,
-...                                       transform=transforms.Compose([transforms.Resize((448,448)),
-...                                                                     transforms.ToTensor()]))
->>> unlabeled_loader = get_train_loader('standard', unlabeled_data, batch_size=16)
+# (Optional) Load unlabeled data
+dataset = get_dataset(dataset="iwildcam", download=True, unlabeled=True)
+unlabeled_data = dataset.get_subset(
+    "test_unlabeled",
+    transform=transforms.Compose(
+        [transforms.Resize((448, 448)), transforms.ToTensor()]
+    ),
+)
+unlabeled_loader = get_train_loader("standard", unlabeled_data, batch_size=16)
 
 # Train loop
->>> for labeled_batch, unlabeled_batch in zip(train_loader, unlabeled_loader):
-...   x, y, metadata = labeled_batch
-...   unlabeled_x, unlabeled_metadata = unlabeled_batch
-...   ...
+for labeled_batch, unlabeled_batch in zip(train_loader, unlabeled_loader):
+    x, y, metadata = labeled_batch
+    unlabeled_x, unlabeled_metadata = unlabeled_batch
+    ...
 ```
 
 The `metadata` contains information like the domain identity, e.g., which camera a photo was taken from, or which hospital the patient's data came from, etc., as well as other metadata.
@@ -138,16 +144,16 @@ They are used to initialize group-aware data loaders (as discussed in [#Data loa
 In the following code snippet, we initialize and use a `Grouper` that extracts the domain annotations on the iWildCam dataset, where the domain is location.
 
 ```py
->>> from wilds.common.grouper import CombinatorialGrouper
+from wilds.common.grouper import CombinatorialGrouper
 
 # Initialize grouper, which extracts domain information
 # In this example, we form domains based on location
->>> grouper = CombinatorialGrouper(dataset, ['location'])
+grouper = CombinatorialGrouper(dataset, ['location'])
 
 # Train loop
->>> for x, y_true, metadata in train_loader:
-...   z = grouper.metadata_to_group(metadata)
-...   ...
+for x, y_true, metadata in train_loader:
+    z = grouper.metadata_to_group(metadata)
+    ...
 ```
 
 ### Data loading
@@ -155,10 +161,10 @@ In the following code snippet, we initialize and use a `Grouper` that extracts t
 For training, the WILDS package provides two types of data loaders.
 The standard data loader shuffles examples in the training set, and is used for the standard approach of empirical risk minimization (ERM), where we minimize the average loss.
 ```py
->>> from wilds.common.data_loaders import get_train_loader
+from wilds.common.data_loaders import get_train_loader
 
 # Prepare the standard data loader
->>> train_loader = get_train_loader('standard', train_data, batch_size=16)
+train_loader = get_train_loader('standard', train_data, batch_size=16)
 ```
 
 To support other algorithms that rely on specific data loading schemes, we also provide the group data loader.
@@ -168,24 +174,28 @@ We initialize group loaders as follows, using `Grouper` that specifies the group
 
 ```py
 # Prepare a group data loader that samples from user-specified groups
->>> train_loader = get_train_loader('group', train_data,
-...                                 grouper=grouper,
-...                                 n_groups_per_batch=2,
-...                                 batch_size=16)
+train_loader = get_train_loader(
+    "group", train_data, grouper=grouper, n_groups_per_batch=2, batch_size=16
+)
+
 ```
 
 Lastly, we also provide a data loader for evaluation, which loads examples without shuffling (unlike the training loaders).
 
 ```py
->>> from wilds.common.data_loaders import get_eval_loader
+from wilds.common.data_loaders import get_eval_loader
 
 # Get the test set
->>> test_data = dataset.get_subset('test',
-...                                 transform=transforms.Compose([transforms.Resize((224,224)),
-...                                                               transforms.ToTensor()]))
+test_data = dataset.get_subset(
+    "test",
+    transform=transforms.Compose(
+        [transforms.Resize((224, 224)), transforms.ToTensor()]
+    ),
+)
 
 # Prepare the evaluation data loader
->>> test_loader = get_eval_loader('standard', test_data, batch_size=16)
+test_loader = get_eval_loader("standard", test_data, batch_size=16)
+
 ```
 
 ### Evaluators
@@ -194,24 +204,27 @@ The WILDS package standardizes and automates evaluation for each dataset.
 Invoking the `eval` method of each dataset yields all metrics reported in the paper and on the leaderboard.
 
 ```py
->>> from wilds.common.data_loaders import get_eval_loader
+from wilds.common.data_loaders import get_eval_loader
 
 # Get the test set
->>> test_data = dataset.get_subset('test',
-...                                 transform=transforms.Compose([transforms.Resize((224,224)),
-...                                                               transforms.ToTensor()]))
+test_data = dataset.get_subset(
+    "test",
+    transform=transforms.Compose(
+        [transforms.Resize((224, 224)), transforms.ToTensor()]
+    ),
+)
 
 # Prepare the data loader
->>> test_loader = get_eval_loader('standard', test_data, batch_size=16)
+test_loader = get_eval_loader("standard", test_data, batch_size=16)
 
 # Get predictions for the full test set
->>> for x, y_true, metadata in test_loader:
-...   y_pred = model(x)
-...   [accumulate y_true, y_pred, metadata]
+for x, y_true, metadata in test_loader:
+    y_pred = model(x)
+    # Accumulate y_true, y_pred, metadata
 
 # Evaluate
->>> dataset.eval(all_y_pred, all_y_true, all_metadata)
-{'recall_macro_all': 0.66, ...}
+dataset.eval(all_y_pred, all_y_true, all_metadata)
+# {'recall_macro_all': 0.66, ...}
 ```
 Most `eval` methods take in predicted labels for `all_y_pred` by default, but the default inputs vary across datasets and are documented in the `eval` docstrings of the corresponding dataset class.
 
