@@ -148,6 +148,14 @@ def evaluate_benchmark(
                 )
             else:
                 predicted_labels: torch.Tensor = get_predictions(full_path)
+                if dataset_name == "poverty":
+                    # Poverty is special because we need to pass in the fold when calling `get_dataset`
+                    # e.g., {"fold": "A"}
+                    dataset_kwargs = {"fold": replicate.split(":")[1]}
+                    wilds_dataset: WILDSDataset = get_dataset(
+                        dataset=dataset_name, root_dir=root_dir, download=True, **dataset_kwargs
+                    )
+
                 metric_results = evaluate_replicate(
                     wilds_dataset, split, predicted_labels
                 )
