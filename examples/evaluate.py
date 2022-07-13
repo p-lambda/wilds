@@ -40,8 +40,12 @@ def evaluate_all_benchmarks(predictions_dir: str, output_dir: str, root_dir: str
             all_results[dataset] = evaluate_benchmark(
                 dataset, os.path.join(predictions_dir, dataset), output_dir, root_dir
             )
+        except FileNotFoundError as e:
+            print(f"Could not evaluate predictions for {dataset}:\n{str(e)}")
         except Exception as e:
             print(f"Could not evaluate predictions for {dataset}:\n{str(e)}")
+            raise
+        print('')
 
     # Write out aggregated results to output file
     print(f"Writing complete results to {output_dir}...")
@@ -113,6 +117,11 @@ def evaluate_benchmark(
             return ["acc_avg"]
         else:
             raise ValueError(f"Invalid dataset: {dataset_name}")
+
+    if not os.path.exists(predictions_dir):
+        raise FileNotFoundError(
+            f"Predictions directory does not exist."
+        )
 
     # Dataset will only be downloaded if it does not exist
     wilds_dataset: WILDSDataset = get_dataset(
@@ -231,7 +240,7 @@ def get_predictions(path: str) -> torch.Tensor:
         file = open(path, mode="r")
         data = file.readlines()
         file.close()
-
+    
     predicted_labels = [literal_eval(line.rstrip()) for line in data if line.rstrip()]
     return torch.from_numpy(np.array(predicted_labels))
 
@@ -279,7 +288,7 @@ if __name__ == "__main__":
         help="WILDS dataset to evaluate for.",
     )
     parser.add_argument(
-        "--root-dir",
+        "--root_dir",
         type=str,
         default="data",
         help="The directory where the datasets can be found (or should be downloaded to, if they do not exist).",

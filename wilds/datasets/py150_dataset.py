@@ -13,7 +13,7 @@ from transformers import GPT2Tokenizer
 class Py150Dataset(WILDSDataset):
     """
         The Py150 dataset.
-        This is a modified version of the original Py150 dataset.        
+        This is a modified version of the original Py150 dataset.
         Supported `split_scheme`:
             - 'official'
         Input (x):
@@ -78,9 +78,10 @@ class Py150Dataset(WILDSDataset):
         self._input_array = torch.tensor(list(df['input'].apply(lambda x: x[:-1]).values)) #[n_samples, seqlen-1]
 
         # Labels
-        name = 'microsoft/CodeGPT-small-py'
-        tokenizer = GPT2Tokenizer.from_pretrained(name)
-        self._n_classes = len(tokenizer)
+        # name = 'microsoft/CodeGPT-small-py'
+        # tokenizer = GPT2Tokenizer.from_pretrained(name)
+        # self._n_classes = len(tokenizer)
+        self._n_classes = 50001 # We can hardcode this since it is fixed; this removes the transformers dependency
         self._y_array = torch.tensor(list(df['input'].apply(lambda x: x[1:]).values))
         self._y_size = None
 
