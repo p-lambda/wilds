@@ -14,7 +14,7 @@ The WILDS package contains:
 1. Data loaders that automatically handle data downloading, processing, and splitting, and
 2. Dataset evaluators that standardize model evaluation for each dataset.
 
-In addition, the example scripts contain default models, optimizers, schedulers, and training/evaluation code. 
+In addition, the example scripts contain default models, optimizers, schedulers, and training/evaluation code.
 New algorithms can be easily added and run on all of the WILDS datasets.
 
 For more information, please visit [our website](https://wilds.stanford.edu) or read the main WILDS paper ([1](https://arxiv.org/abs/2012.07421)) and its follow-up integrating unlabeled data ([2](https://arxiv.org/abs/2112.05090)).
@@ -41,7 +41,7 @@ cd wilds
 pip install -e .
 ```
 
-In `examples/`, we provide a set of scripts that can be used to train models on the WILDS datasets. These scripts were also used to benchmark baselines in our papers [[1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)]. 
+In `examples/`, we provide a set of scripts that can be used to train models on the WILDS datasets. These scripts were also used to benchmark baselines in our papers [[1](https://arxiv.org/abs/2012.07421), [2](https://arxiv.org/abs/2112.05090)].
 These scripts are not part of the installed WILDS package. To use them, you should install from source, as described above.
 
 ### Requirements
@@ -229,7 +229,7 @@ dataset.eval(all_y_pred, all_y_true, all_metadata)
 Most `eval` methods take in predicted labels for `all_y_pred` by default, but the default inputs vary across datasets and are documented in the `eval` docstrings of the corresponding dataset class.
 
 ## Using the example scripts
-In `examples/`, we provide a set of scripts that can be used to train models on the WILDS datasets. 
+In `examples/`, we provide a set of scripts that can be used to train models on the WILDS datasets.
 
 ```bash
 python examples/run_expt.py --dataset iwildcam --algorithm ERM --root_dir data
@@ -321,7 +321,7 @@ The repository is set up to facilitate general-purpose algorithm development: ne
 We also provide an evaluation script that aggregates prediction CSV files for different replicates and reports on their combined evaluation. To use this, run:
 
 ```bash
-python examples/evaluate.py <predictions_dir> <output_dir> --root-dir <root_dir>
+python examples/evaluate.py <predictions_dir> <output_dir> --root_dir <root_dir>
 ```
 
 where `<predictions_dir>` is the path to your predictions directory, `<output_dir>` is where the results JSON will be writte, and `<root_dir>` is the dataset root directory.
