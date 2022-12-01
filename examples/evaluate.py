@@ -68,8 +68,7 @@ def evaluate_benchmark(
     Returns:
         Metrics as a dictionary with metrics as the keys and metric values as the values
     """
-
-    def get_replicates(dataset_name: str) -> List[str]:
+    def get_minimum_replicates(dataset_name: str) -> List[str]:
         if dataset_name == "poverty":
             return [f"fold:{fold}" for fold in ["A", "B", "C", "D", "E"]]
         else:
@@ -80,6 +79,22 @@ def evaluate_benchmark(
             else:
                 seeds = range(0, 3)
             return [f"seed:{seed}" for seed in seeds]
+
+    def get_replicates(predictions_dir: str, dataset_name: str) -> List[str]:
+        all_files = os.listdir(predictions_dir)
+        if dataset_name == "poverty":
+            split_str = 'fold'
+        else:
+            split_str = 'seed'
+        replicates = set([f.split(f'{split_str}:')[1].split('_')[0] for f in all_files if split_str in f])
+        replicates = [f"{split_str}:{rep}" for rep in replicates]
+
+        minimum_replicates = get_minimum_replicates(dataset_name)
+        for rep in minimum_replicates:
+            if rep not in replicates:
+                raise ValueError(f'{predictions_dir} needs to contain {rep}')
+        
+        return replicates
 
     def get_prediction_file(
         predictions_dir: str, dataset_name: str, split: str, replicate: str
@@ -132,7 +147,7 @@ def evaluate_benchmark(
         splits.remove("train")
 
     replicates_results: Dict[str, Dict[str, List[float]]] = dict()
-    replicates: List[str] = get_replicates(dataset_name)
+    replicates: List[str] = get_replicates(predictions_dir, dataset_name)
     metrics: List[str] = get_metrics(dataset_name)
 
     # Store the results for each replicate
@@ -240,7 +255,7 @@ def get_predictions(path: str) -> torch.Tensor:
         file = open(path, mode="r")
         data = file.readlines()
         file.close()
-    
+
     predicted_labels = [literal_eval(line.rstrip()) for line in data if line.rstrip()]
     return torch.from_numpy(np.array(predicted_labels))
 
