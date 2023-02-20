@@ -512,7 +512,7 @@ class WILDSSubset(WILDSDataset):
 
     @property
     def y_array(self):
-        return self.dataset._y_array[self.indices]
+        return self.dataset.y_array[self.indices]
 
     @property
     def metadata_array(self):
