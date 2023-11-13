@@ -115,6 +115,10 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
     elif dataset == 'py150':
         from wilds.datasets.py150_dataset import Py150Dataset
         return Py150Dataset(version=version, **dataset_kwargs)
+    
+    elif dataset == 'py150-mini':
+        from wilds.datasets.py150_mini_dataset import Py150MiniDataset
+        return Py150MiniDataset(version=version, **dataset_kwargs)
 
     elif dataset == 'sqf':
         from wilds.datasets.sqf_dataset import SQFDataset
