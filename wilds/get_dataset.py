@@ -120,6 +120,14 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
         from wilds.datasets.py150_mini_dataset import Py150MiniDataset
         return Py150MiniDataset(version=version, **dataset_kwargs)
 
+    elif dataset == 'py150aug':
+        from wilds.datasets.py150_aug_dataset import Py150AugDataset
+        return Py150AugDataset(version=version, **dataset_kwargs)
+    
+    elif dataset == 'py150aug-mini':
+        from wilds.datasets.py150_aug_mini_dataset import Py150AugMiniDataset
+        return Py150AugMiniDataset(version=version, **dataset_kwargs)
+
     elif dataset == 'sqf':
         from wilds.datasets.sqf_dataset import SQFDataset
         return SQFDataset(version=version, **dataset_kwargs)

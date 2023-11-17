@@ -1,3 +1,4 @@
+import os
 from augmentation.generate_refactoring import *
 
 def format_python_code(snippet):
@@ -9,7 +10,15 @@ def reformat_to_original_style(code):
     formatted_code = code.replace("\n", " <EOL>")
     return f"<s> {formatted_code} </s>"
 
+def ensure_directory_exists(file_path):
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
 def process_file(input_file_path, output_file_path, combined_file_path, k=1):
+    ensure_directory_exists(output_file_path)
+    ensure_directory_exists(combined_file_path)
+
     with open(input_file_path, 'r') as file:
         content = file.read().split('</s>')
 
@@ -33,7 +42,7 @@ def process_file(input_file_path, output_file_path, combined_file_path, k=1):
         with open(output_file_path, 'r') as new_file:
             combined_file.write(new_file.read())
 
-input_file = 'original-input.txt'
-output_file = 'refactored-input.txt'
-combined_file = 'new-input.txt'
+input_file = 'data/py150_v1.0/raw/train.txt'
+output_file = 'data-aug/py150_v1.0/raw/train-aug.txt'
+combined_file = 'data-aug/py150_v1.0/raw/train.txt'
 process_file(input_file, output_file, combined_file)

@@ -164,6 +164,10 @@ class Py150Dataset(WILDSDataset):
 
 
     def _load_all_data(self):
+        print(50 * "=")
+        print('\nLoading data from', self._data_dir)
+        print(50 * "=")
+        
         def fname2repo_id(fname, repo_name2id):
             return repo_name2id['/'.join(fname.split('/')[:2])]
 

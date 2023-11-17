@@ -22,7 +22,9 @@ additional_datasets = [
     'bdd100k',
     'sqf',
     'encode',
+    'py150aug',
     'py150-mini',
+    'py150aug-mini',
 ]
 
 supported_datasets = benchmark_datasets + additional_datasets
