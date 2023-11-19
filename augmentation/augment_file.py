@@ -1,5 +1,6 @@
 import os
 from augmentation.generate_refactoring import *
+import shutil
 
 def format_python_code(snippet):
     formatted_code = snippet.replace(" <EOL>", "\n")
@@ -56,6 +57,13 @@ def duplicate_meta_content(meta_file_path, output_meta_path):
     with open(output_meta_path, 'w') as output_meta:
         output_meta.write('\n'.join(duplicated_content))
 
+def copy_file(source_path, destination_path):
+    """
+    Copy a file from the source path to the destination path.
+    """
+    ensure_directory_exists(destination_path)
+    shutil.copyfile(source_path, destination_path)
+
 # ATTENTION!!! BE EXTREMELY CAREFUL THAT THE PATHS ARE RIGHT WHEN RUNNING THIS SCRIPT
 # Below are the paths for the full set and the 500 set. If you make a new set,
 # you will need to add the paths. Otherwise, just comment out the ones you don't need.
@@ -85,3 +93,18 @@ meta_file_path = 'data500/py150_v1.0/metadata/repo_file_names/train.txt'
 output_meta_path = 'data500-aug/py150_v1.0/metadata/repo_file_names/train.txt'
 
 duplicate_meta_content(meta_file_path, output_meta_path)
+
+######################## Copy the additional dataset files ####################
+datasets_to_copy = {
+    'data500/py150_v1.0/raw/OODval.txt': 'data500-aug/py150_v1.0/raw/OODval.txt',
+    'data500/py150_v1.0/raw/OODtest.txt': 'data500-aug/py150_v1.0/raw/OODtest.txt',
+    'data500/py150_v1.0/raw/IDval.txt': 'data500-aug/py150_v1.0/raw/IDval.txt',
+    'data500/py150_v1.0/raw/IDtest.txt': 'data500-aug/py150_v1.0/raw/IDtest.txt',
+    'data500/py150_v1.0/metadata/repo_file_names/OODval.txt': 'data500-aug/py150_v1.0/metadata/repo_file_names/OODval.txt',
+    'data500/py150_v1.0/metadata/repo_file_names/OODtest.txt': 'data500-aug/py150_v1.0/metadata/repo_file_names/OODtest.txt',
+    'data500/py150_v1.0/metadata/repo_file_names/IDval.txt': 'data500-aug/py150_v1.0/metadata/repo_file_names/IDval.txt',
+    'data500/py150_v1.0/metadata/repo_file_names/IDtest.txt': 'data500-aug/py150_v1.0/metadata/repo_file_names/IDtest.txt'
+}
+
+for input_path, output_path in datasets_to_copy.items():
+    copy_file(input_path, output_path)
