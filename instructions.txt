@@ -1,0 +1,31 @@
+The code we are talking about here resides on exp-aug branch
+
+1. Download datasets at the highest level of the project from the link
+   provided:
+
+2. If you want to sample a different dataset, use the script 
+   augmentation/sample_data.py.
+
+3. Go to your non-augmented set that you want to augment and run the scripts
+   in the script directory. First, the one that starts with 1. and second the
+   one that starts with 2.
+
+After this step, the control (non-augmented) set is ready to be run.
+
+4. But, you also want its twin, the augmented set. For that run
+   augmentation/augment_file.py. CHECK THE PATHS BEFORE YOU RUN.
+
+5. Go to your augmented set and run the scripts in the script directory. First,
+   the one that starts with 1. and second the one that starts with 2.
+
+After this step, the augment set is ready to be run.
+
+Actually running the experiments:
+
+6. Go to the highest level meaning that you are in the wilds/:
+
+    - If you want to run control:
+        python examples/run_expt.py --root_dir data500 --log_dir $HOME/logs --dataset py150 --algorithm ERM --seed 0 --lr 8e-5 --weight_decay 0
+    
+    - If you want to run augmented:
+        python examples/run_expt.py --root_dir data500-aug --log_dir $HOME/logs --dataset py150 --algorithm ERM --seed 0 --lr 8e-5 --weight_decay 0
