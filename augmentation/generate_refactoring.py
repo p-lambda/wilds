@@ -214,6 +214,52 @@ def generate_adversarial_file_level(k, code):
         new_rf = new_refactored_code
     return new_refactored_code
 
+def generate_adversarial_file_level_n(code, n):
+    refactors_list = [
+                        rename_argument, 
+                        return_optimal, 
+                        add_argumemts,
+                        rename_api, 
+                        rename_local_variable,
+                        add_local_variable,
+                        rename_method_name,
+                        enhance_if,
+                        add_print,
+                        duplication,
+                        apply_plus_zero_math,
+                        dead_branch_if_else,
+                        dead_branch_if,
+                        dead_branch_while,
+                        dead_branch_for,
+                        ]
+
+    new_refactored_code = code
+    refactoring_counts = {refactor.__name__: 0 for refactor in refactors_list}
+
+    for refactor in refactors_list:
+        attempts = 0
+        while attempts < n:
+            try:
+                new_refactored_code = refactor(new_refactored_code)
+                refactoring_counts[refactor.__name__] += 1
+                attempts += 1
+            except Exception as error:
+                # Try all alternative methods before moving to the next refactoring
+                for alternative_refactor in [rf for rf in refactors_list if rf != refactor]:
+                    try:
+                        new_refactored_code = alternative_refactor(new_refactored_code)
+                        refactoring_counts[alternative_refactor.__name__] += 1
+                        # print(f'Applied alternative {alternative_refactor.__name__}')
+                        break  # Break if successful with an alternative
+                    except Exception as alt_error:
+                        # print(f'Error applying alternative {alternative_refactor.__name__}: {alt_error}')
+                        continue  # Continue trying other alternatives if this one fails
+                
+                if refactoring_counts[alternative_refactor.__name__] == 0:
+                    print(f'All alternatives failed for {refactor.__name__}')
+                break  # Move to the next refactoring method after trying all alternatives
+
+    return new_refactored_code, refactoring_counts
 
 if __name__ == '__main__':
     """
