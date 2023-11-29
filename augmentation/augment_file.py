@@ -4,6 +4,14 @@ import shutil
 from generate_refactoring import *
 import argparse
 
+# Custom print function to output both to stdout and log file
+def custom_print(*args, **kwargs):
+    # Print to the original stdout (terminal)
+    print(*args, **kwargs, file=original_stdout)
+
+    # Print to the log file
+    print(*args, **kwargs, file=log_file)
+
 # Parsing command line argument for the output directory
 parser = argparse.ArgumentParser(description="Run script and redirect output to specified directory")
 parser.add_argument('output_dir', type=str, help='Directory to save the output logs')
@@ -15,12 +23,12 @@ os.makedirs(output_log_directory, exist_ok=True)
 
 # Redirect stdout to a file in the specified directory
 original_stdout = sys.stdout  # Save a reference to the original standard output
-log_file_path = os.path.join(output_log_directory, 'output.log')
+log_file_path = os.path.join(output_log_directory, 'aug.log')
 log_file = open(log_file_path, 'w')
 sys.stdout = log_file  # Change the standard output to the file we created
 
-DATA_DIR = 'data24k'
-AUG_DIR = 'data24k-aug'
+DATA_DIR = 'data500'
+AUG_DIR = 'data500-aug'
 
 def format_python_code(snippet):
     formatted_code = snippet.replace(" <EOL>", "\n")
@@ -68,7 +76,7 @@ def process_file(input_file_path, output_file_path, combined_file_path, k):
     for snippet in content:
         if '<s>' in snippet:
             formatted_code = format_python_code(snippet)
-            refactored_code, refactoring_counts = generate_adversarial_file_level_n(formatted_code, k)
+            refactored_code, refactoring_counts = generate_adversarial_file_level(formatted_code, k)
             for refactor, count in refactoring_counts.items():
                 cumulative_refactoring_counts[refactor] += count
             original_style_code = reformat_to_original_style(refactored_code)
@@ -76,7 +84,7 @@ def process_file(input_file_path, output_file_path, combined_file_path, k):
 
     # Print cumulative refactoring counts after the loop
     for refactor, count in cumulative_refactoring_counts.items():
-        print(f"{refactor}: Applied {count} times")
+        custom_print(f"{refactor}: Applied {count} times")
 
     # Write the new content to the output file
     with open(output_file_path, 'w') as output_file:
@@ -153,7 +161,9 @@ datasets_to_copy = {
 for input_path, output_path in datasets_to_copy.items():
     copy_file_or_directory(input_path, output_path)
 
+# Close the log file and restore sys.stdout before the final print
 log_file.close()
 sys.stdout = original_stdout
 
+# Use standard print for the final message
 print(f"Script execution completed. Logs are saved in {log_file_path}")
