@@ -165,54 +165,57 @@ def generate_adversarial_json(k, code):
     return refac
 
 
-def generate_adversarial_file_level(k, code):
+def generate_adversarial_file_level(code, k, verbose=False):
     """
     Apply k refactoring operations to the entire file-level code, potentially altering the overall structure.
-
-    This function applies refactoring transformations to the code at the file level as a whole,
-    without targeting specific methods or classes. It is suitable for broad refactoring that impacts
-    the entire codebase, such as renaming variables used across multiple methods or classes, or
-    adding additional error handling throughout the file.
 
     Args:
         k (int): The number of refactoring methods to apply to the entire code.
         code (str): The source code of the entire file to refactor.
+        verbose (bool): Whether to print detailed information about the refactoring process.
 
     Returns:
-        str: The refactored code at the file level, with each transformation potentially affecting the global scope.
+        tuple: A tuple containing the refactored code at the file level and a dictionary of refactoring counts.
     """
-    new_refactored_code = ''
-    new_rf = code
+    refactors_list = [
+                        # rename_argument, 
+                        # return_optimal, 
+                        # add_argumemts,
+                        rename_api, 
+                        # rename_local_variable,
+                        # add_local_variable,
+                        rename_method_name,
+                        # enhance_if,
+                        # add_print,
+                        duplication,
+                        apply_plus_zero_math,
+                        # dead_branch_if_else,
+                        # dead_branch_if,
+                        # dead_branch_while,
+                        # dead_branch_for,
+                        ]
+    
     new_refactored_code = code
+    refactoring_counts = {refactor.__name__: 0 for refactor in refactors_list}
+
     for t in range(k):
-        refactors_list = [
-                            rename_argument, 
-                            return_optimal, 
-                            add_argumemts,
-                            rename_api, 
-                            rename_local_variable,
-                            add_local_variable,
-                            rename_method_name,
-                            enhance_if,
-                            add_print,
-                            duplication,
-                            apply_plus_zero_math,
-                            dead_branch_if_else,
-                            dead_branch_if,
-                            dead_branch_while,
-                            dead_branch_for
-                            ]  
         vv = 0
-        while new_rf == new_refactored_code and vv <= 20:
+        while new_refactored_code == code and vv <= 20:
             try:
                 vv += 1
                 refactor = random.choice(refactors_list)
-                print('*' * 50, refactor, '*' * 50)
-                new_refactored_code = refactor(new_refactored_code)
+                if verbose:
+                    print('*' * 50, refactor.__name__, '*' * 50)
+                updated_code = refactor(new_refactored_code)
+                if updated_code != new_refactored_code:
+                    new_refactored_code = updated_code
+                    refactoring_counts[refactor.__name__] += 1
             except Exception as error:
-                print('error:\t', error)
-        new_rf = new_refactored_code
-    return new_refactored_code
+                if verbose:
+                    print(f'Error applying {refactor.__name__}:\t{error}')
+
+    return new_refactored_code, refactoring_counts
+
 
 def generate_adversarial_file_level_n(code, n, verbose=False):
     refactors_list = [
