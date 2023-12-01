@@ -178,21 +178,21 @@ def generate_adversarial_file_level(code, k, verbose=False):
         tuple: A tuple containing the refactored code at the file level and a dictionary of refactoring counts.
     """
     refactors_list = [
-                        # rename_argument, 
-                        # return_optimal, 
-                        # add_argumemts,
+                        rename_argument, 
+                        return_optimal, 
+                        add_argumemts,
                         rename_api, 
-                        # rename_local_variable,
-                        # add_local_variable,
+                        rename_local_variable,
+                        add_local_variable,
                         rename_method_name,
-                        # enhance_if,
-                        # add_print,
+                        enhance_if,
+                        add_print,
                         duplication,
                         apply_plus_zero_math,
-                        # dead_branch_if_else,
-                        # dead_branch_if,
-                        # dead_branch_while,
-                        # dead_branch_for,
+                        dead_branch_if_else,
+                        dead_branch_if,
+                        dead_branch_while,
+                        dead_branch_for,
                         ]
     
     new_refactored_code = code
@@ -214,7 +214,26 @@ def generate_adversarial_file_level(code, k, verbose=False):
                 if verbose:
                     print(f'Error applying {refactor.__name__}:\t{error}')
 
+                # Prepare a shuffled list of alternative refactors
+                alternatives = [rf for rf in refactors_list if rf != refactor]
+                random.shuffle(alternatives)
+
+                for alternative_refactor in alternatives:
+                    try:
+                        updated_code = alternative_refactor(new_refactored_code)
+                        if updated_code != new_refactored_code:
+                            new_refactored_code = updated_code
+                            refactoring_counts[alternative_refactor.__name__] += 1
+                            if verbose:
+                                print(f'Applied alternative {alternative_refactor.__name__}')
+                            break
+                    except Exception as alt_error:
+                        if verbose:
+                            print(f'Error applying alternative {alternative_refactor.__name__}: {alt_error}')
+                        continue
+
     return new_refactored_code, refactoring_counts
+
 
 
 def generate_adversarial_file_level_n(code, n, verbose=False):
