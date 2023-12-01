@@ -478,7 +478,7 @@ def dead_branch_while(data):
             else:
                 break
     new_statement = ''
-    print(space_count)
+    #print(space_count)
     for _ in range(space_count):
         new_statement += ' '
     new_statement += get_branch_while_mutant()
@@ -545,5 +545,5 @@ if __name__ == '__main__':
         function_list, class_name = extract_function_python(class_name)
     candidate_code = function_list[0]
     mutated_code = apply_plus_zero_math(candidate_code)
-    print(candidate_code)
-    print(mutated_code)
+    #print(candidate_code)
+    #print(mutated_code)

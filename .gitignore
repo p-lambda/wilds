@@ -3,7 +3,6 @@ __pycache__
 .idea
 build
 data
-logs
 dist
 venv
 wilds.egg-info
@@ -17,3 +16,9 @@ simple_program.py
 data-aug
 data500
 data500-aug
+data1500
+data1500-aug
+data1500-aug-all
+data24k
+data24k-aug
+additional

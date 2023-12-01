@@ -1,5 +1,9 @@
 import random
 import os
+import shutil
+
+INPUT = 'data'
+OUTPUT = 'data24k'
 
 def calculate_sample_sizes(train_sample_size, proportions):
     """
@@ -25,7 +29,7 @@ def sample_from_file(input_path, output_path, sample_size, sample_indices=None):
 
     return sample_indices
 
-def sample_snippets(raw_file_path, meta_file_path, output_raw_path, output_meta_path, sample_size=500, other_datasets_paths=None, other_metadata_paths=None):
+def sample_snippets(raw_file_path, meta_file_path, output_raw_path, output_meta_path, sample_size, other_datasets_paths=None, other_metadata_paths=None):
     # Ensure the output directories exist
     os.makedirs(os.path.dirname(output_raw_path), exist_ok=True)
     os.makedirs(os.path.dirname(output_meta_path), exist_ok=True)
@@ -44,6 +48,22 @@ def sample_snippets(raw_file_path, meta_file_path, output_raw_path, output_meta_
             # Sample raw data and metadata for other datasets
             dataset_sample_indices = sample_from_file(input_raw_path, output_raw_path, dataset_sample_size)
             sample_from_file(input_meta_path, output_meta_path, dataset_sample_size, sample_indices=dataset_sample_indices)
+    
+    # Check and copy additional files
+    repo_ids_dest = f'{OUTPUT}/py150_v1.0/metadata/repo_file_names/repo_ids.csv'
+    if os.path.exists(repo_ids_dest):
+        os.remove(repo_ids_dest)
+    shutil.copy(f'{INPUT}/py150_v1.0/metadata/repo_file_names/repo_ids.csv', repo_ids_dest)
+
+    script_dest = f'{OUTPUT}/py150_v1.0/script'
+    if os.path.exists(script_dest):
+        shutil.rmtree(script_dest)
+    shutil.copytree(f'{INPUT}/py150_v1.0/script', script_dest)
+
+    release_file_dest = f'{OUTPUT}/py150_v1.0/RELEASE_v1.0.txt'
+    if os.path.exists(release_file_dest):
+        os.remove(release_file_dest)
+    shutil.copy(f'{INPUT}/py150_v1.0/RELEASE_v1.0.txt', release_file_dest)
 
 # Define file paths and proportions
 proportions = {
@@ -54,26 +74,26 @@ proportions = {
 }
 
 other_datasets_paths = {
-    'OODval': ('data/py150_v1.0/raw/OODval.txt', 'data500/py150_v1.0/raw/OODval.txt'),
-    'OODtest': ('data/py150_v1.0/raw/OODtest.txt', 'data500/py150_v1.0/raw/OODtest.txt'),
-    'IDval': ('data/py150_v1.0/raw/IDval.txt', 'data500/py150_v1.0/raw/IDval.txt'),
-    'IDtest': ('data/py150_v1.0/raw/IDtest.txt', 'data500/py150_v1.0/raw/IDtest.txt')
+    'OODval': (f'{INPUT}/py150_v1.0/raw/OODval.txt', f'{OUTPUT}/py150_v1.0/raw/OODval.txt'),
+    'OODtest': (f'{INPUT}/py150_v1.0/raw/OODtest.txt', f'{OUTPUT}/py150_v1.0/raw/OODtest.txt'),
+    'IDval': (f'{INPUT}/py150_v1.0/raw/IDval.txt', f'{OUTPUT}/py150_v1.0/raw/IDval.txt'),
+    'IDtest': (f'{INPUT}/py150_v1.0/raw/IDtest.txt', f'{OUTPUT}/py150_v1.0/raw/IDtest.txt')
 }
 
 other_metadata_paths = {
-    'OODval': ('data/py150_v1.0/metadata/repo_file_names/OODval.txt', 'data500/py150_v1.0/metadata/repo_file_names/OODval.txt'),
-    'OODtest': ('data/py150_v1.0/metadata/repo_file_names/OODtest.txt', 'data500/py150_v1.0/metadata/repo_file_names/OODtest.txt'),
-    'IDval': ('data/py150_v1.0/metadata/repo_file_names/IDval.txt', 'data500/py150_v1.0/metadata/repo_file_names/IDval.txt'),
-    'IDtest': ('data/py150_v1.0/metadata/repo_file_names/IDtest.txt', 'data500/py150_v1.0/metadata/repo_file_names/IDtest.txt')
+    'OODval': (f'{INPUT}/py150_v1.0/metadata/repo_file_names/OODval.txt', f'{OUTPUT}/py150_v1.0/metadata/repo_file_names/OODval.txt'),
+    'OODtest': (f'{INPUT}/py150_v1.0/metadata/repo_file_names/OODtest.txt', f'{OUTPUT}/py150_v1.0/metadata/repo_file_names/OODtest.txt'),
+    'IDval': (f'{INPUT}/py150_v1.0/metadata/repo_file_names/IDval.txt', f'{OUTPUT}/py150_v1.0/metadata/repo_file_names/IDval.txt'),
+    'IDtest': (f'{INPUT}/py150_v1.0/metadata/repo_file_names/IDtest.txt', f'{OUTPUT}/py150_v1.0/metadata/repo_file_names/IDtest.txt')
 }
 
 # Sample the snippets
 sample_snippets(
-    raw_file_path='data/py150_v1.0/raw/train.txt',
-    meta_file_path='data/py150_v1.0/metadata/repo_file_names/train.txt',
-    output_raw_path='data500/py150_v1.0/raw/train.txt',
-    output_meta_path='data500/py150_v1.0/metadata/repo_file_names/train.txt',
-    sample_size=500,
+    raw_file_path=f'{INPUT}/py150_v1.0/raw/train.txt',
+    meta_file_path=f'{INPUT}/py150_v1.0/metadata/repo_file_names/train.txt',
+    output_raw_path=f'{OUTPUT}/py150_v1.0/raw/train.txt',
+    output_meta_path=f'{OUTPUT}/py150_v1.0/metadata/repo_file_names/train.txt',
+    sample_size=24000,
     other_datasets_paths=other_datasets_paths,
     other_metadata_paths=other_metadata_paths
 )

@@ -1,0 +1,251 @@
+Dataset: py150
+Algorithm: ERM
+Root dir: data500-aug
+Split scheme: official
+Dataset kwargs: {}
+Download: False
+Frac: 1.0
+Version: None
+Unlabeled split: None
+Unlabeled version: None
+Use unlabeled y: False
+Loader kwargs: {'num_workers': 4, 'pin_memory': True}
+Unlabeled loader kwargs: {'num_workers': 8, 'pin_memory': True}
+Train loader: standard
+Uniform over groups: False
+Distinct groups: None
+N groups per batch: 2
+Unlabeled n groups per batch: None
+Batch size: 6
+Unlabeled batch size: None
+Eval loader: standard
+Gradient accumulation steps: 1
+Model: code-gpt-py
+Model kwargs: {}
+Noisystudent add dropout: None
+Noisystudent dropout rate: None
+Pretrained model path: None
+Load featurizer only: False
+Teacher model path: None
+Transform: None
+Additional train transform: None
+Target resolution: None
+Resize scale: None
+Max token length: None
+Randaugment n: 2
+Loss function: lm_cross_entropy
+Loss kwargs: {}
+Groupby fields: ['repo']
+Group dro step size: None
+Coral penalty weight: 1.0
+Dann penalty weight: None
+Dann classifier lr: None
+Dann featurizer lr: None
+Dann discriminator lr: None
+Afn penalty weight: None
+Safn delta r: None
+Hafn r: None
+Use hafn: False
+Irm lambda: 1.0
+Irm penalty anneal iters: None
+Self training lambda: None
+Self training threshold: None
+Pseudolabel t2: None
+Soft pseudolabels: False
+Algo log metric: multitask_accuracy
+Process pseudolabels function: None
+Val metric: acc
+Val metric decreasing: False
+N epochs: 3
+Optimizer: AdamW
+Lr: 8e-05
+Weight decay: 0.0
+Max grad norm: 1.0
+Optimizer kwargs: {'eps': 1e-08}
+Scheduler: linear_schedule_with_warmup
+Scheduler kwargs: {'num_warmup_steps': 0}
+Scheduler metric split: val
+Scheduler metric name: None
+Process outputs function: multiclass_logits_to_pred
+Evaluate all splits: True
+Eval splits: []
+Eval only: False
+Eval epoch: None
+Device: cuda
+Seed: 0
+Log dir: $HOME/logs500/loops-ifs-spaces-rename-method-1
+Log every: 50
+Save step: None
+Save best: True
+Save last: True
+Save pred: True
+No group logging: True
+Progress bar: False
+Resume: False
+Use wandb: False
+Wandb api key path: None
+Wandb kwargs: {}
+Use data parallel: False
+
+==================================================
+
+Loading data from data500-aug/py150_v1.0
+==================================================
+/home/luka/wilds/wilds/common/grouper.py:136: UserWarning: Minimum metadata value for CombinatorialGrouper is not 0 (repo, 9). This will result in empty groups
+  warnings.warn(f"Minimum metadata value for CombinatorialGrouper is not 0 ({field}, {min_value}). This will result in empty groups")
+Train data...
+    n = 1000
+Validation (OOD) data...
+    n = 37
+Test (OOD) data...
+    n = 285
+Validation (ID) data...
+    n = 36
+Test (ID) data...
+    n = 143
+/home/luka/anaconda3/lib/python3.11/site-packages/transformers/optimization.py:407: FutureWarning: This implementation of AdamW is deprecated and will be removed in a future version. Use the PyTorch implementation torch.optim.AdamW instead, or set `no_deprecation_warning=True` to disable this warning
+  warnings.warn(
+
+Epoch [0]:
+
+Train:
+objective: 2.302
+loss_all: 2.302
+acc_all: 0.568
+
+objective: 1.872
+loss_all: 1.872
+acc_all: 0.633
+
+objective: 1.681
+loss_all: 1.681
+acc_all: 0.661
+
+objective: 1.629
+loss_all: 1.629
+acc_all: 0.672
+
+Epoch eval:
+Acc (Class-Method): 0.608
+Acc (Overall): 0.626
+Acc (class): 0.601
+Acc (method): 0.615
+Acc (punctuation): 0.810
+Acc (keyword): 0.616
+Acc (builtin): 0.665
+Acc (literal): 0.568
+Acc (other_identifier): 0.480
+
+Validation (OOD):
+objective: 1.942
+loss_all: 1.942
+acc_all: 0.643
+
+Epoch eval:
+Acc (Class-Method): 0.593
+Acc (Overall): 0.639
+Acc (class): 0.594
+Acc (method): 0.592
+Acc (punctuation): 0.811
+Acc (keyword): 0.623
+Acc (builtin): 0.689
+Acc (literal): 0.588
+Acc (other_identifier): 0.510
+Validation acc: 0.593
+Epoch 0 has the best validation performance so far.
+
+
+Epoch [1]:
+
+Train:
+objective: 1.215
+loss_all: 1.215
+acc_all: 0.731
+
+objective: 1.128
+loss_all: 1.128
+acc_all: 0.748
+
+objective: 1.079
+loss_all: 1.079
+acc_all: 0.755
+
+objective: 1.019
+loss_all: 1.019
+acc_all: 0.766
+
+Epoch eval:
+Acc (Class-Method): 0.766
+Acc (Overall): 0.747
+Acc (class): 0.742
+Acc (method): 0.793
+Acc (punctuation): 0.901
+Acc (keyword): 0.698
+Acc (builtin): 0.771
+Acc (literal): 0.705
+Acc (other_identifier): 0.626
+
+Validation (OOD):
+objective: 2.098
+loss_all: 2.098
+acc_all: 0.638
+
+Epoch eval:
+Acc (Class-Method): 0.574
+Acc (Overall): 0.634
+Acc (class): 0.571
+Acc (method): 0.577
+Acc (punctuation): 0.816
+Acc (keyword): 0.621
+Acc (builtin): 0.695
+Acc (literal): 0.585
+Acc (other_identifier): 0.498
+Validation acc: 0.574
+
+
+Epoch [2]:
+
+Train:
+objective: 0.781
+loss_all: 0.781
+acc_all: 0.813
+
+objective: 0.794
+loss_all: 0.794
+acc_all: 0.810
+
+objective: 0.776
+loss_all: 0.776
+acc_all: 0.811
+
+objective: 0.737
+loss_all: 0.737
+acc_all: 0.821
+
+Epoch eval:
+Acc (Class-Method): 0.834
+Acc (Overall): 0.813
+Acc (class): 0.800
+Acc (method): 0.871
+Acc (punctuation): 0.939
+Acc (keyword): 0.742
+Acc (builtin): 0.843
+Acc (literal): 0.795
+Acc (other_identifier): 0.716
+
+Validation (OOD):
+objective: 2.216
+loss_all: 2.216
+acc_all: 0.635
+
+Epoch eval:
+Acc (Class-Method): 0.575
+Acc (Overall): 0.631
+Acc (class): 0.573
+Acc (method): 0.577
+Acc (punctuation): 0.817
+Acc (keyword): 0.623
+Acc (builtin): 0.679
+Acc (literal): 0.573
+Acc (other_identifier): 0.492
+Validation acc: 0.575
