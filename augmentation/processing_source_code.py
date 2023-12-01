@@ -153,10 +153,8 @@ def extract_function_python(string):
     """
     i = 0
     function_list = []
-    # print(string)
     while True:
         match_ret = re.search('(def).+\s*\(', string)
-        # print(match_ret)
         if match_ret:
             function_head = match_ret.group()
             start_pos = string.find(function_head)
@@ -241,6 +239,34 @@ def extract_while_loop(string):
             break
     return while_list, string
 
+def remove_whitespace(text, num_indents):
+    # Remove whitespace before colons
+    text = re.sub(r'\s+:', ':', text)
+    # Remove whitespace before and after periods
+    text = re.sub(r'\s+\.', '.', text)
+    text = re.sub(r'\.\s+', '.', text)
+    # Remove whitespace in front of line
+    text = text.lstrip()
+    # Remove whitespace between word and opening parenthesis
+    text = re.sub(r'(\w)\s+\(', r'\1(', text)
+    for i in range(0, num_indents):
+        text = "\t" + text
+    return text
+
+def preprocess_source(source):
+    lines = source.split('\n')
+    num_indents = 0
+    processed_lines = []
+    for line in lines:
+        if len(line) == 0:
+            continue
+        last_char = line.rsplit()[-1]
+        processed_lines.append(remove_whitespace(line, num_indents))
+        if last_char == ":":
+            num_indents = num_indents + 1
+        if "return" in line:
+            num_indents = num_indents - 1
+    return '\n'.join(processed_lines)
 
 def hack(source):
     """
@@ -252,8 +278,8 @@ def hack(source):
     Yields:
         iterator: An iterator over the identifiers found in the source code.
     """
-    root = ast.parse(source)
-
+    formatted_source = preprocess_source(source)
+    root = ast.parse(formatted_source)
     for node in ast.walk(root):
         if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
             yield node.id
@@ -273,7 +299,9 @@ def extract_local_variable(string):
     Returns:
         list: A list of local variable names extracted from the string.
     """
-    return list(hack(string))
+    result = hack(string)
+    result_list = list(result)
+    return list(result_list)
 
 
 if __name__ == '__main__':
