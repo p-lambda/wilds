@@ -27,8 +27,8 @@ log_file_path = os.path.join(output_log_directory, 'aug.log')
 log_file = open(log_file_path, 'w')
 sys.stdout = log_file  # Change the standard output to the file we created
 
-DATA_DIR = 'data500'
-AUG_DIR = 'data500-aug'
+DATA_DIR = 'data24k'
+AUG_DIR = 'data24k-aug'
 
 def format_python_code(snippet):
     formatted_code = snippet.replace(" <EOL>", "\n")
