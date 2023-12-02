@@ -1,0 +1,2116 @@
+Dataset: py150
+Algorithm: ERM
+Root dir: data24k-aug
+Split scheme: official
+Dataset kwargs: {}
+Download: False
+Frac: 1.0
+Version: None
+Unlabeled split: None
+Unlabeled version: None
+Use unlabeled y: False
+Loader kwargs: {'num_workers': 4, 'pin_memory': True}
+Unlabeled loader kwargs: {'num_workers': 8, 'pin_memory': True}
+Train loader: standard
+Uniform over groups: False
+Distinct groups: None
+N groups per batch: 2
+Unlabeled n groups per batch: None
+Batch size: 6
+Unlabeled batch size: None
+Eval loader: standard
+Gradient accumulation steps: 1
+Model: code-gpt-py
+Model kwargs: {}
+Noisystudent add dropout: None
+Noisystudent dropout rate: None
+Pretrained model path: None
+Load featurizer only: False
+Teacher model path: None
+Transform: None
+Additional train transform: None
+Target resolution: None
+Resize scale: None
+Max token length: None
+Randaugment n: 2
+Loss function: lm_cross_entropy
+Loss kwargs: {}
+Groupby fields: ['repo']
+Group dro step size: None
+Coral penalty weight: 1.0
+Dann penalty weight: None
+Dann classifier lr: None
+Dann featurizer lr: None
+Dann discriminator lr: None
+Afn penalty weight: None
+Safn delta r: None
+Hafn r: None
+Use hafn: False
+Irm lambda: 1.0
+Irm penalty anneal iters: None
+Self training lambda: None
+Self training threshold: None
+Pseudolabel t2: None
+Soft pseudolabels: False
+Algo log metric: multitask_accuracy
+Process pseudolabels function: None
+Val metric: acc
+Val metric decreasing: False
+N epochs: 3
+Optimizer: AdamW
+Lr: 8e-05
+Weight decay: 0.0
+Max grad norm: 1.0
+Optimizer kwargs: {'eps': 1e-08}
+Scheduler: linear_schedule_with_warmup
+Scheduler kwargs: {'num_warmup_steps': 0}
+Scheduler metric split: val
+Scheduler metric name: None
+Process outputs function: multiclass_logits_to_pred
+Evaluate all splits: True
+Eval splits: []
+Eval only: False
+Eval epoch: None
+Device: cuda
+Seed: 0
+Log dir: logs/logs24k/all-1-per-new
+Log every: 50
+Save step: None
+Save best: True
+Save last: True
+Save pred: True
+No group logging: True
+Progress bar: False
+Resume: False
+Use wandb: False
+Wandb api key path: None
+Wandb kwargs: {}
+Use data parallel: False
+
+Train data...
+    n = 48000
+Validation (OOD) data...
+    n = 1766
+Test (OOD) data...
+    n = 13681
+Validation (ID) data...
+    n = 1710
+Test (ID) data...
+    n = 6843
+
+Epoch [0]:
+
+Train:
+objective: 2.431
+loss_all: 2.431
+acc_all: 0.554
+
+objective: 2.058
+loss_all: 2.058
+acc_all: 0.610
+
+objective: 2.012
+loss_all: 2.012
+acc_all: 0.619
+
+objective: 1.942
+loss_all: 1.942
+acc_all: 0.629
+
+objective: 1.991
+loss_all: 1.991
+acc_all: 0.620
+
+objective: 1.862
+loss_all: 1.862
+acc_all: 0.639
+
+objective: 1.859
+loss_all: 1.859
+acc_all: 0.642
+
+objective: 1.879
+loss_all: 1.879
+acc_all: 0.644
+
+objective: 1.886
+loss_all: 1.886
+acc_all: 0.637
+
+objective: 1.775
+loss_all: 1.775
+acc_all: 0.652
+
+objective: 1.811
+loss_all: 1.811
+acc_all: 0.650
+
+objective: 1.807
+loss_all: 1.807
+acc_all: 0.646
+
+objective: 1.727
+loss_all: 1.727
+acc_all: 0.662
+
+objective: 1.778
+loss_all: 1.778
+acc_all: 0.654
+
+objective: 1.779
+loss_all: 1.779
+acc_all: 0.653
+
+objective: 1.716
+loss_all: 1.716
+acc_all: 0.663
+
+objective: 1.792
+loss_all: 1.792
+acc_all: 0.648
+
+objective: 1.846
+loss_all: 1.846
+acc_all: 0.645
+
+objective: 1.714
+loss_all: 1.714
+acc_all: 0.667
+
+objective: 1.741
+loss_all: 1.741
+acc_all: 0.658
+
+objective: 1.730
+loss_all: 1.730
+acc_all: 0.659
+
+objective: 1.779
+loss_all: 1.779
+acc_all: 0.655
+
+objective: 1.711
+loss_all: 1.711
+acc_all: 0.667
+
+objective: 1.719
+loss_all: 1.719
+acc_all: 0.664
+
+objective: 1.700
+loss_all: 1.700
+acc_all: 0.668
+
+objective: 1.716
+loss_all: 1.716
+acc_all: 0.661
+
+objective: 1.651
+loss_all: 1.651
+acc_all: 0.672
+
+objective: 1.681
+loss_all: 1.681
+acc_all: 0.666
+
+objective: 1.683
+loss_all: 1.683
+acc_all: 0.669
+
+objective: 1.645
+loss_all: 1.645
+acc_all: 0.671
+
+objective: 1.668
+loss_all: 1.668
+acc_all: 0.671
+
+objective: 1.638
+loss_all: 1.638
+acc_all: 0.670
+
+objective: 1.625
+loss_all: 1.625
+acc_all: 0.674
+
+objective: 1.687
+loss_all: 1.687
+acc_all: 0.665
+
+objective: 1.619
+loss_all: 1.619
+acc_all: 0.675
+
+objective: 1.635
+loss_all: 1.635
+acc_all: 0.673
+
+objective: 1.644
+loss_all: 1.644
+acc_all: 0.675
+
+objective: 1.574
+loss_all: 1.574
+acc_all: 0.680
+
+objective: 1.653
+loss_all: 1.653
+acc_all: 0.672
+
+objective: 1.635
+loss_all: 1.635
+acc_all: 0.672
+
+objective: 1.621
+loss_all: 1.621
+acc_all: 0.676
+
+objective: 1.668
+loss_all: 1.668
+acc_all: 0.669
+
+objective: 1.630
+loss_all: 1.630
+acc_all: 0.675
+
+objective: 1.597
+loss_all: 1.597
+acc_all: 0.679
+
+objective: 1.567
+loss_all: 1.567
+acc_all: 0.684
+
+objective: 1.627
+loss_all: 1.627
+acc_all: 0.676
+
+objective: 1.568
+loss_all: 1.568
+acc_all: 0.686
+
+objective: 1.638
+loss_all: 1.638
+acc_all: 0.675
+
+objective: 1.632
+loss_all: 1.632
+acc_all: 0.678
+
+objective: 1.601
+loss_all: 1.601
+acc_all: 0.679
+
+objective: 1.565
+loss_all: 1.565
+acc_all: 0.684
+
+objective: 1.570
+loss_all: 1.570
+acc_all: 0.683
+
+objective: 1.610
+loss_all: 1.610
+acc_all: 0.679
+
+objective: 1.566
+loss_all: 1.566
+acc_all: 0.687
+
+objective: 1.506
+loss_all: 1.506
+acc_all: 0.691
+
+objective: 1.592
+loss_all: 1.592
+acc_all: 0.677
+
+objective: 1.561
+loss_all: 1.561
+acc_all: 0.687
+
+objective: 1.557
+loss_all: 1.557
+acc_all: 0.688
+
+objective: 1.581
+loss_all: 1.581
+acc_all: 0.685
+
+objective: 1.569
+loss_all: 1.569
+acc_all: 0.681
+
+objective: 1.531
+loss_all: 1.531
+acc_all: 0.690
+
+objective: 1.490
+loss_all: 1.490
+acc_all: 0.698
+
+objective: 1.507
+loss_all: 1.507
+acc_all: 0.691
+
+objective: 1.533
+loss_all: 1.533
+acc_all: 0.688
+
+objective: 1.583
+loss_all: 1.583
+acc_all: 0.681
+
+objective: 1.499
+loss_all: 1.499
+acc_all: 0.699
+
+objective: 1.518
+loss_all: 1.518
+acc_all: 0.691
+
+objective: 1.531
+loss_all: 1.531
+acc_all: 0.690
+
+objective: 1.517
+loss_all: 1.517
+acc_all: 0.692
+
+objective: 1.587
+loss_all: 1.587
+acc_all: 0.681
+
+objective: 1.583
+loss_all: 1.583
+acc_all: 0.681
+
+objective: 1.558
+loss_all: 1.558
+acc_all: 0.684
+
+objective: 1.485
+loss_all: 1.485
+acc_all: 0.694
+
+objective: 1.585
+loss_all: 1.585
+acc_all: 0.679
+
+objective: 1.486
+loss_all: 1.486
+acc_all: 0.694
+
+objective: 1.455
+loss_all: 1.455
+acc_all: 0.705
+
+objective: 1.503
+loss_all: 1.503
+acc_all: 0.689
+
+objective: 1.496
+loss_all: 1.496
+acc_all: 0.692
+
+objective: 1.482
+loss_all: 1.482
+acc_all: 0.697
+
+objective: 1.545
+loss_all: 1.545
+acc_all: 0.688
+
+objective: 1.509
+loss_all: 1.509
+acc_all: 0.692
+
+objective: 1.565
+loss_all: 1.565
+acc_all: 0.680
+
+objective: 1.492
+loss_all: 1.492
+acc_all: 0.695
+
+objective: 1.493
+loss_all: 1.493
+acc_all: 0.694
+
+objective: 1.432
+loss_all: 1.432
+acc_all: 0.704
+
+objective: 1.471
+loss_all: 1.471
+acc_all: 0.696
+
+objective: 1.513
+loss_all: 1.513
+acc_all: 0.690
+
+objective: 1.521
+loss_all: 1.521
+acc_all: 0.689
+
+objective: 1.489
+loss_all: 1.489
+acc_all: 0.695
+
+objective: 1.489
+loss_all: 1.489
+acc_all: 0.691
+
+objective: 1.410
+loss_all: 1.410
+acc_all: 0.711
+
+objective: 1.511
+loss_all: 1.511
+acc_all: 0.690
+
+objective: 1.497
+loss_all: 1.497
+acc_all: 0.689
+
+objective: 1.476
+loss_all: 1.476
+acc_all: 0.696
+
+objective: 1.486
+loss_all: 1.486
+acc_all: 0.692
+
+objective: 1.467
+loss_all: 1.467
+acc_all: 0.699
+
+objective: 1.429
+loss_all: 1.429
+acc_all: 0.703
+
+objective: 1.484
+loss_all: 1.484
+acc_all: 0.695
+
+objective: 1.462
+loss_all: 1.462
+acc_all: 0.699
+
+objective: 1.481
+loss_all: 1.481
+acc_all: 0.693
+
+objective: 1.406
+loss_all: 1.406
+acc_all: 0.707
+
+objective: 1.404
+loss_all: 1.404
+acc_all: 0.709
+
+objective: 1.428
+loss_all: 1.428
+acc_all: 0.702
+
+objective: 1.443
+loss_all: 1.443
+acc_all: 0.704
+
+objective: 1.420
+loss_all: 1.420
+acc_all: 0.705
+
+objective: 1.415
+loss_all: 1.415
+acc_all: 0.709
+
+objective: 1.427
+loss_all: 1.427
+acc_all: 0.708
+
+objective: 1.452
+loss_all: 1.452
+acc_all: 0.698
+
+objective: 1.442
+loss_all: 1.442
+acc_all: 0.701
+
+objective: 1.442
+loss_all: 1.442
+acc_all: 0.700
+
+objective: 1.397
+loss_all: 1.397
+acc_all: 0.708
+
+objective: 1.395
+loss_all: 1.395
+acc_all: 0.712
+
+objective: 1.413
+loss_all: 1.413
+acc_all: 0.705
+
+objective: 1.381
+loss_all: 1.381
+acc_all: 0.710
+
+objective: 1.429
+loss_all: 1.429
+acc_all: 0.705
+
+objective: 1.407
+loss_all: 1.407
+acc_all: 0.703
+
+objective: 1.382
+loss_all: 1.382
+acc_all: 0.710
+
+objective: 1.413
+loss_all: 1.413
+acc_all: 0.705
+
+objective: 1.429
+loss_all: 1.429
+acc_all: 0.700
+
+objective: 1.412
+loss_all: 1.412
+acc_all: 0.707
+
+objective: 1.403
+loss_all: 1.403
+acc_all: 0.706
+
+objective: 1.411
+loss_all: 1.411
+acc_all: 0.706
+
+objective: 1.434
+loss_all: 1.434
+acc_all: 0.706
+
+objective: 1.453
+loss_all: 1.453
+acc_all: 0.699
+
+objective: 1.395
+loss_all: 1.395
+acc_all: 0.709
+
+objective: 1.432
+loss_all: 1.432
+acc_all: 0.701
+
+objective: 1.361
+loss_all: 1.361
+acc_all: 0.715
+
+objective: 1.360
+loss_all: 1.360
+acc_all: 0.712
+
+objective: 1.352
+loss_all: 1.352
+acc_all: 0.714
+
+objective: 1.370
+loss_all: 1.370
+acc_all: 0.707
+
+objective: 1.393
+loss_all: 1.393
+acc_all: 0.709
+
+objective: 1.353
+loss_all: 1.353
+acc_all: 0.715
+
+objective: 1.401
+loss_all: 1.401
+acc_all: 0.711
+
+objective: 1.348
+loss_all: 1.348
+acc_all: 0.717
+
+objective: 1.384
+loss_all: 1.384
+acc_all: 0.710
+
+objective: 1.401
+loss_all: 1.401
+acc_all: 0.705
+
+objective: 1.344
+loss_all: 1.344
+acc_all: 0.716
+
+objective: 1.393
+loss_all: 1.393
+acc_all: 0.710
+
+objective: 1.395
+loss_all: 1.395
+acc_all: 0.707
+
+objective: 1.360
+loss_all: 1.360
+acc_all: 0.713
+
+objective: 1.350
+loss_all: 1.350
+acc_all: 0.716
+
+objective: 1.419
+loss_all: 1.419
+acc_all: 0.706
+
+objective: 1.383
+loss_all: 1.383
+acc_all: 0.712
+
+objective: 1.375
+loss_all: 1.375
+acc_all: 0.710
+
+objective: 1.394
+loss_all: 1.394
+acc_all: 0.711
+
+objective: 1.335
+loss_all: 1.335
+acc_all: 0.718
+
+objective: 1.303
+loss_all: 1.303
+acc_all: 0.723
+
+objective: 1.349
+loss_all: 1.349
+acc_all: 0.719
+
+objective: 1.354
+loss_all: 1.354
+acc_all: 0.715
+
+objective: 1.344
+loss_all: 1.344
+acc_all: 0.717
+
+objective: 1.335
+loss_all: 1.335
+acc_all: 0.716
+
+objective: 1.403
+loss_all: 1.403
+acc_all: 0.705
+
+objective: 1.363
+loss_all: 1.363
+acc_all: 0.715
+
+objective: 1.326
+loss_all: 1.326
+acc_all: 0.718
+
+objective: 1.367
+loss_all: 1.367
+acc_all: 0.712
+
+objective: 1.331
+loss_all: 1.331
+acc_all: 0.715
+
+objective: 1.338
+loss_all: 1.338
+acc_all: 0.715
+
+objective: 1.410
+loss_all: 1.410
+acc_all: 0.701
+
+objective: 1.334
+loss_all: 1.334
+acc_all: 0.715
+
+objective: 1.350
+loss_all: 1.350
+acc_all: 0.712
+
+Epoch eval:
+Acc (Class-Method): 0.683
+Acc (Overall): 0.687
+Acc (class): 0.679
+Acc (method): 0.688
+Acc (punctuation): 0.864
+Acc (keyword): 0.677
+Acc (builtin): 0.729
+Acc (literal): 0.628
+Acc (other_identifier): 0.544
+
+Validation (OOD):
+objective: 1.724
+loss_all: 1.724
+acc_all: 0.675
+
+Epoch eval:
+Acc (Class-Method): 0.652
+Acc (Overall): 0.675
+Acc (class): 0.653
+Acc (method): 0.650
+Acc (punctuation): 0.855
+Acc (keyword): 0.673
+Acc (builtin): 0.723
+Acc (literal): 0.609
+Acc (other_identifier): 0.529
+Validation acc: 0.652
+Epoch 0 has the best validation performance so far.
+
+
+Epoch [1]:
+
+Train:
+objective: 1.153
+loss_all: 1.153
+acc_all: 0.740
+
+objective: 1.140
+loss_all: 1.140
+acc_all: 0.748
+
+objective: 1.138
+loss_all: 1.138
+acc_all: 0.745
+
+objective: 1.131
+loss_all: 1.131
+acc_all: 0.751
+
+objective: 1.143
+loss_all: 1.143
+acc_all: 0.745
+
+objective: 1.139
+loss_all: 1.139
+acc_all: 0.743
+
+objective: 1.167
+loss_all: 1.167
+acc_all: 0.745
+
+objective: 1.207
+loss_all: 1.207
+acc_all: 0.733
+
+objective: 1.176
+loss_all: 1.176
+acc_all: 0.739
+
+objective: 1.165
+loss_all: 1.165
+acc_all: 0.742
+
+objective: 1.146
+loss_all: 1.146
+acc_all: 0.743
+
+objective: 1.185
+loss_all: 1.185
+acc_all: 0.738
+
+objective: 1.188
+loss_all: 1.188
+acc_all: 0.739
+
+objective: 1.191
+loss_all: 1.191
+acc_all: 0.737
+
+objective: 1.107
+loss_all: 1.107
+acc_all: 0.749
+
+objective: 1.165
+loss_all: 1.165
+acc_all: 0.742
+
+objective: 1.135
+loss_all: 1.135
+acc_all: 0.745
+
+objective: 1.189
+loss_all: 1.189
+acc_all: 0.734
+
+objective: 1.140
+loss_all: 1.140
+acc_all: 0.748
+
+objective: 1.127
+loss_all: 1.127
+acc_all: 0.749
+
+objective: 1.134
+loss_all: 1.134
+acc_all: 0.748
+
+objective: 1.131
+loss_all: 1.131
+acc_all: 0.744
+
+objective: 1.181
+loss_all: 1.181
+acc_all: 0.738
+
+objective: 1.155
+loss_all: 1.155
+acc_all: 0.745
+
+objective: 1.133
+loss_all: 1.133
+acc_all: 0.747
+
+objective: 1.172
+loss_all: 1.172
+acc_all: 0.741
+
+objective: 1.199
+loss_all: 1.199
+acc_all: 0.736
+
+objective: 1.155
+loss_all: 1.155
+acc_all: 0.744
+
+objective: 1.151
+loss_all: 1.151
+acc_all: 0.744
+
+objective: 1.160
+loss_all: 1.160
+acc_all: 0.744
+
+objective: 1.150
+loss_all: 1.150
+acc_all: 0.746
+
+objective: 1.128
+loss_all: 1.128
+acc_all: 0.747
+
+objective: 1.128
+loss_all: 1.128
+acc_all: 0.747
+
+objective: 1.127
+loss_all: 1.127
+acc_all: 0.748
+
+objective: 1.151
+loss_all: 1.151
+acc_all: 0.743
+
+objective: 1.212
+loss_all: 1.212
+acc_all: 0.734
+
+objective: 1.162
+loss_all: 1.162
+acc_all: 0.739
+
+objective: 1.139
+loss_all: 1.139
+acc_all: 0.747
+
+objective: 1.120
+loss_all: 1.120
+acc_all: 0.750
+
+objective: 1.079
+loss_all: 1.079
+acc_all: 0.757
+
+objective: 1.135
+loss_all: 1.135
+acc_all: 0.747
+
+objective: 1.101
+loss_all: 1.101
+acc_all: 0.756
+
+objective: 1.117
+loss_all: 1.117
+acc_all: 0.751
+
+objective: 1.138
+loss_all: 1.138
+acc_all: 0.743
+
+objective: 1.125
+loss_all: 1.125
+acc_all: 0.748
+
+objective: 1.186
+loss_all: 1.186
+acc_all: 0.736
+
+objective: 1.115
+loss_all: 1.115
+acc_all: 0.749
+
+objective: 1.102
+loss_all: 1.102
+acc_all: 0.751
+
+objective: 1.131
+loss_all: 1.131
+acc_all: 0.747
+
+objective: 1.094
+loss_all: 1.094
+acc_all: 0.754
+
+objective: 1.158
+loss_all: 1.158
+acc_all: 0.742
+
+objective: 1.083
+loss_all: 1.083
+acc_all: 0.757
+
+objective: 1.119
+loss_all: 1.119
+acc_all: 0.749
+
+objective: 1.108
+loss_all: 1.108
+acc_all: 0.750
+
+objective: 1.080
+loss_all: 1.080
+acc_all: 0.758
+
+objective: 1.141
+loss_all: 1.141
+acc_all: 0.744
+
+objective: 1.112
+loss_all: 1.112
+acc_all: 0.751
+
+objective: 1.088
+loss_all: 1.088
+acc_all: 0.751
+
+objective: 1.143
+loss_all: 1.143
+acc_all: 0.745
+
+objective: 1.191
+loss_all: 1.191
+acc_all: 0.737
+
+objective: 1.190
+loss_all: 1.190
+acc_all: 0.737
+
+objective: 1.141
+loss_all: 1.141
+acc_all: 0.744
+
+objective: 1.109
+loss_all: 1.109
+acc_all: 0.752
+
+objective: 1.097
+loss_all: 1.097
+acc_all: 0.752
+
+objective: 1.108
+loss_all: 1.108
+acc_all: 0.753
+
+objective: 1.119
+loss_all: 1.119
+acc_all: 0.748
+
+objective: 1.067
+loss_all: 1.067
+acc_all: 0.760
+
+objective: 1.064
+loss_all: 1.064
+acc_all: 0.759
+
+objective: 1.115
+loss_all: 1.115
+acc_all: 0.751
+
+objective: 1.098
+loss_all: 1.098
+acc_all: 0.755
+
+objective: 1.131
+loss_all: 1.131
+acc_all: 0.748
+
+objective: 1.115
+loss_all: 1.115
+acc_all: 0.749
+
+objective: 1.085
+loss_all: 1.085
+acc_all: 0.757
+
+objective: 1.161
+loss_all: 1.161
+acc_all: 0.743
+
+objective: 1.052
+loss_all: 1.052
+acc_all: 0.762
+
+objective: 1.116
+loss_all: 1.116
+acc_all: 0.752
+
+objective: 1.056
+loss_all: 1.056
+acc_all: 0.760
+
+objective: 1.118
+loss_all: 1.118
+acc_all: 0.751
+
+objective: 1.082
+loss_all: 1.082
+acc_all: 0.754
+
+objective: 1.111
+loss_all: 1.111
+acc_all: 0.751
+
+objective: 1.098
+loss_all: 1.098
+acc_all: 0.753
+
+objective: 1.099
+loss_all: 1.099
+acc_all: 0.752
+
+objective: 1.073
+loss_all: 1.073
+acc_all: 0.753
+
+objective: 1.124
+loss_all: 1.124
+acc_all: 0.747
+
+objective: 1.124
+loss_all: 1.124
+acc_all: 0.746
+
+objective: 1.067
+loss_all: 1.067
+acc_all: 0.762
+
+objective: 1.083
+loss_all: 1.083
+acc_all: 0.755
+
+objective: 1.102
+loss_all: 1.102
+acc_all: 0.754
+
+objective: 1.102
+loss_all: 1.102
+acc_all: 0.751
+
+objective: 1.119
+loss_all: 1.119
+acc_all: 0.750
+
+objective: 1.105
+loss_all: 1.105
+acc_all: 0.751
+
+objective: 1.087
+loss_all: 1.087
+acc_all: 0.756
+
+objective: 1.098
+loss_all: 1.098
+acc_all: 0.755
+
+objective: 1.067
+loss_all: 1.067
+acc_all: 0.758
+
+objective: 1.102
+loss_all: 1.102
+acc_all: 0.752
+
+objective: 1.071
+loss_all: 1.071
+acc_all: 0.757
+
+objective: 1.097
+loss_all: 1.097
+acc_all: 0.751
+
+objective: 1.110
+loss_all: 1.110
+acc_all: 0.751
+
+objective: 1.114
+loss_all: 1.114
+acc_all: 0.750
+
+objective: 1.042
+loss_all: 1.042
+acc_all: 0.765
+
+objective: 1.086
+loss_all: 1.086
+acc_all: 0.756
+
+objective: 1.084
+loss_all: 1.084
+acc_all: 0.755
+
+objective: 1.075
+loss_all: 1.075
+acc_all: 0.758
+
+objective: 1.058
+loss_all: 1.058
+acc_all: 0.763
+
+objective: 1.086
+loss_all: 1.086
+acc_all: 0.754
+
+objective: 1.047
+loss_all: 1.047
+acc_all: 0.764
+
+objective: 1.082
+loss_all: 1.082
+acc_all: 0.757
+
+objective: 1.070
+loss_all: 1.070
+acc_all: 0.758
+
+objective: 1.065
+loss_all: 1.065
+acc_all: 0.758
+
+objective: 1.098
+loss_all: 1.098
+acc_all: 0.753
+
+objective: 1.078
+loss_all: 1.078
+acc_all: 0.757
+
+objective: 1.091
+loss_all: 1.091
+acc_all: 0.755
+
+objective: 1.052
+loss_all: 1.052
+acc_all: 0.763
+
+objective: 1.062
+loss_all: 1.062
+acc_all: 0.757
+
+objective: 1.038
+loss_all: 1.038
+acc_all: 0.767
+
+objective: 1.105
+loss_all: 1.105
+acc_all: 0.753
+
+objective: 1.038
+loss_all: 1.038
+acc_all: 0.762
+
+objective: 1.075
+loss_all: 1.075
+acc_all: 0.759
+
+objective: 1.089
+loss_all: 1.089
+acc_all: 0.756
+
+objective: 1.056
+loss_all: 1.056
+acc_all: 0.760
+
+objective: 1.065
+loss_all: 1.065
+acc_all: 0.758
+
+objective: 1.081
+loss_all: 1.081
+acc_all: 0.753
+
+objective: 1.055
+loss_all: 1.055
+acc_all: 0.761
+
+objective: 1.051
+loss_all: 1.051
+acc_all: 0.761
+
+objective: 1.061
+loss_all: 1.061
+acc_all: 0.759
+
+objective: 1.091
+loss_all: 1.091
+acc_all: 0.754
+
+objective: 1.030
+loss_all: 1.030
+acc_all: 0.764
+
+objective: 1.017
+loss_all: 1.017
+acc_all: 0.767
+
+objective: 1.043
+loss_all: 1.043
+acc_all: 0.763
+
+objective: 1.091
+loss_all: 1.091
+acc_all: 0.755
+
+objective: 1.101
+loss_all: 1.101
+acc_all: 0.750
+
+objective: 1.103
+loss_all: 1.103
+acc_all: 0.750
+
+objective: 1.050
+loss_all: 1.050
+acc_all: 0.761
+
+objective: 1.047
+loss_all: 1.047
+acc_all: 0.764
+
+objective: 1.014
+loss_all: 1.014
+acc_all: 0.769
+
+objective: 1.062
+loss_all: 1.062
+acc_all: 0.759
+
+objective: 1.044
+loss_all: 1.044
+acc_all: 0.764
+
+objective: 1.089
+loss_all: 1.089
+acc_all: 0.754
+
+objective: 1.038
+loss_all: 1.038
+acc_all: 0.766
+
+objective: 1.029
+loss_all: 1.029
+acc_all: 0.766
+
+objective: 1.051
+loss_all: 1.051
+acc_all: 0.759
+
+objective: 1.052
+loss_all: 1.052
+acc_all: 0.759
+
+objective: 1.030
+loss_all: 1.030
+acc_all: 0.768
+
+objective: 1.074
+loss_all: 1.074
+acc_all: 0.759
+
+objective: 1.050
+loss_all: 1.050
+acc_all: 0.760
+
+objective: 1.090
+loss_all: 1.090
+acc_all: 0.750
+
+objective: 1.042
+loss_all: 1.042
+acc_all: 0.764
+
+objective: 1.037
+loss_all: 1.037
+acc_all: 0.764
+
+objective: 1.063
+loss_all: 1.063
+acc_all: 0.760
+
+objective: 1.046
+loss_all: 1.046
+acc_all: 0.761
+
+objective: 1.034
+loss_all: 1.034
+acc_all: 0.764
+
+objective: 1.004
+loss_all: 1.004
+acc_all: 0.771
+
+objective: 1.060
+loss_all: 1.060
+acc_all: 0.760
+
+objective: 1.021
+loss_all: 1.021
+acc_all: 0.769
+
+objective: 1.046
+loss_all: 1.046
+acc_all: 0.761
+
+objective: 1.044
+loss_all: 1.044
+acc_all: 0.763
+
+objective: 1.049
+loss_all: 1.049
+acc_all: 0.761
+
+objective: 1.046
+loss_all: 1.046
+acc_all: 0.760
+
+objective: 1.021
+loss_all: 1.021
+acc_all: 0.767
+
+objective: 1.035
+loss_all: 1.035
+acc_all: 0.765
+
+Epoch eval:
+Acc (Class-Method): 0.770
+Acc (Overall): 0.752
+Acc (class): 0.756
+Acc (method): 0.785
+Acc (punctuation): 0.900
+Acc (keyword): 0.718
+Acc (builtin): 0.783
+Acc (literal): 0.701
+Acc (other_identifier): 0.634
+
+Validation (OOD):
+objective: 1.798
+loss_all: 1.798
+acc_all: 0.677
+
+Epoch eval:
+Acc (Class-Method): 0.650
+Acc (Overall): 0.677
+Acc (class): 0.651
+Acc (method): 0.649
+Acc (punctuation): 0.859
+Acc (keyword): 0.659
+Acc (builtin): 0.726
+Acc (literal): 0.612
+Acc (other_identifier): 0.534
+Validation acc: 0.650
+
+
+Epoch [2]:
+
+Train:
+objective: 0.920
+loss_all: 0.920
+acc_all: 0.783
+
+objective: 0.911
+loss_all: 0.911
+acc_all: 0.784
+
+objective: 0.911
+loss_all: 0.911
+acc_all: 0.785
+
+objective: 0.914
+loss_all: 0.914
+acc_all: 0.784
+
+objective: 0.890
+loss_all: 0.890
+acc_all: 0.789
+
+objective: 0.845
+loss_all: 0.845
+acc_all: 0.797
+
+objective: 0.848
+loss_all: 0.848
+acc_all: 0.799
+
+objective: 0.929
+loss_all: 0.929
+acc_all: 0.781
+
+objective: 0.865
+loss_all: 0.865
+acc_all: 0.793
+
+objective: 0.860
+loss_all: 0.860
+acc_all: 0.794
+
+objective: 0.853
+loss_all: 0.853
+acc_all: 0.796
+
+objective: 0.892
+loss_all: 0.892
+acc_all: 0.788
+
+objective: 0.885
+loss_all: 0.885
+acc_all: 0.788
+
+objective: 0.882
+loss_all: 0.882
+acc_all: 0.791
+
+objective: 0.913
+loss_all: 0.913
+acc_all: 0.783
+
+objective: 0.901
+loss_all: 0.901
+acc_all: 0.787
+
+objective: 0.866
+loss_all: 0.866
+acc_all: 0.793
+
+objective: 0.887
+loss_all: 0.887
+acc_all: 0.786
+
+objective: 0.869
+loss_all: 0.869
+acc_all: 0.792
+
+objective: 0.881
+loss_all: 0.881
+acc_all: 0.792
+
+objective: 0.835
+loss_all: 0.835
+acc_all: 0.800
+
+objective: 0.904
+loss_all: 0.904
+acc_all: 0.788
+
+objective: 0.912
+loss_all: 0.912
+acc_all: 0.785
+
+objective: 0.872
+loss_all: 0.872
+acc_all: 0.794
+
+objective: 0.891
+loss_all: 0.891
+acc_all: 0.789
+
+objective: 0.860
+loss_all: 0.860
+acc_all: 0.794
+
+objective: 0.897
+loss_all: 0.897
+acc_all: 0.788
+
+objective: 0.891
+loss_all: 0.891
+acc_all: 0.787
+
+objective: 0.879
+loss_all: 0.879
+acc_all: 0.792
+
+objective: 0.894
+loss_all: 0.894
+acc_all: 0.791
+
+objective: 0.878
+loss_all: 0.878
+acc_all: 0.794
+
+objective: 0.902
+loss_all: 0.902
+acc_all: 0.788
+
+objective: 0.897
+loss_all: 0.897
+acc_all: 0.790
+
+objective: 0.845
+loss_all: 0.845
+acc_all: 0.797
+
+objective: 0.905
+loss_all: 0.905
+acc_all: 0.786
+
+objective: 0.920
+loss_all: 0.920
+acc_all: 0.784
+
+objective: 0.882
+loss_all: 0.882
+acc_all: 0.790
+
+objective: 0.896
+loss_all: 0.896
+acc_all: 0.789
+
+objective: 0.913
+loss_all: 0.913
+acc_all: 0.785
+
+objective: 0.904
+loss_all: 0.904
+acc_all: 0.786
+
+objective: 0.881
+loss_all: 0.881
+acc_all: 0.791
+
+objective: 0.899
+loss_all: 0.899
+acc_all: 0.789
+
+objective: 0.905
+loss_all: 0.905
+acc_all: 0.786
+
+objective: 0.846
+loss_all: 0.846
+acc_all: 0.798
+
+objective: 0.904
+loss_all: 0.904
+acc_all: 0.787
+
+objective: 0.887
+loss_all: 0.887
+acc_all: 0.790
+
+objective: 0.873
+loss_all: 0.873
+acc_all: 0.789
+
+objective: 0.895
+loss_all: 0.895
+acc_all: 0.786
+
+objective: 0.895
+loss_all: 0.895
+acc_all: 0.790
+
+objective: 0.867
+loss_all: 0.867
+acc_all: 0.794
+
+objective: 0.890
+loss_all: 0.890
+acc_all: 0.788
+
+objective: 0.849
+loss_all: 0.849
+acc_all: 0.797
+
+objective: 0.908
+loss_all: 0.908
+acc_all: 0.785
+
+objective: 0.896
+loss_all: 0.896
+acc_all: 0.791
+
+objective: 0.860
+loss_all: 0.860
+acc_all: 0.794
+
+objective: 0.899
+loss_all: 0.899
+acc_all: 0.786
+
+objective: 0.876
+loss_all: 0.876
+acc_all: 0.794
+
+objective: 0.860
+loss_all: 0.860
+acc_all: 0.794
+
+objective: 0.850
+loss_all: 0.850
+acc_all: 0.798
+
+objective: 0.877
+loss_all: 0.877
+acc_all: 0.793
+
+objective: 0.867
+loss_all: 0.867
+acc_all: 0.792
+
+objective: 0.874
+loss_all: 0.874
+acc_all: 0.791
+
+objective: 0.892
+loss_all: 0.892
+acc_all: 0.788
+
+objective: 0.887
+loss_all: 0.887
+acc_all: 0.790
+
+objective: 0.871
+loss_all: 0.871
+acc_all: 0.792
+
+objective: 0.868
+loss_all: 0.868
+acc_all: 0.793
+
+objective: 0.876
+loss_all: 0.876
+acc_all: 0.793
+
+objective: 0.835
+loss_all: 0.835
+acc_all: 0.801
+
+objective: 0.819
+loss_all: 0.819
+acc_all: 0.803
+
+objective: 0.891
+loss_all: 0.891
+acc_all: 0.790
+
+objective: 0.897
+loss_all: 0.897
+acc_all: 0.790
+
+objective: 0.857
+loss_all: 0.857
+acc_all: 0.796
+
+objective: 0.880
+loss_all: 0.880
+acc_all: 0.789
+
+objective: 0.852
+loss_all: 0.852
+acc_all: 0.797
+
+objective: 0.866
+loss_all: 0.866
+acc_all: 0.795
+
+objective: 0.886
+loss_all: 0.886
+acc_all: 0.789
+
+objective: 0.863
+loss_all: 0.863
+acc_all: 0.794
+
+objective: 0.842
+loss_all: 0.842
+acc_all: 0.797
+
+objective: 0.887
+loss_all: 0.887
+acc_all: 0.790
+
+objective: 0.914
+loss_all: 0.914
+acc_all: 0.785
+
+objective: 0.856
+loss_all: 0.856
+acc_all: 0.797
+
+objective: 0.874
+loss_all: 0.874
+acc_all: 0.791
+
+objective: 0.870
+loss_all: 0.870
+acc_all: 0.794
+
+objective: 0.833
+loss_all: 0.833
+acc_all: 0.800
+
+objective: 0.857
+loss_all: 0.857
+acc_all: 0.799
+
+objective: 0.859
+loss_all: 0.859
+acc_all: 0.798
+
+objective: 0.844
+loss_all: 0.844
+acc_all: 0.800
+
+objective: 0.827
+loss_all: 0.827
+acc_all: 0.803
+
+objective: 0.841
+loss_all: 0.841
+acc_all: 0.799
+
+objective: 0.892
+loss_all: 0.892
+acc_all: 0.789
+
+objective: 0.865
+loss_all: 0.865
+acc_all: 0.794
+
+objective: 0.836
+loss_all: 0.836
+acc_all: 0.799
+
+objective: 0.844
+loss_all: 0.844
+acc_all: 0.800
+
+objective: 0.867
+loss_all: 0.867
+acc_all: 0.793
+
+objective: 0.852
+loss_all: 0.852
+acc_all: 0.796
+
+objective: 0.849
+loss_all: 0.849
+acc_all: 0.794
+
+objective: 0.867
+loss_all: 0.867
+acc_all: 0.793
+
+objective: 0.885
+loss_all: 0.885
+acc_all: 0.788
+
+objective: 0.849
+loss_all: 0.849
+acc_all: 0.798
+
+objective: 0.856
+loss_all: 0.856
+acc_all: 0.797
+
+objective: 0.852
+loss_all: 0.852
+acc_all: 0.798
+
+objective: 0.884
+loss_all: 0.884
+acc_all: 0.789
+
+objective: 0.856
+loss_all: 0.856
+acc_all: 0.794
+
+objective: 0.844
+loss_all: 0.844
+acc_all: 0.798
+
+objective: 0.866
+loss_all: 0.866
+acc_all: 0.795
+
+objective: 0.853
+loss_all: 0.853
+acc_all: 0.797
+
+objective: 0.832
+loss_all: 0.832
+acc_all: 0.804
+
+objective: 0.867
+loss_all: 0.867
+acc_all: 0.793
+
+objective: 0.846
+loss_all: 0.846
+acc_all: 0.798
+
+objective: 0.861
+loss_all: 0.861
+acc_all: 0.796
+
+objective: 0.834
+loss_all: 0.834
+acc_all: 0.803
+
+objective: 0.839
+loss_all: 0.839
+acc_all: 0.800
+
+objective: 0.812
+loss_all: 0.812
+acc_all: 0.804
+
+objective: 0.854
+loss_all: 0.854
+acc_all: 0.799
+
+objective: 0.864
+loss_all: 0.864
+acc_all: 0.796
+
+objective: 0.852
+loss_all: 0.852
+acc_all: 0.797
+
+objective: 0.857
+loss_all: 0.857
+acc_all: 0.796
+
+objective: 0.851
+loss_all: 0.851
+acc_all: 0.797
+
+objective: 0.857
+loss_all: 0.857
+acc_all: 0.797
+
+objective: 0.824
+loss_all: 0.824
+acc_all: 0.803
+
+objective: 0.866
+loss_all: 0.866
+acc_all: 0.794
+
+objective: 0.833
+loss_all: 0.833
+acc_all: 0.802
+
+objective: 0.830
+loss_all: 0.830
+acc_all: 0.801
+
+objective: 0.831
+loss_all: 0.831
+acc_all: 0.802
+
+objective: 0.828
+loss_all: 0.828
+acc_all: 0.801
+
+objective: 0.868
+loss_all: 0.868
+acc_all: 0.793
+
+objective: 0.849
+loss_all: 0.849
+acc_all: 0.797
+
+objective: 0.866
+loss_all: 0.866
+acc_all: 0.796
+
+objective: 0.870
+loss_all: 0.870
+acc_all: 0.794
+
+objective: 0.862
+loss_all: 0.862
+acc_all: 0.795
+
+objective: 0.835
+loss_all: 0.835
+acc_all: 0.800
+
+objective: 0.862
+loss_all: 0.862
+acc_all: 0.795
+
+objective: 0.851
+loss_all: 0.851
+acc_all: 0.798
+
+objective: 0.863
+loss_all: 0.863
+acc_all: 0.794
+
+objective: 0.836
+loss_all: 0.836
+acc_all: 0.801
+
+objective: 0.836
+loss_all: 0.836
+acc_all: 0.801
+
+objective: 0.872
+loss_all: 0.872
+acc_all: 0.795
+
+objective: 0.813
+loss_all: 0.813
+acc_all: 0.806
+
+objective: 0.810
+loss_all: 0.810
+acc_all: 0.805
+
+objective: 0.849
+loss_all: 0.849
+acc_all: 0.797
+
+objective: 0.881
+loss_all: 0.881
+acc_all: 0.790
+
+objective: 0.851
+loss_all: 0.851
+acc_all: 0.795
+
+objective: 0.891
+loss_all: 0.891
+acc_all: 0.792
+
+objective: 0.865
+loss_all: 0.865
+acc_all: 0.795
+
+objective: 0.848
+loss_all: 0.848
+acc_all: 0.802
+
+objective: 0.841
+loss_all: 0.841
+acc_all: 0.801
+
+objective: 0.851
+loss_all: 0.851
+acc_all: 0.798
+
+objective: 0.837
+loss_all: 0.837
+acc_all: 0.800
+
+objective: 0.828
+loss_all: 0.828
+acc_all: 0.803
+
+objective: 0.852
+loss_all: 0.852
+acc_all: 0.797
+
+objective: 0.839
+loss_all: 0.839
+acc_all: 0.798
+
+objective: 0.845
+loss_all: 0.845
+acc_all: 0.798
+
+objective: 0.851
+loss_all: 0.851
+acc_all: 0.794
+
+objective: 0.841
+loss_all: 0.841
+acc_all: 0.800
+
+objective: 0.866
+loss_all: 0.866
+acc_all: 0.793
+
+objective: 0.832
+loss_all: 0.832
+acc_all: 0.802
+
+objective: 0.839
+loss_all: 0.839
+acc_all: 0.800
+
+objective: 0.870
+loss_all: 0.870
+acc_all: 0.794
+
+objective: 0.859
+loss_all: 0.859
+acc_all: 0.796
+
+objective: 0.862
+loss_all: 0.862
+acc_all: 0.798
+
+Epoch eval:
+Acc (Class-Method): 0.818
+Acc (Overall): 0.794
+Acc (class): 0.799
+Acc (method): 0.841
+Acc (punctuation): 0.921
+Acc (keyword): 0.743
+Acc (builtin): 0.820
+Acc (literal): 0.755
+Acc (other_identifier): 0.693
+
+Validation (OOD):
+objective: 1.898
+loss_all: 1.898
+acc_all: 0.674
+
+Epoch eval:
+Acc (Class-Method): 0.643
+Acc (Overall): 0.674
+Acc (class): 0.639
+Acc (method): 0.646
+Acc (punctuation): 0.856
+Acc (keyword): 0.667
+Acc (builtin): 0.721
+Acc (literal): 0.610
+Acc (other_identifier): 0.531
+Validation acc: 0.643
+
