@@ -1,11 +1,11 @@
 import re
 from pprint import pprint
 
-DIRECTORY = 'logs24k'
+DIRECTORY = 'logs500'
 
 # Input directories
-INPUT1 = f'{DIRECTORY}/all-1-per-new'
-INPUT2 = f'{DIRECTORY}/all-1-per'
+INPUT1 = f'{DIRECTORY}/mixed/all-1-per'
+INPUT2 = f'{DIRECTORY}/mixed/all-if-else-1-per'
 
 def parse_input(input_text):
     # Regular expressions for extracting data
@@ -50,9 +50,10 @@ def read_data_from_file(file_path):
         data = file.read()
     return data
 
-# Function to extract the relevant part of the directory name
+# Extract the part of the path after the DIRECTORY
 def format_label(label):
-    return label.split('/')[-1]
+    formatted_label = label.replace(DIRECTORY + '/', '')
+    return formatted_label
 
 def percent_difference(metric1, metric2):
     if metric1 == 0 and metric2 == 0:
