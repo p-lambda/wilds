@@ -1,8 +1,19 @@
+"""
+Takes version of py150 dataset and outputs an augmented dataset that 
+contains either an original code snippet or its augmented counterpart,
+but not both.
+
+Expects output log directory as command-line argument, to output stats
+on which augmentations were applied.
+"""
 import sys
 import os
 import shutil
 from generate_refactoring import *
 import argparse
+
+DATA_DIR = 'data'
+AUG_DIR = 'data-aug'
 
 # Custom print function to output both to stdout and log file
 def custom_print(*args, **kwargs):
@@ -26,9 +37,6 @@ original_stdout = sys.stdout  # Save a reference to the original standard output
 log_file_path = os.path.join(output_log_directory, 'aug.log')
 log_file = open(log_file_path, 'w')
 sys.stdout = log_file  # Change the standard output to the file we created
-
-DATA_DIR = 'data24k'
-AUG_DIR = 'data24k-aug'
 
 def format_python_code(snippet):
     formatted_code = snippet.replace(" <EOL>", "\n")
@@ -90,27 +98,19 @@ def process_file(input_file_path, output_file_path, combined_file_path, k):
     with open(output_file_path, 'w') as output_file:
         output_file.write('\n'.join(new_content))
 
-    # Combine the original and new files into a third file
+    # Combine mixture of original and new files into a third file
+    with open(input_file_path, 'r') as input_file:
+        orig_snippets = input_file.read().splitlines()
+    
+    with open(output_file_path, 'r') as new_file:
+        aug_snippets = new_file.read().splitlines()
+
+    mixed_snippets = []
+    for i in range(0, len(orig_snippets)):
+        mixed_snippets.append(orig_snippets[i] if i % 2 == 0 else aug_snippets[i])
+
     with open(combined_file_path, 'w') as combined_file:
-        with open(input_file_path, 'r') as original_file:
-            combined_file.write(original_file.read() + '\n')
-
-        with open(output_file_path, 'r') as new_file:
-            combined_file.write(new_file.read())
-
-def duplicate_meta_content(meta_file_path, output_meta_path):
-    # Ensure the output directory exists
-    os.makedirs(os.path.dirname(output_meta_path), exist_ok=True)
-
-    with open(meta_file_path, 'r') as meta_file:
-        meta_lines = meta_file.read().splitlines()
-
-    # Duplicate the contents
-    duplicated_content = meta_lines + meta_lines
-
-    # Write the duplicated content to the output file
-    with open(output_meta_path, 'w') as output_meta:
-        output_meta.write('\n'.join(duplicated_content))
+        combined_file.write('\n'.join(mixed_snippets))
 
 def copy_file_or_directory(source, destination):
     """
@@ -136,14 +136,7 @@ combined_file = f'{AUG_DIR}/py150_v1.0/raw/train.txt'
 
 process_file(input_file, output_file, combined_file, 1)
 
-######################## Duplicate meta files ###############################
-
-meta_file_path = f'{DATA_DIR}/py150_v1.0/metadata/repo_file_names/train.txt'
-output_meta_path = f'{AUG_DIR}/py150_v1.0/metadata/repo_file_names/train.txt'
-
-duplicate_meta_content(meta_file_path, output_meta_path)
-
-######################## Copy the additional dataset files ####################
+######################## Copy the dataset files ####################
 datasets_to_copy = {
     f'{DATA_DIR}/py150_v1.0/raw/OODval.txt': f'{AUG_DIR}/py150_v1.0/raw/OODval.txt',
     f'{DATA_DIR}/py150_v1.0/raw/OODtest.txt': f'{AUG_DIR}/py150_v1.0/raw/OODtest.txt',
@@ -154,6 +147,7 @@ datasets_to_copy = {
     f'{DATA_DIR}/py150_v1.0/metadata/repo_file_names/IDval.txt': f'{AUG_DIR}/py150_v1.0/metadata/repo_file_names/IDval.txt',
     f'{DATA_DIR}/py150_v1.0/metadata/repo_file_names/IDtest.txt': f'{AUG_DIR}/py150_v1.0/metadata/repo_file_names/IDtest.txt',
     f'{DATA_DIR}/py150_v1.0/metadata/repo_file_names/repo_ids.csv': f'{AUG_DIR}/py150_v1.0/metadata/repo_file_names/repo_ids.csv',
+    f'{DATA_DIR}/py150_v1.0/metadata/repo_file_names/train.txt': f'{AUG_DIR}/py150_v1.0/metadata/repo_file_names/train.txt',
     f'{DATA_DIR}/py150_v1.0/script': f'{AUG_DIR}/py150_v1.0/script',
     f'{DATA_DIR}/py150_v1.0/RELEASE_v1.0.txt': f'{AUG_DIR}/py150_v1.0/RELEASE_v1.0.txt'
 }
