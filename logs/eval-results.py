@@ -4,8 +4,8 @@ from pprint import pprint
 DIRECTORY = 'logs24k'
 
 # Input directories
-INPUT1 = f'{DIRECTORY}/all-1'
-INPUT2 = f'{DIRECTORY}/all-all'
+INPUT1 = f'{DIRECTORY}/all-1-per-new'
+INPUT2 = f'{DIRECTORY}/all-1-per'
 
 def parse_input(input_text):
     # Regular expressions for extracting data
@@ -54,6 +54,12 @@ def read_data_from_file(file_path):
 def format_label(label):
     return label.split('/')[-1]
 
+def percent_difference(metric1, metric2):
+    if metric1 == 0 and metric2 == 0:
+        return 0
+    diff = round(abs(metric1 - metric2) * 100, 1)
+    return diff
+
 def compare_data(data1, data2, label1, label2):
     comparison = {}
     overall_performance = {}
@@ -68,20 +74,20 @@ def compare_data(data1, data2, label1, label2):
 
         # Compare Train Accuracy
         train_acc1, train_acc2 = data1['epochs'][i]['train']['acc_all'][-1], data2['epochs'][i]['train']['acc_all'][-1]
-        epoch_comp['Train Accuracy'] = (train_acc1, train_acc2, better_metric(train_acc1, train_acc2, formatted_label1, formatted_label2, better_count))
+        epoch_comp['Train Accuracy'] = (train_acc1, train_acc2, better_metric(train_acc1, train_acc2, formatted_label1, formatted_label2, better_count), percent_difference(train_acc1, train_acc2))
 
         # Compare Validation Accuracy
         val_acc1, val_acc2 = data1['epochs'][i]['validation']['acc_all'], data2['epochs'][i]['validation']['acc_all']
-        epoch_comp['Validation Accuracy'] = (val_acc1, val_acc2, better_metric(val_acc1, val_acc2, formatted_label1, formatted_label2, better_count))
+        epoch_comp['Validation Accuracy'] = (val_acc1, val_acc2, better_metric(val_acc1, val_acc2, formatted_label1, formatted_label2, better_count), percent_difference(val_acc1, val_acc2))
 
         # Compare Validation Acc Metric
         val_acc_metric1, val_acc_metric2 = data1['epochs'][i]['validation_acc'], data2['epochs'][i]['validation_acc']
-        epoch_comp['Validation Acc Metric'] = (val_acc_metric1, val_acc_metric2, better_metric(val_acc_metric1, val_acc_metric2, formatted_label1, formatted_label2, better_count))
+        epoch_comp['Validation Acc Metric'] = (val_acc_metric1, val_acc_metric2, better_metric(val_acc_metric1, val_acc_metric2, formatted_label1, formatted_label2, better_count), percent_difference(val_acc_metric1, val_acc_metric2))
 
         # Compare detailed accuracies
         for key in data1['epochs'][i]['detailed_acc'].keys():
             acc1, acc2 = data1['epochs'][i]['detailed_acc'][key], data2['epochs'][i]['detailed_acc'][key]
-            epoch_comp[f'Acc ({key})'] = (acc1, acc2, better_metric(acc1, acc2, formatted_label1, formatted_label2, better_count))
+            epoch_comp[f'Acc ({key})'] = (acc1, acc2, better_metric(acc1, acc2, formatted_label1, formatted_label2, better_count), percent_difference(acc1, acc2))
 
         comparison[f'Epoch {i}'] = epoch_comp
         overall_performance[f'Epoch {i}'] = determine_overall_performance(better_count, formatted_label1, formatted_label2)
