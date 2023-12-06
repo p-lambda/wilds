@@ -1,11 +1,11 @@
 import re
 from pprint import pprint
 
-DIRECTORY = 'logs500'
+DIRECTORY = 'logs1500'
 
 # Input directories
-INPUT1 = f'{DIRECTORY}/mixed/all-1-per'
-INPUT2 = f'{DIRECTORY}/mixed/all-if-else-1-per'
+INPUT1 = f'{DIRECTORY}/mixed/test'
+INPUT2 = f'{DIRECTORY}/control'
 
 def parse_input(input_text):
     # Regular expressions for extracting data
@@ -79,11 +79,11 @@ def compare_data(data1, data2, label1, label2):
 
         # Compare Validation Accuracy
         val_acc1, val_acc2 = data1['epochs'][i]['validation']['acc_all'], data2['epochs'][i]['validation']['acc_all']
-        epoch_comp['Validation Accuracy'] = (val_acc1, val_acc2, better_metric(val_acc1, val_acc2, formatted_label1, formatted_label2, better_count), percent_difference(val_acc1, val_acc2))
+        epoch_comp['Test OOD All'] = (val_acc1, val_acc2, better_metric(val_acc1, val_acc2, formatted_label1, formatted_label2, better_count), percent_difference(val_acc1, val_acc2))
 
         # Compare Validation Acc Metric
         val_acc_metric1, val_acc_metric2 = data1['epochs'][i]['validation_acc'], data2['epochs'][i]['validation_acc']
-        epoch_comp['Validation Acc Metric'] = (val_acc_metric1, val_acc_metric2, better_metric(val_acc_metric1, val_acc_metric2, formatted_label1, formatted_label2, better_count), percent_difference(val_acc_metric1, val_acc_metric2))
+        epoch_comp['Test OOD Method/class'] = (val_acc_metric1, val_acc_metric2, better_metric(val_acc_metric1, val_acc_metric2, formatted_label1, formatted_label2, better_count), percent_difference(val_acc_metric1, val_acc_metric2))
 
         # Compare detailed accuracies
         for key in data1['epochs'][i]['detailed_acc'].keys():
