@@ -1,4 +1,4 @@
-Melanie: 
- - Running all augmentation combinations from 1 - 5 on a data1500 and data1500-aug 
-   set. Depending on how long this takes, I can continue to test even more 
-   augmentations on 1500 before we meet next, but I'll start with this. 
+Validation Acc/Acc (Class-Method) -> Test OOD Method/class Acc
+Acc Overall -> Test OOD All Acc
+acc_all -> Test ID Method/Class Acc
+Acc (builtin) -> Test ID All Acc
