@@ -165,7 +165,7 @@ def generate_adversarial_json(k, code):
     return refac
 
 
-def generate_adversarial_file_level(code, k, verbose=False):
+def generate_adversarial_file_level(code, k, max_refactor_limit, cumulative, verbose=False):
     """
     Apply k refactoring operations to the entire file-level code, potentially altering the overall structure.
 
@@ -173,6 +173,8 @@ def generate_adversarial_file_level(code, k, verbose=False):
         k (int): The number of refactoring methods to apply to the entire code.
         code (str): The source code of the entire file to refactor.
         verbose (bool): Whether to print detailed information about the refactoring process.
+        max_refactor_limit (int): The maximum limit for each refactoring method.
+        cumulative_refactoring_counts (dict): A dictionary to keep track of the number of times each refactoring method has been applied.
 
     Returns:
         tuple: A tuple containing the refactored code at the file level and a dictionary of refactoring counts.
@@ -198,32 +200,45 @@ def generate_adversarial_file_level(code, k, verbose=False):
     new_refactored_code = code
     refactoring_counts = {refactor.__name__: 0 for refactor in refactors_list}
 
+    successful_refactorings = 0  # Counter for successful refactorings
+
     for t in range(k):
+        available_refactors = [rf for rf in refactors_list if cumulative[rf.__name__] < max_refactor_limit]
+        if not available_refactors:
+            break
+
         vv = 0
-        while new_refactored_code == code and vv <= 20:
+        while new_refactored_code == code and vv <= 20 and successful_refactorings < k:
             try:
                 vv += 1
-                refactor = random.choice(refactors_list)
+                refactor = random.choice(available_refactors)
                 if verbose:
                     print('*' * 50, refactor.__name__, '*' * 50)
                 updated_code = refactor(new_refactored_code)
                 if updated_code != new_refactored_code:
+                    successful_refactorings += 1
                     new_refactored_code = updated_code
                     refactoring_counts[refactor.__name__] += 1
+                    cumulative[refactor.__name__] += 1
+                    if successful_refactorings >= k:
+                        break
             except Exception as error:
                 if verbose:
                     print(f'Error applying {refactor.__name__}:\t{error}')
 
                 # Prepare a shuffled list of alternative refactors
-                alternatives = [rf for rf in refactors_list if rf != refactor]
+                alternatives = [rf for rf in available_refactors if rf != refactor]
                 random.shuffle(alternatives)
-
                 for alternative_refactor in alternatives:
                     try:
                         updated_code = alternative_refactor(new_refactored_code)
                         if updated_code != new_refactored_code:
+                            successful_refactorings += 1
                             new_refactored_code = updated_code
                             refactoring_counts[alternative_refactor.__name__] += 1
+                            cumulative[alternative_refactor.__name__] += 1
+                            if successful_refactorings >= k:
+                                break
                             if verbose:
                                 print(f'Applied alternative {alternative_refactor.__name__}')
                             break

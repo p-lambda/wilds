@@ -12,8 +12,11 @@ import shutil
 from generate_refactoring import *
 import argparse
 
-DATA_DIR = 'data'
-AUG_DIR = 'data-aug'
+DATA_DIR = 'data1500'
+AUG_DIR = 'data1500-aug'
+SIZE = 1500
+PERCENT = 0.075
+max_refactor_limit = int(PERCENT * SIZE)
 
 # Custom print function to output both to stdout and log file
 def custom_print(*args, **kwargs):
@@ -84,7 +87,8 @@ def process_file(input_file_path, output_file_path, combined_file_path, k):
     for snippet in content:
         if '<s>' in snippet:
             formatted_code = format_python_code(snippet)
-            refactored_code, refactoring_counts = generate_adversarial_file_level(formatted_code, k)
+            cumulative_refactoring_counts_copy = cumulative_refactoring_counts.copy()
+            refactored_code, refactoring_counts = generate_adversarial_file_level(formatted_code, k, max_refactor_limit, cumulative_refactoring_counts_copy)
             for refactor, count in refactoring_counts.items():
                 cumulative_refactoring_counts[refactor] += count
             original_style_code = reformat_to_original_style(refactored_code)
@@ -93,6 +97,11 @@ def process_file(input_file_path, output_file_path, combined_file_path, k):
     # Print cumulative refactoring counts after the loop
     for refactor, count in cumulative_refactoring_counts.items():
         custom_print(f"{refactor}: Applied {count} times")
+    
+    total = 0
+    for count in cumulative_refactoring_counts.values():
+        total = total + count
+    custom_print(f"Total applied: {total} times")
 
     # Write the new content to the output file
     with open(output_file_path, 'w') as output_file:
