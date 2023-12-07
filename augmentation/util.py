@@ -2,6 +2,8 @@ import javalang
 import secrets
 import random
 import json
+import textwrap
+from nltk.corpus import wordnet as wn
 
 from os import listdir
 from os.path import isfile, join
@@ -371,4 +373,144 @@ def get_branch_for_mutant():
     mutant = 'for ' + var + ' in range(0): ' + get_random_type_name_and_value_statment()
     return mutant
 
+def get_related_words(word, pos=wn.NOUN, limit=3):
+    """
+    Fetches a list of words related to the given word up to a specified limit.
 
+    :param word: The word for which to find related words.
+    :param pos: Part of speech (default is noun).
+    :param limit: The maximum number of related words to return.
+    :return: A list of related words.
+    """
+    synsets = wn.synsets(word, pos=pos)
+    related_words = set()
+    for syn in synsets:
+        for lemma in syn.lemmas():
+            if len(related_words) < limit:
+                related_words.add(lemma.name().replace('_', ' '))
+            else:
+                break
+    return list(related_words)
+
+def generate_function_name():
+    """
+    Generates a random function name using nouns from WordNet.
+
+    :return: A string representing a randomly chosen function name.
+    """
+    synsets = list(wn.all_synsets(wn.NOUN))
+    word = random.choice(synsets).lemmas()[0].name().replace('_', '')
+    return word
+
+def generate_random_string_value(base_word):
+    """
+    Generates a random string value that is semantically related to the given base word.
+
+    :param base_word: The base word to find related string values.
+    :return: A string value related to the base word.
+    """
+    related_words = get_related_words(base_word, limit=10)
+    if related_words:
+        return random.choice(related_words)
+    else:
+        # Fallback to a generic string if no related words are found
+        return "related string"
+
+def generate_random_value(base_word):
+    """
+    Generates a random value which could be an integer, a float, or a string semantically related to the base word.
+
+    :param base_word: The base word used for generating a related string value.
+    :return: A randomly chosen integer, float, or string.
+    """
+    value_types = [
+        lambda: random.randint(0, 100),
+        lambda: round(random.uniform(0.0, 100.0), 2),
+        lambda: generate_random_string_value(base_word)
+    ]
+    return random.choice(value_types)()
+
+def generate_related_var_name(arg_name):
+    """
+    Generates a variable name that is semantically related to the given argument name.
+
+    :param arg_name: The name of the argument for which to generate a related variable name.
+    :return: A string representing a related variable name.
+    """
+    related_words = get_related_words(arg_name, limit=10)
+    for word in related_words:
+        if word.replace(' ', '_') != arg_name:
+            return word.replace(' ', '_')
+    return arg_name + '_var'  # Fallback if no different name is found
+
+def get_synonyms(word):
+    """
+    Fetches synonyms for a given word.
+
+    :param word: The word for which to find synonyms.
+    :return: A list of synonyms for the given word.
+    """
+    synonyms = set()
+    for syn in wn.synsets(word):
+        for lemma in syn.lemmas():
+            synonyms.add(lemma.name().replace('_', ' '))
+    return list(synonyms)
+
+def generate_function_purpose_comment(func_name, related_args):
+    """
+    Generates a purpose statement for a function based on its name and related arguments.
+
+    :param func_name: The name of the function.
+    :param related_args: A list of arguments related to the function.
+    :return: A string representing the purpose statement of the function.
+    """
+    action_words = get_synonyms("process")
+    complexity_words = get_related_words(func_name, limit=5)
+    complexity_word = random.choice(complexity_words) if complexity_words else "complex"
+    action_word = random.choice(action_words) if action_words else "processes"
+
+    args_description = ", ".join(related_args)
+    return f"    # The function '{func_name}' {action_word} {args_description} for {complexity_word} tasks."
+
+def generate_comment_for_var(var_name, func_name):
+    """
+    Generates a comment for a variable within the context of a function.
+
+    :param var_name: The name of the variable.
+    :param func_name: The name of the function in which the variable is used.
+    :return: A string representing the comment for the variable.
+    """
+    action_words = get_synonyms("operation")
+    action_word = random.choice(action_words) if action_words else "operation"
+    return f"    # {var_name} is utilized in {func_name} {action_word}."
+
+def generate_random_function():
+    """
+    Generates a random function with a random name, arguments, and body. The function includes operations and comments.
+
+    :return: A string representing the complete definition of the randomly generated function.
+    """
+    func_name = generate_function_name()
+    related_args = get_related_words(func_name, pos=wn.NOUN, limit=random.randint(1, 3))
+    args = ', '.join([arg.replace(' ', '_') for arg in related_args])
+    
+    body_lines = [generate_function_purpose_comment(func_name, related_args)]
+    operation_lines = []
+    for arg in related_args:
+        related_var_name = generate_related_var_name(arg.replace(' ', '_'))
+        operation_value = repr(generate_random_value(func_name))
+        operation_line = f"    {related_var_name} = {arg.replace(' ', '_')} + {operation_value}"
+        if random.choice([True, False]):  # Randomly decide to add a comment
+            comment = generate_comment_for_var(related_var_name, func_name)
+            operation_line += " " + comment  # Append comment on the same line
+        operation_lines.append(operation_line)
+        body_lines.append(operation_line)
+
+    if operation_lines:
+        num_vars_to_return = random.randint(1, len(operation_lines))
+        return_vars = random.sample(operation_lines, num_vars_to_return)
+        return_statement = 'return ' + ', '.join([var.split('=')[0].strip() for var in return_vars])
+        body_lines.append(return_statement)
+
+    function_def = f"def {func_name}({args}):\n" + '\n'.join(body_lines)
+    return function_def

@@ -524,6 +524,61 @@ def dead_branch_for(data):
     method_string = data.replace(statement, '\n' + new_statement + '\n' + statement)
     return method_string
 
+def insert_safe_random_space(code, n=50):
+    """
+    Inserts `n` random spaces into safe locations in the given code snippet.
+    Safe locations include spaces around operators, after commas, and around braces and brackets.
+
+    :param code: String containing the Python code snippet.
+    :param n: Number of random spaces to insert.
+    :return: String with the code snippet having `n` random spaces inserted at safe locations.
+    """
+    if n <= 0:
+        return code
+
+    # Characters around which spaces can safely be inserted
+    safe_chars = set(",;()[]{}+-*/&|=<>")
+
+    # Identifying safe positions to insert spaces
+    safe_positions = [i for i, char in enumerate(code) if char in safe_chars]
+
+    for _ in range(n):
+        if safe_positions:
+            # Choosing a random position from the safe positions
+            pos = random.choice(safe_positions)
+            code = code[:pos] + ' ' + code[pos:]
+            # Updating safe positions after insertion
+            safe_positions = [i + 1 if i >= pos else i for i in safe_positions]
+        else:
+            # If no safe positions left, break the loop
+            break
+
+    return code
+
+def insert_random_function(code, n=1):
+    """
+    Inserts a specified number of random functions into a given code snippet.
+
+    :param code: The original Python code snippet.
+    :param n: The number of random functions to insert.
+    :return: The modified code snippet with random functions added.
+    """
+
+    # Split the code into lines
+    lines = code.split('\n')
+    
+    # Decide on insertion points
+    # For simplicity, insert at the end of the code
+    insertion_point = len(lines)
+    
+    # Generate and insert n functions
+    for _ in range(n):
+        random_func = generate_random_function()
+        lines.insert(insertion_point, textwrap.dedent(random_func))
+        insertion_point += len(random_func.split('\n'))
+    
+    # Combine back into a single string
+    return '\n'.join(lines)
 
 if __name__ == '__main__':
     """

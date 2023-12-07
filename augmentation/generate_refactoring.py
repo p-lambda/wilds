@@ -191,10 +191,12 @@ def generate_adversarial_file_level(code, k, max_refactor_limit, cumulative, ver
                         add_print,
                         duplication,
                         apply_plus_zero_math,
+                        insert_random_function,
                         dead_branch_if_else,
                         dead_branch_if,
                         dead_branch_while,
                         dead_branch_for,
+                        insert_safe_random_space,
                         ]
     
     new_refactored_code = code
@@ -246,6 +248,19 @@ def generate_adversarial_file_level(code, k, max_refactor_limit, cumulative, ver
                         if verbose:
                             print(f'Error applying alternative {alternative_refactor.__name__}: {alt_error}')
                         continue
+        if new_refactored_code == code:
+            try:
+                updated_code = insert_safe_random_space(new_refactored_code)
+                if updated_code != new_refactored_code:
+                    successful_refactorings += 1
+                    new_refactored_code = updated_code
+                    refactoring_counts['insert_safe_random_spaces'] += 1
+                    cumulative['insert_safe_random_spaces'] += 1  # Increment even if over limit
+                    if verbose:
+                        print("Applied last resort refactoring: insert_safe_random_spaces")
+            except Exception as last_resort_error:
+                if verbose:
+                    print(f'Error applying last resort refactoring insert_safe_random_spaces: {last_resort_error}')
 
     return new_refactored_code, refactoring_counts
 
@@ -268,6 +283,7 @@ def generate_adversarial_file_level_n(code, n, verbose=False):
                         dead_branch_if,
                         dead_branch_while,
                         dead_branch_for,
+                        insert_safe_random_space,
                         ]
 
     new_refactored_code = code
