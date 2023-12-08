@@ -12,9 +12,9 @@ import shutil
 from generate_refactoring import *
 import argparse
 
-DATA_DIR = 'data1500'
-AUG_DIR = 'data1500-aug'
-SIZE = 1500
+DATA_DIR = 'data24k'
+AUG_DIR = 'data24k-aug'
+SIZE = 24000
 PERCENT = 0.065
 max_refactor_limit = int(PERCENT * (SIZE / 2))
 
@@ -78,6 +78,7 @@ def process_file(input_file_path, output_file_path, combined_file_path, k):
                     apply_plus_zero_math,
                     insert_random_function,
                     insert_random_class,
+                    create_typo,
                     dead_branch_if_else,
                     dead_branch_if,
                     dead_branch_while,

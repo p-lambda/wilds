@@ -193,6 +193,7 @@ def generate_adversarial_file_level(code, k, max_refactor_limit, cumulative, ver
                         apply_plus_zero_math,
                         insert_random_function,
                         insert_random_class,
+                        create_typo,
                         dead_branch_if_else,
                         dead_branch_if,
                         dead_branch_while,

@@ -604,6 +604,27 @@ def insert_random_class(code, n=1):
     # Combine back into a single string
     return '\n'.join(lines)
 
+def create_typo(method_string):
+    """
+    Creates a typo of a variable in the method by swapping two random
+    characters in the middle.
+
+    Parameters:
+    - method_string (str): The string representation of a method's code.
+
+    Returns:
+    - str: The method string with an argument renamed.
+    """
+    variables = extract_local_variable(method_string)
+    suitable_vars = [arg for arg in variables if len(arg) >= 4]
+    if len(suitable_vars) == 0:
+        return method_string
+    mutation_index = random.randint(0, len(suitable_vars) - 1)
+    argument = suitable_vars[mutation_index]
+    typo_index = random.randint(1, len(argument) - 2)
+    new_argument = argument[:typo_index] + argument[typo_index + 1] + argument[typo_index] + argument[typo_index + 2:]
+    return method_string.replace(argument, new_argument)
+
 if __name__ == '__main__':
     """
     Main execution block of the script.
