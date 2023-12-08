@@ -253,19 +253,69 @@ def remove_whitespace(text, num_indents):
         text = "\t" + text
     return text
 
+def fix_whitespace(text, num_indents):
+    # Remove whitespace before colons
+    text = re.sub(r'\s+:', ':', text)
+    # Remove whitespace before and after periods
+    text = re.sub(r'\s+\.', '.', text)
+    text = re.sub(r'\.\s+', '.', text)
+    # Remove whitespace in front of line
+    text = text.lstrip()
+    # Remove whitespace between word and opening parenthesis
+    text = re.sub(r'(\w)\s+\(', r'\1(', text)
+    for i in range(0, num_indents):
+        text = "\t" + text
+    return text
+
+def convert_to_python3(line):
+    new_line = line.replace("Exception ,", "Exception as")
+    if line.lstrip().startswith("print ") and '(' not in line:
+        # Split the line at 'print' and add parentheses around the rest of the line
+        parts = line.split("print ", 1)
+        new_line = "print(" + parts[1].rstrip() + ")"
+    return new_line
+
 def preprocess_source(source):
+    ifstack = []
+    trystack = []
+    empty_class_or_func = False
     lines = source.split('\n')
     num_indents = 0
     processed_lines = []
-    for line in lines:
+    for line in lines:            
         if len(line) == 0:
             continue
         last_char = line.rsplit()[-1]
-        processed_lines.append(remove_whitespace(line, num_indents))
+        line = convert_to_python3(line)
+        if len(trystack) != 0:
+            if "except " in line or "else :" in line or "finally :" in line:
+                num_indents = trystack[-1]
+        if len(ifstack) != 0:
+            if "elif " in line:
+                num_indents = ifstack[-1]
+            elif "else :" in line:
+                num_indents = ifstack.pop()
+        if "class " in line or "def " in line:
+            num_indents = 0
+            ifstack = []
+            trystack = []
+            if "def" in line and empty_class_or_func:
+                num_indents = 1 # member function of class
+        processed_lines.append(fix_whitespace(line, num_indents))
+        
         if last_char == ":":
-            num_indents = num_indents + 1
+            if "if " in line:
+                ifstack.append(num_indents)
+            elif "try" in line:
+                trystack.append(num_indents)
+            num_indents += 1
+                
         if "return" in line:
-            num_indents = num_indents - 1
+            num_indents = 0
+        if empty_class_or_func:
+            empty_class_or_func = False
+        if "class " in line or "def " in line:
+            empty_class_or_func = True # classes/functions need at least one line
     return '\n'.join(processed_lines)
 
 def hack(source):

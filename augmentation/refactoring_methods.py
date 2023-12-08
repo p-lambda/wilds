@@ -14,7 +14,6 @@ def rename_local_variable(method_string):
     Returns:
     - str: The method string with a local variable renamed.
     """
-    method_string = method_string.lstrip()
     local_var_list = extract_local_variable(method_string)
     if len(local_var_list) == 0:
         return method_string
@@ -576,6 +575,31 @@ def insert_random_function(code, n=1):
         random_func = generate_random_function()
         lines.insert(insertion_point, textwrap.dedent(random_func))
         insertion_point += len(random_func.split('\n'))
+    
+    # Combine back into a single string
+    return '\n'.join(lines)
+
+def insert_random_class(code, n=1):
+    """
+    Inserts a specified number of randomly generated classes into a given Python code snippet.
+
+    :param code: The Python code snippet into which the classes will be inserted.
+    :param n: The number of random classes to insert.
+    :return: The Python code snippet with the random classes inserted.
+    """
+
+    # Split the code into lines
+    lines = code.split('\n')
+    
+    # Decide on insertion points
+    # For simplicity, insert at the end of the code
+    insertion_point = len(lines)
+    
+    # Generate and insert n classes
+    for _ in range(n):
+        random_class = generate_random_class(random.randint(1, 3), random.randint(1, 3))  # Random number of fields and methods
+        lines.insert(insertion_point, textwrap.dedent(random_class))
+        insertion_point += len(random_class.split('\n'))
     
     # Combine back into a single string
     return '\n'.join(lines)
