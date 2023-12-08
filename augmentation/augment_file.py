@@ -12,11 +12,11 @@ import shutil
 from generate_refactoring import *
 import argparse
 
-DATA_DIR = 'data500'
-AUG_DIR = 'data500-aug'
-SIZE = 500
-PERCENT = 0.075
-max_refactor_limit = int(PERCENT * SIZE)
+DATA_DIR = 'data1500'
+AUG_DIR = 'data1500-aug'
+SIZE = 1500
+PERCENT = 0.065
+max_refactor_limit = int(PERCENT * (SIZE / 2))
 
 # Custom print function to output both to stdout and log file
 def custom_print(*args, **kwargs):
@@ -77,6 +77,7 @@ def process_file(input_file_path, output_file_path, combined_file_path, k):
                     duplication,
                     apply_plus_zero_math,
                     insert_random_function,
+                    insert_random_class,
                     dead_branch_if_else,
                     dead_branch_if,
                     dead_branch_while,
@@ -86,7 +87,9 @@ def process_file(input_file_path, output_file_path, combined_file_path, k):
 
     cumulative_refactoring_counts = {refactor.__name__: 0 for refactor in refactors_list}
 
-    for snippet in content:
+    # Apply augmentations to half of the snippets
+    midpoint = len(content) // 2
+    for snippet in content[midpoint:]:
         if '<s>' in snippet:
             formatted_code = format_python_code(snippet)
             cumulative_refactoring_counts_copy = cumulative_refactoring_counts.copy()
@@ -116,9 +119,17 @@ def process_file(input_file_path, output_file_path, combined_file_path, k):
     with open(output_file_path, 'r') as new_file:
         aug_snippets = new_file.read().splitlines()
 
+    # Holds snippets for combined train.txt file
     mixed_snippets = []
-    for i in range(0, len(orig_snippets)):
-        mixed_snippets.append(orig_snippets[i] if i % 2 == 0 else aug_snippets[i])
+
+    # Add in non-augmented half
+    for i in range(0, midpoint):
+        mixed_snippets.append(orig_snippets[i])
+
+    # Add in augmented half; must all come after the original snippets
+    # so snippets align with corresponding git repo in metadata file
+    for i in range(0, midpoint):
+        mixed_snippets.append(aug_snippets[i])
 
     with open(combined_file_path, 'w') as combined_file:
         combined_file.write('\n'.join(mixed_snippets))

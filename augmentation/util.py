@@ -514,3 +514,139 @@ def generate_random_function():
 
     function_def = f"def {func_name}({args}):\n" + '\n'.join(body_lines)
     return function_def
+
+def generate_class_name():
+    """
+    Generates a class name by randomly selecting a noun from WordNet and formatting it as a class name.
+
+    :return: A string representing a class name.
+    """
+    synsets = list(wn.all_synsets(wn.NOUN))
+    word = random.choice(synsets).lemmas()[0].name().capitalize().replace('_', '')
+    return word
+
+def generate_field_names(num_fields):
+    """
+    Generates a list of field names for a class. Each field name is a randomly selected function name.
+
+    :param num_fields: The number of field names to generate.
+    :return: A list of strings, each representing a field name.
+    """
+    return [generate_function_name() for _ in range(num_fields)]
+
+def generate_class_fields(num_fields):
+    """
+    Generates class field declarations with random types and names.
+
+    :param num_fields: The number of fields to generate for the class.
+    :return: A list of strings, each representing a field declaration in the class.
+    """
+    types = ["int", "float", "str"]
+    field_names = generate_field_names(num_fields)
+    return [f"{name}: {random.choice(types)}" for name in field_names]
+
+def generate_inheritance():
+    """
+    Generates a string representing class inheritance by randomly selecting from a predefined set of base classes.
+
+    :return: A string containing the base classes from which the new class will inherit, separated by commas.
+    """
+    BASE_CLASSES = ["object", "list", "dict", "set"]
+    base_classes = random.sample(BASE_CLASSES, random.randint(1, 2))
+    return ', '.join(base_classes)
+
+def generate_class_constructor(fields):
+    """
+    Generates a constructor method for a class, initializing each field provided.
+
+    :param fields: A list of fields to be initialized in the constructor.
+    :return: A string representing the constructor method of the class.
+    """
+    if not fields:
+        return "    def __init__(self):\n        pass\n"
+
+    args = ", ".join(["self"] + [f"{name}" for name in fields])
+    assignments = "\n".join([f"        self.{name} = {name}" for name in fields])
+    return f"    def __init__({args}):\n{assignments}\n"
+
+def apply_decorators(entity, is_class=False):
+    """
+    Optionally applies decorators to a class or method.
+
+    :param entity: The class or method code to which decorators may be applied.
+    :param is_class: Boolean indicating whether the entity is a class (affects the choice of decorators).
+    :return: The possibly decorated class or method code.
+    """
+    decorators = ["@classmethod", "@staticmethod", "@property"]
+    if random.choice([True, False]) and not is_class:
+        return random.choice(decorators) + "\n" + entity
+    return entity
+
+def generate_class_method(is_static=False):
+    """
+    Generates a class method, potentially adapting an existing sophisticated function for use as a class method.
+    The method can be static or instance (non-static).
+
+    :param is_static: Boolean indicating whether the generated method should be static.
+    :return: A string representing the class method definition.
+    """
+    method_code = generate_random_function()
+    
+    # Adjust the function definition to turn it into a class method
+    method_lines = method_code.split('\n')
+    if not is_static:
+        # Replace function name and add 'self' to arguments
+        def_line_parts = method_lines[0].split('(')
+        method_lines[0] = def_line_parts[0] + "(self, " + def_line_parts[1]
+        # Adjust operations to interact with class fields using 'self'
+        for i, line in enumerate(method_lines[1:], start=1):
+            if " = " in line:
+                left_side = line.split(" = ")[0]
+                if not left_side.strip().startswith("self."):
+                    method_lines[i] = "    self." + line.strip()
+    else:
+        # For static methods, remove 'self' from the method
+        def_line_parts = method_lines[0].split('(')
+        method_lines[0] = def_line_parts[0] + "()"
+
+    # Reassemble the method code
+    return '\n'.join(method_lines)
+
+def generate_class_methods(num_methods):
+    """
+    Generates a specified number of methods for a class.
+
+    :param num_methods: The number of methods to generate for the class.
+    :return: A list of strings, each representing a method definition for the class.
+    """
+    methods = []
+    for _ in range(num_methods):
+        is_static = random.choice([True, False])
+        method = generate_class_method(is_static)
+        methods.append(apply_decorators(method))
+    return methods
+
+def generate_random_class(num_fields, num_methods):
+    """
+    Generates a complete random class definition, including fields, methods, and optionally inherited classes.
+
+    :param num_fields: The number of fields to include in the class.
+    :param num_methods: The number of methods to include in the class.
+    :return: A string representing the complete definition of the class.
+    """
+    class_name = generate_class_name()
+    base_class = generate_inheritance()
+    fields = generate_class_fields(num_fields)
+    constructor = generate_class_constructor(fields)
+    methods = generate_class_methods(num_methods)
+
+    class_def = f"@apply_decorators\nclass {class_name}({base_class}):\n"
+    class_def += "    \"\"\"Advanced class definition with fields and methods.\"\"\"\n"
+    # Include field definitions
+    for field in fields:
+        class_def += f"    {field}\n"
+    class_def += constructor + "\n"
+    for method in methods:
+        class_def += method + "\n\n"
+
+    return class_def.strip()

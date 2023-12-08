@@ -192,6 +192,7 @@ def generate_adversarial_file_level(code, k, max_refactor_limit, cumulative, ver
                         duplication,
                         apply_plus_zero_math,
                         insert_random_function,
+                        insert_random_class,
                         dead_branch_if_else,
                         dead_branch_if,
                         dead_branch_while,
@@ -206,11 +207,9 @@ def generate_adversarial_file_level(code, k, max_refactor_limit, cumulative, ver
 
     for t in range(k):
         available_refactors = [rf for rf in refactors_list if cumulative[rf.__name__] < max_refactor_limit]
-        if not available_refactors:
-            break
 
         vv = 0
-        while new_refactored_code == code and vv <= 20 and successful_refactorings < k:
+        while new_refactored_code == code and vv <= 20 and available_refactors and successful_refactorings < k:
             try:
                 vv += 1
                 refactor = random.choice(available_refactors)
