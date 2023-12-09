@@ -210,7 +210,7 @@ def generate_adversarial_file_level(code, k, max_refactor_limit, cumulative, ver
         available_refactors = [rf for rf in refactors_list if cumulative[rf.__name__] < max_refactor_limit]
 
         vv = 0
-        while new_refactored_code == code and vv <= 20 and available_refactors and successful_refactorings < k:
+        while vv <= 20 and available_refactors and (new_refactored_code == code or successful_refactorings < k):
             try:
                 vv += 1
                 refactor = random.choice(available_refactors)
