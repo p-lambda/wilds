@@ -1,22 +1,41 @@
-"""
-Takes version of py150 dataset and outputs an augmented dataset that 
-contains either an original code snippet or its augmented counterpart,
-but not both.
-
-Expects output log directory as command-line argument, to output stats
-on which augmentations were applied.
-"""
 import sys
 import os
 import shutil
 from generate_refactoring import *
 import argparse
 
-DATA_DIR = 'data24k'
-AUG_DIR = 'data24k-aug'
-SIZE = 24000
-PERCENT = 0.065
-max_refactor_limit = int(PERCENT * (SIZE / 2))
+# List of refactoring functions to apply
+refactors_list = [
+                rename_argument, 
+                return_optimal, 
+                add_argumemts,
+                rename_api, 
+                rename_local_variable,
+                add_local_variable,
+                rename_method_name,
+                enhance_if,
+                add_print,
+                duplication,
+                apply_plus_zero_math,
+                insert_random_function,
+                insert_random_class,
+                create_typo,
+                dead_branch_if_else,
+                dead_branch_if,
+                dead_branch_while,
+                dead_branch_for,
+                insert_safe_random_space,
+                ]
+
+DATA_DIR = 'data500'
+AUG_DIR = 'data500-aug'
+SIZE_OF_DATASET = 500
+APPLY_K_PER_SNIPPET = 1
+SIZE_TO_AUGMENT = (SIZE_OF_DATASET / 2) * APPLY_K_PER_SNIPPET
+NO_REFACTORINGS = refactors_list.__len__()
+RELAXATION_FACTOR = 1
+PERCENT_LIMIT = (100 / NO_REFACTORINGS + RELAXATION_FACTOR) / 100
+REFACTOR_LIMIT = int(PERCENT_LIMIT * SIZE_TO_AUGMENT)
 
 # Custom print function to output both to stdout and log file
 def custom_print(*args, **kwargs):
@@ -55,7 +74,7 @@ def ensure_directory_exists(file_path):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-def process_file(input_file_path, output_file_path, combined_file_path, k):
+def process_file(input_file_path, output_file_path, combined_file_path):
     ensure_directory_exists(output_file_path)
     ensure_directory_exists(combined_file_path)
 
@@ -63,28 +82,6 @@ def process_file(input_file_path, output_file_path, combined_file_path, k):
         content = file.read().split('</s>')
 
     new_content = []
-
-    refactors_list = [
-                    rename_argument, 
-                    return_optimal, 
-                    add_argumemts,
-                    rename_api, 
-                    rename_local_variable,
-                    add_local_variable,
-                    rename_method_name,
-                    enhance_if,
-                    add_print,
-                    duplication,
-                    apply_plus_zero_math,
-                    insert_random_function,
-                    insert_random_class,
-                    create_typo,
-                    dead_branch_if_else,
-                    dead_branch_if,
-                    dead_branch_while,
-                    dead_branch_for,
-                    insert_safe_random_space,
-                    ]
 
     cumulative_refactoring_counts = {refactor.__name__: 0 for refactor in refactors_list}
 
@@ -94,7 +91,7 @@ def process_file(input_file_path, output_file_path, combined_file_path, k):
         if '<s>' in snippet:
             formatted_code = format_python_code(snippet)
             cumulative_refactoring_counts_copy = cumulative_refactoring_counts.copy()
-            refactored_code, refactoring_counts = generate_adversarial_file_level(formatted_code, k, max_refactor_limit, cumulative_refactoring_counts_copy)
+            refactored_code, refactoring_counts = generate_adversarial_file_level(formatted_code, refactors_list, APPLY_K_PER_SNIPPET, REFACTOR_LIMIT, cumulative_refactoring_counts_copy)
             for refactor, count in refactoring_counts.items():
                 cumulative_refactoring_counts[refactor] += count
             original_style_code = reformat_to_original_style(refactored_code)
@@ -157,7 +154,7 @@ input_file = f'{DATA_DIR}/py150_v1.0/raw/train.txt'
 output_file = f'{AUG_DIR}/py150_v1.0/raw/train-aug.txt'
 combined_file = f'{AUG_DIR}/py150_v1.0/raw/train.txt'
 
-process_file(input_file, output_file, combined_file, 1)
+process_file(input_file, output_file, combined_file)
 
 ######################## Copy the dataset files ####################
 datasets_to_copy = {
