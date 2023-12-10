@@ -2,19 +2,31 @@ import random
 import os
 import shutil
 
+# Constants for input and output directories, and the sample size for the data
 INPUT = 'data'
 OUTPUT = 'data24k'
+SAMPLE_SIZE = 24000
 
 def calculate_sample_sizes(train_sample_size, proportions):
     """
-    Calculate sample sizes for other datasets based on the proportion and training dataset sample size.
+    Calculate sample sizes for other datasets based on their proportions relative to the training dataset.
+
+    :param train_sample_size: The sample size of the training dataset.
+    :param proportions: A dictionary of proportions for each dataset.
+    :return: A dictionary containing the calculated sample sizes for each dataset.
     """
     total = sum(proportions.values())
     return {key: round((value / total) * train_sample_size) for key, value in proportions.items()}
 
 def sample_from_file(input_path, output_path, sample_size, sample_indices=None):
     """
-    Sample lines from a file based on sample_indices or a given sample_size.
+    Sample lines from a file either based on provided sample indices or by randomly selecting a specified number of lines.
+
+    :param input_path: Path to the input file.
+    :param output_path: Path where the sampled data should be saved.
+    :param sample_size: Number of lines to sample.
+    :param sample_indices: Optional list of indices to use for sampling.
+    :return: List of indices used for sampling.
     """
     with open(input_path, 'r') as file:
         lines = file.readlines()
@@ -29,7 +41,18 @@ def sample_from_file(input_path, output_path, sample_size, sample_indices=None):
 
     return sample_indices
 
-def sample_snippets(raw_file_path, meta_file_path, output_raw_path, output_meta_path, sample_size, other_datasets_paths=None, other_metadata_paths=None):
+def sample_snippets(sample_size, raw_file_path, meta_file_path, output_raw_path, output_meta_path, other_datasets_paths=None, other_metadata_paths=None):
+    """
+    Samples code snippets from the raw data files and their corresponding metadata files.
+    
+    :param sample_size: The sample size for the training data.
+    :param raw_file_path: Path to the raw data file for training data.
+    :param meta_file_path: Path to the metadata file for training data.
+    :param output_raw_path: Output path for the sampled raw training data.
+    :param output_meta_path: Output path for the sampled metadata of training data.
+    :param other_datasets_paths: Optional dictionary of paths for other datasets' raw data.
+    :param other_metadata_paths: Optional dictionary of paths for other datasets' metadata.
+    """
     # Ensure the output directories exist
     os.makedirs(os.path.dirname(output_raw_path), exist_ok=True)
     os.makedirs(os.path.dirname(output_meta_path), exist_ok=True)
@@ -65,7 +88,7 @@ def sample_snippets(raw_file_path, meta_file_path, output_raw_path, output_meta_
         os.remove(release_file_dest)
     shutil.copy(f'{INPUT}/py150_v1.0/RELEASE_v1.0.txt', release_file_dest)
 
-# Define file paths and proportions
+# Define file paths and proportions for different datasets
 proportions = {
     'OODval': 3.44,
     'OODtest': 26.65,
@@ -73,6 +96,7 @@ proportions = {
     'IDtest': 13.33
 }
 
+# Dictionary mappings for other dataset paths
 other_datasets_paths = {
     'OODval': (f'{INPUT}/py150_v1.0/raw/OODval.txt', f'{OUTPUT}/py150_v1.0/raw/OODval.txt'),
     'OODtest': (f'{INPUT}/py150_v1.0/raw/OODtest.txt', f'{OUTPUT}/py150_v1.0/raw/OODtest.txt'),
@@ -89,11 +113,11 @@ other_metadata_paths = {
 
 # Sample the snippets
 sample_snippets(
+    SAMPLE_SIZE,
     raw_file_path=f'{INPUT}/py150_v1.0/raw/train.txt',
     meta_file_path=f'{INPUT}/py150_v1.0/metadata/repo_file_names/train.txt',
     output_raw_path=f'{OUTPUT}/py150_v1.0/raw/train.txt',
     output_meta_path=f'{OUTPUT}/py150_v1.0/metadata/repo_file_names/train.txt',
-    sample_size=24000,
     other_datasets_paths=other_datasets_paths,
     other_metadata_paths=other_metadata_paths
 )
