@@ -240,6 +240,13 @@ def extract_while_loop(string):
     return while_list, string
 
 def remove_whitespace(text, num_indents):
+    """
+    Removes unnecessary whitespace from a given text and adds indentation.
+
+    :param text: The text from which to remove whitespace.
+    :param num_indents: Number of tab indentations to add to the beginning of the text.
+    :return: The modified text with whitespace removed and indentation added.
+    """
     # Remove whitespace before colons
     text = re.sub(r'\s+:', ':', text)
     # Remove whitespace before and after periods
@@ -254,6 +261,13 @@ def remove_whitespace(text, num_indents):
     return text
 
 def fix_whitespace(text, num_indents):
+    """
+    Fixes whitespace issues in a given text and adds indentation.
+
+    :param text: The text to be fixed for whitespace.
+    :param num_indents: Number of tab indentations to add to the beginning of the text.
+    :return: The text with corrected whitespace and added indentation.
+    """
     # Remove whitespace before colons
     text = re.sub(r'\s+:', ':', text)
     # Remove whitespace before and after periods
@@ -268,6 +282,12 @@ def fix_whitespace(text, num_indents):
     return text
 
 def convert_to_python3(line):
+    """
+    Converts a line of Python 2 code to Python 3, particularly focusing on exception syntax and print statements.
+
+    :param line: A line of Python 2 code.
+    :return: The converted line of code in Python 3 syntax.
+    """
     new_line = line.replace("Exception ,", "Exception as")
     if line.lstrip().startswith("print ") and '(' not in line:
         # Split the line at 'print' and add parentheses around the rest of the line
@@ -276,46 +296,60 @@ def convert_to_python3(line):
     return new_line
 
 def preprocess_source(source):
+    """
+    Preprocesses Python source code for formatting and conversion to Python 3.
+
+    :param source: Multiline string of Python source code.
+    :return: Preprocessed and formatted Python 3 source code.
+    """
     ifstack = []
     trystack = []
     empty_class_or_func = False
     lines = source.split('\n')
     num_indents = 0
     processed_lines = []
+
     for line in lines:            
-        if len(line) == 0:
+        if not line:
             continue
+
         last_char = line.rsplit()[-1]
         line = convert_to_python3(line)
-        if len(trystack) != 0:
-            if "except " in line or "else :" in line or "finally :" in line:
-                num_indents = trystack[-1]
-        if len(ifstack) != 0:
+
+        # Handling indentation for try-except blocks
+        if trystack and ("except " in line or "else :" in line or "finally :" in line):
+            num_indents = trystack[-1]
+
+        # Handling indentation for if-elif-else blocks
+        if ifstack:
             if "elif " in line:
                 num_indents = ifstack[-1]
             elif "else :" in line:
                 num_indents = ifstack.pop()
+
+        # Reset indents for new class or function definitions
         if "class " in line or "def " in line:
             num_indents = 0
-            ifstack = []
-            trystack = []
+            ifstack.clear()
+            trystack.clear()
             if "def" in line and empty_class_or_func:
-                num_indents = 1 # member function of class
+                num_indents = 1  # Member function of a class
+
         processed_lines.append(fix_whitespace(line, num_indents))
         
+        # Adjust indentation level after colon
         if last_char == ":":
-            if "if " in line:
-                ifstack.append(num_indents)
-            elif "try" in line:
-                trystack.append(num_indents)
+            if "if " in line or "try" in line:
+                ifstack.append(num_indents) if "if " in line else trystack.append(num_indents)
             num_indents += 1
-                
+
+        # Reset indent after return statement
         if "return" in line:
             num_indents = 0
-        if empty_class_or_func:
-            empty_class_or_func = False
-        if "class " in line or "def " in line:
-            empty_class_or_func = True # classes/functions need at least one line
+
+        # Track empty class or function definition
+        empty_class_or_func = "class " in line or "def " in line
+
     return '\n'.join(processed_lines)
 
 def hack(source):
