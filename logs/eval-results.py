@@ -1,31 +1,36 @@
 import re
 from pprint import pprint
 
-DIRECTORY = 'logs1500'
-
-# Input directories
-INPUT1 = f'{DIRECTORY}/mixed/test'
-INPUT2 = f'{DIRECTORY}/control'
+# Constants for directory paths
+DIRECTORY = 'logs24k'
+INPUT1 = f'{DIRECTORY}/mixed/all-1-per-enh'
+INPUT2 = f'{DIRECTORY}/mixed/all-2-per-enh'
 
 def parse_input(input_text):
-    # Regular expressions for extracting data
+    """
+    Parses input text from a log file to extract and structure epoch data.
+
+    :param input_text: The string content of a log file.
+    :return: A dictionary containing structured data about epochs.
+    """
+    # Define regular expressions for parsing the log data
     epoch_pattern = r'Epoch \[\d+\]:'
     train_pattern = r'Train:\s*objective: ([\d\.]+)\s*loss_all: ([\d\.]+)\s*acc_all: ([\d\.]+)'
     val_pattern = r'Validation \(OOD\):\s*objective: ([\d\.]+)\s*loss_all: ([\d\.]+)\s*acc_all: ([\d\.]+)'
     val_acc_pattern = r'Validation acc: ([\d\.]+)'
     detailed_acc_pattern = r'Acc \((\w+)\): ([\d\.]+)'
 
-    data = {
-        'epochs': [],
-    }
-
+    # Splitting the input text into epochs and processing each one
+    data = {'epochs': []}
     epochs = re.split(epoch_pattern, input_text)
     for epoch_data in epochs[1:]:
+        # Extracting various metrics using regular expressions
         train_matches = re.findall(train_pattern, epoch_data)
         val_matches = re.findall(val_pattern, epoch_data)
         val_acc_match = re.search(val_acc_pattern, epoch_data)
         detailed_acc_matches = re.findall(detailed_acc_pattern, epoch_data)
 
+        # Structuring the extracted data
         epoch_info = {
             'train': {
                 'objective': [float(x[0]) for x in train_matches],
@@ -44,24 +49,50 @@ def parse_input(input_text):
 
     return data
 
-# Function to read data from a file
 def read_data_from_file(file_path):
+    """
+    Reads data from a file and returns it as a string.
+
+    :param file_path: The path to the file to be read.
+    :return: The content of the file as a string.
+    """
     with open(file_path, 'r') as file:
         data = file.read()
     return data
 
-# Extract the part of the path after the DIRECTORY
 def format_label(label):
+    """
+    Formats a file path label by removing the directory prefix.
+
+    :param label: The original file path label.
+    :return: The formatted label.
+    """
     formatted_label = label.replace(DIRECTORY + '/', '')
     return formatted_label
 
 def percent_difference(metric1, metric2):
+    """
+    Calculates the percentage difference between two metrics.
+
+    :param metric1: The first metric value.
+    :param metric2: The second metric value.
+    :return: The percentage difference between the two metrics.
+    """
     if metric1 == 0 and metric2 == 0:
         return 0
     diff = round(abs(metric1 - metric2) * 100, 1)
     return diff
 
 def compare_data(data1, data2, label1, label2):
+    """
+    Compares data from two different sources and computes a comparison metric.
+
+    :param data1: The first dataset.
+    :param data2: The second dataset.
+    :param label1: Label for the first dataset.
+    :param label2: Label for the second dataset.
+    :return: A tuple containing the comparison results and overall performance.
+    """
     comparison = {}
     overall_performance = {}
     num_epochs = min(len(data1['epochs']), len(data2['epochs']))
@@ -96,6 +127,16 @@ def compare_data(data1, data2, label1, label2):
     return comparison, overall_performance
 
 def better_metric(metric1, metric2, label1, label2, better_count):
+    """
+    Determines which metric is better and updates the count.
+
+    :param metric1: The first metric value.
+    :param metric2: The second metric value.
+    :param label1: Label for the first metric.
+    :param label2: Label for the second metric.
+    :param better_count: Dictionary tracking the count of better metrics.
+    :return: The label of the better metric.
+    """
     if metric1 > metric2:
         better_count[label1] += 1
         return label1
@@ -107,6 +148,14 @@ def better_metric(metric1, metric2, label1, label2, better_count):
         return 'Equal'
 
 def determine_overall_performance(better_count, label1, label2):
+    """
+    Determines the overall performance based on the count of better metrics.
+
+    :param better_count: Dictionary with counts of better metrics for each label.
+    :param label1: The first label.
+    :param label2: The second label.
+    :return: A dictionary summarizing the overall performance.
+    """
     if better_count[label1] > better_count[label2]:
         winner = label1
     elif better_count[label1] < better_count[label2]:
