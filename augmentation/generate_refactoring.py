@@ -165,7 +165,7 @@ def generate_adversarial_json(k, code):
     return refac
 
 
-def generate_adversarial_file_level(code, k, max_refactor_limit, cumulative, verbose=False):
+def generate_adversarial_file_level(code, refactors_list, k, max_refactor_limit, cumulative, verbose=False):
     """
     Apply k refactoring operations to the entire file-level code, potentially altering the overall structure.
 
@@ -179,27 +179,6 @@ def generate_adversarial_file_level(code, k, max_refactor_limit, cumulative, ver
     Returns:
         tuple: A tuple containing the refactored code at the file level and a dictionary of refactoring counts.
     """
-    refactors_list = [
-                        rename_argument, 
-                        return_optimal, 
-                        add_argumemts,
-                        rename_api, 
-                        rename_local_variable,
-                        add_local_variable,
-                        rename_method_name,
-                        enhance_if,
-                        add_print,
-                        duplication,
-                        apply_plus_zero_math,
-                        insert_random_function,
-                        insert_random_class,
-                        create_typo,
-                        dead_branch_if_else,
-                        dead_branch_if,
-                        dead_branch_while,
-                        dead_branch_for,
-                        insert_safe_random_space,
-                        ]
     
     new_refactored_code = code
     refactoring_counts = {refactor.__name__: 0 for refactor in refactors_list}
