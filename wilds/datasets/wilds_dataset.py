@@ -495,13 +495,15 @@ class WILDSSubset(WILDSDataset):
         self.do_transform_y = do_transform_y
 
     def __getitem__(self, idx):
-        x, y, metadata = self.dataset[self.indices[idx]]
+        dataset_item = self.dataset[self.indices[idx]]
+
+        x, y, *_ = dataset_item  # Unpacks the first two items; expects dataset items to have at least 2 elements
         if self.transform is not None:
             if self.do_transform_y:
                 x, y = self.transform(x, y)
             else:
                 x = self.transform(x)
-        return x, y, metadata
+        return x, y, *dataset_item[2:]  # Returns additional elements beyond x and y, if any
 
     def __len__(self):
         return len(self.indices)
