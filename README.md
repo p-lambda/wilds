@@ -344,7 +344,7 @@ The evaluation script will skip over any datasets that has missing prediction fi
 Any dataset not in `<root_dir>` will be downloaded to `<root_dir>`.
 
 ### Reproducibility
-The original [CodaLab executable paper](https://wilds.stanford.edu/codalab) contained the commands, code, data, and trained model weights for the reported experiments. CodaLab is being retired. The Hugging Face collection preserves the released datasets; experiment bundles, saved model weights, predictions, and logs have not been mirrored there. Configurations and hyperparameters remain available in [`examples/configs`](examples/configs), with dataset-specific settings in [`examples/configs/datasets.py`](examples/configs/datasets.py).
+Datasets can be found in the [HuggingFace collection](https://huggingface.co/collections/pangwei/wilds-6af049f85e2e4ff623ad53b6). All configurations and hyperparameters can also be found in the `examples/configs` folder of this repo, and dataset-specific parameters are in `examples/configs/datasets.py`.
 
 ## Leaderboard
 If you are developing new training algorithms and/or models on WILDS, please consider submitting them to our [public leaderboard](https://wilds.stanford.edu/leaderboard/).
