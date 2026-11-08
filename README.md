@@ -339,7 +339,7 @@ python examples/evaluate.py <predictions_dir> <output_dir> --root_dir <root_dir>
 
 where `<predictions_dir>` is the path to your predictions directory, `<output_dir>` is where the results JSON will be writte, and `<root_dir>` is the dataset root directory.
 The predictions directory should have a subdirectory for each dataset
-(e.g. `iwildcam`) containing prediction CSV files to evaluate; see our [submission guidelines](https://wilds.stanford.edu/submit/) for the format.
+(e.g. `iwildcam`) containing prediction CSV files to evaluate; see our [prediction formatting guidelines](https://wilds.stanford.edu/submit/) for the format.
 The evaluation script will skip over any datasets that has missing prediction files.
 Any dataset not in `<root_dir>` will be downloaded to `<root_dir>`.
 
@@ -347,7 +347,7 @@ Any dataset not in `<root_dir>` will be downloaded to `<root_dir>`.
 Datasets can be found in the [HuggingFace collection](https://huggingface.co/collections/pangwei/wilds-6af049f85e2e4ff623ad53b6). All configurations and hyperparameters can also be found in the `examples/configs` folder of this repo, and dataset-specific parameters are in `examples/configs/datasets.py`.
 
 ## Leaderboard
-If you are developing new training algorithms and/or models on WILDS, please consider submitting them to our [public leaderboard](https://wilds.stanford.edu/leaderboard/).
+The [WILDS leaderboard](https://wilds.stanford.edu/leaderboard/) is no longer actively maintained. Thank you to everyone for their submissions!
 
 ## Citing WILDS ([Bibtex](https://wilds.stanford.edu/assets/files/wilds_bib.txt))
 If you use WILDS datasets in your work, please cite our paper:
