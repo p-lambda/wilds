@@ -273,7 +273,7 @@ tar -xzf iwildcam_v2.0.tar.gz -C data/iwildcam_v2.0
 
 Keep `RELEASE_v2.0.txt` at the root of that folder, then use `get_dataset(dataset="iwildcam", root_dir="data", download=False)`. Separate unlabeled archives use their own folders, such as `data/iwildcam_unlabeled_v1.0`. Amazon, FMoW, and DomainNet each share one archive between their labeled and unlabeled loaders; extract those archives into the labeled dataset folder once.
 
-Only releases listed in the Hugging Face collection are mirrored. Older releases and ENCODE remain outside this migration; existing local copies can still be used.
+Only releases listed in the Hugging Face collection are mirrored. Older releases remain outside this migration; existing local copies can still be used.
 
 These are the sizes of each of our datasets, as well as their approximate time taken to train and evaluate the default model for a single ERM run using a NVIDIA V100 GPU.
 
