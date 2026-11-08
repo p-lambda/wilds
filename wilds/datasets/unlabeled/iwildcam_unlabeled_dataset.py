@@ -37,8 +37,8 @@ class IWildCamUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name = "iwildcam_unlabeled"
     _versions_dict = {
         "1.0": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0xff56ea50fbf64aabbc4d09b2e8d50e18/contents/blob/",
-            "compressed_size": 41_016_937_676,
+            "download_url": "https://huggingface.co/datasets/pangwei/wilds-iwildcam/resolve/78b5e7d858adb01cb5661c7b5f8666a4e91be2cb/iwildcam_unlabeled_v1.0.tar.gz",
+            "compressed_size": 40_575_654_717,
         }
     }
 

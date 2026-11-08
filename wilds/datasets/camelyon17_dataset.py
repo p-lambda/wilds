@@ -56,8 +56,8 @@ class Camelyon17Dataset(WILDSDataset):
     _dataset_name = 'camelyon17'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xe45e15f39fb54e9d9e919556af67aabe/contents/blob/',
-            'compressed_size': 10_658_709_504}}
+            'download_url': 'https://huggingface.co/datasets/pangwei/wilds-camelyon17/resolve/2ed40cf44d4e63de0e89f756e5ef95108127c1df/camelyon17_v1.0.tar.gz',
+            'compressed_size': 10_658_894_493}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
         self._version = version

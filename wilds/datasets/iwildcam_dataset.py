@@ -41,8 +41,8 @@ class IWildCamDataset(WILDSDataset):
     _dataset_name = 'iwildcam'
     _versions_dict = {
         '2.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x6313da2b204647e79a14b468131fcd64/contents/blob/',
-            'compressed_size': 11_957_420_032}}
+            'download_url': 'https://huggingface.co/datasets/pangwei/wilds-iwildcam/resolve/78b5e7d858adb01cb5661c7b5f8666a4e91be2cb/iwildcam_v2.0.tar.gz',
+            'compressed_size': 11_957_415_473}}
 
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):

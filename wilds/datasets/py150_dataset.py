@@ -46,8 +46,8 @@ class Py150Dataset(WILDSDataset):
     _dataset_name = 'py150'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x442a0661a84649e69c0a946cc5f84237/contents/blob/',
-            'compressed_size': 162_811_706}}
+            'download_url': 'https://huggingface.co/datasets/pangwei/wilds-py150/resolve/fa61f471f3c6d7139887a5378b12149a03d94cb1/py150_v1.0.tar.gz',
+            'compressed_size': 162_818_347}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
 

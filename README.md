@@ -237,7 +237,7 @@ python examples/run_expt.py --dataset civilcomments --algorithm groupDRO --root_
 python examples/run_expt.py --dataset fmow --algorithm DANN --unlabeled_split test_unlabeled --root_dir data
 ```
 
-The scripts are configured to use the default models and reasonable hyperparameters. For exact hyperparameter settings used in our papers, please see [our CodaLab executable paper](https://wilds.stanford.edu/codalab).
+The scripts are configured to use the default models and reasonable hyperparameters. Training configurations are in [`examples/configs`](examples/configs), including dataset-specific settings in [`examples/configs/datasets.py`](examples/configs/datasets.py).
 
 ### Downloading and training on the WILDS datasets
 The first time you run these scripts, you might need to download the datasets. You can do so with the `--download` argument, for example:
@@ -262,33 +262,46 @@ python wilds/download_datasets.py --root_dir data --unlabeled
 
 This will download all datasets to the specified `data` folder. You can also use the `--datasets` argument to download particular datasets.
 
+Dataset archives are hosted in the [WILDS Hugging Face collection](https://huggingface.co/collections/pangwei/wilds-6af049f85e2e4ff623ad53b6). OGB-MolPCBA continues to use the official OGB/SNAP downloads. The mirrored releases have the same dataset contents, splits, and evaluation protocols as their CodaLab releases.
+
+If your installed WILDS version still tries to download from CodaLab, install the updated code from this repository or download the archive files manually from the collection. To use a manually downloaded archive, extract it into the folder named after the archive, without `.tar.gz`:
+
+```bash
+mkdir -p data/iwildcam_v2.0
+tar -xzf iwildcam_v2.0.tar.gz -C data/iwildcam_v2.0
+```
+
+Keep `RELEASE_v2.0.txt` at the root of that folder, then use `get_dataset(dataset="iwildcam", root_dir="data", download=False)`. Separate unlabeled archives use their own folders, such as `data/iwildcam_unlabeled_v1.0`. Amazon, FMoW, and DomainNet each share one archive between their labeled and unlabeled loaders; extract those archives into the labeled dataset folder once.
+
+Only releases listed in the Hugging Face collection are mirrored. Older releases and ENCODE remain outside this migration; existing local copies can still be used.
+
 These are the sizes of each of our datasets, as well as their approximate time taken to train and evaluate the default model for a single ERM run using a NVIDIA V100 GPU.
 
 | Dataset command | Modality | Download size (GB) | Size on disk (GB) | Train+eval time (Hours) |
 | --------------- | -------- | ------------------ | ----------------- | ----------------------- |
-| iwildcam        | Image    | 11                 | 25                | 7                       |
-| camelyon17      | Image    | 10                 | 15                | 2                       |
-| rxrx1           | Image    | 7                  | 7                 | 11                      |
+| iwildcam        | Image    | 12.0               | 25                | 7                       |
+| camelyon17      | Image    | 10.7               | 15                | 2                       |
+| rxrx1           | Image    | 7.4                | 7                 | 11                      |
 | ogb-molpcba     | Graph    | 0.04               | 2                 | 15                      |
-| globalwheat     | Image    | 10                 | 10                | 2                       |
-| civilcomments   | Text     | 0.1                | 0.3               | 4.5                     |
-| fmow            | Image    | 50                 | 55                | 6                       |
-| poverty         | Image    | 12                 | 14                | 5                       |
-| amazon          | Text     | 7                  | 7                 | 5                       |
-| py150           | Text     | 0.1                | 0.8               | 9.5                     |
+| globalwheat     | Image    | 10.3               | 10                | 2                       |
+| civilcomments   | Text     | 0.09               | 0.3               | 4.5                     |
+| fmow            | Image    | 53.9               | 55                | 6                       |
+| poverty         | Image    | 13.1               | 14                | 5                       |
+| amazon          | Text     | 2.0                | 7                 | 5                       |
+| py150           | Text     | 0.16               | 0.8               | 9.5                     |
 
 The following are the sizes of the unlabeled data bundles:
 
 | Dataset command | Modality | Download size (GB) | Size on disk (GB) |
 | --------------- | -------- | ------------------ | ----------------- |
-| iwildcam        | Image    | 41                 | 41                |
+| iwildcam        | Image    | 40.6               | 41                |
 | camelyon17      | Image    | 69.4               | 96                |
 | ogb-molpcba     | Graph    | 1.2                | 21                |
-| globalwheat     | Image    | 103                | 108               |
-| civilcomments   | Text     | 0.3                | 0.6               |
-| fmow\*          | Image    | 50                 | 55                |
-| poverty         | Image    | 172                | 184               |
-| amazon\*        | Text     | 7                  | 7                 |
+| globalwheat     | Image    | 108.8              | 110               |
+| civilcomments   | Text     | 0.25               | 0.6               |
+| fmow\*          | Image    | 53.9               | 55                |
+| poverty         | Image    | 172.7              | 184               |
+| amazon\*        | Text     | 2.0                | 7                 |
 
 <sup> \* These unlabeled datasets are downloaded simultaneously with the labeled data and do not need to be downloaded separately. </sup>
 
@@ -331,8 +344,7 @@ The evaluation script will skip over any datasets that has missing prediction fi
 Any dataset not in `<root_dir>` will be downloaded to `<root_dir>`.
 
 ### Reproducibility
-We have an [executable version](https://wilds.stanford.edu/codalab) of our paper on CodaLab that contains the exact commands, code, and data for the experiments reported in our paper, which rely on these scripts. Trained model weights for all datasets can also be found there.
-All configurations and hyperparameters can also be found in the `examples/configs` folder of this repo, and dataset-specific parameters are in `examples/configs/datasets.py`.
+The original [CodaLab executable paper](https://wilds.stanford.edu/codalab) contained the commands, code, data, and trained model weights for the reported experiments. CodaLab is being retired. The Hugging Face collection preserves the released datasets; experiment bundles, saved model weights, predictions, and logs have not been mirrored there. Configurations and hyperparameters remain available in [`examples/configs`](examples/configs), with dataset-specific settings in [`examples/configs/datasets.py`](examples/configs/datasets.py).
 
 ## Leaderboard
 If you are developing new training algorithms and/or models on WILDS, please consider submitting them to our [public leaderboard](https://wilds.stanford.edu/leaderboard/).

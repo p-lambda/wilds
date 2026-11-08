@@ -415,8 +415,8 @@ class DomainNetDataset(WILDSDataset):
     _dataset_name: str = "domainnet"
     _versions_dict: Dict[str, Dict[str, Union[str, int]]] = {
         "1.0": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0x0b8ca76eef384b98b879d0c8c4681a32/contents/blob/",
-            "compressed_size": 19_255_770_459,
+            "download_url": "https://huggingface.co/datasets/pangwei/wilds-domainnet/resolve/4faee20e7a4a1e9779b844cf45e3b724dbd30d70/domainnet_v1.0.tar.gz",
+            "compressed_size": 18_266_772_134,
         },
     }
 

@@ -67,8 +67,8 @@ class AmazonDataset(WILDSDataset):
             "compressed_size": 1_987_523_759,
         },
         "2.1": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0xe3ed909786d34ee79d430d065582aa29/contents/blob/",
-            "compressed_size": 1_989_805_589,
+            "download_url": "https://huggingface.co/datasets/pangwei/wilds-amazon/resolve/1a633d80a44b1fb11d8a3e319064b86e814eb010/amazon_v2.1.tar.gz",
+            "compressed_size": 1_988_270_939,
         },
     }
 
