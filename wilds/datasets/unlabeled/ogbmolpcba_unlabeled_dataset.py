@@ -3,14 +3,10 @@ import torch
 import numpy as np
 
 from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSUnlabeledDataset
+from wilds.datasets.ogbmolpcba_dataset import get_pyg_collate
 
 from ogb.graphproppred import PygGraphPropPredDataset
-from ogb.utils.url import download_url
-import torch_geometric
-if torch_geometric.__version__ >= '2.0.0':
-    from torch_geometric.loader.dataloader import Collater as PyGCollater
-else:
-    from torch_geometric.data.dataloader import Collater as PyGCollater
+
 
 class OGBPCBAUnlabeledDataset(WILDSUnlabeledDataset):
     """
@@ -90,10 +86,7 @@ class OGBPCBAUnlabeledDataset(WILDSUnlabeledDataset):
         metadata_file_path = os.path.join(self.ogb_dataset.root, 'processed', 'group_assignment.npy')
         self._metadata_array = torch.from_numpy(np.load(metadata_file_path)).reshape(-1,1).long()
 
-        if torch_geometric.__version__ >= '1.7.0':
-            self._collate = PyGCollater(follow_batch=[], exclude_keys=[])
-        else:
-            self._collate = PyGCollater(follow_batch=[])
+        self._collate = get_pyg_collate(self.ogb_dataset)
 
         super().__init__(root_dir, download, split_scheme)
 
