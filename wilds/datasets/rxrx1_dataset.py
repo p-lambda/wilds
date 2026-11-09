@@ -57,8 +57,8 @@ class RxRx1Dataset(WILDSDataset):
     _dataset_name = 'rxrx1'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x6b7a05a3056a434498f0bb1252eb8440/contents/blob/',
-            'compressed_size': 7_413_123_845}
+            'download_url': 'https://huggingface.co/datasets/pangwei/wilds-rxrx1/resolve/017ef63deb7ef69acef18df0ad3eff4d82e7c173/rxrx1_v1.0.tar.gz',
+            'compressed_size': 7_407_885_783}
     }
 
     def __init__(self, version=None, root_dir='data', download=False,

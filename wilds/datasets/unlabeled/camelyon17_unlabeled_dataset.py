@@ -50,7 +50,7 @@ class Camelyon17UnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name = "camelyon17_unlabeled"
     _versions_dict = {
         "1.0": {
-            "download_url": "https://worksheets.codalab.org/rest/bundles/0xa78be8a88a00487a92006936514967d2/contents/blob/",
+            "download_url": "https://huggingface.co/datasets/pangwei/wilds-camelyon17/resolve/2ed40cf44d4e63de0e89f756e5ef95108127c1df/camelyon17_unlabeled_v1.0.tar.gz",
             "compressed_size": 69_442_379_933,
         }
     }

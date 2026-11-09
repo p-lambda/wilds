@@ -56,8 +56,8 @@ class WaterbirdsDataset(WILDSDataset):
     _dataset_name = 'waterbirds'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x505056d5cdea4e4eaa0e242cbfe2daa4/contents/blob/',
-            'compressed_size': None}}
+            'download_url': 'https://huggingface.co/datasets/pangwei/wilds-waterbirds/resolve/9df26fc8b17c3e54650b0ee634ab2d7804c638f1/waterbirds_v1.0.tar.gz',
+            'compressed_size': 489_289_072}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
         self._version = version

@@ -128,8 +128,8 @@ class EncodeDataset(WILDSDataset):
     _dataset_name = 'encode'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x9c282b6e9082440f9dcd61bb605c1eab/contents/blob/',
-            'compressed_size': 7_692_640_256}}
+            'download_url': 'https://huggingface.co/datasets/pangwei/wilds-encode/resolve/43d7ecf34c438783d5e61002d2c225f2626fbba4/encode_v1.0.tar.gz',
+            'compressed_size': 7_692_704_337}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
         itime = time.time()

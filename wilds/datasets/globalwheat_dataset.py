@@ -153,8 +153,8 @@ class GlobalWheatDataset(WILDSDataset):
             'download_url': 'https://worksheets.codalab.org/rest/bundles/0x443fbcb18eeb4f80b5ea4a9f77795168/contents/blob/',
             'compressed_size': 10_286_120_960},
         '1.1': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x36e16907b7254571b708b725f8beae52/contents/blob/',
-            'compressed_size': 10_284_949_504},
+            'download_url': 'https://huggingface.co/datasets/pangwei/wilds-globalwheat/resolve/0cc7b2330f78b3e6654e8d7be645af375eb26734/globalwheat_v1.1.tar.gz',
+            'compressed_size': 10_286_172_890},
         }
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):

@@ -58,8 +58,8 @@ class CivilCommentsDataset(WILDSDataset):
     _dataset_name = 'civilcomments'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x8cd3de0634154aeaad2ee6eb96723c6e/contents/blob/',
-            'compressed_size': 90_644_480
+            'download_url': 'https://huggingface.co/datasets/pangwei/wilds-civilcomments/resolve/9f6125cf264d61ea1ea19937f430900077b6bdfb/civilcomments_v1.0.tar.gz',
+            'compressed_size': 90_910_086
         }
     }
 

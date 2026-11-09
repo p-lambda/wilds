@@ -145,8 +145,8 @@ class PovertyMapDataset(WILDSDataset):
     _dataset_name = 'poverty'
     _versions_dict = {
         '1.1': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xfc0aa86ad9af4eb08c42dfc40eacf094/contents/blob/',
-            'compressed_size': 13_091_823_616}}
+            'download_url': 'https://huggingface.co/datasets/pangwei/wilds-poverty/resolve/64a246b8b5392f99d3c456dcf8a219b65fb012eb/poverty_v1.1.tar.gz',
+            'compressed_size': 13_091_954_244}}
 
     def __init__(self, version=None, root_dir='data', download=False,
                  split_scheme='official',

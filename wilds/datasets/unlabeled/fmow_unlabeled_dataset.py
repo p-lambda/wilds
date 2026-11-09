@@ -53,8 +53,8 @@ class FMoWUnlabeledDataset(WILDSUnlabeledDataset):
     _dataset_name = 'fmow_unlabeled'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xaec91eb7c9d548ebb15e1b5e60f966ab/contents/blob/',
-            'compressed_size': 53_893_324_800,
+            'download_url': 'https://huggingface.co/datasets/pangwei/wilds-fmow/resolve/401e7c233898df2005ad4c680720407912f30854/fmow_v1.1.tar.gz',
+            'compressed_size': 53_893_501_163,
             "equivalent_dataset": "fmow_v1.1",}
     }
 

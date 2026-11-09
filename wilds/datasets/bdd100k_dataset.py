@@ -68,8 +68,8 @@ class BDD100KDataset(WILDSDataset):
     _dataset_name = 'bdd100k'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0x0ac62ae89a644676a57fa61d6aa2f87d/contents/blob/',
-            'compressed_size': None}}
+            'download_url': 'https://huggingface.co/datasets/pangwei/wilds-bdd100k/resolve/d1ee4b04a871136e467b15b8327294e66c6527fe/bdd100k_v1.0.tar.gz',
+            'compressed_size': 4_530_375_870}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='official'):
         self._version = version

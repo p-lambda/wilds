@@ -65,8 +65,8 @@ class SQFDataset(WILDSDataset):
     _dataset_name = 'sqf'
     _versions_dict = {
         '1.0': {
-            'download_url': 'https://worksheets.codalab.org/rest/bundles/0xea27fd7daef642d2aa95b02f1e3ac404/contents/blob/',
-            'compressed_size': 36_708_352}}
+            'download_url': 'https://huggingface.co/datasets/pangwei/wilds-sqf/resolve/9dee93d2fb76d70910c89c20595d9e3708671a02/sqf_v1.0.tar.gz',
+            'compressed_size': 37_025_891}}
 
     def __init__(self, version=None, root_dir='data', download=False, split_scheme='all_race'):
         # set variables
