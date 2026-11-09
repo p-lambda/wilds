@@ -4,11 +4,18 @@ import numpy as np
 from wilds.datasets.wilds_dataset import WILDSDataset
 from ogb.graphproppred import PygGraphPropPredDataset, Evaluator
 from ogb.utils.url import download_url
-import torch_geometric
-if torch_geometric.__version__ >= '2.0.0':
-    from torch_geometric.loader.dataloader import Collater as PyGCollater
-else:
-    from torch_geometric.data.dataloader import Collater as PyGCollater
+try:
+    from torch_geometric.loader import DataLoader as PyGDataLoader
+except ModuleNotFoundError as exc:
+    if exc.name != 'torch_geometric.loader':
+        raise
+    from torch_geometric.data import DataLoader as PyGDataLoader  # PyG 1.x
+
+
+def get_pyg_collate(dataset):
+    """Use PyG's batching function with the WILDS data loaders."""
+    return PyGDataLoader(dataset).collate_fn
+
 
 class OGBPCBADataset(WILDSDataset):
     """
@@ -92,10 +99,7 @@ class OGBPCBADataset(WILDSDataset):
             download_url('https://snap.stanford.edu/ogb/data/misc/ogbg_molpcba/scaffold_group.npy', os.path.join(self.ogb_dataset.root, 'raw'))
         self._metadata_array = torch.from_numpy(np.load(metadata_file_path)).reshape(-1,1).long()
 
-        if torch_geometric.__version__ >= '1.7.0':
-            self._collate = PyGCollater(follow_batch=[], exclude_keys=[])
-        else:
-            self._collate = PyGCollater(follow_batch=[])
+        self._collate = get_pyg_collate(self.ogb_dataset)
 
         self._metric = Evaluator('ogbg-molpcba')
 
