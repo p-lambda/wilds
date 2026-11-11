@@ -1,5 +1,5 @@
-from torch.optim import SGD, Adam
-from transformers import AdamW
+from torch.optim import SGD, Adam, AdamW
+
 
 def initialize_optimizer(config, model):
     # initialize optimizers
